@@ -49,13 +49,18 @@ override_dh_auto_install:
 		done )
 
 override_dh_intall:
-	dh_instal --sourcedir=$(CURDIR)/debian/tmp
+	dh_install --sourcedir=$(CURDIR)/debian/tmp
 	# for alternatives treatment we rename usr/bin/bibtex to
 	# usr/bin/bibtex.original
 	mv debian/texlive-binaries/usr/bin/bibtex \
 	   debian/texlive-binaries/usr/bin/bibtex.original
 	mv debian/texlive-binaries/usr/share/man/man1/bibtex.1 \
 	   debian/texlive-binaries/usr/share/man/man1/bibtex.original.1
+	# rename texmf-dist to texmf-texlive for consistency with former
+	# times
+	# do we want to do that????
+	#mv debian/texlive-binaries/usr/share/texmf-texlive \
+	#   debian/texlive-binaries/usr/share/texmf-dist
 
 override_dh_installdocs:
 	dh_installdocs

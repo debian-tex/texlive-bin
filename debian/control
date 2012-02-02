@@ -1,0 +1,52 @@
+Source: texlive-bin
+Section: tex
+Priority: optional
+Maintainer:  Debian TeX Maintainers <debian-tex-maint@lists.debian.org>
+Uploaders: Norbert Preining <preining@debian.org>, Frank Küster <frank@kuesterei.ch>
+Build-Depends: debhelper (>= 7.0.50~), sharutils, ed, libncurses5-dev | libncurses-dev, libxaw7-dev, libpng12-dev | libpng-dev, zlib1g-dev | libz-dev, libgd2-xpm-dev | libgd2-noxpm-dev, flex, bison, libpoppler-dev (>= 0.12.4), chrpath, g++-4.4 [armel], time
+Standards-Version: 3.9.2
+Homepage: http://www.tug.org/texlive
+
+Package: texlive-binaries
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, texlive-common (>= 2011), tex-common (>= 2.00), ed, perl
+Recommends: texlive-base
+Breaks: texlive-base (<< 2010)
+Description: Binaries for TeX Live
+ This package contains all the binaries of TeX Live packages.
+ .
+ Note that this package alone has hardly any functionality.  Rather,
+ choose the texlive-* packages you want to use, e.g.
+ texlive-latex-recommended or context
+
+Package: libkpathsea6
+Section: libs
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Description: TeX Live: path search library for TeX (runtime part)
+ This package contains the runtime part of the Kpathsea[rch] library,
+ which implements generic path searching, configuration, and
+ TeX-specific file searching.
+
+Package: libkpathsea-dev
+Section: libdevel
+Architecture: any
+Depends: ${misc:Depends}, libkpathsea6 (= ${binary:Version}), ${shlibs:Depends}
+Description: TeX Live: path search library for TeX (development part)
+ This package contains the static library and header files for the
+ Kpathsea[rch] library.
+
+Package: libptexenc1
+Section: libs
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Description: TeX Live: ptex encoding library
+ library for encoding support in ptex
+
+Package: libptexenc-dev
+Section: libdevel
+Architecture: any
+Depends: ${misc:Depends}, libptexenc1 (= ${binary:Version}), ${shlibs:Depends}
+Description: TeX Live: path search library for TeX (development part)
+ This package contains the static library and header files for the
+ ptexenc library.

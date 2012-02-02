@@ -1,0 +1,3 @@
+debian/debianize-fmtutil usr/share/texlive-bin
+usr/bin
+usr/share

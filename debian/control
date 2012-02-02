@@ -10,7 +10,7 @@ Homepage: http://www.tug.org/texlive
 Package: texlive-binaries
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, texlive-common (>= 2011), tex-common (>= 2.00), ed, perl
-Recommends: texlive-base
+Recommends: texlive-base, luatex, python, ruby, wish
 Breaks: texlive-base (<< 2010)
 Description: Binaries for TeX Live
  This package contains all the binaries of TeX Live packages.

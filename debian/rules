@@ -38,15 +38,8 @@ override_dh_auto_configure:
 	--disable-tex4htk			\
 	--enable-ipc				
 
-override_dh_auto_build:
-	(cd $(CURDIR)/Work ; $(MAKE) )
-
 override_dh_auto_install:
 	dh_auto_install -- DESTDIR=$(CURDIR)/debian/tmp
-	(cd $(CURDIR)/debian/tmp/usr/bin ; \
-		for f in `find . -type f` ; do \
-		  chrpath -d $$f 2>/dev/null ;\
-		done )
 
 override_dh_intall:
 	dh_install --sourcedir=$(CURDIR)/debian/tmp

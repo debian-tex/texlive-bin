@@ -43,6 +43,10 @@ override_dh_auto_install:
 
 override_dh_intall:
 	dh_install --sourcedir=$(CURDIR)/debian/tmp
+	# use mupdmap (multi!)
+	# change the link from updmap -> ../updmap.pl
+	ln -sf ../share/texmf/scripts/texlive/mupdmap.pl \
+		debian/texlive-binaries/usr/bin/updmap
 	# for alternatives treatment we rename usr/bin/bibtex to
 	# usr/bin/bibtex.original
 	mv debian/texlive-binaries/usr/bin/bibtex \

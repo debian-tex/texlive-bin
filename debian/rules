@@ -41,7 +41,7 @@ override_dh_auto_configure:
 override_dh_auto_install:
 	dh_auto_install -- DESTDIR=$(CURDIR)/debian/tmp
 
-override_dh_intall:
+override_dh_install:
 	dh_install --sourcedir=$(CURDIR)/debian/tmp
 	# use mupdmap (multi!)
 	# change the link from updmap -> ../updmap.pl

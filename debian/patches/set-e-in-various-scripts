@@ -1,0 +1,148 @@
+set -e in mktexlsr, updmap, fmtutil
+---
+ texk/tetex/fmtutil   |    7 +++++--
+ texk/tetex/texconfig |   41 ++++++++++++++++++++++-------------------
+ 2 files changed, 27 insertions(+), 21 deletions(-)
+
+Index: texlive-bin-2011.20120216/texk/tetex/fmtutil
+===================================================================
+--- texlive-bin-2011.20120216.orig/texk/tetex/fmtutil	2012-02-17 10:42:59.000000000 +0900
++++ texlive-bin-2011.20120216/texk/tetex/fmtutil	2012-02-17 10:49:15.999076162 +0900
+@@ -3,6 +3,9 @@
+ # Public domain.  Originally written by Thomas Esser.
+ # Run with --help for usage.
+ 
++set -e
++retval=0
++
+ # program history:
+ #   further changes in texk/tetex/ChangeLog.
+ #   2007-01-04  patch by JK to support $engine subdir (enabled by default)
+@@ -522,8 +525,8 @@
+   if test -n "$cfgmaint"; then
+     if test -z "$cfgparam"; then
+       setupTmpDir
+-      co=`tcfmgr --tmp $tmpdir --cmd co --file $cnf`
+-      test $? = 0 || cleanup 1
++      co=`tcfmgr --tmp $tmpdir --cmd co --file $cnf || retval=$?`
++      test $retval = 0 || cleanup 1
+       set x $co; shift
+       id=$1; cnf_file=$3; orig=$4
+       verboseMsg "$progname: initial config file is \`$orig'"
+Index: texlive-bin-2011.20120216/texk/tetex/texconfig
+===================================================================
+--- texlive-bin-2011.20120216.orig/texk/tetex/texconfig	2012-02-17 10:48:08.000000000 +0900
++++ texlive-bin-2011.20120216/texk/tetex/texconfig	2012-02-17 10:49:15.999076162 +0900
+@@ -1,4 +1,4 @@
+-#!/bin/sh
++#!/bin/sh -e
+ 
+ # TeXConfig version 3.0
+ # Originally written by Thomas Esser. Public domain.
+@@ -41,6 +41,9 @@
+ needsCleanup=false
+ lastUpdatedFile=
+ 
++# needed for set -e and replacing the various checks for $?
++retval=0
++
+ # 
+ ###############################################################################
+ # setupFMT(void) - find a suitable version of fmt / adjust
+@@ -374,8 +377,8 @@
+   fmgrConfigReplaceValue=$3
+ 
+   setupTmpDir
+-  co=`tcfmgr $moreArgs --tmp $tmpdir --cmd co --file $fmgrConfigReplaceFile`
+-  if test $? != 0; then
++  co=`tcfmgr $moreArgs --tmp $tmpdir --cmd co --file $fmgrConfigReplaceFile || retval=$?`
++  if test $retval != 0; then
+     echo "$progname: fmgrConfigReplace co failed for \`$fmgrConfigReplaceFile'" >&2
+     (exit 1); return 1
+   fi
+@@ -391,16 +394,16 @@
+     if ! $(diff $fmgrConfigReplaceCfgFile $fmgrConfigReplaceOrigFile >/dev/null); then
+       fmgrConfigReplaceChanged=true
+     fi
+-    ucf --debconf-ok $fmgrConfigReplaceCfgFile $fmgrConfigReplaceOrigFile
++    ucf --debconf-ok $fmgrConfigReplaceCfgFile $fmgrConfigReplaceOrigFile || retval=$?
+     # here is a bug: We should somehow check whether the file had been
+     # changed, in order to be able to recreate formats etc.
+-    if test $? != 0; then
++    if test $retval != 0; then
+       echo "$progname: fmgrConfigReplace failed to call ucf for \`$fmgrConfigReplaceOrigFile'" >&2
+       (exit 1); return 1
+     fi
+   else
+-    ci=`tcfmgr --tmp $tmpdir --cmd ci --id "$fmgrConfigReplaceID"`
+-    if test $? != 0; then
++    ci=`tcfmgr --tmp $tmpdir --cmd ci --id "$fmgrConfigReplaceID" || retval=$?`
++    if test $retval != 0; then
+       echo "$progname: fmgrConfigReplace ci failed for \`$fmgrConfigReplaceFile'" >&2
+       (exit 1); return 1
+     fi
+@@ -427,8 +430,8 @@
+   setupDvipsPaperDftPaper=$1
+ 
+   setupTmpDir
+-  co=`tcfmgr --tmp $tmpdir --cmd co --file $setupDvipsPaperFile`
+-  if test $? != 0; then
++  co=`tcfmgr --tmp $tmpdir --cmd co --file $setupDvipsPaperFile || retval=$?`
++  if test $retval != 0; then
+     echo "$progname: setupDvipsPaper co failed for \`$setupDvipsPaperFile'" >&2
+     (exit 1); return 1
+   fi
+@@ -450,8 +453,8 @@
+   # one change, there shouldn't be any need for prompting.  But since
+   # texconfig might be called by a maintainer script with debconf
+   # running, pass the option, if only to prevent it from nagging.
+-  ucf --debconf-ok $setupDvipsPaperCfgFile $setupDvipsPaperOrigFile
+-  if test $? != 0; then
++  ucf --debconf-ok $setupDvipsPaperCfgFile $setupDvipsPaperOrigFile || retval=$?
++  if test $retval != 0; then
+     echo "$progname: fmgrConfigReplace failed to call ucf for \`$fmgrConfigReplaceOrigFile'" >&2
+     (exit 1); return 1
+   fi
+@@ -987,16 +990,16 @@
+               case $pFile in
+                 "")
+                   setupTmpDir
+-                  tcfRet=`tcfmgr --emptyinfile --reldir dvips/config --cmd co --tmp $tmpdir --file "config.$printerName"`
+-                  if test $? != 0; then
++                  tcfRet=`tcfmgr --emptyinfile --reldir dvips/config --cmd co --tmp $tmpdir --file "config.$printerName" || retval=$?`
++                  if test $retval != 0; then
+                     echo "$progname: failed to add new configuration file \`config.$printerName'" >&2
+                     rc=1
+                   else
+                     set x $tcfRet; shift
+                     tcBatchDvipsAddID=$1; tcBatchDvipsAddFile=$3
+                     echo "% file config.$printerName; added by texconfig" > "$tcBatchDvipsAddFile"
+-                    tcfRet=`tcfmgr --tmp $tmpdir --id "$tcBatchDvipsAddID" --cmd ci`
+-                    if test $? != 0; then
++                    tcfRet=`tcfmgr --tmp $tmpdir --id "$tcBatchDvipsAddID" --cmd ci || retval=$?`
++                    if test $retval != 0; then
+                       echo "$progname: failed to add new configuration file \`config.$printerName'" >&2
+                       rc=1
+                     else
+@@ -1326,8 +1329,8 @@
+                 # use tcfmgr
+                 tcBatchHyphenFileBasename=`echo "$tcBatchHyphenFile" | sed 's@.*/@@'`
+                 setupTmpDir
+-                co=`tcfmgr --tmp $tmpdir --cmd co --file "$tcBatchHyphenFileBasename" --reldir "$relPart" --infile "$tcBatchHyphenFile"`
+-                if test $? != 0; then
++                co=`tcfmgr --tmp $tmpdir --cmd co --file "$tcBatchHyphenFileBasename" --reldir "$relPart" --infile "$tcBatchHyphenFile" || retval=$?`
++                if test $retval != 0; then
+                   echo "$progname: failed to check out file \`$tcBatchHyphenFile'" >&2
+                   rc=1
+                   return 1
+@@ -1348,8 +1351,8 @@
+                   lastUpdatedFile=$ci
+                   ;;
+                 *)
+-                  ci=`tcfmgr --tmp $tmpdir --cmd ci --id "$tcBatchHFID"`
+-                  if test $? != 0; then
++                  ci=`tcfmgr --tmp $tmpdir --cmd ci --id "$tcBatchHFID" || retval=$?`
++                  if test $retval != 0; then
+                     echo "$progname: failed to check in file \`$tcBatchHyphenFileBasename'" >&2
+                     rc=1
+                     return

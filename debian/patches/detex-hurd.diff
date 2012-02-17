@@ -1,0 +1,22 @@
+Fix building on hurd-i386. From Samuel Thibault <samuel.thibault@ens-lyon.org>
+> There was also a problem with xxx.l which uses the NOFILE macro which is
+> linux-only.
+---
+ texk/detex/detex.l |    4 ++++
+ 1 file changed, 4 insertions(+)
+
+Index: texlive-bin-2009/texk/detex/detex.l
+===================================================================
+--- texlive-bin-2009.orig/texk/detex/detex.l	2009-12-21 18:18:10.000000000 +0900
++++ texlive-bin-2009/texk/detex/detex.l	2009-12-21 18:18:34.000000000 +0900
+@@ -59,6 +59,10 @@
+ 
+ #endif
+ 
++#ifndef NOFILE
++#define NOFILE 256
++#endif
++
+ void SetEnvIgnore(char *sbEnvList);
+ int BeginEnv(char *sbEnv);
+ int EndEnv(char *sbEnv);

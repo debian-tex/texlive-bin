@@ -1,0 +1,143 @@
+---
+ texk/tetex/updmap     |   23 ++++++++++++++++-------
+ texk/tetex/updmap.man |   27 +++++++++++++++++++--------
+ 2 files changed, 35 insertions(+), 15 deletions(-)
+
+Index: texlive-bin-2009~svn15596/texk/tetex/updmap.man
+===================================================================
+--- texlive-bin-2009~svn15596.orig/texk/tetex/updmap.man	2009-08-15 08:13:49.000000000 +0900
++++ texlive-bin-2009~svn15596/texk/tetex/updmap.man	2009-10-03 23:37:05.000000000 +0900
+@@ -32,11 +32,20 @@
+ line, \fBupdmap\fP will write generated map files to a directory of
+ your choosing (via one of the \fB--*outputdir\fP options), or automatically
+ determine where to place the files\&.  In the latter case, it tries to
+-use the tree where the variable TEXMFVAR points to.
++use the tree where the variable TEXMFVAR -- or TEXMFSYSVAR if called
++as \fBupdmap-sys\fP -- points to.
++.PP
+ When used with the options \fB--edit\fP, \fB--setoption\fP,
+-\fB--enable\fP, \fB--disable\fP, or \fB--syncwithtrees\fP, \fBupdmap\fP will first write
+-\fBupdmap\&.cfg\fP(5) and regenerate the map files only if this file
+-has been changed\&.
++\fB--enable\fP, \fB--disable\fP, or \fB--syncwithtrees\fP,
++\fBupdmap\fP will first write \fBupdmap\&.cfg\fP(5) and regenerate the
++map files only if this file has been changed\&.  In Debian, updmap has
++been adapted so that \fB--enable\fP and \fB--disable\fP do the "right
++thing": change the configuration snippets in \fIupdmap.d\fP instead,
++call \fBupdate-updmap\fP(1) to regenerate \fBupdmap\&.cfg\fP(5) and
++regenerate the map files afterwards.  There are some limitations,
++though: \fBupdmap\fP will regenerate the map files even if
++\fBupdmap\&.cfg\fP(5) has not been changed, and \fB--edit\fP and
++\fB--syncwithtrees\fP cannot be used.
+ .PP
+ .SH "OPTIONS"
+ .PP
+@@ -98,10 +107,10 @@
+ \fBdvipdfmDownloadBase14\fP
+ .IP
+ .IP "\fB--enable\fP \fImaptype\fP \fImapfile\fP"
+-Add or enable a \fBMap\fP or \fBMixedMap\fP for \fImapfile\fP\&.
++Permanently add or enable a \fBMap\fP or \fBMixedMap\fP for \fImapfile\fP\&.
+ .IP
+ .IP "\fB--enable Map=\fImapfile\fP"
+-Add or enable a Map for \fImapfile\fP\&.
++Permanently add or enable a Map for \fImapfile\fP\&.
+ .IP
+ .IP "\fB--enable MixedMap=\fP\fImapfile\fP"
+ Add or enable a MixedMap for \fImapfile\fP\&.
+@@ -126,7 +135,9 @@
+ .IP "\fIupdmap\&.cfg\fP"
+ Main configuration file\&.  In
+ \fItexmf/web2c\fP by default, but may be located elsewhere
+-depending on your distribution\&.
++depending on your distribution\&. \fBNote for Debian\fP: On Debian
+++ that file is generated out of files in \fI/etc/texmf/updmap.d\fP.
+++ See \fBupdate-updmap\fP(8) or the \fITeX-on-Debian\fP document.
+ .IP
+ .IP "\fIdvips35\&.map\fP"
+ Map file for standard 35 PostScript fonts for
+@@ -240,7 +251,7 @@
+ .PP
+ .SH "SEE ALSO"
+ .PP
+-\fBupdmap\&.cfg\fP(5), \fBdvipdfm\fP(1), \fBdvips\fP(1),
++\fBupdmap\&.cfg\fP(5), \fBupdate-updmap\fP(8), \fBdvipdfm\fP(1), \fBdvips\fP(1),
+ \fBgsftopk\fP(1), \fBpdftex\fP(1), \fBps2pk\fP(1),
+ \fBtexhash\fP(1), \fBxdvi\fP(1)\&.
+ .PP
+Index: texlive-bin-2009~svn15596/texk/tetex/updmap
+===================================================================
+--- texlive-bin-2009~svn15596.orig/texk/tetex/updmap	2009-07-24 02:09:15.000000000 +0900
++++ texlive-bin-2009~svn15596/texk/tetex/updmap	2009-10-03 23:37:05.000000000 +0900
+@@ -350,6 +350,8 @@
+ #   sets option to value in the config file (replacing the existing setting
+ #   or by adding a new line to the config file).
+ ###############################################################################
++# for Debian, this is superseded by a function defined in debianize-updmap
++# (see below)
+ setOption()
+ {
+   opt=$1
+@@ -384,6 +386,8 @@
+ # enableMap (type, map)
+ #   enables an entry in the config file for map with a given type.
+ ###############################################################################
++# for Debian, this is superseded by a function defined in debianize-updmap
++# (see below)
+ enableMap()
+ {
+   case $1 in
+@@ -406,6 +410,8 @@
+ # disableMap (map)
+ #   disables map in config file (any type)
+ ###############################################################################
++# for Debian, this is superseded by a function defined in debianize-updmap
++# (see below)
+ disableMap()
+ {
+   #mapType=`awk '($1 == "MixedMap" || $1 == "Map") && $2 == map { print $1 }' \
+@@ -759,12 +765,8 @@
+ !!! ERROR! The map file \`$2' has not been found at all.
+ 
+     Either put this file into the right place or remove the
+-    reference from the configuration file. An automatic way
+-    to disable unavailable map files is to call
+-      $progname --syncwithtrees
+-
+-    For manual editing, call
+-      $progname --edit
++    reference from the configuration files - see
++    update-updmap(1).
+ "
+ 
+     false; return 1
+@@ -1071,6 +1073,8 @@
+ #   update the config file: uncomment all lines which refer to map files that
+ #   are unavailabe in the texmf trees
+ ###############################################################################
++# for Debian, this is superseded by a function defined in debianize-updmap
++# (see below)
+ syncWithTrees()
+ {
+   for i in `egrep '^(Mixed)?Map' "$cnfFile" | sed 's@.* @@'`; do
+@@ -1084,6 +1088,11 @@
+ }
+ 
+ ###############################################################################
++# source Debian-specific changes, superseding the last three functions
++###############################################################################
++. /usr/share/tex-common/debianize-updmap
++
++###############################################################################
+ # normalizeLines()
+ #   remove comments, whitespace is exactly one space, no empty lines,
+ #   no whitespace at end of line, one space before and after ",
+@@ -1386,7 +1395,7 @@
+ 
+     case "$cmd" in
+       edit)
+-        ${VISUAL-${EDITOR-vi}} "$cnfFile";;
++	debianEditWarnAndShow;;
+       setoption)
+         setOption "$setoptionOpt" "$setoptionVal";;
+       enable)

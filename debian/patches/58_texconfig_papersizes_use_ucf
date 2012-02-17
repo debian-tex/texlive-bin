@@ -1,0 +1,203 @@
+---
+ texk/tetex/texconfig |  106 +++++++++++++++++++++++++++++++++++++--------------
+ 1 file changed, 77 insertions(+), 29 deletions(-)
+
+Index: texlive-bin-2011.20120216/texk/tetex/texconfig
+===================================================================
+--- texlive-bin-2011.20120216.orig/texk/tetex/texconfig	2012-02-17 10:47:57.239498209 +0900
++++ texlive-bin-2011.20120216/texk/tetex/texconfig	2012-02-17 10:48:08.363439360 +0900
+@@ -353,12 +353,22 @@
+   fmgrConfigReplaceChanged=false
+ 
+   moreArgs=""
++  use_ucf=false
+   while
+     case $1 in
+-      --*) moreArgs="$moreArgs $1 $2";;
++      --ucf)
++	use_ucf=true
++	shift
++	;;
++      --*)
++	moreArgs="$moreArgs $1 $2"
++	shift; shift
++	;;
+       *) break;;
+     esac
+-  do shift; shift; done
++  do
++    :
++  done
+   fmgrConfigReplaceFile=$1
+   fmgrConfigReplaceRegex=$2
+   fmgrConfigReplaceValue=$3
+@@ -372,19 +382,37 @@
+   set x $co; shift
+   fmgrConfigReplaceID=$1; fmgrConfigReplaceCfgFile=$3; fmgrConfigReplaceOrigFile=$4
+   configReplace "$fmgrConfigReplaceCfgFile" "$fmgrConfigReplaceRegex" "$fmgrConfigReplaceValue"
+-  ci=`tcfmgr --tmp $tmpdir --cmd ci --id "$fmgrConfigReplaceID"`
+-  if test $? != 0; then
+-    echo "$progname: fmgrConfigReplace ci failed for \`$fmgrConfigReplaceFile'" >&2
+-    (exit 1); return 1
+-  fi
+-  case $ci in
+-    "") :;;
+-    $lastUpdatedFile)
+-      fmgrConfigReplaceChanged=true;;
+-    *) echo "$progname: updated configuration saved as file \`$ci'" >&2
+-       fmgrConfigReplaceChanged=true
+-       lastUpdatedFile=$ci;;
+-  esac
++
++  if [ $use_ucf = true ]; then
++    # use ucf in Debian.  Since we just copied the file and made only
++    # one change, there shouldn't be any need for prompting.  But since
++    # texconfig might be called by a maintainer script with debconf
++    # running, pass the option, if only to prevent it from nagging.
++    if ! $(diff $fmgrConfigReplaceCfgFile $fmgrConfigReplaceOrigFile >/dev/null); then
++      fmgrConfigReplaceChanged=true
++    fi
++    ucf --debconf-ok $fmgrConfigReplaceCfgFile $fmgrConfigReplaceOrigFile
++    # here is a bug: We should somehow check whether the file had been
++    # changed, in order to be able to recreate formats etc.
++    if test $? != 0; then
++      echo "$progname: fmgrConfigReplace failed to call ucf for \`$fmgrConfigReplaceOrigFile'" >&2
++      (exit 1); return 1
++    fi
++  else
++    ci=`tcfmgr --tmp $tmpdir --cmd ci --id "$fmgrConfigReplaceID"`
++    if test $? != 0; then
++      echo "$progname: fmgrConfigReplace ci failed for \`$fmgrConfigReplaceFile'" >&2
++      (exit 1); return 1
++    fi
++      case $ci in
++        "") :;;
++        $lastUpdatedFile)
++          fmgrConfigReplaceChanged=true;;
++        *) echo "$progname: updated configuration saved as file \`$ci'" >&2
++           fmgrConfigReplaceChanged=true
++           lastUpdatedFile=$ci;;
++      esac
++      fi
+   (exit 0); return 0
+ }
+ 
+@@ -418,11 +446,20 @@
+ 	q
+ eof
+ 
+-  ci=`tcfmgr --tmp $tmpdir --cmd ci --id "$setupDvipsPaperID"`
++  # use ucf in Debian.  Since we just copied the file and made only
++  # one change, there shouldn't be any need for prompting.  But since
++  # texconfig might be called by a maintainer script with debconf
++  # running, pass the option, if only to prevent it from nagging.
++  ucf --debconf-ok $setupDvipsPaperCfgFile $setupDvipsPaperOrigFile
+   if test $? != 0; then
+-    echo "$progname: setupDvipsPaper ci failed for \`$setupDvipsPaperFile'" >&2
++    echo "$progname: fmgrConfigReplace failed to call ucf for \`$fmgrConfigReplaceOrigFile'" >&2
+     (exit 1); return 1
+   fi
++  # ci=`tcfmgr --tmp $tmpdir --cmd ci --id "$fmgrConfigReplaceID"`
++  # if test $? != 0; then
++  #   echo "$progname: fmgrConfigReplace ci failed for \`$fmgrConfigReplaceFile'" >&2
++  #   (exit 1); return 1
++  # fi
+   case $ci in
+     "") :;;
+     $lastUpdatedFile)
+@@ -599,9 +636,8 @@
+ 	  papername=$(echo $papername | \
+ 	    sed 's/11x17//;s/statement//;s/a4size//;s/letterSize//;s/flse//;s/[[:space:]]//g' \
+ 	    )
+-	  echo $papername
+ 	fi
+-	:
++	echo $papername
+       fi
+       ;;
+   esac
+@@ -658,7 +694,9 @@
+ {
+   pdfPaperHelp="Usage: $progname pdftex paper PAPER"
+ 
++  skipFormats=false
+   pdfPaperName="$1"
++  if [ -n "$2" ] && [ "$2" = "no-recreate-formats" ]; then skipFormats=true; fi
+ 
+   if [ -z $pdfPaperName ]; then
+     echo "$help" >&2
+@@ -674,12 +712,18 @@
+   pdfPaperWidth=$( echo $PaperWidth  | sed 's/mm/ true mm/;s/in/ true in/')
+ 
+   setupTmpDir
+-  fmgrConfigReplace pdftexconfig.tex pdfpagewidth '\pdfpagewidth='"$pdfPaperWidth"
++  fmgrConfigReplace --ucf pdftexconfig.tex pdfpagewidth '\pdfpagewidth='"$pdfPaperWidth"
+   wChanged=$fmgrConfigReplaceChanged
+-  fmgrConfigReplace pdftexconfig.tex pdfpageheight '\pdfpageheight='"$pdfPaperHeight"
++  if $wChanged; then
++    # don't tell again about replacing pdftexconfig
++    fmgrConfigReplace --ucf pdftexconfig.tex pdfpageheight '\pdfpageheight='"$pdfPaperHeight" 2>/dev/null
++  else
++    fmgrConfigReplace --ucf pdftexconfig.tex pdfpageheight '\pdfpageheight='"$pdfPaperHeight"
++  fi
++  if $skipFormats; then return 0; fi
+   if $wChanged || $fmgrConfigReplaceChanged; then
+     echo "pdftex paper size has changed, refreshing formats"
+-    fmtutil --refresh
++    fmtutil --byengine pdftex 2>&1 | grep "^fmtutil"
+   fi
+ }
+ 
+@@ -708,7 +752,7 @@
+ #   get paper for dvipdfmx
+ ###############################################################################
+ dvipdfmxPaperConf(){
+-  fmgrConfigShow dvipdfmx.cfg '/^p/ {s/^p //;p}'
++  fmgrConfigShow dvipdfmx.cfg '/^p/ {s/^p[[:space:]]*//;p}'
+ }
+ 
+ ###############################################################################
+@@ -828,7 +872,7 @@
+         paper)
+           case $3 in
+             letter|legal|ledger|tabloid|a4|a3)
+-              fmgrConfigReplace config '^p' "p $3";;
++              fmgrConfigReplace --ucf config '^p' "p $3";;
+             "") echo "$help" >&2; rc=1;;
+             *)
+              echo "$progname: unknown PAPER \`$3' given as argument for \`$progname dvipdfm paper'" >&2
+@@ -864,7 +908,7 @@
+         paper)
+           case $3 in
+             letter|legal|ledger|tabloid|a4|a3)
+-              fmgrConfigReplace dvipdfmx.cfg '^p' "p $3";;
++              fmgrConfigReplace --ucf dvipdfmx.cfg '^p' "p $3";;
+             "") echo "$help" >&2; rc=1;;
+             *)
+              echo "$progname: unknown PAPER \`$3' given as argument for \`$progname dvipdfmx paper'" >&2
+@@ -1415,9 +1459,13 @@
+       if checkForBinary dvips >/dev/null && tcfmgr --cmd find --file config.ps >/dev/null 2>&1; then
+         tcBatch dvips paper $p
+       fi
+-      if checkForBinary dvipdfm >/dev/null && tcfmgr --cmd find --file config >/dev/null 2>&1; then
+-        tcBatch dvipdfm paper $p
+-      fi
++      # dvipdfm is now only a symlink to dvipdfmx. Changing the old
++      # config file doesn't make sense.  moreover, it is not under ucf
++      # control in Debian, so running the command from the libpaper
++      # hook would give false ucf questions
++      # if checkForBinary dvipdfm >/dev/null && tcfmgr --cmd find --file config >/dev/null 2>&1; then
++      #   tcBatch dvipdfm paper $p
++      # fi
+       if checkForBinary dvipdfmx >/dev/null && tcfmgr --cmd find --file dvipdfmx.cfg >/dev/null 2>&1; then
+         tcBatch dvipdfmx paper $p
+       fi
+@@ -1588,7 +1636,7 @@
+           case $3 in
+ 	    # 20100125: added paper sizes found in xdvi.c, version.h says 22.84.16 in TeXLive 2010
+             a0|a1|a1r|a2|a2r|a3|a3r|a4|a4r|a5|a5r|a6|a6r|a7|a7r|a8|a8r|a9|a9r|a10|a10r|b0|b0r|b1|b1r|b2|b2r|b3|b3r|b4|b4r|b5|b5r|b6|b6r|b7|b7r|b8|b8r|b9|b9r|b10|b10r|c0|c0r|c1|c1r|c2|c2r|c3|c3r|c4|c4r|c5|c5r|c6|c6r|c7|c7r|c8|c8r|c9|c9r|c10|c10r|foolscap|foolscapr|legal|legalr|us|usr|letter|ledger|tabloid)
+-              fmgrConfigReplace XDvi paper: "*paper: $3"
++              fmgrConfigReplace --ucf XDvi paper: "*paper: $3"
+               ;;
+             "") echo "$help" >&2; rc=1;;
+             *)

@@ -1,0 +1,19 @@
+12c_fix_pdfcrop_invocation.dpatch  <preining@logic.at>
+Fix invocation of pdfcrop to get rid of magic
+---
+ texk/texlive/linked_scripts/pdfcrop/pdfcrop.pl |    4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+Index: texlive-bin-2009~svn13478/texk/texlive/linked_scripts/pdfcrop/pdfcrop.pl
+===================================================================
+--- texlive-bin-2009~svn13478.orig/texk/texlive/linked_scripts/pdfcrop/pdfcrop.pl	2009-05-26 11:00:08.000000000 +0200
++++ texlive-bin-2009~svn13478/texk/texlive/linked_scripts/pdfcrop/pdfcrop.pl	2009-05-27 22:17:17.000000000 +0200
+@@ -1,7 +1,5 @@
+-eval '(exit $?0)' && eval 'exec perl -S $0 ${1+"$@"}' && eval 'exec perl -S $0 $argv:q'
+-  if 0;
++#!/usr/bin/perl -w
+ use strict;
+-$^W=1; # turn warning on
+ #
+ # pdfcrop.pl
+ #

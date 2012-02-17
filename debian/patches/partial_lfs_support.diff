@@ -1,0 +1,12 @@
+diff -urN texlive-bin-2009.orig/Build texlive-bin-2009/Build
+--- texlive-bin-2009.orig/Build	2009-09-17 15:40:44.000000000 +0200
++++ texlive-bin-2009/Build	2011-03-28 19:40:09.000000000 +0200
+@@ -66,7 +66,7 @@
+ 
+ # longinteger and off_t declarations are still inconsistent, do not
+ # enable this unless you are testing.
+-: ${TL_CONF_LARGEFILE=--disable-largefile}
++# : ${TL_CONF_LARGEFILE=--disable-largefile}
+ 
+ # default to static linking.
+ : ${TL_CONF_SHARED=--disable-shared}

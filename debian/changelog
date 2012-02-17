@@ -1,15 +1,28 @@
-texlive-bin (2011.20120202-0.1) unreleased; urgency=low
+texlive-bin (2011.20120216-0.1) unreleased; urgency=low
 
   * first trial
 
  -- Norbert Preining <preining@debian.org>  Thu, 02 Feb 2012 21:51:14 +0900
 
-texlive-bin (2009-12~1) unreleased; urgency=low
+texlive-bin (2009-12) unstable; urgency=low
 
+  [ Frank Küster ]
   * Make the error message more user-friendly when texconfig encounters
     strange paper size definitions in config.ps (closes: #636328)
 
- -- Frank Küster <frank@debian.org>  Sat, 05 Nov 2011 22:03:03 +0100
+  [ Hilmar Preuße ]
+  * Do not declare an versioned B-D for g++ on armel (Closes: #654746)
+  * Install manual page for vlna in /usr/share/man/cs/man1
+    (Closes: #597218)
+
+  [ Norbert Preining ]
+  * include fix for xetex breakage to backward incompatible zlib change
+    change build dependency to depend on zlib1g-dev with version, and
+    remove the alternative zlib-dev build dep
+    (Closes: #659680)
+  * bump standards version to 3.9.2, no changes necessary
+
+ -- Norbert Preining <preining@debian.org>  Tue, 14 Feb 2012 08:24:30 +0900
 
 texlive-bin (2009-11) unstable; urgency=low
 

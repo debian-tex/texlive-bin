@@ -1,0 +1,21 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 12_fix_epstopdf_invocation.dpatch  <preining@logic.at>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: Fix invocation of epstopdf to get rid of magic
+
+@DPATCH@
+ texk/texlive/linked_scripts/epstopdf/epstopdf.pl |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+Index: texlive-bin-2011.20120216/texk/texlive/linked_scripts/epstopdf/epstopdf.pl
+===================================================================
+--- texlive-bin-2011.20120216.orig/texk/texlive/linked_scripts/epstopdf/epstopdf.pl	2011-03-01 18:20:55.000000000 +0900
++++ texlive-bin-2011.20120216/texk/texlive/linked_scripts/epstopdf/epstopdf.pl	2012-02-17 10:35:21.030873107 +0900
+@@ -1,5 +1,4 @@
+-eval '(exit $?0)' && eval 'exec perl -S $0 ${1+"$@"}' && eval 'exec perl -S $0 $argv:q'
+-  if 0;
++#!/usr/bin/perl
+ use strict;
+ 
+ # $Id: epstopdf.pl 18319 2010-05-17 16:34:21Z karl $

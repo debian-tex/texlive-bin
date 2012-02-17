@@ -1,0 +1,15 @@
+---
+ texk/texlive/linked_scripts/vpe/vpe.pl |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+Index: texlive-bin-2009~svn13478/texk/texlive/linked_scripts/vpe/vpe.pl
+===================================================================
+--- texlive-bin-2009~svn13478.orig/texk/texlive/linked_scripts/vpe/vpe.pl	2009-05-26 11:00:06.000000000 +0200
++++ texlive-bin-2009~svn13478/texk/texlive/linked_scripts/vpe/vpe.pl	2009-05-27 22:18:41.000000000 +0200
+@@ -1,5 +1,4 @@
+-eval '(exit $?0)' && eval 'exec perl -S $0 ${1+"$@"}' && eval 'exec perl -S $0 $argv:q'
+-  if 0;
++#!/usr/bin/perl -w
+ use strict;
+ #
+ # vpe.pl

@@ -1,0 +1,17 @@
+---
+ texk/xdvik/Makefile.in |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+Index: texlive-bin-2011.20120216/texk/xdvik/Makefile.in
+===================================================================
+--- texlive-bin-2011.20120216.orig/texk/xdvik/Makefile.in	2012-02-03 00:59:11.000000000 +0900
++++ texlive-bin-2011.20120216/texk/xdvik/Makefile.in	2012-02-17 10:50:18.606731857 +0900
+@@ -387,7 +387,7 @@
+ x_ldflags = $(X_LIBS) $(x_linker_options) $(iconv_libpath)
+ x_extra_libs = $(X_EXTRA_LIBS) $(iconv_libs)
+ xdvi_x_libs = $(x_ldflags) $(x_tool_libs) $(x_xmu_lib) -lXt \
+-	$(X_PRE_LIBS) $(x_ext_lib) $(x_xpm_libs) -lX11 $(x_extra_libs)
++	$(x_xpm_libs) -lX11 $(x_extra_libs)
+ common_ldadd = $(KPATHSEA_LIBS) $(T1LIB_LIBS) $(xdvi_x_libs)
+ common_dependencies = $(KPATHSEA_DEPEND) $(T1LIB_DEPEND)
+ libxdvi_dependencies = ${top_srcdir}/*.[ch] ${top_srcdir}/gui/*.[ch] ${top_builddir}/psheader.c

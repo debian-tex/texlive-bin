@@ -1,0 +1,33 @@
+See comments in the diff for explanations
+---
+ texk/web2c/lib/openclose.c |   15 +++++++++++----
+ 1 file changed, 11 insertions(+), 4 deletions(-)
+
+Index: texlive-bin-2009/texk/web2c/lib/openclose.c
+===================================================================
+--- texlive-bin-2009.orig/texk/web2c/lib/openclose.c	2010-03-30 22:15:52.000000000 +0900
++++ texlive-bin-2009/texk/web2c/lib/openclose.c	2010-03-30 22:17:20.000000000 +0900
+@@ -37,12 +37,19 @@
+ static void
+ recorder_start(void)
+ {
+-    /* Alas, while we might want to use mkstemp it is not portable.
+-       So we have to be content with using a default name... */
++    /* Alas, while we'd like to use mkstemp it is not portable,
++       and doing the autoconfiscation (and providing fallbacks) is more
++       than we want to cope with.  So we have to be content with using a
++       default name.  Throw in the pid so at least parallel builds might
++       work (Debian bug 575731).  */
+     string cwd;
+-    
+-    recorder_name = (string)xmalloc(strlen(kpse_program_name)+5);
++    pid_t pid = getpid();
++    char pid_str[MAX_INT_LENGTH];
++    sprintf (pid_str, "%ld", (long) pid);
++
++    recorder_name = (string)xmalloc(strlen(kpse_program_name) + strlen(pid_str)  + 5);
+     strcpy(recorder_name, kpse_program_name);
++    strcat(recorder_name, pid_str);
+     strcat(recorder_name, ".fls");
+     
+     /* If an output directory was specified, use it instead of cwd.  */

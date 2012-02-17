@@ -1,0 +1,179 @@
+55_texconfig_stuff 
+- expand texconfig man page, some random texconfig fixes
+- remove code that texconfig formats is not longer supported and refer to tlmgr
+  we rely on fmtutil being debianized and let texconfig work as before.
+--
+ texk/tetex/texconfig     |   52 ++++++++++++-----------------------------------
+ texk/tetex/texconfig.man |   28 ++++++++++++++++++++++++-
+ 2 files changed, 41 insertions(+), 39 deletions(-)
+
+Index: texlive-bin-2011.20120216/texk/tetex/texconfig
+===================================================================
+--- texlive-bin-2011.20120216.orig/texk/tetex/texconfig	2011-01-07 20:45:38.000000000 +0900
++++ texlive-bin-2011.20120216/texk/tetex/texconfig	2012-02-17 10:45:03.752383135 +0900
+@@ -567,7 +567,7 @@
+        $progname help                  (or --help; show this help)
+        $progname hyphen FORMAT         (edit hyphenation config for FORMAT)
+        $progname init [FORMAT]...      (rebuild FORMATs, or all formats
+-                                        plus run texlinks and updmap)
++                                        plus run updmap)
+        $progname mode MODE             (set Metafont MODE)
+        $progname paper PAPER           (set default paper size to PAPER)
+        $progname pdftex [OPTION]...    (pdftex options)
+@@ -890,8 +890,8 @@
+ 
+     faq)
+       setupTexmfmain
+-      if test -f $MT_TEXMFMAIN/doc/tetex/teTeX-FAQ; then
+-        <$MT_TEXMFMAIN/doc/tetex/teTeX-FAQ eval ${PAGER-more}
++      if test -f $MT_TEXMFDIST/doc/tetex/teTeX-FAQ.gz; then
++        <$MT_TEXMFDIST/doc/tetex/teTeX-FAQ.gz eval zcat | ${PAGER-sensible-pager}
+       else
+         echo "$progname: faq not found (usually in \$TEXMFMAIN/doc/tetex/teTeX-FAQ)" >&2
+         rc=1
+@@ -931,16 +931,19 @@
+               ;;
+             *)
+               tcBatchFontVardir=$3
+-              tfc=`kpsewhich texmf.cnf`
++	      tfcs=$(grep -l '^[[:space:]]*VARTEXFONTS[[:space:]]*=' /etc/texmf/texmf.d/*.cnf)
++	      # last match wins
++	      for file in $tfcs; do tfc=$file; done
+               if test -n "$tfc"; then
+                 if test -w "$tfc"; then
+                   configReplace "$tfc" '^VARTEXFONTS' "VARTEXFONTS  = $tcBatchFontVardir"
++		  update-texmf
+                 else
+                   echo "$progname: setting up vardir failed. Reason: no permission to write file \`$tfc'" >&2
+                   rc=1
+                 fi
+               else
+-                echo "$progname: setting up vardir failed. Reason: failed to find file texmf.cnf" >&2
++                echo "$progname: setting up vardir failed. Reason: failed to find file \`$tfc'" >&2
+                 rc=1
+               fi
+               ;;
+@@ -1007,21 +1010,6 @@
+       ;;
+ 
+     formats)
+-      cat >&2 <<EOM
+-texconfig formats is no longer supported, because manual edits of
+-fmtutil.cnf will be overwritten by the new TeX Live package manager,
+-tlmgr, which regenerates that file as needed upon package changes.
+-Thus, to add or remove formats, the recommended method is to use tlmgr
+-to add or remove the appropriate package.
+-
+-If you need to make manual additions, you can edit the file
+-fmtutil-local.cnf under TEXMFLOCAL.  Further information with
+-tlmgr --help and at http://tug.org/texlive/tlmgr.html.
+-
+-Exiting.
+-EOM
+-      exit 1  # but leave the real code for posterity
+-
+       setupTmpDir
+       echo "$progname: analyzing old configuration..." >&2
+       fmtutil --catcfg > $tmpdir/pre
+@@ -1037,7 +1025,6 @@
+         for i in `awk '{print $1}' $tmpdir/addOrChange`; do
+           fmtutil --byfmt "$i" || rc=1
+         done
+-        texlinks --multiplatform || rc=1
+       fi
+       ;;
+ 
+@@ -1047,22 +1034,6 @@
+ 
+     # "hyphen FORMAT"
+     hyphen)
+-      cat >&2 <<EOM
+-texconfig hyphen is no longer supported, because manual edits of
+-language.dat (or language.def) will be overwritten by the new TeX Live
+-package manager, tlmgr, which regenerates those configuration files as
+-needed upon package changes.  Thus, to add or remove hyphenation
+-patterns, the recommended method is to use tlmgr to add or remove the
+-appropriate package.
+-
+-If you need to make manual additions, you can edit the files
+-language-local.dat and language-local.def under TEXMFLOCAL.  Further
+-information with tlmgr --help and at http://tug.org/texlive/tlmgr.html.
+-
+-Exiting.
+-EOM
+-      exit 1  # but leave the real code for posterity
+-
+       tcBatchHyphenFormat=$2
+       formatsForHyphen=`getFormatsForHyphen`
+       formatsForHyphenFmt=`echo "$formatsForHyphen" | myFmt | sed 's@^@  @'`
+@@ -1084,6 +1055,11 @@
+                 rc=1
+                 return
+                 ;;
++	      /var/lib/texmf/*)
++		echo "$progname: The hyphenation file for $tcBatchHyphenFormat is a generated file in Debian"
++		echo "You cannot use this texconfig command, use \`update-language(1)' instead."
++		echo "Please read its manual page or /usr/share/tex-common/TeX-on-Debian*"
++		;;
+             esac
+ 
+             getRelDir "$tcBatchHyphenFile"
+@@ -1111,7 +1087,7 @@
+                 fi
+                 ;;
+             esac
+-            ${VISUAL-${EDITOR-vi}} "$tcBatchHFEdit"
++            ${VISUAL:-${EDITOR:-sensible-editor}} "$tcBatchHFEdit"
+             if cmp "$tcBatchHFEdit" "$tcBatchHFOrig" >/dev/null 2>&1; then
+               echo "$progname: configuration unchanged." >&2
+             else
+Index: texlive-bin-2011.20120216/texk/tetex/texconfig.man
+===================================================================
+--- texlive-bin-2011.20120216.orig/texk/tetex/texconfig.man	2011-09-29 21:14:07.000000000 +0900
++++ texlive-bin-2011.20120216/texk/tetex/texconfig.man	2012-02-17 10:46:05.492075357 +0900
+@@ -46,6 +46,20 @@
+ .IR TEXMFSYSCONFIG .
+ (You may need to be root to do this.)
+ .PP
++Note that on a Debian system, changes to formats, font setup,
++hyphenation for different languages, etc. should not be done with
++texconfig, because
++.B fmtutil.cnf(5), updmap.cfg(5), texmf.cnf
++and
++.B language.dat
++are generated files in Debian.  See
++.I TeX-on-Debian.pdf, TeX-on-Debian.txt.gz
++or
++.I TeX-on-Debian.html/index.html
++in
++.I /usr/share/doc/tex-common/
++for alternatives.
++.PP
+ .I texconfig
+ also offers a non-interactive batch mode which can be accessed with
+ the following commands
+@@ -128,11 +142,23 @@
+ (and their answers).
+ .TP
+ .B font vardir DIR, font ro, font rw
++These options should not be used on a Debian system unless you really
++know what you are doing.  For details, look at the output of
++.B texconfig fonts
++and read section 2.5, font caching, in the TeX-on-Debian documentation
++in
++.I /usr/share/doc/tex-common/.
+ .TP
+ .B formats
+ This command allows to edit
+ .B fmtutil.cnf(5)
+-and (re)creates any new or changed formats afterwards.  
++and (re)creates any new or changed formats afterwards.  It should not
++be used on Debian systems, unless you want to temporarily create and
++test a specific format, because
++.B fmtutil.cnf(5)
++is a generated file in Debian, and changes will be overwritten.  See
++.B update-fmtutil
++for details.
+ .TP
+ .B hyphen FORMAT
+ This command allows to edit the hyphenation configuration file for

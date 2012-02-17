@@ -1,0 +1,56 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 53_builtin-searchpath-fix.dpatch
+##
+## DP: adjust built-in search paths for kpathsea library to Debian standard
+
+@DPATCH@
+ texk/kpathsea/texmf.cnf |   14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
+
+Index: texlive-bin-2011.20120216/texk/kpathsea/texmf.cnf
+===================================================================
+--- texlive-bin-2011.20120216.orig/texk/kpathsea/texmf.cnf	2011-12-22 08:58:58.000000000 +0900
++++ texlive-bin-2011.20120216/texk/kpathsea/texmf.cnf	2012-02-17 10:44:42.948485022 +0900
+@@ -53,19 +53,19 @@
+ 
+ % The tree containing runtime files related to the specific
+ % distribution and version.
+-TEXMFMAIN = $TEXMFROOT/texmf
++TEXMFMAIN = /usr/share/texmf
+ 
+ % The main tree of packages, distribution-agnostic:
+-TEXMFDIST = $TEXMFROOT/texmf-dist
++TEXMFDIST = /usr/share/texmf-dist
+ 
+ % Local additions to the distribution trees.
+-TEXMFLOCAL = $TEXMFROOT/../texmf-local
++TEXMFLOCAL = /usr/local/share/texmf
+ 
+ % TEXMFSYSVAR, where *-sys store cached runtime data.
+-TEXMFSYSVAR = $TEXMFROOT/texmf-var
++TEXMFSYSVAR = /var/lib/texmf
+ 
+ % TEXMFSYSCONFIG, where *-sys store configuration data.
+-TEXMFSYSCONFIG = $TEXMFROOT/texmf-config
++TEXMFSYSCONFIG = /etc/texmf
+ 
+ % Per-user texmf tree(s) -- organized per the TDS, as usual.  To define
+ % more than one per-user tree, set this to a list of directories in
+@@ -111,7 +111,7 @@
+ % Where generated fonts may be written.  This tree is used when the sources
+ % were found in a system tree and either that tree wasn't writable, or the
+ % varfonts feature was enabled in MT_FEATURES in mktex.cnf.
+-VARTEXFONTS = $TEXMFVAR/fonts
++VARTEXFONTS = /var/cache/fonts
+ 
+ % On some systems, there will be a system tree which contains all the font
+ % files that may be created as well as the formats.  For example
+@@ -463,7 +463,7 @@
+ % 
+ % For security reasons, it is better not to include . in this path.
+ %
+-TEXMFCNF = {$SELFAUTOLOC,$SELFAUTODIR,$SELFAUTOPARENT}{,{/share,}/texmf{-local,}/web2c}
++TEXMFCNF = /usr/share/texmf/web2c;/usr/share/texmf-texlive/web2c;/usr/local/share/texmf/web2c
+ 
+ % kpathsea 3.5.3 and later sets these at runtime. To avoid empty
+ % expansions from binaries linked against an earlier version of the

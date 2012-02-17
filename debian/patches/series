@@ -1,0 +1,42 @@
+12_fix_epstopdf_invocation
+12a_fix_thumbpdf_invocation
+12b_fix_a2ping_invocation
+#2011# not applicable # 12c_fix_pdfcrop_invocation
+12e_fix_vpe_invocation
+#2011# not applicable # 17_texdoc
+23_use_xdvi.bin
+### for backports with poppler << 0.5 (etch)
+###30_libpoppler_0.4.5
+### for libpoppler 0.5 (not used anymore)
+###30_libpoppler_0.5.4
+### for double new libpoppler >= 0.5.9 (lenny)
+###30_libpoppler_0.5.9
+# for unstable
+# 30_libpoppler_0.10
+41_maketexmf
+50_fmtutil_deb
+51_fmtutil_keep_failedlog
+# not ready, we do not ship feynmf by now
+# 52_feynmf-perl-sec-fix
+53_builtin-searchpath-fix
+55_texconfig_stuff
+#2011# TODO TODO TODO TODO TODO !!!!!! # 56_updmap_deb
+#2011# we also need to set -e or check return values in updmap!!!
+57_texconfig_papersizes_for_upstream
+58_texconfig_papersizes_use_ucf
+set-e-in-various-scripts
+60_unneeded_linking
+#2011# disabled - do we need to fix that???# libpoppler-0.12
+#2011# disabled not applicable, still necessary? # icu-xetex_hurd.diff
+#2011# upstream included # fix-mpost-segfault
+#2011# not applicable # detex-hurd.diff
+#2011# upstream # fmtutil-fix-infinite-loop_upstream
+#2011# upstream # upstream-web2c-tmpfilewithpid
+#2011# upstream # cve-2010-1440
+#cve-2010-0739.patch
+#2011# upstream # cve-2010-0827.patch
+#2011# upstream # upstream-tex-file_arg-passing-fix
+xdvik-22.84.16-open-mode.patch
+#partial_lfs_support.diff
+#2011# upstream # 73_tex_segfault
+#2011# not necessary anymore, different fix upstream # unstymie-xetex-with-zlib-1.2.6.patch

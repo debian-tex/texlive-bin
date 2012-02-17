@@ -1,0 +1,103 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 50_fmtutil_deb.dpatch
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: debianize fmtutil, updmap etc, taken from tetex
+
+@DPATCH@
+ texk/tetex/fmtutil     |   28 +++++++++-------------------
+ texk/tetex/fmtutil.man |    7 +++++--
+ 2 files changed, 14 insertions(+), 21 deletions(-)
+
+Index: texlive-bin-2011.20120216/texk/tetex/fmtutil.man
+===================================================================
+--- texlive-bin-2011.20120216.orig/texk/tetex/fmtutil.man	2011-06-28 06:32:19.000000000 +0900
++++ texlive-bin-2011.20120216/texk/tetex/fmtutil.man	2012-02-17 10:41:07.061487176 +0900
+@@ -45,7 +45,7 @@
+ no-op in TeX Live
+ .TP
+ .BI --enablefmt \ formatname
+-ensable
++enable
+ .I formatname
+ in config file
+ .TP
+@@ -100,8 +100,11 @@
+ .TP
+ .I fmtutil\&.cnf
+ default configuration file
++.IP "\fI/etc/texmf/fmt.d/\fP"
++Debian-specific directory for configuration file snippets
+ .SH "SEE ALSO"
+-.BR kpsewhich (1)
++.BR kpsewhich (1),
++\fBupdate-fmtutil\fP(1)
+ .SH "BUGS"
+ None known, but report any bugs found to <tex-k@tug.org> (mailing list).
+ .SH "AUTHOR"
+Index: texlive-bin-2011.20120216/texk/tetex/fmtutil
+===================================================================
+--- texlive-bin-2011.20120216.orig/texk/tetex/fmtutil	2011-06-28 06:32:19.000000000 +0900
++++ texlive-bin-2011.20120216/texk/tetex/fmtutil	2012-02-17 10:42:46.161039803 +0900
+@@ -541,9 +541,11 @@
+       grep -v '^ *#' "$cnf_file" | sed 's@^ *@@; s@ *$@@' | grep . | sort
+       cleanup $? ;;
+     edit)
+-      echo "$0: fmtutil --edit is disabled in TeX Live;" >&2
+-      echo "$0: use a file fmtutil-local.cnf instead." >&2
+-      echo "$0: See tlmgr --help or http://tug.org/texlive/doc/tlmgr.html." >&2
++      # defined by debianize-fmtutil
++      debianEditWarnAndShow
++      #echo "$0: fmtutil --edit is disabled in TeX Live;" >&2
++      #echo "$0: use a file fmtutil-local.cnf instead." >&2
++      #echo "$0: See tlmgr --help or http://tug.org/texlive/doc/tlmgr.html." >&2
+       cleanup 0 ;;
+     enablefmt|disablefmt)
+       $cmd $arg ;;  # does not return
+@@ -555,22 +557,6 @@
+       cleanup $? ;;
+   esac
+ 
+-  if test -n "$cfgmaint"; then
+-    if test -z "$cfgparam"; then
+-      ci=`tcfmgr --tmp $tmpdir --cmd ci --id $id`
+-      if test $? = 0; then
+-        if test -n "$ci"; then
+-          verboseMsg "$progname: configuration file updated: \`$ci'"
+-        else
+-          verboseMsg "$progname: configuration file unchanged."
+-        fi
+-      else
+-        abort "failed to update configuration file."
+-      fi
+-    fi
+-    cleanup $?
+-  fi
+-
+   # set up destdir:
+   if test -z "$destdir"; then
+     : ${MT_TEXMFVAR=`kpsewhich -var-value=TEXMFVAR`}
+@@ -984,6 +970,7 @@
+ ###############################################################################
+ # disablefmt(format)
+ #   disables format in configuration file
++#    [ redefined by debianize-fmtutil ]
+ ###############################################################################
+ disablefmt()
+ {
+@@ -1000,6 +987,7 @@
+ ###############################################################################
+ #  enablefmt(format)
+ #    enables format in configuration file
++#    [ redefined by debianize-fmtutil ]
+ ###############################################################################
+ enablefmt()
+ {
+@@ -1012,5 +1000,7 @@
+   (exit 0); return 0
+ }
+ 
++. /usr/share/texlive-bin/debianize-fmtutil
++
+ main ${1+"$@"}
+ cleanup 0

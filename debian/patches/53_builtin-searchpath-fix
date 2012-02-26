@@ -16,11 +16,11 @@ Index: texlive-bin-2011.20120216/texk/kpathsea/texmf.cnf
  % The tree containing runtime files related to the specific
  % distribution and version.
 -TEXMFMAIN = $TEXMFROOT/texmf
-+TEXMFMAIN = /usr/share/texmf
++TEXMFMAIN = /usr/share/texlive/texmf
  
  % The main tree of packages, distribution-agnostic:
 -TEXMFDIST = $TEXMFROOT/texmf-dist
-+TEXMFDIST = /usr/share/texmf-dist
++TEXMFDIST = /usr/share/texlive/texmf-dist
  
  % Local additions to the distribution trees.
 -TEXMFLOCAL = $TEXMFROOT/../texmf-local
@@ -50,7 +50,7 @@ Index: texlive-bin-2011.20120216/texk/kpathsea/texmf.cnf
  % For security reasons, it is better not to include . in this path.
  %
 -TEXMFCNF = {$SELFAUTOLOC,$SELFAUTODIR,$SELFAUTOPARENT}{,{/share,}/texmf{-local,}/web2c}
-+TEXMFCNF = /usr/share/texmf/web2c;/usr/share/texmf-texlive/web2c;/usr/local/share/texmf/web2c
++TEXMFCNF = /etc/texmf/web2c;/usr/share/texlive/texmf/web2c;/usr/share/texlive/texmf-dist/web2c;/usr/local/share/texmf/web2c
  
  % kpathsea 3.5.3 and later sets these at runtime. To avoid empty
  % expansions from binaries linked against an earlier version of the

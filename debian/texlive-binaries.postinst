@@ -43,12 +43,11 @@ dhit_build_format ()
 
 case "$1" in
   configure|reconfigure)
-    update-texmf
     update-fmtutil
     if dhit_libkpathsea_configured; then
       # we are shipping mktexlsr, so it must be there!
-      mktexlsr /usr/share/texmf /usr/share/texmf-texlive /var/lib/texmf
-      if [ -r /usr/share/texmf/texconfig/tcfmgr ] ; then
+      mktexlsr /usr/share/texmf /usr/share/texlive/texmf /usr/share/texlive/texmf-dist /var/lib/texmf
+      if [ -r /usr/share/texlive/texmf/texconfig/tcfmgr ] ; then
         dhit_build_format --refresh
       fi
     fi

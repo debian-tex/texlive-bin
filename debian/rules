@@ -53,9 +53,6 @@ override_dh_install:
 	   debian/texlive-binaries/usr/bin/bibtex.original
 	mv debian/texlive-binaries/usr/share/man/man1/bibtex.1 \
 	   debian/texlive-binaries/usr/share/man/man1/bibtex.original.1
-	# rename texmf-dist to texmf-texlive
-	mv debian/texlive-binaries/usr/share/texmf-dist \
-	   debian/texlive-binaries/usr/share/texmf-texlive
 
 override_dh_installdocs:
 	dh_installdocs

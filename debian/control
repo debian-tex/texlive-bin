@@ -9,7 +9,7 @@ Homepage: http://www.tug.org/texlive
 
 Package: texlive-binaries
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, texlive-common (>= 2011), tex-common (>= 2.00), ed, perl
+Depends: ${shlibs:Depends}, ${misc:Depends}, texlive-common (>= 2011), tex-common (>= 3), ed, perl
 Recommends: texlive-base, luatex, python, ruby, wish
 Breaks: texlive-base (<< 2010)
 Description: Binaries for TeX Live

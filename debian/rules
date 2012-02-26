@@ -8,7 +8,8 @@ export CONFIG_SHELL=/bin/sh
 	dh $@ --builddirectory Work
 
 override_dh_auto_configure:
-	dh_auto_configure -- --prefix=/usr \
+	dh_auto_configure -- --prefix=/usr 	\
+	--datarootdir=/usr/share/texlive	\
 	--disable-native-texlive-build		\
 	--disable-largefile			\
 	--disable-missing			\
@@ -44,9 +45,8 @@ override_dh_auto_install:
 override_dh_install:
 	dh_install --sourcedir=$(CURDIR)/debian/tmp
 	# use mupdmap (multi!)
-	# change the link from updmap -> ../updmap.pl
-	ln -sf ../share/texmf/scripts/texlive/mupdmap.pl \
-		debian/texlive-binaries/usr/bin/updmap
+	rm debian/texlive-binaries/usr/bin/updmap
+	cp debian/mupdmap.pl debian/texlive-binaries/usr/bin/updmap
 	# for alternatives treatment we rename usr/bin/bibtex to
 	# usr/bin/bibtex.original
 	mv debian/texlive-binaries/usr/bin/bibtex \

@@ -33,7 +33,7 @@ BEGIN {
     exit 1;
   }
   chomp($TEXMFROOT);
-  unshift (@INC, "$TEXMFROOT/tlpkg");
+  unshift (@INC, "/usr/share/texlive/tlpkg");
 }
 
 

@@ -48,11 +48,14 @@ override_dh_install:
 	rm debian/texlive-binaries/usr/bin/updmap
 	cp debian/mupdmap.pl debian/texlive-binaries/usr/bin/updmap
 	# copy updmap-sys over
+	rm debian/texlive-binaries/usr/bin/updmap-sys
 	cp debian/texlive-binaries/usr/share/texlive/texmf/scripts/tetex/updmap-sys.sh debian/texlive-binaries/usr/bin/updmap-sys
 	# remove texlive directories, they should not be shipped here
 	rm -rf debian/texlive-binaries/usr/share/texlive
-	rm -rf debian/texlive-binaries/usr/share/info
-	rm -rf debian/texlive-binaries/usr/share/man
+	#rm -rf debian/texlive-binaries/usr/share/info
+	# remove wrongly added info/dir.gz
+	rm -f debian/texlive-binaries/usr/share/info/dir.gz
+	#rm -rf debian/texlive-binaries/usr/share/man
 	# for alternatives treatment we rename usr/bin/bibtex to
 	# usr/bin/bibtex.original
 	mv debian/texlive-binaries/usr/bin/bibtex \

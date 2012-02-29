@@ -1,0 +1,12 @@
+
+verstr=texlive-bin-2011.`date+%Y%m%d`
+if [ -r $verstr ] ; then
+  echo "already existing: $verstr, exit!"
+  exit 1
+fi
+cp -a /src/TeX/texlive-svn/Build/source $verstr
+rm -rf $verstr/inst
+rm -rf $verstr/Work
+rm -rf $verstr/utils/biber/bin
+find $verstr -name autom4te.cache -exec rm -rf '{}' \;
+

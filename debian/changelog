@@ -1,3 +1,9 @@
+texlive-bin (2011.20120226-1~2) unreleased; urgency=low
+
+  * don't install linked scripts, but save updmap-sys
+
+   -- Norbert Preining <preining@debian.org>  Wed, 29 Feb 2012 09:55:56 +0900
+
 texlive-bin (2011.20120226-1~1) unreleased; urgency=low
 
   * first trial

@@ -47,6 +47,8 @@ override_dh_install:
 	# use mupdmap (multi!)
 	rm debian/texlive-binaries/usr/bin/updmap
 	cp debian/mupdmap.pl debian/texlive-binaries/usr/bin/updmap
+	# copy updmap-sys over
+	cp debian/texlive-binaries/usr/share/texlive/texmf/scripts/tetex/updmap-sys.sh debian/texlive-binaries/usr/bin/updmap-sys
 	# remove texlive directories, they should not be shipped here
 	rm -rf debian/texlive-binaries/usr/share/texlive
 	rm -rf debian/texlive-binaries/usr/share/info

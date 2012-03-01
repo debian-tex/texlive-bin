@@ -5,7 +5,7 @@ export SHELL=/bin/bash
 export CONFIG_SHELL=/bin/sh
 
 %:
-	dh $@ --builddirectory Work
+	dh $@ --with autoreconf --builddirectory Work
 
 override_dh_auto_configure:
 	dh_auto_configure -- --prefix=/usr 	\

@@ -41,3 +41,4 @@ xdvik-22.84.16-open-mode.patch
 #2011# upstream # 73_tex_segfault
 #2011# not necessary anymore, different fix upstream # unstymie-xetex-with-zlib-1.2.6.patch
 debian-no-linked-scripts
+build-wovp2ovf

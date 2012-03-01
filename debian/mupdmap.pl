@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 # mupdmap: utility to maintain map files for outline fonts.
-# $Id: mupdmap.pl 25297 2012-02-05 23:46:22Z preining $
+# $Id: mupdmap.pl 25545 2012-03-01 02:32:20Z preining $
 # 
 # Copyright 2011, 2012 Norbert Preining
 # This file is licensed under the GNU General Public License version 2
@@ -33,11 +33,11 @@ BEGIN {
     exit 1;
   }
   chomp($TEXMFROOT);
-  unshift (@INC, "/usr/share/texlive/tlpkg");
+  unshift (@INC, "$TEXMFROOT/tlpkg");
 }
 
 
-my $version = '$Id: mupdmap.pl 25297 2012-02-05 23:46:22Z preining $';
+my $version = '$Id: mupdmap.pl 25545 2012-03-01 02:32:20Z preining $';
 
 use Getopt::Long qw(:config no_autoabbrev ignore_case_always);
 use strict;
@@ -293,9 +293,11 @@ sub main {
       $changes_config_file = "$dn/updmap.cfg";
     }
   }
-  print "$prg is using the following updmap.cfg files (in precedence order):\n";
-  for my $f (@{$opts{'cnffile'}}) {
-    print "  $f\n";
+  if (!$opts{'quiet'}) {
+    print "$prg is using the following updmap.cfg files (in precedence order):\n";
+    for my $f (@{$opts{'cnffile'}}) {
+      print "  $f\n";
+    }
   }
   $alldata->{'changes_config'} = $changes_config_file;
 
@@ -441,6 +443,7 @@ sub getFonts {
   my ($first, @rest) = @_;
   my $getall = 0;
   my @maps = ();
+  return if !defined($first);
   if ($first eq "-all") {
     $getall = 1;
     @maps = @rest;

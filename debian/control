@@ -11,6 +11,7 @@ Package: texlive-binaries
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, texlive-common (>= 2011), tex-common (>= 3), ed, perl
 Recommends: texlive-base, luatex, python, ruby, wish
+Replaces: texlive-metapost (<< 2010)
 Breaks: texlive-base (<< 2010)
 Description: Binaries for TeX Live
  This package contains all the binaries of TeX Live packages.

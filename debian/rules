@@ -65,8 +65,6 @@ override_dh_install:
 	rm debian/texlive-binaries/usr/share/man/man1/e2pall.1*
 	rm debian/texlive-binaries/usr/share/man/man1/eplain.1*
 	rm debian/texlive-binaries/usr/share/man/man1/amstex.1*
-	# wrongly included script links
-	rm debian/texlive-binaries/usr/bin/deweb
 	# for alternatives treatment we rename usr/bin/bibtex to
 	# usr/bin/bibtex.original
 	mv debian/texlive-binaries/usr/bin/bibtex \

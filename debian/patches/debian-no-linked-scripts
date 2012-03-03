@@ -17,16 +17,3 @@ Index: texlive-bin-2011.20120226/texk/texlive/Makefile.am
  
  ## Windows wrapper
  ##
-Index: texlive-bin-2011.20120226/texk/texlive/Makefile.in
-===================================================================
---- texlive-bin-2011.20120226.orig/texk/texlive/Makefile.in	2012-02-20 23:23:59.000000000 +0900
-+++ texlive-bin-2011.20120226/texk/texlive/Makefile.in	2012-02-29 09:54:35.672116004 +0900
-@@ -193,7 +193,7 @@
- top_builddir = @top_builddir@
- top_srcdir = @top_srcdir@
- ACLOCAL_AMFLAGS = -I ../../m4
--SUBDIRS = context linked_scripts
-+SUBDIRS = 
- EXTRA_DIST = w32_wrapper
- all: all-recursive
- 

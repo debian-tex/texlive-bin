@@ -35,6 +35,7 @@ override_dh_auto_configure:
 	--disable-luatex			\
 	--disable-t1utils			\
 	--disable-cjkutils			\
+	--disable-chktex			\
 	--disable-dvidvi			\
 	--disable-lacheck			\
 	--disable-tex4htk			\

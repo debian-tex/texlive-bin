@@ -1,3 +1,9 @@
+texlive-bin (2011.20120226-1~6) experimental; urgency=low
+
+  * try to install manpages
+
+ -- Frank Küster <frank@debian.org>  Tue, 06 Mar 2012 11:49:03 +0100
+
 texlive-bin (2011.20120226-1~5) experimental; urgency=low
 
   * another build

@@ -4,11 +4,7 @@ Table of contents:
 
 1. Copyright and License of the debian-specific adaptions
 2. License of the TeX live distribution as a compilation work
-3. Licenses of individual parts
-3.1 Explanation of the format of the following information
-3.2 Packages with license problems
-3.3 Individual license texts
-3.4 (Incomplete) list of licenses of individual parts
+3. LPPL
 
 
 1. Copyright and License of the debian-specific adaptions
@@ -26,32 +22,32 @@ Public License.
 
 2. License of the TeX live distribution as a compilation work
 
+
 COPYING CONDITIONS FOR TeX Live:
 
-To the best of our knowledge, all software in this distribution is
-freely redistributable (libre, that is, not necessarily gratis), within
-the Free Software Foundation's definition and Debian Free Software
-Guidelines.  If you find any non-free files included, please contact us
-(references given below).
+To the best of our knowledge, all software in the TeX Live distribution
+is freely redistributable (libre, that is, not necessarily gratis),
+within the Free Software Foundation's definition and the Debian Free
+Software Guidelines.  Where the two conflict, we generally follow the
+FSF.  If you find any non-free files included, please contact us
+(references given at the end).
 
 That said, TeX Live has neither a single copyright holder nor a single
 license covering its entire contents, since it is a collection of many
-disparate packages.  Therefore, you may copy, modify, and/or
+independent packages.  Therefore, you may copy, modify, and/or
 redistribute software from TeX Live only if you comply with the
 requirements placed thereon by the owners of the respective packages.
 
 To most easily learn these requirements, we suggest checking the TeX
 Catalogue at: http://www.ctan.org/tex-archive/help/Catalogue/ (or any
-CTAN mirror).  The Catalogue is also included in TeX Live in
-./texmf/doc/html/catalogue/, but the online version will have updates.
-Of course the legal statements within the packages themselves are the
-final authority.
+CTAN mirror).  Of course the legal statements within the packages
+themselves are the final authority.
 
 In some cases, TeX Live is distributed with a snapshot of the CTAN
 archive, which is entirely independent of and separable from TeX Live
-itself.  (The "live" DVD in the TeX Collection is one example of this.)
-Please be aware that the CTAN snapshot contains many files which are
-*not* freely redistributable; see LICENSE.CTAN for more information.
+itself.  (The TeX Collection DVD is one example of this.)  Please be
+aware that the CTAN snapshot contains many files which are *not* freely
+redistributable; see LICENSE.CTAN for more information.
 
 
 GUIDELINES FOR REDISTRIBUTION:
@@ -64,20 +60,19 @@ are some general guidelines for doing this:
 package it contains, besides complying with any licensing requirements,
 you must prominently mention such changes in your modified distribution
 so that users do not take your work for ours, and know to contact you,
-not us, in case of questions or problems.  A new top-level
-README.<yourwork> file is a good place to describe the general situation.
+not us, in case of questions or problems.  A new top-level file
+README.<yourwork> is a good place to describe the general situation.
 
 - Especially (but not necessarily) if changes or additions are made, we
-recommend a clearly different title, such as "<your work> demo CD",
-based on TeX Live YYYY demo (with updates)", where YYYY is the year of
-TeX Live you are publishing.  This credits both our work and yours.
+recommend a clearly different title, such as "<your work> DVD, based on
+TeX Live YYYY", where YYYY is the year of TeX Live you are using.  This
+credits both our work and yours.
 
 - You absolutely may *not* place your own copyright on the entire
-distribution, since it is not your work (as stated above, TeX Live is
-not created by any single person or entity).  Statements such as "all
-rights reserved" and "may not be reproduced" are especially
-reprehensible, since they are antithetical to the free software
-principles under which TeX Live is produced.
+distribution, since it is not your work.  Statements such as "all rights
+reserved" and "may not be reproduced" are especially reprehensible,
+since they are antithetical to the free software principles under which
+TeX Live is produced.
 
 - You may use any cover or media label designs that you wish.  Such
 packaging and marketing details are not covered by any TeX Live license.
@@ -86,23 +81,17 @@ packaging and marketing details are not covered by any TeX Live license.
 
 a) Acknowledging that TeX Live is developed as a joint effort by all TeX
    user groups, and encouraging the user/reader to join their user group
-   of choice.
-   
-   The web page http://www.tug.org/usergroups.html may be referenced as
-   a list of TeX user groups.  We also appreciate your explicitly
-   listing all the user groups as given on that page, space permitting.
+   of choice, as listed on the web page http://tug.org/usergroups.html.
 
-b) Referencing the TeX Live home page: http://www.tug.org/tex-live/.
+b) Referencing the TeX Live home page: http://tug.org/texlive/
 
-c) Crediting the editor of the original TeX Live: Sebastian Rahtz.
-
-Such credits may be placed on the label of your media, your cover,
+Such information may be placed on the label of your media, your cover,
 and/or in accompanying text (for instance, in the acknowledgements
 section of a book).
 
-Finally, although it is certainly not a requirement, we'd like to invite
-any redistributors to make a donation to the project, whether cash or
-in-kind, for example via https://www.tug.org/donate.html.  Thanks.
+Finally, although it is again not a requirement, we'd like to invite any
+redistributors to make a donation to the project, whether cash or
+in-kind, for example via https://www.tug.org/donate/dev.html.  Thanks.
 
 
 If you have any questions or comments, *please* contact us.  In general,
@@ -112,166 +101,41 @@ much better to correct text on a CD label or in a book before thousands
 of copies are made!
 
 We are also happy to keep anyone planning a publication informed as to
-our deadlines and progress.  Just let us know.  However, you should be
-aware that TeX Live is produced entirely by volunteers, and no dates can
-be guaranteed.
+our deadlines and progress.  Just let us know.  However, be aware that
+TeX Live is produced entirely by volunteers, and no dates can be
+guaranteed.
 
 
 LICENSING FOR NEW PACKAGES:
 
 Finally, we are often asked what license to use for new work.  To be
 considered for inclusion on TeX Live, a package must use a free software
-license, such as the LaTeX Project Public License, the GNU Public
-License, the X Window System license, the modified BSD license, etc., or
-be put into the public domain.  Please see the url's below for more
-discussion of this.
+license, such as the LaTeX Project Public License, the GNU General
+Public License, the modified BSD license, etc.  (Please use an existing
+license instead of making up your own.)  Furthermore, all sources must
+be available, including for documentation files.  Please see
+http://tug.org/texlive/pkgcontrib.html for more information, and other
+considerations.
 
 Thanks for your interest in TeX.
 
-- Sebastian Rahtz, editor, for the TeX Live team
+- Karl Berry, for the TeX Live project
 
-
-TeX Live mailing list: texlive@tug.org
-TeX Live home page: http://www.tug.org/tex-live/
+------------------------------------------------------------
+TeX Live mailing list: http://lists.tug.org/tex-live
+TeX Live home page:    http://tug.org/tex-live/
 
 The FSF's free software definition: http://www.gnu.org/philosophy/free-sw.html
 Debian Free Software Guidelines:    http://www.debian.org/intro/free
 FSF commentary on existing licenses:
   http://www.gnu.org/licenses/license-list.html
 
-LPPL: http://latex-project.org/lppl.html or texmf/doc/latex/base/lppl.txt
-LPPL rationale: texmf/doc/latex/base/modguide.pdf
+LPPL: http://latex-project.org/lppl.html or texmf-dist/doc/latex/base/lppl.txt
+LPPL rationale: texmf-dist/doc/latex/base/modguide.pdf
 
 -------------
 
-3. Reference to an (incomplete) list of licenses of individual parts
-
-Individual parts of this distribution have their own copyright and
-license.
-
-3.1 Explanation of the format of the following information
-
-Since most packages use standard licenses, we have separated the list
-of license texts and the list of packages and individual files with
-their licenses.  In section 3.3 we provide the license texts and their
-abbreviations used in in the file list.  The file list itself is
-generated automatically from the TeX Catalogue and can be found, for
-each binary package, in /usr/share/doc/texlive-<name>/Licenses.
-
-The information in the TeX Catalogue is checked by the Debian TeX
-maintainers and the CTAN maintainers.  If you find any contradiction
-in the listing with the reality please inform us.
-
-In the case of gpl and lppl, the string without a number means that
-the license statement contains a "or any later version" statement.  In
-the list in Licenses, each package has a header line like this:
-
-% ccfonts: lppl (verification data:1.1:1.1:2006-03-14:frank:readme)
-
-indicating that the package ccfonts is under LPPL, exists in version
-1.1, the license has been checked in version 1.1 on 2006-03-14 by
-"frank" (the username among the Catalogue developers, actually Frank
-Küster), and the license information is in a file "readme".  After
-that follows the list of files, 
-
- tex/latex/ccfonts/t1ccr.fd
- tex/latex/ccfonts/ccfonts.sty
- tex/latex/ccfonts/ts1ccr.fd
- doc/latex/ccfonts/*
-
-where the * indicates that all ordinary files in that directory belong
-to that package (but not necessarily subdirectories and files
-therein).
-
-3.2 TODO: Packages with licensing problems
-
-[ this is copied over from teTeX, and some problems might already be
-solved ]
-
-3.2.1 Serious problems
-
-- euler: LPPL according changelog, but no indication in file.
-
-- adrconv: No license at all for the documentation
-
-- antp: PD according to catalogue, no statement in the files, no
-  sources; contacted upstream
-
-- bbm: no license statement at all, bug filed
-
-- cite:  chapterbib.sty is missing a license statement in the header
-
-- Problematic files by Donald Arseneau:
-
-  * chapterbib.sty: no license information
-  * tabls.sty: no license information
-  * import.sty: "this software is free of any restrictions"
-  * relsize.sty: "public domain", nothing else
-  * shapepar.sty: noncommercial
-  * version.sty: no license information, not only by D.A.
-  * selectp.sty: no license information
-  *./source/latex/shapepar/README.shapepar
-   ./source/latex/shapepar/shapepar.sty
-   ./source/latex/shapepar/shapepar.ltx
-   ./source/latex/hyphenat/hyphenat.dtx: no license information
-
-
-- citesort.sty: no license statement
-
-- index.doc: no license statement - probably unused
-
-- dinbrief: lppl 1.1+, but with additional restrictions which are non-free
-
-- eepic: The style files are public domain, but all the documentation
-  has no license at all.
-
-- extsizes: extsizes.sty, extarticle.cls and extreport.cls, and the
-  size*.clo files have a correct LPPL notice, the others have none.
-  The author seems to be active on Wikipedia, tried to contact him
-
-- beamericon*: no license statement. beamerexample-seminar: just like
-  seminar, which has not been investigated yet.  Filed bug against beamer.
-
-- one file in the psnfss directory with unclear license:
-
-    tex/latex/psnfss/8r.sty
-
-3.2.2 Normal :-) problems
-
-- listings: LPPL, plus: 
-
-,----
-| *Modification*advice* 
-| 
-| Permission is granted to modify the listings package as well as
-| lstdrvrs.dtx. You are not allowed to distribute a modified version of
-| the listings package or lstdrvrs.dtx unless you change the file names
-| and provide the original files. In any case it is better to contact
-| the address below; other users will welcome removed bugs, new
-| features, and additional programming languages.
-
-This is more restrictive than LPPL 1.3 (6.a and 6.d.2). The title is advice... 
-
-- ae: Just a formal problem, the GPL is included, but nowhere is it
-      explicitly stated that this license applies to the package.
-
-      contacted upstream
-
-- antt: gust font license, unclear which files % contacted upstream
-
-
-3.3 Individual license texts
-
-The actual text of the licenses can either be found in
-/usr/share/common-licenses (for artistic,bsd,gpl) or in "3.2 Text of
-the licenses" below.  For BSD-like licenses that just exchange the
-name of the copyright holder, we do not list the license text.
-
-A. gpl (GNU General Public License)
-
-The full text of the GPL is given in /usr/share/common-licenses/GPL.
-
-B. lppl (LaTeX Project Public License)
+3. lppl (LaTeX Project Public License)
 
 The LaTeX Project Public License
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -689,105 +553,3 @@ Important Recommendations
    entitled to make reasonable conjectures as to which files comprise
    the Work.
 
-
-
-
-C. Artistic
-D. PD (Public domain):
-
-The file or package contains a statement equivalent to 
-
-"This file is in the public domain. You may freely use, modify and
-distribute it".
-
-E. Non-standard licenses, by package name:
-
-(1) eepic.sty, eepicemu.sty:
-    The macros are in public domain.
-    You may distribute or modify it in any ways you like.
-    epic.sty:
-    You may use this file in whatever way you wish. You are requested to 
-    leave this notice intact, and report any bugs, enhancements, comments,
-    suggestions, etc. to:
-    ...
-
-(2) The Computer Modern fonts by Donald E. Knuth have a special
-    license; essentially, they are public domain, but no modified
-    version may use the same name, and the names "TeX" and "MetaFont"
-    for the resulting programs, unless they pass the TRIP and TRAP
-    tests.  The complete license statement can be found in a text at
-    http://www.tug.org/TUGboat/Articles/tb11-4/tb30knut.pdf, and the
-    relevant parts are:
-
-   ,----
-   | My work on developing TEX, METAFONT, and Computer
-   | Modern has come to an end. I willmake no further
-   | changes except to correct extremely serious bugs.
-   | 
-   | I have put these systems into the public domain so that
-   | people everywhere can use the ideas freely if they wish.
-   | 
-   | [...]
-   | As stated on the copyright pages of Volumes B, D, and
-   | E, anybody can make use of my programs in whatever
-   | way they wish, as long as they do not use the names
-   | TEX, METAFONT, or Computer Modern. In particular,
-   | any person or group who wants to produce a program
-   | superior to mine is free to do so. However, nobody is
-   | allowed to call a system TEX or METAFONT unless that
-   | system conforms 100% to my own programs, as I have
-   | specified in the manuals for the TRIP and TRAP tests.
-   | And nobody is allowed to use the names of the Computer
-   | Modern fonts in Volume E for any fonts that do not
-   | produce identical tfm files. This prohibition applies to
-   | all people or machines, whether appointed by TUG or
-   | by any other organization. I do not intend to delegate the
-   | responsibility formaintainance of TEX, METAFONT, or
-   | Computer Modern to anybody else, ever.
-   `----
-
-   For those who believe more in texts written on paper, we reproduce
-   here the copyright page of Volume $of "Computers and Typesetting"
-   by Donald E. Knuth, which present the commented code for the 
-   Computer Modern fonts:
-
-   ,----
-   | The quotations on pages 7 and 351 have been excerpted [...].
-   | 
-   | METAFONT is a trademark of th Addison Wesley Publishing Company.
-   | 
-   | TeX is a trademark of the American Mathematical Society.
-   | 
-   | The programs for computer Modern are in the public domain, and readers
-   | may freely generate and hand-tune their own fonts using the algorithms
-   | of this book.  However, use of the names is restricted:  Any fonts
-   | whose names cmr10 or cmbx12 or ... are identical to the standard font
-   | names of this book should be fully compatible with the fonts defined
-   | here; i.e., fonts with the same names are supposed to have precisely
-   | the same character coding schemes and precisely the same font metric
-   | files. 
-   `----
-
-
-
-   *****
-
-F. Individual files, not belonging to any package: 
-
-%  cahyph.tex: LPPL 1+
-%  gahyph.tex: GPL 2+
-%  icehyph.tex: LPPL 1.2+
-%  ruhyphas.tex: LPPL 1.2+
-%  ruhyphzn.tex: LPPL 1.2+
-%  sehyph.tex: LPPL 1.2+
-
-
-
-3.4 Reference to an (incomplete) list of licenses of individual parts
-
-The file list for each binary package has the format explained above
-and can be found, for each binary package, in
-
-/usr/share/doc/texlive-<name>/Licenses.
-
-$Id: copyright 3943 2009-05-22 12:11:09Z preining $

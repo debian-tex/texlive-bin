@@ -3,13 +3,13 @@ Section: tex
 Priority: optional
 Maintainer:  Debian TeX Maintainers <debian-tex-maint@lists.debian.org>
 Uploaders: Norbert Preining <preining@debian.org>, Frank Küster <frank@kuesterei.ch>
-Build-Depends: debhelper (>= 7.0.50~), sharutils, ed, libncurses5-dev | libncurses-dev, libxaw7-dev, libpng12-dev | libpng-dev, zlib1g-dev | libz-dev, libgd2-xpm-dev | libgd2-noxpm-dev, flex, bison, libpoppler-dev (>= 0.12.4), libfontconfig1-dev, libt1-dev, g++-4.4 [armel], dh-autoreconf, time
+Build-Depends: debhelper (>= 7.0.50~), sharutils, ed, libncurses5-dev | libncurses-dev, libxaw7-dev, libpng-dev, zlib1g-dev | libz-dev, libgd2-xpm-dev | libgd2-noxpm-dev, flex, bison, libpoppler-dev (>= 0.12.4), libfontconfig1-dev, libt1-dev, g++-4.4 [armel], dh-autoreconf, time
 Standards-Version: 3.9.2
 Homepage: http://www.tug.org/texlive
 
 Package: texlive-binaries
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, texlive-common (>= 2011), tex-common (>= 3), ed, perl
+Depends: ${shlibs:Depends}, ${misc:Depends}, texlive-common (>= 2011), tex-common (>= 3), ed, perl, dpkg (>= 1.15.4) | install-info
 Recommends: texlive-base, luatex, python, ruby, wish
 Replaces: texlive-metapost (<< 2010), texlive-base (<< 2010)
 Breaks: texlive-base (<< 2010)

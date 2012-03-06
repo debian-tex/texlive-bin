@@ -11,6 +11,9 @@ export CONFIG_SHELL=/bin/sh
 %:
 	dh $@ --with autoreconf --builddirectory Work
 
+override_dh_autoreconf:
+	dh_autoreconf --as-needed
+
 override_dh_auto_configure:
 	dh_auto_configure -- --prefix=/usr 	\
 	--datarootdir=/usr/share/texlive	\
@@ -32,6 +35,7 @@ override_dh_auto_configure:
 	--with-mf-x-toolkit			\
 	--with-xdvi-x-toolkit=xaw		\
 	--disable-lcdf-typetools		\
+	--disable-biber				\
 	--disable-dvipng			\
 	--disable-musixflx			\
 	--disable-ps2eps			\

@@ -1,5 +1,5 @@
 
-verstr=texlive-bin-2011.`date+%Y%m%d`
+verstr=texlive-bin-2011.`date +%Y%m%d`
 if [ -r $verstr ] ; then
   echo "already existing: $verstr, exit!"
   exit 1

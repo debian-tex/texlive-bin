@@ -1,3 +1,11 @@
+texlive-bin (2011.20120307-2) experimental; urgency=low
+
+  * UNRELEASED
+  * debian/patches/upstream-r25581-eptex-fix
+    include upstream fix for eptex and euptex segfault
+
+ -- Norbert Preining <preining@debian.org>  Fri, 09 Mar 2012 08:37:10 +0900
+
 texlive-bin (2011.20120307-1) experimental; urgency=low
 
   * new release, based on preliminary TL2012 status (TL2012/dev!)

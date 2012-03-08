@@ -1,0 +1,65 @@
+Fix a bug in eptex and euptex
+included upstream in revision 25581
+see http://oku.edu.mie-u.ac.jp/tex/mod/forum/discuss.php?d=782
+---
+ texk/web2c/ptexdir/ChangeLog    |    4 ++++
+ texk/web2c/ptexdir/ptex-base.ch |    2 +-
+ texk/web2c/uptexdir/ChangeLog   |    4 ++++
+ texk/web2c/uptexdir/uptex-m.ch  |    4 ++--
+ 4 files changed, 11 insertions(+), 3 deletions(-)
+
+Index: texlive-bin-2011.20120307/texk/web2c/ptexdir/ChangeLog
+===================================================================
+--- texlive-bin-2011.20120307.orig/texk/web2c/ptexdir/ChangeLog	2012-03-05 17:50:28.000000000 +0900
++++ texlive-bin-2011.20120307/texk/web2c/ptexdir/ChangeLog	2012-03-09 08:31:25.965656225 +0900
+@@ -1,3 +1,7 @@
++2012-03-08  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
++
++	* ptex-base.ch: fix a long-remained bug in show_context.
++
+ 2012-03-04  Peter Breitenlohner  <peb@mppmu.mpg.de>
+ 
+ 	Avoid 'differ in signedness' warnings.
+Index: texlive-bin-2011.20120307/texk/web2c/ptexdir/ptex-base.ch
+===================================================================
+--- texlive-bin-2011.20120307.orig/texk/web2c/ptexdir/ptex-base.ch	2012-03-05 17:50:28.000000000 +0900
++++ texlive-bin-2011.20120307/texk/web2c/ptexdir/ptex-base.ch	2012-03-09 08:31:25.965656225 +0900
+@@ -1549,7 +1549,7 @@
+   begin  if (token_type=backed_up)and(loc<>null) then
+     begin  if (link(start)=null)and(check_kanji(info(start))) then {|wchar_token|}
+       begin cur_input:=input_stack[base_ptr-1];
+-      s:=get_avail; info(s):=Lo(buffer[loc]);
++      s:=get_avail; info(s):=Lo(info(loc));
+       cur_input:=input_stack[base_ptr];
+       link(start):=s;
+       show_token_list(start,loc,100000);
+Index: texlive-bin-2011.20120307/texk/web2c/uptexdir/ChangeLog
+===================================================================
+--- texlive-bin-2011.20120307.orig/texk/web2c/uptexdir/ChangeLog	2012-03-05 17:50:28.000000000 +0900
++++ texlive-bin-2011.20120307/texk/web2c/uptexdir/ChangeLog	2012-03-09 08:31:25.969656212 +0900
+@@ -1,3 +1,7 @@
++2012-03-08  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
++
++	* uptex-m.ch: fix a long-remained bug in show_context.
++
+ 2012-03-04  Peter Breitenlohner  <peb@mppmu.mpg.de>
+ 
+ 	Avoid 'differ in signedness' warnings.
+Index: texlive-bin-2011.20120307/texk/web2c/uptexdir/uptex-m.ch
+===================================================================
+--- texlive-bin-2011.20120307.orig/texk/web2c/uptexdir/uptex-m.ch	2012-03-05 17:50:28.000000000 +0900
++++ texlive-bin-2011.20120307/texk/web2c/uptexdir/uptex-m.ch	2012-03-09 08:31:25.965656225 +0900
+@@ -352,11 +352,11 @@
+ @x
+     begin  if (link(start)=null)and(check_kanji(info(start))) then {|wchar_token|}
+       begin cur_input:=input_stack[base_ptr-1];
+-      s:=get_avail; info(s):=Lo(buffer[loc]);
++      s:=get_avail; info(s):=Lo(info(loc));
+ @y
+     begin  if (link(start)=null)and(check_kanji(info(start))) then {|wchar_token|}
+       begin cur_input:=input_stack[base_ptr-1];
+-      s:=get_avail; info(s):=(buffer[loc] mod max_char_val);
++      s:=get_avail; info(s):=(info(loc) mod max_char_val);
+ @z
+ 
+ @x

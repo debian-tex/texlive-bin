@@ -5,6 +5,8 @@ texlive-bin (2011.2012XXXXX-00000) experimental; urgency=low
 
   [ Hilmar Preuße ]
   * Do not declare an versioned B-D for g++ on armel, reapplied
+  * we still need 60_unneeded_linking (new version based on am files)
+    (Closes: #664074)
 
  -- Norbert Preining <preining@debian.org>  Wed, 14 Mar 2012 18:06:53 +0900
 

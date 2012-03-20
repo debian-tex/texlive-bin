@@ -25,7 +25,6 @@
 57_texconfig_papersizes_for_upstream
 58_texconfig_papersizes_use_ucf
 set-e-in-various-scripts
-#replaced by --as-needed for dh_autoreconf#60_unneeded_linking
 #2011# disabled - do we need to fix that???# libpoppler-0.12
 #2011# disabled not applicable, still necessary? # icu-xetex_hurd.diff
 #2011# upstream included # fix-mpost-segfault
@@ -42,3 +41,4 @@ xdvik-22.84.16-open-mode.patch
 #2011# not necessary anymore, different fix upstream # unstymie-xetex-with-zlib-1.2.6.patch
 debian-no-linked-scripts
 build-wovp2ovf
+60_unneeded_linking

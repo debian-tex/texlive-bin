@@ -7,8 +7,16 @@ texlive-bin (2011.2012XXXXX-00000) experimental; urgency=low
   * Do not declare an versioned B-D for g++ on armel, reapplied
   * we still need 60_unneeded_linking (new version based on am files)
     (Closes: #664074)
-  * built using libpng15 (Closes: #662520)
+  * built using libpng15 (Closes: #662520) (Closes: #649949)
   * use libpoppler-private-dev instead of libpoppler-dev (Closes: #660105)
+
+  List of fixed bugs in new TeX Live
+  * fix string corruptionin Metapost (Closes: #632328)
+  * MP failed to create .mpx files for .mp files not in current dir
+    (Closes: #632658)
+  * bibtex is able to handle unicode (Closes: #382075)
+  * dvips info page describes debugging options correctly
+    (Closes: #269638)
 
  -- Norbert Preining <preining@debian.org>  Wed, 14 Mar 2012 18:06:53 +0900
 

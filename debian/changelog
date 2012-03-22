@@ -1,7 +1,4 @@
-texlive-bin (2011.2012XXXXX-00000) experimental; urgency=low
-
-  * UNRELEASED, rebuild with new .orig.tar.gz!!! We need fixes from svn!!!
-  * new upstream (Closes: #663519)
+texlive-bin (2011.20120322-1) unstable; urgency=low
 
   [ Hilmar Preuße ]
   * Do not declare an versioned B-D for g++ on armel, reapplied
@@ -17,8 +14,9 @@ texlive-bin (2011.2012XXXXX-00000) experimental; urgency=low
   * bibtex is able to handle unicode (Closes: #382075)
   * dvips info page describes debugging options correctly
     (Closes: #269638)
+  * FTBFS on KFreeBSD fixed upstream (Closes: #663519)
 
- -- Norbert Preining <preining@debian.org>  Wed, 14 Mar 2012 18:06:53 +0900
+ -- Norbert Preining <preining@debian.org>  Fri, 23 Mar 2012 08:35:10 +0900
 
 texlive-bin (2011.20120307-1) experimental; urgency=low
 

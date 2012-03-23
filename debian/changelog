@@ -15,6 +15,7 @@ texlive-bin (2011.20120322-1) unstable; urgency=low
   * dvips info page describes debugging options correctly
     (Closes: #269638)
   * FTBFS on KFreeBSD fixed upstream (Closes: #663519)
+  * getnonfreefonts has been removed (Closes: #600339)
 
  -- Norbert Preining <preining@debian.org>  Fri, 23 Mar 2012 08:35:10 +0900
 

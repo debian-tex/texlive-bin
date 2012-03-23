@@ -8,7 +8,7 @@ texlive-bin (2011.20120322-1) unstable; urgency=low
   * use libpoppler-private-dev instead of libpoppler-dev (Closes: #660105)
 
   List of fixed bugs in new TeX Live
-  * fix string corruptionin Metapost (Closes: #632328)
+  * fix string corruption in Metapost (Closes: #632328)
   * MP failed to create .mpx files for .mp files not in current dir
     (Closes: #632658)
   * bibtex is able to handle unicode (Closes: #382075)

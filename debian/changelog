@@ -1,3 +1,10 @@
+texlive-bin (2011.20120322-2) unstable; urgency=low
+
+  * UNRELEASED
+  * build with system libgraphite, adapt build dependencies
+
+ -- Norbert Preining <preining@debian.org>  Mon, 26 Mar 2012 17:26:07 +0900
+
 texlive-bin (2011.20120322-1) unstable; urgency=low
 
   [ Hilmar Preuße ]

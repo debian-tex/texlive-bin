@@ -1,9 +1,10 @@
-texlive-bin (2011.20120322-2) unstable; urgency=low
+texlive-bin (2011.2012????-1) unstable; urgency=low
 
-  * UNRELEASED
+  * UNRELEASED NEEDS NEW ORIG TAR GZ!!!!!!!!!!!!
   * build with system libgraphite, adapt build dependencies
+  * remove embedded source copies of several libs (Closes: #665792)
 
- -- Norbert Preining <preining@debian.org>  Mon, 26 Mar 2012 17:26:07 +0900
+ -- Norbert Preining <preining@debian.org>  Mon, 26 Mar 2012 17:29:31 +0900
 
 texlive-bin (2011.20120322-1) unstable; urgency=low
 

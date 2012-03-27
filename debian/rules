@@ -48,6 +48,7 @@ override_dh_auto_configure:
 	--disable-dvidvi			\
 	--disable-lacheck			\
 	--disable-tex4htk			\
+	--disable-pmx				\
 	--enable-ipc				
 
 override_dh_auto_install:

@@ -13,5 +13,6 @@ rm -rf $verstr/utils/biber/bin
 for i in freetype2 gd graphite libpng poppler t1lib xpdf zlib ; do
   rm -rf $verstr/libs/$i
 done
+find $verstr -name \.svn -exec rm -rf '{}' \;
 find $verstr -name autom4te.cache -exec rm -rf '{}' \;
 

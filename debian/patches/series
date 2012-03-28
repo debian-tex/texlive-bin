@@ -42,3 +42,4 @@ xdvik-22.84.16-open-mode.patch
 debian-no-linked-scripts
 build-wovp2ovf
 60_unneeded_linking
+61_path_max.diff

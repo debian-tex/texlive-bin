@@ -5,6 +5,10 @@ texlive-bin (2011.2012????-1) unstable; urgency=low
   * remove embedded source copies of several libs (Closes: #665792)
   * disabling pmx compilation (--disable-pmx in debian/rules)
 
+  [ Hilmar Preuße ]
+  * solve FTBFS on Hurd the ugly way, by hard coding PATH_MAX as
+    it is done in kpathsea (61_path_max.diff) (Closes: #665456)
+
  -- Norbert Preining <preining@debian.org>  Wed, 28 Mar 2012 08:12:12 +0900
 
 texlive-bin (2011.20120322-1) unstable; urgency=low

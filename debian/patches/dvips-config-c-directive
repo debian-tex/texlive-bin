@@ -1,0 +1,67 @@
+---
+ texk/dvipsk/ChangeLog            |    7 +++++++
+ texk/dvipsk/contrib/config.proto |    4 ++++
+ texk/dvipsk/dvips.texi           |    5 +++++
+ texk/dvipsk/resident.c           |    6 ++++++
+ 4 files changed, 22 insertions(+)
+
+Index: texlive-bin-2011.20120328/texk/dvipsk/ChangeLog
+===================================================================
+--- texlive-bin-2011.20120328.orig/texk/dvipsk/ChangeLog	2012-03-16 15:55:48.000000000 +0900
++++ texlive-bin-2011.20120328/texk/dvipsk/ChangeLog	2012-03-30 10:31:33.854669863 +0900
+@@ -1,3 +1,10 @@
++2012-03-30  Norbert Preining  <preining@logic.at>
++
++	* resident.c: add new directive "c<filename> to config files, allowing
++	to include other config files:
++	* contrib/config.proto: add exmaple "c<filename>" directive
++	* dvips.texi: document "c" config file directive
++	 
+ 2012-03-15  Peter Breitenlohner  <peb@mppmu.mpg.de>
+ 
+ 	* Makefile.am: Fixed a typo (in comment).
+Index: texlive-bin-2011.20120328/texk/dvipsk/contrib/config.proto
+===================================================================
+--- texlive-bin-2011.20120328.orig/texk/dvipsk/contrib/config.proto	2009-12-25 03:38:47.000000000 +0900
++++ texlive-bin-2011.20120328/texk/dvipsk/contrib/config.proto	2012-03-30 10:31:33.850669876 +0900
+@@ -44,3 +44,7 @@
+ % You will also want definitions for alternative paper sizes -- A4,
+ % legal, and such.  Examples in @file{contrib/papersize.level2} and
+ % @file{contrib/papersize.simple}.
++
++%
++% Inclusion of additional configuration files
++%c<filename>
+Index: texlive-bin-2011.20120328/texk/dvipsk/dvips.texi
+===================================================================
+--- texlive-bin-2011.20120328.orig/texk/dvipsk/dvips.texi	2011-07-26 23:14:39.000000000 +0900
++++ texlive-bin-2011.20120328/texk/dvipsk/dvips.texi	2012-03-30 10:31:33.850669876 +0900
+@@ -1419,6 +1419,11 @@
+ @opindex b @r{config command (#copies)}
+ Multiple copies.  Same as @samp{-b}, @pxref{Option details}.
+ 
++@item c @var{name}
++@opindex c @r{include additional config file}
++Include an additional config file as if the additional config file's
++content would be included literally.
++
+ @item D @var{dpi}
+ @opindex D @r{config command (dpi)}
+ Output resolution.  Same as @samp{-D}, @pxref{Option details}.
+Index: texlive-bin-2011.20120328/texk/dvipsk/resident.c
+===================================================================
+--- texlive-bin-2011.20120328.orig/texk/dvipsk/resident.c	2011-07-20 16:00:05.000000000 +0900
++++ texlive-bin-2011.20120328/texk/dvipsk/resident.c	2012-03-30 10:31:33.850669876 +0900
+@@ -765,6 +765,12 @@
+                paperfmt = newstring(PSname);
+          }
+          break;
++case 'c' :
++         if (sscanf(was_inline+1, "%s", PSname) != 1)
++           bad_config("missing arg to c");
++         else
++           getdefaults(PSname);
++         break;
+ default:
+          bad_config("strange line");
+       }

@@ -4,8 +4,9 @@ texlive-bin (2011.20120328-2) unstable; urgency=low
   * add patches (maybe to be included upstream) that allows inclusion of
     one config file in another for dvips and (x)dvipdfmx. This will be
     used by the paper code.
+  * fix description of libptexenc-dev package (Closes: #667694)
 
- -- Norbert Preining <preining@debian.org>  Fri, 30 Mar 2012 11:24:12 +0900
+ -- Norbert Preining <preining@debian.org>  Fri, 06 Apr 2012 12:57:27 +0900
 
 texlive-bin (2011.20120328-1) unstable; urgency=low
 

@@ -50,6 +50,6 @@ Package: libptexenc-dev
 Section: libdevel
 Architecture: any
 Depends: ${misc:Depends}, libptexenc1 (= ${binary:Version}), ${shlibs:Depends}
-Description: TeX Live: path search library for TeX (development part)
+Description: TeX Live: ptex encoding library (development part)
  This package contains the static library and header files for the
  ptexenc library.

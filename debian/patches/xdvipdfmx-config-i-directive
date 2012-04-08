@@ -3,21 +3,21 @@
  texk/xdvipdfmx/src/dvipdfmx.c           |    8 ++++++++
  2 files changed, 10 insertions(+)
 
-Index: texlive-bin-2011.20120328/texk/xdvipdfmx/data/config/dvipdfmx.cfg
+Index: texlive-bin-2011.20120408/texk/xdvipdfmx/data/config/dvipdfmx.cfg
 ===================================================================
---- texlive-bin-2011.20120328.orig/texk/xdvipdfmx/data/config/dvipdfmx.cfg	2010-10-09 02:46:38.000000000 +0900
-+++ texlive-bin-2011.20120328/texk/xdvipdfmx/data/config/dvipdfmx.cfg	2012-03-30 10:35:18.270516325 +0900
+--- texlive-bin-2011.20120408.orig/texk/xdvipdfmx/data/config/dvipdfmx.cfg	2012-04-08 21:41:48.165582350 +0900
++++ texlive-bin-2011.20120408/texk/xdvipdfmx/data/config/dvipdfmx.cfg	2012-04-08 21:42:29.217810690 +0900
 @@ -183,3 +183,5 @@
  %% Put additonal fontmap files here
  f  cid-x.map
  
 +%% Include additional config files
 +%i <filename>
-Index: texlive-bin-2011.20120328/texk/xdvipdfmx/src/dvipdfmx.c
+Index: texlive-bin-2011.20120408/texk/xdvipdfmx/src/dvipdfmx.c
 ===================================================================
---- texlive-bin-2011.20120328.orig/texk/xdvipdfmx/src/dvipdfmx.c	2011-03-10 21:07:25.000000000 +0900
-+++ texlive-bin-2011.20120328/texk/xdvipdfmx/src/dvipdfmx.c	2012-03-30 10:35:18.266516319 +0900
-@@ -105,6 +105,9 @@
+--- texlive-bin-2011.20120408.orig/texk/xdvipdfmx/src/dvipdfmx.c	2012-04-08 21:41:48.165582350 +0900
++++ texlive-bin-2011.20120408/texk/xdvipdfmx/src/dvipdfmx.c	2012-04-08 21:42:29.217810690 +0900
+@@ -107,6 +107,9 @@
  char *dvi_filename = NULL, *pdf_filename = NULL;
  
  static void
@@ -27,7 +27,7 @@ Index: texlive-bin-2011.20120328/texk/xdvipdfmx/src/dvipdfmx.c
  set_default_pdf_filename(void)
  {
    const char *dvi_base;
-@@ -453,6 +456,11 @@
+@@ -455,6 +458,11 @@
            pdf_load_fontmap_file(argv[1], FONTMAP_RMODE_REPLACE);
          POP_ARG();
          break;

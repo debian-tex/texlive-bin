@@ -35,7 +35,6 @@ set-e-in-various-scripts
 #cve-2010-0739.patch
 #2011# upstream # cve-2010-0827.patch
 #2011# upstream # upstream-tex-file_arg-passing-fix
-xdvik-22.84.16-open-mode.patch
 #partial_lfs_support.diff
 #2011# upstream # 73_tex_segfault
 #2011# not necessary anymore, different fix upstream # unstymie-xetex-with-zlib-1.2.6.patch

@@ -1,9 +1,11 @@
 
 verstr=texlive-bin-2011.`date +%Y%m%d`
+pkgstr=texlive-bin_2011.`date +%Y%m%d`
 if [ -r $verstr ] ; then
   echo "already existing: $verstr, exit!"
   exit 1
 fi
+echo "copying"
 cp -a /src/TeX/texlive-svn/Build/source $verstr
 rm -rf $verstr/inst
 rm -rf $verstr/Work
@@ -15,4 +17,7 @@ for i in freetype2 gd graphite libpng poppler t1lib xpdf zlib ; do
 done
 find $verstr -name \.svn -exec rm -rf '{}' \;
 find $verstr -name autom4te.cache -exec rm -rf '{}' \;
+
+echo "packing up"
+tar -czf $pkgstr.orig.tar.gz $verstr
 

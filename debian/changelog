@@ -1,14 +1,13 @@
-texlive-bin (2011.20120408-1) unstable; urgency=low
+texlive-bin (2011.20120410-1) unstable; urgency=low
 
   * add patches (maybe to be included upstream) that allows inclusion of
     one config file in another for (x)dvipdfmx. This will be
     used by the paper code.
   * fix description of libptexenc-dev package (Closes: #667694)
   * remove xdvik patch, included upstream
-  * add a (temporary) patch for bibtex8/u failure
   * remove conflict with ptex-bin, we are building a transitional package now
 
- -- Norbert Preining <preining@debian.org>  Mon, 09 Apr 2012 23:50:13 +0900
+ -- Norbert Preining <preining@debian.org>  Tue, 10 Apr 2012 07:47:00 +0900
 
 texlive-bin (2011.20120328-1) unstable; urgency=low
 

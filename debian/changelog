@@ -5,8 +5,10 @@ texlive-bin (2011.20120408-1) unstable; urgency=low
     used by the paper code.
   * fix description of libptexenc-dev package (Closes: #667694)
   * remove xdvik patch, included upstream
+  * add a (temporary) patch for bibtex8/u failure
+  * remove conflict with ptex-bin, we are building a transitional package now
 
- -- Norbert Preining <preining@debian.org>  Sun, 08 Apr 2012 22:12:54 +0900
+ -- Norbert Preining <preining@debian.org>  Mon, 09 Apr 2012 23:50:13 +0900
 
 texlive-bin (2011.20120328-1) unstable; urgency=low
 

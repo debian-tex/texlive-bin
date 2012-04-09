@@ -10,8 +10,10 @@ texlive-bin (2011.20120410-1) unstable; urgency=low
   * fix description of libptexenc-dev package (Closes: #667694)
   * remove xdvik patch, included upstream
   * remove conflict with ptex-bin, we are building a transitional package now
+  * build with internal t1lib, as t1lib is going to disappear in
+    wheezy (Closes: #667912) (no, dropping xdvi is not an option!)
 
- -- Norbert Preining <preining@debian.org>  Tue, 10 Apr 2012 07:49:44 +0900
+ -- Norbert Preining <preining@debian.org>  Tue, 10 Apr 2012 08:54:23 +0900
 
 texlive-bin (2011.20120328-1) unstable; urgency=low
 

@@ -12,8 +12,9 @@ texlive-bin (2011.20120410-1) unstable; urgency=low
   * remove conflict with ptex-bin, we are building a transitional package now
   * build with internal t1lib, as t1lib is going to disappear in
     wheezy (Closes: #667912) (no, dropping xdvi is not an option!)
+    (add a lintian override otherwise this gives a lintian error)
 
- -- Norbert Preining <preining@debian.org>  Tue, 10 Apr 2012 08:54:23 +0900
+ -- Norbert Preining <preining@debian.org>  Tue, 10 Apr 2012 10:16:01 +0900
 
 texlive-bin (2011.20120328-1) unstable; urgency=low
 

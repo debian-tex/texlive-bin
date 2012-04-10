@@ -12,7 +12,7 @@ rm -rf $verstr/Work
 rm -rf $verstr/utils/biber/bin
 #
 # remove system libraries
-for i in freetype2 gd graphite libpng poppler t1lib xpdf zlib ; do
+for i in freetype2 gd graphite libpng poppler xpdf zlib ; do
   rm -rf $verstr/libs/$i
 done
 find $verstr -name \.svn -exec rm -rf '{}' \;

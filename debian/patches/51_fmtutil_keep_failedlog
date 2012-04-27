@@ -2,11 +2,11 @@
  texk/tetex/fmtutil |    4 +++-
  1 file changed, 3 insertions(+), 1 deletion(-)
 
-Index: texlive-bin-2011.20120216/texk/tetex/fmtutil
+Index: texlive-bin-2011.20120427/texk/tetex/fmtutil
 ===================================================================
---- texlive-bin-2011.20120216.orig/texk/tetex/fmtutil	2012-02-17 10:42:46.161039803 +0900
-+++ texlive-bin-2011.20120216/texk/tetex/fmtutil	2012-02-17 10:42:59.924975955 +0900
-@@ -762,7 +762,6 @@
+--- texlive-bin-2011.20120427.orig/texk/tetex/fmtutil	2012-04-27 11:31:40.747069403 +0900
++++ texlive-bin-2011.20120427/texk/tetex/fmtutil	2012-04-27 11:31:48.051066459 +0900
+@@ -763,7 +763,6 @@
        log_warning "\`$engine -ini $tcxflag $jobswitch $prgswitch $texargs' possibly failed."
  
      # We don't want user-interaction for the following "mv" commands:
@@ -14,7 +14,7 @@ Index: texlive-bin-2011.20120216/texk/tetex/fmtutil
      #
      destfile=$fulldestdir/$fmtfile
      if mv "$fmtfile" "$destfile" </dev/null; then
-@@ -801,6 +800,9 @@
+@@ -802,6 +801,9 @@
    else
      log_failure "\`$engine -ini $tcxflag $jobswitch $prgswitch $texargs' failed"
    fi

@@ -44,3 +44,5 @@ build-wovp2ovf
 61_path_max.diff
 #dvipdfmx-config-i-directive
 #xdvipdfmx-config-i-directive
+pmpost-20120415-tl11.diff
+pmpost-svg-20120119-tl11.diff

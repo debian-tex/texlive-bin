@@ -4,14 +4,14 @@
 ## DP: adjust built-in search paths for kpathsea library to Debian standard
 
 @DPATCH@
- texk/kpathsea/texmf.cnf |   23 +++++++++++++----------
- 1 file changed, 13 insertions(+), 10 deletions(-)
+ texk/kpathsea/texmf.cnf |   34 +++++++++++++---------------------
+ 1 file changed, 13 insertions(+), 21 deletions(-)
 
-Index: texlive-bin-2011.20120226/texk/kpathsea/texmf.cnf
+Index: texlive-bin-2011.20120427/texk/kpathsea/texmf.cnf
 ===================================================================
---- texlive-bin-2011.20120226.orig/texk/kpathsea/texmf.cnf	2012-02-26 22:24:25.000000000 +0900
-+++ texlive-bin-2011.20120226/texk/kpathsea/texmf.cnf	2012-02-27 07:50:06.340884511 +0900
-@@ -53,19 +53,22 @@
+--- texlive-bin-2011.20120427.orig/texk/kpathsea/texmf.cnf	2012-04-17 23:43:40.000000000 +0900
++++ texlive-bin-2011.20120427/texk/kpathsea/texmf.cnf	2012-04-27 11:34:05.942960043 +0900
+@@ -55,19 +55,22 @@
  
  % The tree containing runtime files related to the specific
  % distribution and version.
@@ -39,7 +39,7 @@ Index: texlive-bin-2011.20120226/texk/kpathsea/texmf.cnf
  
  % Per-user texmf tree(s) -- organized per the TDS, as usual.  To define
  % more than one per-user tree, set this to a list of directories in
-@@ -92,7 +95,7 @@
+@@ -94,7 +97,7 @@
  % versions should take precedence over those -- although it is generally
  % a source of confusion to have different versions of a package
  % installed, whatever the trees, so try to avoid it.
@@ -48,7 +48,7 @@ Index: texlive-bin-2011.20120226/texk/kpathsea/texmf.cnf
  
  % Where to look for ls-R files.  There need not be an ls-R in the
  % directories in this path, but if there is one, Kpathsea will use it.
-@@ -100,18 +103,18 @@
+@@ -102,18 +105,18 @@
  % does not create ls-R files in the non-!! elements -- because if an
  % ls-R is present, it will be used, and the disk will not be searched.
  % This is arguably a bug in kpathsea.
@@ -70,12 +70,23 @@ Index: texlive-bin-2011.20120226/texk/kpathsea/texmf.cnf
  
  % On some systems, there will be a system tree which contains all the font
  % files that may be created as well as the formats.  For example
-@@ -463,7 +466,7 @@
- % 
- % For security reasons, it is better not to include . in this path.
+@@ -480,18 +483,7 @@
+ % since we don't want to scatter ../'s throughout the value.  Hence we
+ % explicitly list every directory.  Arguably more understandable anyway.
  %
--TEXMFCNF = {$SELFAUTOLOC,$SELFAUTODIR,$SELFAUTOPARENT}{,{/share,}/texmf{-local,}/web2c}
+-TEXMFCNF = {\
+-$SELFAUTOLOC,\
+-$SELFAUTOLOC/share/texmf-local/web2c,$SELFAUTOLOC/share/texmf/web2c,\
+-$SELFAUTOLOC/texmf-local/web2c,$SELFAUTOLOC/texmf/web2c,\
+-$SELFAUTODIR,\
+-$SELFAUTODIR/share/texmf-local/web2c,$SELFAUTODIR/share/texmf/web2c,\
+-$SELFAUTODIR/texmf-local/web2c,$SELFAUTODIR/texmf/web2c,\
+-$SELFAUTOPARENT/../texmf-local/web2c,\
+-$SELFAUTOPARENT,\
+-$SELFAUTOPARENT/share/texmf-local/web2c,$SELFAUTOPARENT/share/texmf/web2c,\
+-$SELFAUTOPARENT/texmf-local/web2c,$SELFAUTOPARENT/texmf/web2c\
+-}
 +TEXMFCNF = /etc/texmf/web2c;/usr/share/texlive/texmf/web2c;/usr/share/texlive/texmf-dist/web2c;/usr/local/share/texmf/web2c
- 
- % kpathsea 3.5.3 and later sets these at runtime. To avoid empty
- % expansions from binaries linked against an earlier version of the
+ %
+ % For reference, here is the old brace-using definition:
+ %TEXMFCNF = {$SELFAUTOLOC,$SELFAUTODIR,$SELFAUTOPARENT}{,{/share,}/texmf{-local,}/web2c}

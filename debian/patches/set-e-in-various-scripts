@@ -4,10 +4,10 @@ set -e in mktexlsr, updmap, fmtutil
  texk/tetex/texconfig |   41 ++++++++++++++++++++++-------------------
  2 files changed, 27 insertions(+), 21 deletions(-)
 
-Index: texlive-bin-2011.20120216/texk/tetex/fmtutil
+Index: texlive-bin-2011.20120427/texk/tetex/fmtutil
 ===================================================================
---- texlive-bin-2011.20120216.orig/texk/tetex/fmtutil	2012-02-17 10:42:59.000000000 +0900
-+++ texlive-bin-2011.20120216/texk/tetex/fmtutil	2012-02-17 10:49:15.999076162 +0900
+--- texlive-bin-2011.20120427.orig/texk/tetex/fmtutil	2012-04-27 11:31:48.051066459 +0900
++++ texlive-bin-2011.20120427/texk/tetex/fmtutil	2012-04-27 11:34:16.014949167 +0900
 @@ -3,6 +3,9 @@
  # Public domain.  Originally written by Thomas Esser.
  # Run with --help for usage.
@@ -18,7 +18,7 @@ Index: texlive-bin-2011.20120216/texk/tetex/fmtutil
  # program history:
  #   further changes in texk/tetex/ChangeLog.
  #   2007-01-04  patch by JK to support $engine subdir (enabled by default)
-@@ -522,8 +525,8 @@
+@@ -523,8 +526,8 @@
    if test -n "$cfgmaint"; then
      if test -z "$cfgparam"; then
        setupTmpDir
@@ -29,10 +29,10 @@ Index: texlive-bin-2011.20120216/texk/tetex/fmtutil
        set x $co; shift
        id=$1; cnf_file=$3; orig=$4
        verboseMsg "$progname: initial config file is \`$orig'"
-Index: texlive-bin-2011.20120216/texk/tetex/texconfig
+Index: texlive-bin-2011.20120427/texk/tetex/texconfig
 ===================================================================
---- texlive-bin-2011.20120216.orig/texk/tetex/texconfig	2012-02-17 10:48:08.000000000 +0900
-+++ texlive-bin-2011.20120216/texk/tetex/texconfig	2012-02-17 10:49:15.999076162 +0900
+--- texlive-bin-2011.20120427.orig/texk/tetex/texconfig	2012-04-27 11:34:15.194950064 +0900
++++ texlive-bin-2011.20120427/texk/tetex/texconfig	2012-04-27 11:34:16.018949164 +0900
 @@ -1,4 +1,4 @@
 -#!/bin/sh
 +#!/bin/sh -e

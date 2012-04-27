@@ -9,10 +9,10 @@
  texk/tetex/fmtutil.man |    7 +++++--
  2 files changed, 14 insertions(+), 21 deletions(-)
 
-Index: texlive-bin-2011.20120216/texk/tetex/fmtutil.man
+Index: texlive-bin-2011.20120427/texk/tetex/fmtutil.man
 ===================================================================
---- texlive-bin-2011.20120216.orig/texk/tetex/fmtutil.man	2011-06-28 06:32:19.000000000 +0900
-+++ texlive-bin-2011.20120216/texk/tetex/fmtutil.man	2012-02-17 10:41:07.061487176 +0900
+--- texlive-bin-2011.20120427.orig/texk/tetex/fmtutil.man	2012-04-27 11:31:33.599071967 +0900
++++ texlive-bin-2011.20120427/texk/tetex/fmtutil.man	2012-04-27 11:31:40.747069403 +0900
 @@ -45,7 +45,7 @@
  no-op in TeX Live
  .TP
@@ -35,11 +35,11 @@ Index: texlive-bin-2011.20120216/texk/tetex/fmtutil.man
  .SH "BUGS"
  None known, but report any bugs found to <tex-k@tug.org> (mailing list).
  .SH "AUTHOR"
-Index: texlive-bin-2011.20120216/texk/tetex/fmtutil
+Index: texlive-bin-2011.20120427/texk/tetex/fmtutil
 ===================================================================
---- texlive-bin-2011.20120216.orig/texk/tetex/fmtutil	2011-06-28 06:32:19.000000000 +0900
-+++ texlive-bin-2011.20120216/texk/tetex/fmtutil	2012-02-17 10:42:46.161039803 +0900
-@@ -541,9 +541,11 @@
+--- texlive-bin-2011.20120427.orig/texk/tetex/fmtutil	2012-04-27 11:31:33.599071967 +0900
++++ texlive-bin-2011.20120427/texk/tetex/fmtutil	2012-04-27 11:31:40.747069403 +0900
+@@ -542,9 +542,11 @@
        grep -v '^ *#' "$cnf_file" | sed 's@^ *@@; s@ *$@@' | grep . | sort
        cleanup $? ;;
      edit)
@@ -54,7 +54,7 @@ Index: texlive-bin-2011.20120216/texk/tetex/fmtutil
        cleanup 0 ;;
      enablefmt|disablefmt)
        $cmd $arg ;;  # does not return
-@@ -555,22 +557,6 @@
+@@ -556,22 +558,6 @@
        cleanup $? ;;
    esac
  
@@ -77,7 +77,7 @@ Index: texlive-bin-2011.20120216/texk/tetex/fmtutil
    # set up destdir:
    if test -z "$destdir"; then
      : ${MT_TEXMFVAR=`kpsewhich -var-value=TEXMFVAR`}
-@@ -984,6 +970,7 @@
+@@ -985,6 +971,7 @@
  ###############################################################################
  # disablefmt(format)
  #   disables format in configuration file
@@ -85,7 +85,7 @@ Index: texlive-bin-2011.20120216/texk/tetex/fmtutil
  ###############################################################################
  disablefmt()
  {
-@@ -1000,6 +987,7 @@
+@@ -1001,6 +988,7 @@
  ###############################################################################
  #  enablefmt(format)
  #    enables format in configuration file
@@ -93,7 +93,7 @@ Index: texlive-bin-2011.20120216/texk/tetex/fmtutil
  ###############################################################################
  enablefmt()
  {
-@@ -1012,5 +1000,7 @@
+@@ -1013,5 +1001,7 @@
    (exit 0); return 0
  }
  

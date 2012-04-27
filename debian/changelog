@@ -1,10 +1,11 @@
-texlive-bin (2011.201204XX-1~1) unstable; urgency=low
+texlive-bin (2011.20120427-1) unstable; urgency=low
 
-  * NEW UPSTREAM NECESSARY!!!
   * drop patches for config file inclusion in (x)dvipdfmx, included upstream
   * add man page for etex
+  * include pmpost patches and build it
+  * adapt/unfuzzify patches for current sources
 
- -- Norbert Preining <preining@debian.org>  Wed, 25 Apr 2012 07:23:33 +0900
+ -- Norbert Preining <preining@debian.org>  Fri, 27 Apr 2012 11:54:57 +0900
 
 texlive-bin (2011.20120410-1) unstable; urgency=low
 

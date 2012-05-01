@@ -48,6 +48,7 @@ override_dh_auto_configure:
 	--disable-lacheck			\
 	--disable-tex4htk			\
 	--disable-pmx				\
+	--disable-mtx				\
 	--enable-ipc				
 
 override_dh_auto_install:

@@ -1,6 +1,10 @@
 texlive-bin (2011.20120507-2) unstable; urgency=low
 
   * UNRELEASED
+  * debian/patches/xdvi-zoom-with-eps-figures.patch: Make zooming with
+    Ghostscript 9.0x working correctly. EPS figures were cut off after
+    zooming and scrolling. (Taken from Ubuntu packaging, thanks Jeremy Bicha)
+    See http://bugs.ghostscript.com/show_bug.cgi?id=692540
 
  -- Norbert Preining <preining@debian.org>  Mon, 07 May 2012 12:52:39 +0900
 

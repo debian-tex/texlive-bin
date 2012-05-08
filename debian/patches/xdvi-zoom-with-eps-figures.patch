@@ -1,0 +1,11 @@
+--- a/texk/xdvik/psgs.c
++++ b/texk/xdvik/psgs.c
+@@ -852,7 +852,7 @@
+     char buf[150];
+ 
+     /* For gs 2, we pretty much have to start over to enlarge the window. */
+-    if ((GS_old && (globals.page.w > GS_page_w || globals.page.h > GS_page_h))
++    if (((globals.page.w > GS_page_w || globals.page.h > GS_page_h))
+ 	|| GS_alpha != resource.gs_alpha)
+ 	destroy_gs();
+ 

@@ -4,6 +4,12 @@
 export SHELL=/bin/bash
 export CONFIG_SHELL=/bin/sh
 
+DEB_HOST_ARCH     ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
+
+ifeq ($(DEB_HOST_ARCH), alpha)
+  export LDFLAGS = -Wl,--no-relax
+endif
+
 # warning: if the --with autoreconf is removed then
 # the patch debian/patches/debian-no-linked-scripts
 # must be adapted to also patch the Makefile.in!

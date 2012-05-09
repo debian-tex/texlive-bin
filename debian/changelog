@@ -5,6 +5,7 @@ texlive-bin (2011.20120507-2) unstable; urgency=low
     Ghostscript 9.0x working correctly. EPS figures were cut off after
     zooming and scrolling. (Taken from Ubuntu packaging, thanks Jeremy Bicha)
     See http://bugs.ghostscript.com/show_bug.cgi?id=692540
+  * fix FTBFS on alpha (Closes: #672222)
 
  -- Norbert Preining <preining@debian.org>  Mon, 07 May 2012 12:52:39 +0900
 

@@ -1,7 +1,9 @@
-texlive-bin (2011.20120507-2) unstable; urgency=low
+texlive-bin (2011.20120510-1) unstable; urgency=low
 
-  * UNRELEASED
-  * debian/patches/xdvi-zoom-with-eps-figures.patch: Make zooming with
+  * new upstream checkout: fix for dvipdfmx
+  * include debian/patches/xdvi-zoom-with-eps-figures.patch from Ubuntu,
+    but do not activate it. It makes xdvi crash on *every* zoom in Debian,
+    needs more investigation. Original reason: Make zooming with
     Ghostscript 9.0x working correctly. EPS figures were cut off after
     zooming and scrolling. (Taken from Ubuntu packaging, thanks Jeremy Bicha)
     See http://bugs.ghostscript.com/show_bug.cgi?id=692540

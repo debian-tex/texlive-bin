@@ -1,3 +1,11 @@
+texlive-bin (2012.20120514-1) unstable; urgency=low
+
+  * UNRELEASED
+  * new upstream snapshot based on TL2012 tlpretest
+  * remove outdated and not needed patches
+
+ -- Norbert Preining <preining@debian.org>  Mon, 14 May 2012 09:44:50 +0900
+
 texlive-bin (2011.20120510-1) unstable; urgency=low
 
   * new upstream checkout: fix for dvipdfmx

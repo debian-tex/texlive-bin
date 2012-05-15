@@ -15,7 +15,7 @@ endif
 # must be adapted to also patch the Makefile.in!
 
 %:
-	dh $@ --with autoreconf --builddirectory Work
+	dh $@ --with quilt --with autoreconf --builddirectory Work
 
 override_dh_autoreconf:
 	dh_autoreconf --as-needed
@@ -62,12 +62,6 @@ override_dh_auto_install:
 
 override_dh_install:
 	dh_install --sourcedir=$(CURDIR)/debian/tmp
-	# use mupdmap (multi!)
-	rm debian/texlive-binaries/usr/bin/updmap
-	cp debian/mupdmap.pl debian/texlive-binaries/usr/bin/updmap
-	# copy updmap-sys over
-	rm debian/texlive-binaries/usr/bin/updmap-sys
-	cp debian/texlive-binaries/usr/share/texlive/texmf/scripts/tetex/updmap-sys.sh debian/texlive-binaries/usr/bin/updmap-sys
 	# remove texlive directories, they should not be shipped here
 	rm -rf debian/texlive-binaries/usr/share/texlive
 	#rm -rf debian/texlive-binaries/usr/share/info
@@ -117,4 +111,5 @@ override_dh_shlibdeps:
 		-l debian/libptexenc1/usr/lib
 
 override_dh_clean:
+	dh_quilt_unpatch
 	dh_clean -X.orig

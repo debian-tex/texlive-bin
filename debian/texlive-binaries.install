@@ -1,5 +1,4 @@
 # how the hell do I break out of the --sourcedir of dh_install???
 ../debianize-fmtutil usr/share/texlive-bin
-../mupdmap.pl usr/share/texmf/scripts/texlive
 usr/bin
 usr/share

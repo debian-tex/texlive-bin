@@ -1,6 +1,6 @@
 
-verstr=texlive-bin-2011.`date +%Y%m%d`
-pkgstr=texlive-bin_2011.`date +%Y%m%d`
+verstr=texlive-bin-2012.`date +%Y%m%d`
+pkgstr=texlive-bin_2012.`date +%Y%m%d`
 if [ -r $verstr ] ; then
   echo "already existing: $verstr, exit!"
   exit 1
@@ -19,5 +19,5 @@ find $verstr -name \.svn -exec rm -rf '{}' \;
 find $verstr -name autom4te.cache -exec rm -rf '{}' \;
 
 echo "packing up"
-tar -czf $pkgstr.orig.tar.gz $verstr
+tar -cJf $pkgstr.orig.tar.xz $verstr
 

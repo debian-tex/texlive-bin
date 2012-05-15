@@ -1265,14 +1265,14 @@ Index: texlive-bin-2011.20120427/texk/web2c/pmplibdir/pmpost.ch
 +
 +@x
 +if (dvitomp_only)
-+  fprintf(stdout, "This is dvitomp %s (TeX Live 2012)\n", s);
++  fprintf(stdout, "This is dvitomp %s" WEB2CVERSION "\n", s);
 +else
-+  fprintf(stdout, "This is MetaPost %s (TeX Live 2012)\n", s);
++  fprintf(stdout, "This is MetaPost %s" WEB2CVERSION "\n", s);
 +@y
 +if (dvitomp_only)
-+  fprintf(stdout, "This is pdvitomp %s (TeX Live 2012)\n", s);
++  fprintf(stdout, "This is pdvitomp %s" WEB2CVERSION "\n", s);
 +else
-+  fprintf(stdout, "This is pMetaPost %s (TeX Live 2012)\n", s);
++  fprintf(stdout, "This is pMetaPost %s" WEB2CVERSION "\n", s);
 +@z
 +
 +@x
@@ -1306,14 +1306,14 @@ Index: texlive-bin-2011.20120427/texk/web2c/pmplibdir/pmpost.ch
 +
 +@x
 +if (dvitomp_only)
-+  fprintf(stdout, "This is dvitomp %s (TeX Live 2012)\n", s);
++  fprintf(stdout, "This is dvitomp %s" WEB2CVERSION "\n", s);
 +else
-+  fprintf(stdout, "This is MetaPost %s (TeX Live 2012)\n", s);
++  fprintf(stdout, "This is MetaPost %s" WEB2CVERSION "\n", s);
 +@y
 +if (dvitomp_only)
-+  fprintf(stdout, "This is pdvitomp %s (TeX Live 2012)\n", s);
++  fprintf(stdout, "This is pdvitomp %s" WEB2CVERSION "\n", s);
 +else
-+  fprintf(stdout, "This is pMetaPost %s (TeX Live 2012)\n", s);
++  fprintf(stdout, "This is pMetaPost %s" WEB2CVERSION "\n", s);
 +@z
 +
 +@x

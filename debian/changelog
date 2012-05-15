@@ -1,16 +1,18 @@
 texlive-bin (2012.20120516-1) unstable; urgency=low
 
-  * UNRELEASED
   * new upstream snapshot based on TL2012 tlpretest
   * remove outdated and not needed patches
   * remove traces of debian internal mupdmap, we use the one that is now
     shipped by default in TeX Live
   * patch shipped updmap for correct perl module search path
-  * switch back to source format 1.0 to get rid of the quilt versus
-    dpkg-source madness. A big toast to the dpkg devs for that!
+  * move patches from debian/patches to debian/quilt, add quilt as 
+    build dep, and include quilt patching in debian/rules
+    this gets us rid of the "strange" parts of the 3.0 format
+    (see quilt vs dpkg-source fuzzyness acceptance). 
+    Thanks to an unnamed dev who gave me the hint!
   * disable build-wovp2ovf patch, included upstream
 
- -- Norbert Preining <preining@debian.org>  Mon, 14 May 2012 09:44:50 +0900
+ -- Norbert Preining <preining@debian.org>  Wed, 16 May 2012 08:09:32 +0900
 
 texlive-bin (2011.20120510-1) unstable; urgency=low
 

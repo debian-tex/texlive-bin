@@ -3,6 +3,7 @@
 
 export SHELL=/bin/bash
 export CONFIG_SHELL=/bin/sh
+export QUILT_PATCHES=debian/quilt
 
 DEB_HOST_ARCH     ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
 
@@ -64,14 +65,8 @@ override_dh_install:
 	dh_install --sourcedir=$(CURDIR)/debian/tmp
 	# remove texlive directories, they should not be shipped here
 	rm -rf debian/texlive-binaries/usr/share/texlive
-	# we have to do something with updmap ... 
-	echo "WARNING WARNING WARNING UPDMAP MUST BE FIXED!!!"
-	#rm -f debian/texlive-binaries/usr/bin/updmap
-	#rm -f debian/texlive-binaries/usr/bin/updmap-sys
-	#rm -rf debian/texlive-binaries/usr/share/info
 	# remove wrongly added info/dir.gz
 	rm -f debian/texlive-binaries/usr/share/info/dir*
-	#rm -rf debian/texlive-binaries/usr/share/man
 	rm debian/texlive-binaries/usr/share/man/man1/latex.1*
 	rm debian/texlive-binaries/usr/share/man/man1/pdflatex.1*
 	rm debian/texlive-binaries/usr/share/man/man1/thumbpdf.1*

@@ -1333,14 +1333,14 @@ Index: texlive-bin-2011.20120427/texk/web2c/pmplibdir/pmpost.ch
 +
 +@x
 +if (dvitomp_only)
-+  fprintf(stdout, "dvitomp (MetaPost) %s (TeX Live 2012)\n", s);
++  fprintf(stdout, "dvitomp (MetaPost) %s" WEB2CVERSION "\n", s);
 +else
-+  fprintf(stdout, "MetaPost %s (TeX Live 2012)\n", s);
++  fprintf(stdout, "MetaPost %s" WEB2CVERSION "\n", s);
 +@y
 +if (dvitomp_only)
-+  fprintf(stdout, "pdvitomp (pMetaPost) %s (TeX Live 2012)\n", s);
++  fprintf(stdout, "pdvitomp (pMetaPost) %s" WEB2CVERSION "\n", s);
 +else
-+  fprintf(stdout, "pMetaPost %s (TeX Live 2012)\n", s);
++  fprintf(stdout, "pMetaPost %s" WEB2CVERSION "\n", s);
 +@z
 +
 +@x

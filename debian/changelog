@@ -1,5 +1,6 @@
-texlive-bin (2012.20120515-1) unstable; urgency=low
+texlive-bin (2012.20120516-1) unstable; urgency=low
 
+  * UNRELEASED
   * new upstream snapshot based on TL2012 tlpretest
   * remove outdated and not needed patches
   * remove traces of debian internal mupdmap, we use the one that is now
@@ -7,6 +8,7 @@ texlive-bin (2012.20120515-1) unstable; urgency=low
   * patch shipped updmap for correct perl module search path
   * switch back to source format 1.0 to get rid of the quilt versus
     dpkg-source madness. A big toast to the dpkg devs for that!
+  * disable build-wovp2ovf patch, included upstream
 
  -- Norbert Preining <preining@debian.org>  Mon, 14 May 2012 09:44:50 +0900
 

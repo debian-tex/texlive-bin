@@ -64,6 +64,10 @@ override_dh_install:
 	dh_install --sourcedir=$(CURDIR)/debian/tmp
 	# remove texlive directories, they should not be shipped here
 	rm -rf debian/texlive-binaries/usr/share/texlive
+	# we have to do something with updmap ... 
+	echo "WARNING WARNING WARNING UPDMAP MUST BE FIXED!!!"
+	#rm -f debian/texlive-binaries/usr/bin/updmap
+	#rm -f debian/texlive-binaries/usr/bin/updmap-sys
 	#rm -rf debian/texlive-binaries/usr/share/info
 	# remove wrongly added info/dir.gz
 	rm -f debian/texlive-binaries/usr/share/info/dir*

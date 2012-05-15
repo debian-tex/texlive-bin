@@ -13,7 +13,7 @@
 set-e-in-various-scripts
 #partial_lfs_support.diff
 debian-no-linked-scripts
-build-wovp2ovf
+#build-wovp2ovf
 60_unneeded_linking
 61_path_max.diff
 pmpost-20120415-tl11.diff

@@ -11,8 +11,9 @@ texlive-bin (2012.20120516-1) unstable; urgency=low
     (see quilt vs dpkg-source fuzzyness acceptance). 
     Thanks to an unnamed dev who gave me the hint!
   * disable build-wovp2ovf patch, included upstream
+  * (re)install cnf.h into libkpathsea-dev (Closes: #673016)
 
- -- Norbert Preining <preining@debian.org>  Wed, 16 May 2012 08:09:32 +0900
+ -- Norbert Preining <preining@debian.org>  Wed, 16 May 2012 14:05:23 +0900
 
 texlive-bin (2011.20120510-1) unstable; urgency=low
 

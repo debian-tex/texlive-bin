@@ -2,10 +2,10 @@
  texk/texlive/linked_scripts/texlive/updmap.pl |    2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-Index: texlive-bin-2011.20120515/texk/texlive/linked_scripts/texlive/updmap.pl
+Index: texlive-bin-2011.20120515/texk/tetex/updmap.pl
 ===================================================================
---- texlive-bin-2011.20120515.orig/texk/texlive/linked_scripts/texlive/updmap.pl	2012-05-15 00:00:53.826300460 +0900
-+++ texlive-bin-2011.20120515/texk/texlive/linked_scripts/texlive/updmap.pl	2012-05-15 14:01:57.158244571 +0900
+--- texlive-bin-2011.20120515.orig/texk/tetex/updmap.pl	2012-05-15 00:00:53.826300460 +0900
++++ texlive-bin-2011.20120515/texk/tetex/updmap.pl	2012-05-15 14:01:57.158244571 +0900
 @@ -30,7 +30,7 @@
      exit 1;
    }

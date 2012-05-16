@@ -1,3 +1,11 @@
+texlive-bin (2012.2012NNNN-1) UNRELEASED; urgency=low
+
+  * UNRELEASED
+  * new upstream snapshot
+  * cnf.h is again installed, don't install it via libkpathsea-dev.install
+
+ -- Norbert Preining <preining@debian.org>  Thu, 17 May 2012 07:54:37 +0900
+
 texlive-bin (2012.20120516-1) unstable; urgency=low
 
   * new upstream snapshot based on TL2012 tlpretest

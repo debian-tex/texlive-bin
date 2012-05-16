@@ -1,4 +1,3 @@
 usr/lib/libkpathsea.a
 usr/lib/libkpathsea.so
 usr/include/kpathsea/*
-../../texk/kpathsea/cnf.h usr/include/kpathsea

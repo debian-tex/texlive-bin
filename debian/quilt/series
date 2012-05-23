@@ -18,4 +18,3 @@ debian-no-linked-scripts
 pmpost-20120415-tl11.diff
 pmpost-svg-20120119-tl11.diff
 #xdvi-zoom-with-eps-figures.patch
-updmap-search-path

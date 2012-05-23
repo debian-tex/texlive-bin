@@ -3,7 +3,6 @@
 12b_fix_a2ping_invocation
 12e_fix_vpe_invocation
 23_use_xdvi.bin
-41_maketexmf
 50_fmtutil_deb
 51_fmtutil_keep_failedlog
 53_builtin-searchpath-fix

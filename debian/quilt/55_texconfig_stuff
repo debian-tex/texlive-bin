@@ -7,11 +7,28 @@
  texk/tetex/texconfig.man |   28 ++++++++++++++++++++++++-
  2 files changed, 41 insertions(+), 39 deletions(-)
 
-Index: texlive-bin-2011.20120216/texk/tetex/texconfig
+Index: texlive-bin-2012.20120516/texk/tetex/texconfig
 ===================================================================
---- texlive-bin-2011.20120216.orig/texk/tetex/texconfig	2011-01-07 20:45:38.000000000 +0900
-+++ texlive-bin-2011.20120216/texk/tetex/texconfig	2012-02-17 10:45:03.752383135 +0900
-@@ -567,7 +567,7 @@
+--- texlive-bin-2012.20120516.orig/texk/tetex/texconfig	2012-05-25 21:16:45.000000000 +0200
++++ texlive-bin-2012.20120516/texk/tetex/texconfig	2012-05-25 21:58:53.000000000 +0200
+@@ -52,6 +52,7 @@
+       FMT=fmt
+       test ! -x /bin/fmt && test ! -f /usr/bin/fmt &&
+         { test -x /bin/adjust || test -x /usr/bin/adjust; } && FMT=adjust
++      :
+       ;;
+     *)
+       return
+@@ -444,7 +445,7 @@
+ {
+   case $configPsFile in
+     "")
+-      configPsFile=`tcfmgr --cmd find --file config.ps`
++      configPsFile=`kpsewhich -format='dvips config' config-paper.ps`
+       ;;
+     *)
+       return
+@@ -567,7 +568,7 @@
         $progname help                  (or --help; show this help)
         $progname hyphen FORMAT         (edit hyphenation config for FORMAT)
         $progname init [FORMAT]...      (rebuild FORMATs, or all formats
@@ -20,40 +37,81 @@ Index: texlive-bin-2011.20120216/texk/tetex/texconfig
         $progname mode MODE             (set Metafont MODE)
         $progname paper PAPER           (set default paper size to PAPER)
         $progname pdftex [OPTION]...    (pdftex options)
-@@ -890,8 +890,8 @@
+@@ -620,7 +621,7 @@
+ 
+     # texconfig dvipdfm
+     dvipdfm)
+-      help="Usage: $progname dvipdfm paper PAPER
++      help="Usage: $progname dvipdfm [paperconf|paper-list] PAPER
+ 
+ Valid PAPER settings:
+   letter legal ledger tabloid a4 a3"
+@@ -632,6 +633,8 @@
+         paper)
+           case $3 in
+             letter|legal|ledger|tabloid|a4|a3)
++	      echo "WARNING: On Debian, this change will NOT be persistent"
++	      echo "upon upgrades or changes to the libpaper settings!"
+               fmgrConfigReplace config '^p' "p $3";;
+             "") echo "$help" >&2; rc=1;;
+             *)
+@@ -653,7 +656,7 @@
+ 
+     # texconfig dvipdfmx
+     dvipdfmx)
+-      help="Usage: $progname dvipdfmx paper PAPER
++      help="Usage: $progname dvipdfmx [paperconf,paper-list,paper PAPER]
+ 
+ Valid PAPER settings:
+   letter legal ledger tabloid a4 a3"
+@@ -665,6 +668,8 @@
+         paper)
+           case $3 in
+             letter|legal|ledger|tabloid|a4|a3)
++	      echo "WARNING: On Debian, this change will NOT be persistent"
++	      echo "upon upgrades or changes to the libpaper settings!"
+               fmgrConfigReplace dvipdfmx.cfg '^p' "p $3";;
+             "") echo "$help" >&2; rc=1;;
+             *)
+@@ -779,6 +784,12 @@
+                   echo "$progname: configuration file for printer \`$printerName' (config.$printerName) not found" >&2
+                   rc=1
+                   ;;
++		/usr/share/texmf|/usr/share/texlive/texmf|/usr/share/texlive/texmf-dist)
++		  echo "On Debian system, this command would remove files installed by dpkg."
++		  echo "Please use texconfig dvips del PRINTER only for printers installed by you."
++		  echo "Exiting."
++		  rc=1
++		  ;;
+                 *)
+                   if rm "$pFile"; then
+                     echo "$progname: file \`$pFile' removed" >&2
+@@ -809,7 +820,7 @@
+               locateConfigPsFile
+               case "$configPsFile" in
+                 "")
+-                  echo "$progname: file config.ps not found" >&2; rc=1
++                  echo "$progname: file $configPsFile not found" >&2; rc=1
+                   ;;
+                 *)
+                   if grep "@ $tcBatchDvipsPaper " $configPsFile >/dev/null 2>&1; then
+@@ -889,11 +900,11 @@
+       ;;
  
      faq)
-       setupTexmfmain
+-      setupTexmfmain
 -      if test -f $MT_TEXMFMAIN/doc/tetex/teTeX-FAQ; then
 -        <$MT_TEXMFMAIN/doc/tetex/teTeX-FAQ eval ${PAGER-more}
++      setupTexmfdist
 +      if test -f $MT_TEXMFDIST/doc/tetex/teTeX-FAQ.gz; then
-+        <$MT_TEXMFDIST/doc/tetex/teTeX-FAQ.gz eval zcat | ${PAGER-sensible-pager}
++        <$MT_TEXMFDIST/doc/tetex/teTeX-FAQ.gz eval ${PAGER-zless}
        else
-         echo "$progname: faq not found (usually in \$TEXMFMAIN/doc/tetex/teTeX-FAQ)" >&2
+-        echo "$progname: faq not found (usually in \$TEXMFMAIN/doc/tetex/teTeX-FAQ)" >&2
++        echo "$progname: faq not found (usually in \$TEXMFDIST/doc/tetex/teTeX-FAQ)" >&2
          rc=1
-@@ -931,16 +931,19 @@
-               ;;
-             *)
-               tcBatchFontVardir=$3
--              tfc=`kpsewhich texmf.cnf`
-+	      tfcs=$(grep -l '^[[:space:]]*VARTEXFONTS[[:space:]]*=' /etc/texmf/texmf.d/*.cnf)
-+	      # last match wins
-+	      for file in $tfcs; do tfc=$file; done
-               if test -n "$tfc"; then
-                 if test -w "$tfc"; then
-                   configReplace "$tfc" '^VARTEXFONTS' "VARTEXFONTS  = $tcBatchFontVardir"
-+		  update-texmf
-                 else
-                   echo "$progname: setting up vardir failed. Reason: no permission to write file \`$tfc'" >&2
-                   rc=1
-                 fi
-               else
--                echo "$progname: setting up vardir failed. Reason: failed to find file texmf.cnf" >&2
-+                echo "$progname: setting up vardir failed. Reason: failed to find file \`$tfc'" >&2
-                 rc=1
-               fi
-               ;;
-@@ -1007,21 +1010,6 @@
+       fi
+       ;;
+@@ -1007,21 +1018,6 @@
        ;;
  
      formats)
@@ -75,7 +133,7 @@ Index: texlive-bin-2011.20120216/texk/tetex/texconfig
        setupTmpDir
        echo "$progname: analyzing old configuration..." >&2
        fmtutil --catcfg > $tmpdir/pre
-@@ -1037,7 +1025,6 @@
+@@ -1037,7 +1033,6 @@
          for i in `awk '{print $1}' $tmpdir/addOrChange`; do
            fmtutil --byfmt "$i" || rc=1
          done
@@ -83,7 +141,7 @@ Index: texlive-bin-2011.20120216/texk/tetex/texconfig
        fi
        ;;
  
-@@ -1047,22 +1034,6 @@
+@@ -1047,22 +1042,6 @@
  
      # "hyphen FORMAT"
      hyphen)
@@ -106,7 +164,7 @@ Index: texlive-bin-2011.20120216/texk/tetex/texconfig
        tcBatchHyphenFormat=$2
        formatsForHyphen=`getFormatsForHyphen`
        formatsForHyphenFmt=`echo "$formatsForHyphen" | myFmt | sed 's@^@  @'`
-@@ -1084,6 +1055,11 @@
+@@ -1084,6 +1063,11 @@
                  rc=1
                  return
                  ;;
@@ -118,7 +176,7 @@ Index: texlive-bin-2011.20120216/texk/tetex/texconfig
              esac
  
              getRelDir "$tcBatchHyphenFile"
-@@ -1111,7 +1087,7 @@
+@@ -1111,7 +1095,7 @@
                  fi
                  ;;
              esac
@@ -127,10 +185,81 @@ Index: texlive-bin-2011.20120216/texk/tetex/texconfig
              if cmp "$tcBatchHFEdit" "$tcBatchHFOrig" >/dev/null 2>&1; then
                echo "$progname: configuration unchanged." >&2
              else
-Index: texlive-bin-2011.20120216/texk/tetex/texconfig.man
+@@ -1153,7 +1137,6 @@
+       case $2 in
+         "")
+           if fmtutil --all \
+-             && texlinks --multiplatform \
+              && updmap; then
+             :
+           else
+@@ -1210,41 +1193,10 @@
+       ;;
+ 
+     paper)
+-      help="Usage: $progname paper PAPER
+-
+-Valid PAPER settings:
+-  letter a4"
+-
+-      p=$2; pXdvi=$2; pDvips=$2
+-      case $2 in
+-        letter)
+-          pXdvi=us;;
+-        a4)
+-          pXdvi=a4;;
+-        "") echo "$help" >&2; rc=1; return;;
+-        *)
+-          echo "$progname: unknown PAPER \`$2' given as argument for \`$progname paper'" >&2
+-          echo "$progname: try \`$progname paper' for help" >&2
+-          rc=1
+-          return;;
+-      esac
+-      if checkForBinary dvips >/dev/null && tcfmgr --cmd find --file config.ps >/dev/null 2>&1; then
+-        tcBatch dvips paper $pDvips
+-      fi
+-      if checkForBinary dvipdfm >/dev/null && tcfmgr --cmd find --file config >/dev/null 2>&1; then
+-        tcBatch dvipdfm paper $p
+-      fi
+-      if checkForBinary dvipdfmx >/dev/null && tcfmgr --cmd find --file dvipdfmx.cfg >/dev/null 2>&1; then
+-        tcBatch dvipdfmx paper $p
+-      fi
+-      if checkForBinary xdvi >/dev/null && tcfmgr --cmd find --file XDvi >/dev/null 2>&1; then
+-        tcBatch xdvi paper $pXdvi
+-      fi
+-      if checkForBinary pdftex >/dev/null && tcfmgr --cmd find --file pdftexconfig.tex >/dev/null 2>&1; then
+-        tcBatch pdftex paper $p
+-      fi
++      echo "This command shouldn't be used on Debian. Please use 'paperconf' instead."
++      echo
++      rc=1
+       ;;
+-
+     pdftex)
+       help="Usage: $progname pdftex paper PAPER
+ 
+@@ -1277,6 +1229,8 @@
+           ;;
+ 
+         paper)
++	  echo "WARNING: On Debian, this change will NOT be persistent"
++	  echo "upon upgrades or changes to the libpaper settings!"
+           case $3 in
+             letter)
+               w="8.5 true in"; h="11 true in"
+@@ -1385,6 +1339,8 @@
+           echo "$tcBatchXdviPapers"
+           ;;
+         paper)
++	  echo "WARNING: On Debian, this change will NOT be persistent"
++	  echo "upon upgrades or changes to the libpaper settings!"
+           case $3 in
+             a1|a1r|a2|a2r|a3|a3r|a4|a4r|a5|a5r|a6|a6r|a7|a7r|b1|b1r|b2|b2r|b3|b3r|b4|b4r|b5|b5r|b6|b6r|b7|b7r|c1|c1r|c2|c2r|c3|c3r|c4|c4r|c5|c5r|c6|c6r|c7|c7r|foolscap|legal|us|usr)
+               fmgrConfigReplace XDvi paper: "*paper: $3"
+Index: texlive-bin-2012.20120516/texk/tetex/texconfig.man
 ===================================================================
---- texlive-bin-2011.20120216.orig/texk/tetex/texconfig.man	2011-09-29 21:14:07.000000000 +0900
-+++ texlive-bin-2011.20120216/texk/tetex/texconfig.man	2012-02-17 10:46:05.492075357 +0900
+--- texlive-bin-2012.20120516.orig/texk/tetex/texconfig.man	2012-05-25 21:16:45.000000000 +0200
++++ texlive-bin-2012.20120516/texk/tetex/texconfig.man	2012-05-25 21:20:58.000000000 +0200
 @@ -46,6 +46,20 @@
  .IR TEXMFSYSCONFIG .
  (You may need to be root to do this.)

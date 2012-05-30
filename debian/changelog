@@ -1,8 +1,9 @@
-texlive-bin (2012.201206DD-1) UNRELEASED; urgency=low
+texlive-bin (2012.201206DD-2) UNRELEASED; urgency=low
 
   * new upstream UNRELEASED
+  * call update-language in the postinstall (Closes: #675179)
 
- -- Norbert Preining <preining@debian.org>  Wed, 30 May 2012 15:10:47 +0900
+ -- Norbert Preining <preining@debian.org>  Wed, 30 May 2012 21:30:14 +0900
 
 texlive-bin (2012.20120530-1) unstable; urgency=high
 

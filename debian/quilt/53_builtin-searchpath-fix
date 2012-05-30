@@ -4,13 +4,13 @@
 ## DP: adjust built-in search paths for kpathsea library to Debian standard
 
 @DPATCH@
- texk/kpathsea/texmf.cnf |   34 +++++++++++++---------------------
- 1 file changed, 13 insertions(+), 21 deletions(-)
+ texk/kpathsea/texmf.cnf |   38 +++++++++++++++-----------------------
+ 1 file changed, 15 insertions(+), 23 deletions(-)
 
-Index: texlive-bin-2011.20120427/texk/kpathsea/texmf.cnf
+Index: texlive-bin-2012.20120530/texk/kpathsea/texmf.cnf
 ===================================================================
---- texlive-bin-2011.20120427.orig/texk/kpathsea/texmf.cnf	2012-04-17 23:43:40.000000000 +0900
-+++ texlive-bin-2011.20120427/texk/kpathsea/texmf.cnf	2012-04-27 11:34:05.942960043 +0900
+--- texlive-bin-2012.20120530.orig/texk/kpathsea/texmf.cnf	2012-05-13 08:34:52.951624000 +0900
++++ texlive-bin-2012.20120530/texk/kpathsea/texmf.cnf	2012-05-30 09:57:42.685015402 +0900
 @@ -55,19 +55,22 @@
  
  % The tree containing runtime files related to the specific
@@ -39,6 +39,19 @@ Index: texlive-bin-2011.20120427/texk/kpathsea/texmf.cnf
  
  % Per-user texmf tree(s) -- organized per the TDS, as usual.  To define
  % more than one per-user tree, set this to a list of directories in
+@@ -76,10 +79,10 @@
+ TEXMFHOME = ~/texmf
+ 
+ % TEXMFVAR, where texconfig/updmap/fmtutil store cached runtime data.
+-TEXMFVAR = ~/.texlive2012/texmf-var
++TEXMFVAR = ~/.texmf-var
+ 
+ % TEXMFCONFIG, where texconfig/updmap/fmtutil store configuration data.
+-TEXMFCONFIG = ~/.texlive2012/texmf-config
++TEXMFCONFIG = ~/.texmf-config
+ 
+ % List all the texmf trees.
+ %
 @@ -94,7 +97,7 @@
  % versions should take precedence over those -- although it is generally
  % a source of confusion to have different versions of a package
@@ -70,9 +83,9 @@ Index: texlive-bin-2011.20120427/texk/kpathsea/texmf.cnf
  
  % On some systems, there will be a system tree which contains all the font
  % files that may be created as well as the formats.  For example
-@@ -480,18 +483,7 @@
- % since we don't want to scatter ../'s throughout the value.  Hence we
- % explicitly list every directory.  Arguably more understandable anyway.
+@@ -481,18 +484,7 @@
+ % explicitly list every directory.  Arguably more understandable this
+ % way anyway.
  %
 -TEXMFCNF = {\
 -$SELFAUTOLOC,\

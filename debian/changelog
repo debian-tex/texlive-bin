@@ -1,3 +1,9 @@
+texlive-bin (2012.201206DD-1) UNRELEASED; urgency=low
+
+  * new upstream UNRELEASED
+
+ -- Norbert Preining <preining@debian.org>  Wed, 30 May 2012 15:10:47 +0900
+
 texlive-bin (2012.20120530-1) unstable; urgency=high
 
   * new upstream snapshot (svn 26726)

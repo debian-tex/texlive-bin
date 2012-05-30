@@ -1,0 +1,29 @@
+---
+ texk/tetex/fmtutil |    7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+Index: texlive-bin-2012.20120530/texk/tetex/fmtutil
+===================================================================
+--- texlive-bin-2012.20120530.orig/texk/tetex/fmtutil	2012-05-30 10:54:55.000000000 +0900
++++ texlive-bin-2012.20120530/texk/tetex/fmtutil	2012-05-30 11:00:06.369603296 +0900
+@@ -3,6 +3,9 @@
+ # Public domain.  Originally written by Thomas Esser.
+ # Run with --help for usage.
+ 
++set -e
++retval=0
++
+ # program history:
+ #   further changes in texk/tetex/ChangeLog.
+ #   2007-01-04  patch by JK to support $engine subdir (enabled by default)
+@@ -523,8 +526,8 @@
+   if test -n "$cfgmaint"; then
+     if test -z "$cfgparam"; then
+       setupTmpDir
+-      co=`tcfmgr --tmp $tmpdir --cmd co --file $cnf`
+-      test $? = 0 || cleanup 1
++      co=`tcfmgr --tmp $tmpdir --cmd co --file $cnf || retval=$?`
++      test $retval = 0 || cleanup 1
+       set x $co; shift
+       id=$1; cnf_file=$3; orig=$4
+       verboseMsg "$progname: initial config file is \`$orig'"

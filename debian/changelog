@@ -3,9 +3,17 @@ texlive-bin (2012.20120530-1) unstable; urgency=high
   * new upstream snapshot (svn 26726)
     exporting kpse_cnf_get (Closes: #675109)
   * cnf.h is again installed, don't install it via libkpathsea-dev.install
-  * remove debian/quilt/41_maketexmf, included upstream
+  * patch handling:
+    . removed: 41_maketexmf, 12_fix_epstopdf_invocation
+      both included upstream or not needed anymore
+    . new: set-e-fmtutil part of set-e-in-various-scripts that still 
+      applies
+    . disabled: 57_texconfig_papersizes_for_upstream,
+      58_texconfig_papersizes_use_ucf, superseeded by 55_texconfig_stuff
+    . disabled: set-e-in-various-scripts: split into set-e-fmtutil
+      and a disabled part for texconfig
 
- -- Norbert Preining <preining@debian.org>  Wed, 30 May 2012 09:37:30 +0900
+ -- Norbert Preining <preining@debian.org>  Wed, 30 May 2012 11:02:05 +0900
 
 texlive-bin (2012.20120516-1) unstable; urgency=low
 

@@ -1,11 +1,11 @@
-texlive-bin (2012.2012NNNN-1) UNRELEASED; urgency=low
+texlive-bin (2012.20120530-1) unstable; urgency=high
 
-  * UNRELEASED
-  * new upstream snapshot
+  * new upstream snapshot (svn 26726)
+    exporting kpse_cnf_get (Closes: #675109)
   * cnf.h is again installed, don't install it via libkpathsea-dev.install
   * remove debian/quilt/41_maketexmf, included upstream
 
- -- Norbert Preining <preining@debian.org>  Wed, 23 May 2012 10:32:48 +0900
+ -- Norbert Preining <preining@debian.org>  Wed, 30 May 2012 09:37:30 +0900
 
 texlive-bin (2012.20120516-1) unstable; urgency=low
 

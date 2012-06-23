@@ -23,3 +23,4 @@ patch-icu -p0
 patch-lacheck -p0
 patch-pdftex -p0
 patch-update-updmap-manpage
+xdvi-upupstream-fixes

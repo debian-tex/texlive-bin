@@ -1,4 +1,4 @@
-texlive-bin (2012.20120623-1) UNRELEASED; urgency=low
+texlive-bin (2012.20120623-1) unstable; urgency=low
 
   * post release fixed from Peter Breitenlohner (will be included upstream):
     - (patch-dvi2tty, patch-lacheck) Ken Brown <kbrow1i@gmail.com> has noteda
@@ -12,8 +12,12 @@ texlive-bin (2012.20120623-1) UNRELEASED; urgency=low
     building pdfTeX that way slightly reduces its capability to handle large 
     files (see README.config 1.6 and 3.4.2).
   * update updmap man page (Closes: #677300)
+  * (pulled from upupstream cvs, patch xdvi-upupstream-fixes)
+    - Fixed bugs in property handling on 64-bit systems (related to source 
+      specials).
+    - Added support for XkbBell, to make the console bell work again.
 
- -- Norbert Preining <preining@debian.org>  Sat, 23 Jun 2012 12:32:48 +0900
+ -- Norbert Preining <preining@debian.org>  Sat, 23 Jun 2012 12:57:25 +0900
 
 texlive-bin (2012.20120530-2) unstable; urgency=low
 

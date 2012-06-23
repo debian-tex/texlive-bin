@@ -18,3 +18,8 @@ debian-no-linked-scripts
 pmpost-20120415-tl11.diff
 pmpost-svg-20120119-tl11.diff
 #xdvi-zoom-with-eps-figures.patch
+patch-dvi2tty -p0
+patch-icu -p0
+patch-lacheck -p0
+patch-pdftex -p0
+patch-update-updmap-manpage

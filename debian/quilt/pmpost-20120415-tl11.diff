@@ -11,11 +11,11 @@
  texk/web2c/pmplibdir/pmpost.ch    |  233 +++++++++++++++++
  10 files changed, 1284 insertions(+)
 
-Index: texlive-bin-2011.20120427/texk/kpathsea/texmf.cnf
+Index: texlive-bin-2012.20120623/texk/kpathsea/texmf.cnf
 ===================================================================
---- texlive-bin-2011.20120427.orig/texk/kpathsea/texmf.cnf	2012-04-27 11:34:05.942960043 +0900
-+++ texlive-bin-2011.20120427/texk/kpathsea/texmf.cnf	2012-04-27 11:37:53.846649471 +0900
-@@ -617,6 +617,7 @@
+--- texlive-bin-2012.20120623.orig/texk/kpathsea/texmf.cnf	2012-06-23 12:19:11.120478535 +0900
++++ texlive-bin-2012.20120623/texk/kpathsea/texmf.cnf	2012-06-23 12:19:15.696482385 +0900
+@@ -619,6 +619,7 @@
  % Used by makempx to run TeX.  We use "etex" because MetaPost is
  % expecting DVI, and not "tex" because we want first line parsing.
  TEX = etex
@@ -23,10 +23,10 @@ Index: texlive-bin-2011.20120427/texk/kpathsea/texmf.cnf
  
  % These variables specify the external program called for the
  % interactive `e' option.  %d is replaced by the line number and %s by
-Index: texlive-bin-2011.20120427/texk/web2c/Makefile.am
+Index: texlive-bin-2012.20120623/texk/web2c/Makefile.am
 ===================================================================
---- texlive-bin-2011.20120427.orig/texk/web2c/Makefile.am	2011-10-05 00:41:38.370251000 +0900
-+++ texlive-bin-2011.20120427/texk/web2c/Makefile.am	2012-04-27 11:37:53.850649466 +0900
+--- texlive-bin-2012.20120623.orig/texk/web2c/Makefile.am	2011-10-05 00:41:38.370251000 +0900
++++ texlive-bin-2012.20120623/texk/web2c/Makefile.am	2012-06-23 12:19:15.696482385 +0900
 @@ -161,6 +161,9 @@
  ## MetaPost
  include $(srcdir)/mplibdir/am/mplib.am
@@ -37,10 +37,10 @@ Index: texlive-bin-2011.20120427/texk/web2c/Makefile.am
  ## libmplib, used by MetaPost and luaTeX
  include $(srcdir)/mplibdir/am/libmplib.am
  
-Index: texlive-bin-2011.20120427/texk/web2c/ac/web2c.ac
+Index: texlive-bin-2012.20120623/texk/web2c/ac/web2c.ac
 ===================================================================
---- texlive-bin-2011.20120427.orig/texk/web2c/ac/web2c.ac	2011-08-14 23:23:26.366247000 +0900
-+++ texlive-bin-2011.20120427/texk/web2c/ac/web2c.ac	2012-04-27 11:37:53.850649466 +0900
+--- texlive-bin-2012.20120623.orig/texk/web2c/ac/web2c.ac	2011-08-14 23:23:26.366247000 +0900
++++ texlive-bin-2012.20120623/texk/web2c/ac/web2c.ac	2012-06-23 12:19:15.696482385 +0900
 @@ -75,6 +75,11 @@
                AS_HELP_STRING([--disable-mp],
                               [do not build METAPOST],
@@ -53,10 +53,10 @@ Index: texlive-bin-2011.20120427/texk/web2c/ac/web2c.ac
  ## configure options for WEB programs
  AC_ARG_ENABLE([web-progs],
                AS_HELP_STRING([--disable-web-progs],
-Index: texlive-bin-2011.20120427/texk/web2c/configure.ac
+Index: texlive-bin-2012.20120623/texk/web2c/configure.ac
 ===================================================================
---- texlive-bin-2011.20120427.orig/texk/web2c/configure.ac	2012-01-18 20:18:30.055776000 +0900
-+++ texlive-bin-2011.20120427/texk/web2c/configure.ac	2012-04-27 11:37:53.850649466 +0900
+--- texlive-bin-2012.20120623.orig/texk/web2c/configure.ac	2012-05-10 20:10:01.264474000 +0900
++++ texlive-bin-2012.20120623/texk/web2c/configure.ac	2012-06-23 12:19:15.696482385 +0900
 @@ -195,6 +195,7 @@
                       [KPSE_MFWIN_DEFINE(Kpse_Win)])])[]dnl
  
@@ -65,10 +65,10 @@ Index: texlive-bin-2011.20120427/texk/web2c/configure.ac
  
  AM_CONDITIONAL([WEB], [test "x$enable_web_progs" != xno])
  
-Index: texlive-bin-2011.20120427/texk/web2c/pmplibdir/am/pmpost.am
+Index: texlive-bin-2012.20120623/texk/web2c/pmplibdir/am/pmpost.am
 ===================================================================
 --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ texlive-bin-2011.20120427/texk/web2c/pmplibdir/am/pmpost.am	2012-04-27 11:37:53.850649466 +0900
++++ texlive-bin-2012.20120623/texk/web2c/pmplibdir/am/pmpost.am	2012-06-23 12:19:15.696482385 +0900
 @@ -0,0 +1,78 @@
 +## texk/web2c/pmplibdir/am/pmpost.am: Makefile fragment for MetaPost.
 +##
@@ -148,10 +148,10 @@ Index: texlive-bin-2011.20120427/texk/web2c/pmplibdir/am/pmpost.am
 +
 +DISTCLEANFILES += $(nodist_pmpost_SOURCES)
 +
-Index: texlive-bin-2011.20120427/texk/web2c/pmplibdir/jfm.ch
+Index: texlive-bin-2012.20120623/texk/web2c/pmplibdir/jfm.ch
 ===================================================================
 --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ texlive-bin-2011.20120427/texk/web2c/pmplibdir/jfm.ch	2012-04-27 11:37:53.850649466 +0900
++++ texlive-bin-2012.20120623/texk/web2c/pmplibdir/jfm.ch	2012-06-23 12:19:15.696482385 +0900
 @@ -0,0 +1,110 @@
 +@x
 +#include <w2c/config.h>
@@ -263,10 +263,10 @@ Index: texlive-bin-2011.20120427/texk/web2c/pmplibdir/jfm.ch
 +mp->tfm_infile = (mp->open_file)(mp, mp->name_of_file, "r",mp_filetype_metrics);
 +#endif
 +@z
-Index: texlive-bin-2011.20120427/texk/web2c/pmplibdir/jmp.ch
+Index: texlive-bin-2012.20120623/texk/web2c/pmplibdir/jmp.ch
 ===================================================================
 --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ texlive-bin-2011.20120427/texk/web2c/pmplibdir/jmp.ch	2012-04-27 11:37:53.850649466 +0900
++++ texlive-bin-2012.20120623/texk/web2c/pmplibdir/jmp.ch	2012-06-23 12:19:15.696482385 +0900
 @@ -0,0 +1,283 @@
 +% jMetaPost change file for MetaPost
 +%
@@ -551,10 +551,10 @@ Index: texlive-bin-2011.20120427/texk/web2c/pmplibdir/jmp.ch
 +}
 +@* Debugging.
 +@z
-Index: texlive-bin-2011.20120427/texk/web2c/pmplibdir/jmppsw.ch
+Index: texlive-bin-2012.20120623/texk/web2c/pmplibdir/jmppsw.ch
 ===================================================================
 --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ texlive-bin-2011.20120427/texk/web2c/pmplibdir/jmppsw.ch	2012-04-27 11:37:53.850649466 +0900
++++ texlive-bin-2012.20120623/texk/web2c/pmplibdir/jmppsw.ch	2012-06-23 12:19:15.696482385 +0900
 @@ -0,0 +1,76 @@
 +%
 +%
@@ -632,10 +632,10 @@ Index: texlive-bin-2011.20120427/texk/web2c/pmplibdir/jmppsw.ch
 +           mp_ps_string_out(mp, gr_text_p(p),gr_text_l(p));
 +        mp_ps_name_out(mp, mp->font_name[gr_font_n(p)],false);
 +@z
-Index: texlive-bin-2011.20120427/texk/web2c/pmplibdir/pdvitomp.ch
+Index: texlive-bin-2012.20120623/texk/web2c/pmplibdir/pdvitomp.ch
 ===================================================================
 --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ texlive-bin-2011.20120427/texk/web2c/pmplibdir/pdvitomp.ch	2012-04-27 11:37:53.850649466 +0900
++++ texlive-bin-2012.20120623/texk/web2c/pmplibdir/pdvitomp.ch	2012-06-23 12:19:15.696482385 +0900
 @@ -0,0 +1,494 @@
 +@x
 +#include "pmpxout.h"
@@ -1131,10 +1131,10 @@ Index: texlive-bin-2011.20120427/texk/web2c/pmplibdir/pdvitomp.ch
 +  mpx->print_col++;
 +}
 +@z
-Index: texlive-bin-2011.20120427/texk/web2c/pmplibdir/pmpost.ch
+Index: texlive-bin-2012.20120623/texk/web2c/pmplibdir/pmpost.ch
 ===================================================================
 --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ texlive-bin-2011.20120427/texk/web2c/pmplibdir/pmpost.ch	2012-04-27 11:37:53.850649466 +0900
++++ texlive-bin-2012.20120623/texk/web2c/pmplibdir/pmpost.ch	2012-06-23 12:19:15.696482385 +0900
 @@ -0,0 +1,233 @@
 +@x
 +#include <pmpxout.h>

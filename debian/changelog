@@ -1,3 +1,20 @@
+texlive-bin (2012.20120623-1) UNRELEASED; urgency=low
+
+  * post release fixed from Peter Breitenlohner (will be included upstream):
+    - (patch-dvi2tty, patch-lacheck) Ken Brown <kbrow1i@gmail.com> has noteda
+    that already moderately long pathnames may yield buffer overruns in 
+    lacheck and dvi2tty.
+    - (patch-icu) three ICU library files have been modified (undoing ICU 
+    SVN commit 36090 from 2009-06-11), in order to solve all/most XeTeX 
+    problems with Indic scripts.
+    - (patch-pdftex) a small change in pdftexdir/pdftosrc.cc required to
+    build pdfTeX with poppler >=0.18.4 (system-xpdf).  Note, however, that 
+    building pdfTeX that way slightly reduces its capability to handle large 
+    files (see README.config 1.6 and 3.4.2).
+  * update updmap man page (Closes: #677300)
+
+ -- Norbert Preining <preining@debian.org>  Sat, 23 Jun 2012 12:32:48 +0900
+
 texlive-bin (2012.20120530-2) unstable; urgency=low
 
   * call update-language in the postinstall (Closes: #675179)

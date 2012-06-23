@@ -1,0 +1,549 @@
+Index: texk/lacheck/lacheck-1.26-PATCHES/ChangeLog
+===================================================================
+--- texk/lacheck/lacheck-1.26-PATCHES/ChangeLog	(revision 26897)
++++ texk/lacheck/lacheck-1.26-PATCHES/ChangeLog	(working copy)
+@@ -1,3 +1,14 @@
++2012-06-22  Peter Breitenlohner   <peb@mppmu.mpg.de>
++
++	* patch-06-buffer-overrun (new): Avoid buffer overrun for long
++	pathnames (detected by Ken Brown <kbrow1i@gmail.com>).
++
++2012-06-19  Peter Breitenlohner  <peb@mppmu.mpg.de>
++
++	* patch-05-never-interactive (new): Added the never-interactive
++	option to prevent flex from creating a problematic prototype for
++	isatty().
++
+ 2010-12-10  Peter Breitenlohner  <peb@mppmu.mpg.de>
+ 
+ 	Patches applied to lacheck-1.26 as obtained from CTAN.
+Index: texk/lacheck/lacheck-1.26-PATCHES/patch-06-buffer-overrun
+===================================================================
+--- texk/lacheck/lacheck-1.26-PATCHES/patch-06-buffer-overrun	(revision 0)
++++ texk/lacheck/lacheck-1.26-PATCHES/patch-06-buffer-overrun	(revision 0)
+@@ -0,0 +1,144 @@
++diff -ur lacheck-1.26.orig/lacheck.l lacheck-1.26/lacheck.l
++--- lacheck-1.26.orig/lacheck.l	2012-06-19 15:11:14.000000000 +0200
+++++ lacheck-1.26/lacheck.l	2012-06-22 11:04:33.000000000 +0200
++@@ -144,7 +144,6 @@
++ #define CG_ITALIC gstack[gstackp-1].italic
++ #define CG_FILE gstack[gstackp-1].s_file
++ 
++-char *bg_command(char *name);
++ void pop(void);
++ void push(const char *p_name, int p_type, int p_line);
++ void linecount(void);
++@@ -157,7 +156,6 @@
++ 
++   /* global variables */
++ 
++-char returnval[100];
++ int line_count = 1;
++ int warn_count = 0;
++ char *file_name;
++@@ -962,72 +960,58 @@
++     free(gstack[gstackp].s_file);
++ }
++ 
++-char *bg_command(char *name)
+++static void print_bg_command(char *name)
++ {
++     
++     switch (CG_TYPE) {
++ 	
++     case 2:
++-	(void) strcpy( returnval, "\\begin{" );
++-	(void) strcat( returnval, (char *) name);
++-	(void) strcat( returnval, "}" );
+++	printf("\\begin{%s}", name);
++ 	break;
++ 	
++     case 3:
++-	(void) strcpy( returnval, "beginning of file " );
++-	(void) strcat( returnval, (char *) name);
+++	printf("beginning of file %s", name);
++ 	break;
++     
++     case 4:
++-	(void) strcpy( returnval, "math begin " );
++-	(void) strcat( returnval, (char *) name);
+++	printf("math begin %s", name);
++ 	break;
++     
++     case 5:
++-	(void) strcpy( returnval, "display math begin " );
++-	(void) strcat( returnval, (char *) name);
+++	printf("display math begin %s", name);
++ 	break;
++     
++     default:
++-    	(void) strcpy( returnval, name );
+++	printf("%s", name);
++ 	
++     }
++-    
++-    return ((char *)returnval);
++ }
++ 
++-static char *eg_command(char *name, int type)
+++static void print_eg_command(char *name, int type)
++ {
++     
++     switch (type) {
++ 	
++     case 2:
++-	(void) strcpy( returnval, "\\end{" );
++-	(void) strcat( returnval, (char *) name);
++-	(void) strcat( returnval, "}" );
+++	printf("\\end{%s}", name);
++ 	break;
++ 	
++     case 3:
++-	(void) strcpy( returnval, "end of file " );
++-	(void) strcat( returnval, (char *) name);
+++	printf("end of file %s", name);
++ 	break;
++     
++     case 4:
++-	(void) strcpy( returnval, "math end " );
++-	(void) strcat( returnval, (char *) name);
+++	printf("math end %s", name);
++ 	break;
++     
++     case 5:
++-	(void) strcpy( returnval, "display math end " );
++-	(void) strcat( returnval, (char *) name);
+++	printf("display math end %s", name);
++ 	break;
++     
++     default:
++-    	(void) strcpy( returnval, name );
+++	printf("%s", name);
++ 	break;
++     }
++-    
++-    return ((char *)returnval);
++ }
++ 
++ 
++@@ -1072,15 +1056,17 @@
++ 
++ void print_bad_match(char *end_command, int type)
++ {
++-	  printf("\"%s\", line %d: <- unmatched \"%s\"\n",
+++	  printf("\"%s\", line %d: <- unmatched \"",
++ 	         file_name, 
++-		 line_count, 
++-		 eg_command( end_command , type) ) ;
+++		 line_count);
+++	  print_eg_command(end_command, type);
+++	  printf("\"\n");
++ 
++-	  printf("\"%s\", line %d: -> unmatched \"%s\"\n",
+++	  printf("\"%s\", line %d: -> unmatched \"",
++ 	         CG_FILE, 
++-		 CG_LINE, 
++-		 bg_command( CG_NAME ) ) ;
+++		 CG_LINE);
+++	  print_bg_command(CG_NAME);
+++	  printf("\"\n");
++ 	  warn_count += 2;
++ }
++ 
++@@ -1088,10 +1074,11 @@
++ {
++     if ( gstackp == 0 )
++ 	{
++-	 printf("\"%s\", line %d: \"%s\" found at top level\n",
++-	       file_name, 
++-	       line_count, 
++-	       eg_command( end_command, type )) ;
+++	 printf("\"%s\", line %d: \"",
+++	        file_name, 
+++		line_count);
+++	 print_eg_command(end_command, type);
+++	 printf("\" found at top level\n");
++ 	 ++warn_count;
++          return(0);
++ 	}
+Index: texk/lacheck/lacheck-1.26-PATCHES/patch-05-never-interactive
+===================================================================
+--- texk/lacheck/lacheck-1.26-PATCHES/patch-05-never-interactive	(revision 0)
++++ texk/lacheck/lacheck-1.26-PATCHES/patch-05-never-interactive	(revision 0)
+@@ -0,0 +1,12 @@
++diff -ur lacheck-1.26.orig/lacheck.l lacheck-1.26/lacheck.l
++--- lacheck-1.26.orig/lacheck.l	2010-12-09 23:25:22.000000000 +0100
+++++ lacheck-1.26/lacheck.l	2012-06-19 15:11:14.000000000 +0200
++@@ -113,6 +113,8 @@
++  *    Initial distribution version.
++  */
++ 
+++%option never-interactive
+++
++ %{ 
++ 
++ #include <stdio.h>
+Index: texk/lacheck/lacheck.c
+===================================================================
+--- texk/lacheck/lacheck.c	(revision 26897)
++++ texk/lacheck/lacheck.c	(working copy)
+@@ -2089,7 +2089,7 @@
+  * 26-May-1991  Kresten Krab Thorup
+  *    Initial distribution version.
+  */
+-#line 117 "lacheck.l"
++#line 119 "lacheck.l"
+ 
+ #include <stdio.h>
+ #include <string.h>
+@@ -2118,7 +2118,6 @@
+ #define CG_ITALIC gstack[gstackp-1].italic
+ #define CG_FILE gstack[gstackp-1].s_file
+ 
+-char *bg_command(char *name);
+ void pop(void);
+ void push(const char *p_name, int p_type, int p_line);
+ void linecount(void);
+@@ -2131,7 +2130,6 @@
+ 
+   /* global variables */
+ 
+-char returnval[100];
+ int line_count = 1;
+ int warn_count = 0;
+ char *file_name;
+@@ -2167,7 +2165,7 @@
+ 
+ 
+ 
+-#line 2171 "lacheck.c"
++#line 2169 "lacheck.c"
+ 
+ #define INITIAL 0
+ #define B_ENVIRONMENT 1
+@@ -2367,7 +2365,7 @@
+ #line 237 "lacheck.l"
+ 
+ 
+-#line 2371 "lacheck.c"
++#line 2369 "lacheck.c"
+ 
+ 	if ( !(yy_init) )
+ 		{
+@@ -2433,7 +2431,7 @@
+ 			*(yy_state_ptr)++ = yy_current_state;
+ 			++yy_cp;
+ 			}
+-		while ( yy_base[yy_current_state] != 5134 );
++		while ( yy_current_state != 952 );
+ 
+ yy_find_action:
+ 		yy_current_state = *--(yy_state_ptr);
+@@ -3361,7 +3359,7 @@
+ #line 764 "lacheck.l"
+ ECHO;
+ 	YY_BREAK
+-#line 3365 "lacheck.c"
++#line 3363 "lacheck.c"
+ 
+ 	case YY_END_OF_BUFFER:
+ 		{
+@@ -3878,10 +3876,6 @@
+ 	yyfree((void *) b  );
+ }
+ 
+-#ifndef __cplusplus
+-extern int isatty (int );
+-#endif /* __cplusplus */
+-    
+ /* Initializes or reinitializes a buffer.
+  * This function is sometimes called more than once on the same buffer,
+  * such as during a yyrestart() or at EOF.
+@@ -3905,7 +3899,7 @@
+         b->yy_bs_column = 0;
+     }
+ 
+-        b->yy_is_interactive = file ? (isatty( fileno(file) ) > 0) : 0;
++        b->yy_is_interactive = 0;
+     
+ 	errno = oerrno;
+ }
+@@ -4535,72 +4529,58 @@
+     free(gstack[gstackp].s_file);
+ }
+ 
+-char *bg_command(char *name)
++static void print_bg_command(char *name)
+ {
+     
+     switch (CG_TYPE) {
+ 	
+     case 2:
+-	(void) strcpy( returnval, "\\begin{" );
+-	(void) strcat( returnval, (char *) name);
+-	(void) strcat( returnval, "}" );
++	printf("\\begin{%s}", name);
+ 	break;
+ 	
+     case 3:
+-	(void) strcpy( returnval, "beginning of file " );
+-	(void) strcat( returnval, (char *) name);
++	printf("beginning of file %s", name);
+ 	break;
+     
+     case 4:
+-	(void) strcpy( returnval, "math begin " );
+-	(void) strcat( returnval, (char *) name);
++	printf("math begin %s", name);
+ 	break;
+     
+     case 5:
+-	(void) strcpy( returnval, "display math begin " );
+-	(void) strcat( returnval, (char *) name);
++	printf("display math begin %s", name);
+ 	break;
+     
+     default:
+-    	(void) strcpy( returnval, name );
++	printf("%s", name);
+ 	
+     }
+-    
+-    return ((char *)returnval);
+ }
+ 
+-static char *eg_command(char *name, int type)
++static void print_eg_command(char *name, int type)
+ {
+     
+     switch (type) {
+ 	
+     case 2:
+-	(void) strcpy( returnval, "\\end{" );
+-	(void) strcat( returnval, (char *) name);
+-	(void) strcat( returnval, "}" );
++	printf("\\end{%s}", name);
+ 	break;
+ 	
+     case 3:
+-	(void) strcpy( returnval, "end of file " );
+-	(void) strcat( returnval, (char *) name);
++	printf("end of file %s", name);
+ 	break;
+     
+     case 4:
+-	(void) strcpy( returnval, "math end " );
+-	(void) strcat( returnval, (char *) name);
++	printf("math end %s", name);
+ 	break;
+     
+     case 5:
+-	(void) strcpy( returnval, "display math end " );
+-	(void) strcat( returnval, (char *) name);
++	printf("display math end %s", name);
+ 	break;
+     
+     default:
+-    	(void) strcpy( returnval, name );
++	printf("%s", name);
+ 	break;
+     }
+-    
+-    return ((char *)returnval);
+ }
+ 
+ 
+@@ -4645,15 +4625,17 @@
+ 
+ void print_bad_match(char *end_command, int type)
+ {
+-	  printf("\"%s\", line %d: <- unmatched \"%s\"\n",
++	  printf("\"%s\", line %d: <- unmatched \"",
+ 	         file_name, 
+-		 line_count, 
+-		 eg_command( end_command , type) ) ;
++		 line_count);
++	  print_eg_command(end_command, type);
++	  printf("\"\n");
+ 
+-	  printf("\"%s\", line %d: -> unmatched \"%s\"\n",
++	  printf("\"%s\", line %d: -> unmatched \"",
+ 	         CG_FILE, 
+-		 CG_LINE, 
+-		 bg_command( CG_NAME ) ) ;
++		 CG_LINE);
++	  print_bg_command(CG_NAME);
++	  printf("\"\n");
+ 	  warn_count += 2;
+ }
+ 
+@@ -4661,10 +4643,11 @@
+ {
+     if ( gstackp == 0 )
+ 	{
+-	 printf("\"%s\", line %d: \"%s\" found at top level\n",
+-	       file_name, 
+-	       line_count, 
+-	       eg_command( end_command, type )) ;
++	 printf("\"%s\", line %d: \"",
++	        file_name, 
++		line_count);
++	 print_eg_command(end_command, type);
++	 printf("\" found at top level\n");
+ 	 ++warn_count;
+          return(0);
+ 	}
+Index: texk/lacheck/lacheck-1.26/lacheck.l
+===================================================================
+--- texk/lacheck/lacheck-1.26/lacheck.l	(revision 26897)
++++ texk/lacheck/lacheck-1.26/lacheck.l	(working copy)
+@@ -113,6 +113,8 @@
+  *    Initial distribution version.
+  */
+ 
++%option never-interactive
++
+ %{ 
+ 
+ #include <stdio.h>
+@@ -142,7 +144,6 @@
+ #define CG_ITALIC gstack[gstackp-1].italic
+ #define CG_FILE gstack[gstackp-1].s_file
+ 
+-char *bg_command(char *name);
+ void pop(void);
+ void push(const char *p_name, int p_type, int p_line);
+ void linecount(void);
+@@ -155,7 +156,6 @@
+ 
+   /* global variables */
+ 
+-char returnval[100];
+ int line_count = 1;
+ int warn_count = 0;
+ char *file_name;
+@@ -960,72 +960,58 @@
+     free(gstack[gstackp].s_file);
+ }
+ 
+-char *bg_command(char *name)
++static void print_bg_command(char *name)
+ {
+     
+     switch (CG_TYPE) {
+ 	
+     case 2:
+-	(void) strcpy( returnval, "\\begin{" );
+-	(void) strcat( returnval, (char *) name);
+-	(void) strcat( returnval, "}" );
++	printf("\\begin{%s}", name);
+ 	break;
+ 	
+     case 3:
+-	(void) strcpy( returnval, "beginning of file " );
+-	(void) strcat( returnval, (char *) name);
++	printf("beginning of file %s", name);
+ 	break;
+     
+     case 4:
+-	(void) strcpy( returnval, "math begin " );
+-	(void) strcat( returnval, (char *) name);
++	printf("math begin %s", name);
+ 	break;
+     
+     case 5:
+-	(void) strcpy( returnval, "display math begin " );
+-	(void) strcat( returnval, (char *) name);
++	printf("display math begin %s", name);
+ 	break;
+     
+     default:
+-    	(void) strcpy( returnval, name );
++	printf("%s", name);
+ 	
+     }
+-    
+-    return ((char *)returnval);
+ }
+ 
+-static char *eg_command(char *name, int type)
++static void print_eg_command(char *name, int type)
+ {
+     
+     switch (type) {
+ 	
+     case 2:
+-	(void) strcpy( returnval, "\\end{" );
+-	(void) strcat( returnval, (char *) name);
+-	(void) strcat( returnval, "}" );
++	printf("\\end{%s}", name);
+ 	break;
+ 	
+     case 3:
+-	(void) strcpy( returnval, "end of file " );
+-	(void) strcat( returnval, (char *) name);
++	printf("end of file %s", name);
+ 	break;
+     
+     case 4:
+-	(void) strcpy( returnval, "math end " );
+-	(void) strcat( returnval, (char *) name);
++	printf("math end %s", name);
+ 	break;
+     
+     case 5:
+-	(void) strcpy( returnval, "display math end " );
+-	(void) strcat( returnval, (char *) name);
++	printf("display math end %s", name);
+ 	break;
+     
+     default:
+-    	(void) strcpy( returnval, name );
++	printf("%s", name);
+ 	break;
+     }
+-    
+-    return ((char *)returnval);
+ }
+ 
+ 
+@@ -1070,15 +1056,17 @@
+ 
+ void print_bad_match(char *end_command, int type)
+ {
+-	  printf("\"%s\", line %d: <- unmatched \"%s\"\n",
++	  printf("\"%s\", line %d: <- unmatched \"",
+ 	         file_name, 
+-		 line_count, 
+-		 eg_command( end_command , type) ) ;
++		 line_count);
++	  print_eg_command(end_command, type);
++	  printf("\"\n");
+ 
+-	  printf("\"%s\", line %d: -> unmatched \"%s\"\n",
++	  printf("\"%s\", line %d: -> unmatched \"",
+ 	         CG_FILE, 
+-		 CG_LINE, 
+-		 bg_command( CG_NAME ) ) ;
++		 CG_LINE);
++	  print_bg_command(CG_NAME);
++	  printf("\"\n");
+ 	  warn_count += 2;
+ }
+ 
+@@ -1086,10 +1074,11 @@
+ {
+     if ( gstackp == 0 )
+ 	{
+-	 printf("\"%s\", line %d: \"%s\" found at top level\n",
+-	       file_name, 
+-	       line_count, 
+-	       eg_command( end_command, type )) ;
++	 printf("\"%s\", line %d: \"",
++	        file_name, 
++		line_count);
++	 print_eg_command(end_command, type);
++	 printf("\" found at top level\n");
+ 	 ++warn_count;
+          return(0);
+ 	}

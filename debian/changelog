@@ -1,3 +1,10 @@
+texlive-bin (2012.20120623-2) unstable; urgency=low
+
+  * fix reading from and writing to pipes from within tex: new 
+    patch fix-pipe-in-out-regression (Closes: #679065)
+
+ -- Norbert Preining <preining@debian.org>  Tue, 26 Jun 2012 16:02:17 +0900
+
 texlive-bin (2012.20120623-1) unstable; urgency=low
 
   * post release fixed from Peter Breitenlohner (will be included upstream):

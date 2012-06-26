@@ -1,0 +1,34 @@
+reading from pipes and writing to pipes is currently broken, because
+the argument passed to popen is one that should only be used on
+Windows. (additional "b"). Since we will never compile these sources
+on Windows, simply remove the problematics "b"s and get it back on.
+---
+ texk/web2c/lib/texmfmp.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+Index: texlive-bin-2012.20120623/texk/web2c/lib/texmfmp.c
+===================================================================
+--- texlive-bin-2012.20120623.orig/texk/web2c/lib/texmfmp.c	2012-04-16 22:39:06.000000000 +0900
++++ texlive-bin-2012.20120623/texk/web2c/lib/texmfmp.c	2012-06-26 16:00:03.154246698 +0900
+@@ -1853,7 +1853,7 @@
+       fname = xmalloc(strlen((const_string)(nameoffile+1))+1);
+       strcpy(fname,(const_string)(nameoffile+1));
+       recorder_record_input (fname + 1);
+-      *f_ptr = runpopen(fname+1,"rb");
++      *f_ptr = runpopen(fname+1,"r");
+       free(fname);
+       for (i=0; i<NUM_PIPES; i++) {
+         if (pipes[i]==NULL) {
+@@ -1895,10 +1895,10 @@
+            is better to be prepared */
+         if (STREQ((fname+strlen(fname)-4),".tex"))
+           *(fname+strlen(fname)-4) = 0;
+-        *f_ptr = runpopen(fname+1,"wb");
++        *f_ptr = runpopen(fname+1,"w");
+         *(fname+strlen(fname)) = '.';
+       } else {
+-        *f_ptr = runpopen(fname+1,"wb");
++        *f_ptr = runpopen(fname+1,"w");
+       }
+       recorder_record_output (fname + 1);
+       free(fname);

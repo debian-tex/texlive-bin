@@ -24,4 +24,5 @@ patch-lacheck -p0
 patch-pdftex -p0
 patch-update-updmap-manpage
 xdvi-upupstream-fixes
+upstream-fix-ini-synctex-segfault
 fix-pipe-in-out-regression

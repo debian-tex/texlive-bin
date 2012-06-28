@@ -3,14 +3,62 @@ the argument passed to popen is one that should only be used on
 Windows. (additional "b"). Since we will never compile these sources
 on Windows, simply remove the problematics "b"s and get it back on.
 ---
- texk/web2c/lib/texmfmp.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ texk/web2c/lib/ChangeLog |    8 ++++++++
+ texk/web2c/lib/texmfmp.c |   22 +++++++++++++++-------
+ 2 files changed, 23 insertions(+), 7 deletions(-)
 
 Index: texlive-bin-2012.20120623/texk/web2c/lib/texmfmp.c
 ===================================================================
---- texlive-bin-2012.20120623.orig/texk/web2c/lib/texmfmp.c	2012-04-16 22:39:06.000000000 +0900
-+++ texlive-bin-2012.20120623/texk/web2c/lib/texmfmp.c	2012-06-26 16:00:03.154246698 +0900
-@@ -1853,7 +1853,7 @@
+--- texlive-bin-2012.20120623.orig/texk/web2c/lib/texmfmp.c	2012-06-28 09:38:21.810278326 +0900
++++ texlive-bin-2012.20120623/texk/web2c/lib/texmfmp.c	2012-06-28 09:44:56.514267775 +0900
+@@ -527,7 +527,9 @@
+ /* Like runsystem(), the runpopen() function is called only when
+    shellenabledp == 1.   Unlike runsystem(), here we write errors to
+    stderr, since we have nowhere better to use; and of course we return
+-   a file handle (or NULL) instead of a status indicator.  */
++   a file handle (or NULL) instead of a status indicator.
++
++   Also, we append "b" to MODE on Windows.  */
+ 
+ static FILE *
+ runpopen (char *cmd, const char *mode)
+@@ -536,9 +538,14 @@
+   char *safecmd = NULL;
+   char *cmdname = NULL;
+   int allow;
+-
+ #ifdef WIN32
+   char *pp;
++#endif
++  string realmode = xmalloc(strlen(mode)+2);
++
++  strcpy(realmode, mode);
++#ifdef WIN32
++  strcat(realmode, "b");
+ 
+   for (pp = cmd; *pp; pp++) {
+     if (*pp == '\'') *pp = '"';
+@@ -552,9 +559,9 @@
+     allow = shell_cmd_is_allowed (cmd, &safecmd, &cmdname);
+ 
+   if (allow == 1)
+-    f = popen (cmd, mode);
++    f = popen (cmd, realmode);
+   else if (allow == 2)
+-    f = popen (safecmd, mode);
++    f = popen (safecmd, realmode);
+   else if (allow == -1)
+     fprintf (stderr, "\nrunpopen quotation error in command line: %s\n",
+              cmd);
+@@ -565,6 +572,7 @@
+     free (safecmd);
+   if (cmdname)
+     free (cmdname);
++  free (realmode);
+   return f;
+ }
+ #endif /* ENABLE_PIPES */
+@@ -1857,7 +1865,7 @@
        fname = xmalloc(strlen((const_string)(nameoffile+1))+1);
        strcpy(fname,(const_string)(nameoffile+1));
        recorder_record_input (fname + 1);
@@ -19,7 +67,7 @@ Index: texlive-bin-2012.20120623/texk/web2c/lib/texmfmp.c
        free(fname);
        for (i=0; i<NUM_PIPES; i++) {
          if (pipes[i]==NULL) {
-@@ -1895,10 +1895,10 @@
+@@ -1899,10 +1907,10 @@
             is better to be prepared */
          if (STREQ((fname+strlen(fname)-4),".tex"))
            *(fname+strlen(fname)-4) = 0;
@@ -32,3 +80,19 @@ Index: texlive-bin-2012.20120623/texk/web2c/lib/texmfmp.c
        }
        recorder_record_output (fname + 1);
        free(fname);
+Index: texlive-bin-2012.20120623/texk/web2c/lib/ChangeLog
+===================================================================
+--- texlive-bin-2012.20120623.orig/texk/web2c/lib/ChangeLog	2012-06-28 09:38:52.014277080 +0900
++++ texlive-bin-2012.20120623/texk/web2c/lib/ChangeLog	2012-06-28 09:40:08.130274192 +0900
+@@ -1,3 +1,11 @@
++2012-06-27  Norbert Preining  <preining@logic.at>
++
++	* texmfmp.c (runpopen): append "b" on Windows.
++	(open_in_or_pipe): do not use the "b" here.
++	(This makes pdftex's \input"|..." feature work again,
++	unintentionally broken.)
++	tex-live mail, 26 Jun 2012 14:02:26.
++
+ 2012-06-27  Karl Berry  <karl@tug.org>
+ 
+ 	* texmfmp.c (generic_synctex_get_current_name): return the

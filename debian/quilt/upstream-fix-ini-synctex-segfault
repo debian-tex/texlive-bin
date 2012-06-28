@@ -1,0 +1,33 @@
+---
+ texk/web2c/lib/ChangeLog |    5 +++++
+ texk/web2c/lib/texmfmp.c |    4 ++++
+ 2 files changed, 9 insertions(+)
+
+Index: texlive-bin-2012.20120623/texk/web2c/lib/ChangeLog
+===================================================================
+--- texlive-bin-2012.20120623.orig/texk/web2c/lib/ChangeLog	2012-05-04 16:10:16.000000000 +0900
++++ texlive-bin-2012.20120623/texk/web2c/lib/ChangeLog	2012-06-28 09:38:52.014277080 +0900
+@@ -1,3 +1,8 @@
++2012-06-27  Karl Berry  <karl@tug.org>
++
++	* texmfmp.c (generic_synctex_get_current_name): return the
++	empty string if passed null (can happen with -ini).
++
+ 2012-05-04  Peter Breitenlohner  <peb@mppmu.mpg.de>
+ 
+ 	* printversion.c (printversionandexit): Update 'Copyright 2012'.
+Index: texlive-bin-2012.20120623/texk/web2c/lib/texmfmp.c
+===================================================================
+--- texlive-bin-2012.20120623.orig/texk/web2c/lib/texmfmp.c	2012-06-28 09:36:56.706282341 +0900
++++ texlive-bin-2012.20120623/texk/web2c/lib/texmfmp.c	2012-06-28 09:38:21.810278326 +0900
+@@ -127,6 +127,10 @@
+ char *generic_synctex_get_current_name (void)
+ {
+   char *pwdbuf, *ret;
++  if (!fullnameoffile) {
++    ret = xstrdup("");
++    return ret;
++  }
+   if (kpse_absolute_p(fullnameoffile, false)) {
+      return xstrdup(fullnameoffile);
+   }

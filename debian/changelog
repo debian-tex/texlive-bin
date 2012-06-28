@@ -1,3 +1,10 @@
+texlive-bin (2012.20120623-3) UNRELEASED; urgency=low
+
+  * Build with -marm on armhf to fix lilypond FTBFS (Closes: #678604)
+    (Thanks Peter Michael Green)
+
+ -- Norbert Preining <preining@debian.org>  Thu, 28 Jun 2012 09:34:16 +0900
+
 texlive-bin (2012.20120623-2) unstable; urgency=low
 
   * fix reading from and writing to pipes from within tex: new 

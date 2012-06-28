@@ -1,9 +1,12 @@
-texlive-bin (2012.20120623-3) UNRELEASED; urgency=low
+texlive-bin (2012.20120628-1) unstable; urgency=low
 
+  * new upstream (some emergency fixes), the following patches have
+    been removed since they are included upstream: patch-icu, patch-pdftex,
+    fix-pipe-in-out-regression, upstream-fix-ini-synctex-segfault
   * Build with -marm on armhf to fix lilypond FTBFS (Closes: #678604)
     (Thanks Peter Michael Green)
 
- -- Norbert Preining <preining@debian.org>  Thu, 28 Jun 2012 09:34:16 +0900
+ -- Norbert Preining <preining@debian.org>  Thu, 28 Jun 2012 23:47:26 +0900
 
 texlive-bin (2012.20120623-2) unstable; urgency=low
 

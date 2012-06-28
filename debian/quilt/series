@@ -19,10 +19,10 @@ pmpost-20120415-tl11.diff
 pmpost-svg-20120119-tl11.diff
 #xdvi-zoom-with-eps-figures.patch
 patch-dvi2tty -p0
-patch-icu -p0
+#upstream included# patch-icu -p0
 patch-lacheck -p0
-patch-pdftex -p0
+#upstream included# patch-pdftex -p0
 patch-update-updmap-manpage
 xdvi-upupstream-fixes
-upstream-fix-ini-synctex-segfault
-fix-pipe-in-out-regression
+#upstream included# upstream-fix-ini-synctex-segfault
+#upstream included# fix-pipe-in-out-regression

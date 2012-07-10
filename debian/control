@@ -1,7 +1,7 @@
 Source: texlive-bin
 Section: tex
 Priority: optional
-Maintainer:  Debian TeX Maintainers <debian-tex-maint@lists.debian.org>
+Maintainer: Debian TeX Maintainers <debian-tex-maint@lists.debian.org>
 Uploaders: Norbert Preining <preining@debian.org>, Frank Küster <frank@kuesterei.ch>
 Build-Depends: debhelper (>= 7.0.50~), sharutils, ed, libncurses5-dev | libncurses-dev, libxaw7-dev, libpng-dev, zlib1g-dev | libz-dev, libgd2-xpm-dev | libgd2-noxpm-dev, flex, bison, libpoppler-private-dev (>= 0.12.4), libfontconfig1-dev, dh-autoreconf, time, libgraphite-dev (>= 1:2.3.1), quilt
 Standards-Version: 3.9.3

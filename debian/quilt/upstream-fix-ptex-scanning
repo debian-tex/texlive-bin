@@ -1,9 +1,63 @@
 Fix scanning of characters in ptex
+patch by Hironori Kitagawa
 upstream svn 27076
----
- texk/web2c/ptexdir/ChangeLog    |    5 +++++
- texk/web2c/ptexdir/ptex-base.ch |    2 +-
- 2 files changed, 6 insertions(+), 1 deletion(-)
+
+reported in http://oku.edu.mie-u.ac.jp/tex/mod/forum/
+QA -> Forums -> 一般フォーラム ->  Improper alphabetic constant.　がでない？
+
+Test case: the following tex file:
+\newcount\foo
+\foo`\A
+\showthe\foo % 65
+\foo`\AA % !?
+\showthe\foo
+\bye
+
+when run through etex gives the correct:
+This is pdfTeX, Version 3.1415926-2.3-1.40.12 (TeX Live 2012/dev/W32TeX)
+ restricted \write18 enabled.
+entering extended mode
+(./test.tex
+> 65.
+l.3 \showthe\foo
+                 % 65
+?
+! Improper alphabetic constant.
+
+                   \AA
+l.4 \foo`\AA
+             % !?
+?
+> 48.
+l.5 \showthe\foo
+
+?
+[1] )
+Output written on test.dvi (1 page, 220 bytes).
+Transcript written on test.log.
+
+
+
+while when running through eptex it gives the wrong:
+This is e-pTeX, Version 3.1415926-p3.2-110825-2.3 (sjis) (TeX Live
+2012/dev/W32TeX)
+ restricted \write18 enabled.
+entering extended mode
+(./test.tex
+> 65.
+l.3 \showthe\foo
+                 % 65
+?
+> 452.
+l.5 \showthe\foo
+
+?
+ )
+No pages of output.
+Transcript written on test.log.
+
+
+--
 
 Index: texlive-bin-2012.20120628/texk/web2c/ptexdir/ChangeLog
 ===================================================================

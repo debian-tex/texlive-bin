@@ -26,3 +26,4 @@ patch-update-updmap-manpage
 xdvi-upupstream-fixes
 #upstream included# upstream-fix-ini-synctex-segfault
 #upstream included# fix-pipe-in-out-regression
+upstream-fix-ptex-scanning

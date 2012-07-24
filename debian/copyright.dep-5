@@ -319,7 +319,74 @@ Copyright:
  Werner Lemberg  <werner.lemberg@freetype.org>
 License: GPL-2+, FTL
 
+Files: ./libs/icu/*
+Copyright: 1995-2012 International Business Machines Corporation and others 
+License: ICU License
 
+Files: 
+./libs/icu/*Makefile.am
+./libs/icu/configure.ac
+./libs/icu/version.ac
+Copyright: 2009-2012 Peter Breitenlohner 
+License: simple-copyleft
+
+Files:
+./libs/icu/ac/*
+Copyright: 2009 Peter Breitenlohner
+License: public-domain
+
+Files:
+./libs/obsdcompat/ac/*
+Copyright: 2009 Peter Breitenlohner
+License: public-domain
+
+Files: ./libs/obsdcompat/*
+Copyright: Many
+License: Mixed
+Comment: PROBLEM 
+ The files all seem to be free, but the copyright and license
+ information is all dispersed throughout them.  Moreover, it's unclear
+ whether they are used at all, and if yes whether similar code isn't
+ already in Debian.
+
+Files: ./libs/t1lib/*
+Copyright: 2009,2011 Peter Breitenlohner
+License: public-domain
+
+Files: 
+./libs/t1lib/configure.ac
+./libs/t1lib/version.ac
+Copyright: 2009,2011 Peter Breitenlohner
+License: simple-copyleft
+
+Files: 
+./libs/t1lib/l047016t.pfa
+./libs/t1lib/l047016t.xafm
+Copyright: 
+ 2001 Bigelow & Holmes Inc. Instructions 
+ 2001 URW++
+License: Luxi-font-license
+
+Files: ./libs/teckit/*
+Copyright: 2009-2011 Peter Breitenlohner
+License: public-domain
+
+Files: 
+./libs/teckit/configure.ac
+./libs/teckit/version.ac
+./libs/teckit/include/teckit/Makefile.am 
+Copyright: 2009-2012 Peter Breitenlohner
+License: simple-copyleft
+
+Files:
+./libs/teckit/TECkit-2.5.3/*
+Copyright: 2002-2011, SIL International
+License: CPL-0.5+, LGPG-2.1+
+
+
+Files: ./libs/t1lib/t1lib-5.1.2/*
+Copyright: 1996-2007 Rainer Menzner <Rainer.Menzner@web.de>
+License: LGPL
 
 License: simple-copyleft
  This file is free software; the copyright holder
@@ -507,3 +574,82 @@ License: FTL
 
 
  --- end of FTL.txt ---
+
+License: ICU License
+ ICU License - ICU 1.8.1 and later
+ 
+ COPYRIGHT AND PERMISSION NOTICE
+ 
+ Copyright (c) 1995-2012 International Business Machines Corporation and others
+ 
+ All rights reserved.
+ 
+ Permission is hereby granted, free of charge, to any person obtaining
+ a copy of this software and associated documentation files (the
+ "Software"), to deal in the Software without restriction, including
+ without limitation the rights to use, copy, modify, merge, publish,
+ distribute, and/or sell copies of the Software, and to permit persons
+ to whom the Software is furnished to do so, provided that the above
+ copyright notice(s) and this permission notice appear in all copies of
+ the Software and that both the above copyright notice(s) and this
+ permission notice appear in supporting documentation.
+ 
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT
+ OF THIRD PARTY RIGHTS. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
+ HOLDERS INCLUDED IN THIS NOTICE BE LIABLE FOR ANY CLAIM, OR ANY
+ SPECIAL INDIRECT OR CONSEQUENTIAL DAMAGES, OR ANY DAMAGES WHATSOEVER
+ RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF
+ CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ 
+ Except as contained in this notice, the name of a copyright holder
+ shall not be used in advertising or otherwise to promote the sale, use
+ or other dealings in this Software without prior written authorization
+ of the copyright holder.
+ 
+ All trademarks and registered trademarks mentioned herein are the
+ property of their respective owners.
+
+License: Luxi-font-license
+ Bigelow & Holmes Inc and URW++ GmbH Luxi font license
+ 
+ Luxi fonts copyright (c) 2001 by Bigelow & Holmes Inc. Luxi font instruction
+ code copyright (c) 2001 by URW++ GmbH. All Rights Reserved. Luxi is a regis-
+ tered trademark of Bigelow & Holmes Inc.
+ 
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of these Fonts and associated documentation files (the "Font Software"), to
+ deal in the Font Software, including without limitation the rights to use,
+ copy, merge, publish, distribute, sublicense, and/or sell copies of the Font
+ Software, and to permit persons to whom the Font Software is furnished to do
+ so, subject to the following conditions:
+ 
+ The above copyright and trademark notices and this permission notice shall be
+ included in all copies of one or more of the Font Software.
+ 
+ The Font Software may not be modified, altered, or added to, and in particu-
+ lar the designs of glyphs or characters in the Fonts may not be modified nor
+ may additional glyphs or characters be added to the Fonts. This License
+ becomes null and void when the Fonts or Font Software have been modified.
+ 
+ THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT OF COPYRIGHT, PATENT,
+ TRADEMARK, OR OTHER RIGHT.  IN NO EVENT SHALL BIGELOW & HOLMES INC. OR URW++
+ GMBH. BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, INCLUDING ANY GEN-
+ ERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, WHETHER IN AN
+ ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF THE USE OR
+ INABILITY TO USE THE FONT SOFTWARE OR FROM OTHER DEALINGS IN THE FONT SOFT-
+ WARE.
+ 
+ Except as contained in this notice, the names of Bigelow & Holmes Inc. and
+ URW++ GmbH. shall not be used in advertising or otherwise to promote the
+ sale, use or other dealings in this Font Software without prior written
+ authorization from Bigelow & Holmes Inc. and URW++ GmbH.
+ 
+ For further information, contact:
+ 
+ info@urwpp.de or design@bigelowandholmes.com
+ 

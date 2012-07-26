@@ -45,7 +45,7 @@ Section: libs
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Description: TeX Live: pTeX encoding library
- library for encoding support in pTeX, a japanese TeX engine.
+ library for encoding support in pTeX, a Japanese TeX engine.
 
 Package: libptexenc-dev
 Section: libdevel
@@ -53,5 +53,5 @@ Architecture: any
 Depends: ${misc:Depends}, libptexenc1 (= ${binary:Version}), ${shlibs:Depends}
 Description: TeX Live: ptex encoding library (development part)
  This package contains the static library and header files for the
- ptexenc library, a library for encoding support in pTeX, a japanese
+ ptexenc library, a library for encoding support in pTeX, a Japanese
  TeX engine.

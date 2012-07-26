@@ -4,7 +4,7 @@ texlive-bin (2012.20120628-2) unstable; urgency=low
     (debian/quilt/upstream-fix-ptex-scanning)
   * format and lintian fixes
 
- -- Norbert Preining <preining@debian.org>  Thu, 26 Jul 2012 02:20:44 +0900
+ -- Norbert Preining <preining@debian.org>  Thu, 26 Jul 2012 11:59:23 +0900
 
 texlive-bin (2012.20120628-1) unstable; urgency=low
 

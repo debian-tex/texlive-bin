@@ -1,3 +1,10 @@
+texlive-bin (2012.20120628-3) unstable; urgency=low
+
+  * fix too short name space for cweave (original file has this fix
+    since 2008) (new patch cweave-fix-too-short-names)
+
+ -- Norbert Preining <preining@debian.org>  Tue, 04 Sep 2012 10:32:59 +0900
+
 texlive-bin (2012.20120628-2) unstable; urgency=low
 
   * cherrypick a bugfix from upstream for ptex kanji code scanning

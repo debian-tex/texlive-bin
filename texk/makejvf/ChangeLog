@@ -1,0 +1,49 @@
+2012-04-29  Norbert Preining  <preining@logic.at>
+
+	Update for upTeX-1.10. From TANAKA Takuji <KXD02663@nifty.ne.jp>.
+	* uniblock.c: Update references Unicode blocks Blocks-6.1.0.txt
+	and CMap files.
+	* main.c: Update version number. Revise help messages.
+
+2012-01-17  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* write.c: binary write mode for tfm and vf on Windows.
+
+2012-01-16  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	Update for upTeX-1.00. From TANAKA Takuji <KXD02663@nifty.ne.jp>.
+	* uniblock.[ch]: New files.
+	* main.c, makejvf.h, write.c: Use the new files.
+	* Makefile.am (makejvf_SOURCES): Add the new files.
+	(EXTRA_DIST): Drop Makefile.orig.
+
+2011-04-19  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	Avoid 'differ in signedness' warnings.
+	* tfmread.c (header, char_type, char_info): Declare as unsigned.
+
+2010-05-01  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* makejvf.test (new): Shell script for 'make check' test.
+	* tests/[t]min10.{tfm,vf}, tests/rml[v].tfm (new): Test data.
+	* Makefile.am: Adjust.
+
+2010-04-16  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* write.c (writevf): Initialize height.  From Sadayuki Tanaka
+	<s-tanaka@asciimw.jp>, 16 Apr 2010 16:30:22.
+
+2010-04-15  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* tool.c: #include "makejvf.h" for prototypes.
+	(utri, tri, pair, mget, uftri, ftri, fskip, cutspace, gethex,
+	getdec): Don't compile unused functions.
+	(fputnum): Drop unused local variable.
+	* tfmread.c (tfmget): Drop unused local variables.
+	* makejvf.h, write.c: Change return type of vfclose() and
+	maketfm() from int to void.
+
+2010-04-12  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* Makefile: Renamed => Makefile.orig.
+	* Makefile.am (EXTRA_DIST): Add Makefile.orig.

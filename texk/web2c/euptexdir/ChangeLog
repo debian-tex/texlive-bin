@@ -1,0 +1,24 @@
+2012-05-12  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* euptrip/euptrip.diffs: Updated.
+
+2011-12-19  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* euptex.ch1: Drop unused param2 of check_kanji().
+
+2011-12-19  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* euptex.ch1, euptex.defines: Avoid Segmentation fault for
+	japanese \catcode or \kcatcode.
+
+2011-08-29  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* euptex.defines: Remove setptexencuptex.
+	Add dumpkanji and undumpkanji.
+
+2011-08-24  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	Imported e-upTeX into TeX Live, based on the W32TeX version
+	  from Akira Kakuto <kakuto@fuk.kindai.ac.jp>
+	and on the TL patches in tlsvn23478-uptex-1108111825.tar.xz
+	  from Hironori Kitagawa <h_kitagawa2001@yahoo.co.jp>.

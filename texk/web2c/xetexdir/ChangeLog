@@ -1,0 +1,264 @@
+2012-06-25  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* xetex.ch: XeTeX uses 256 math font families.
+
+2012-05-07  Khaled Hosny  <khaledhosny@eglug.org>
+
+	* am/xetex.am (xetex_web_srcs): Drop enctex.ch.
+	* xetex.ch, xetex-latex3.ch: Adjusted.
+
+2012-05-06  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* am/xetex.am (EXTRA_DIST): Drop pool2c.pl (is removed).
+
+2012-05-05  Khaled Hosny  <khaledhosny@eglug.org>
+
+	* xetex.ch, xetex.defines, XeTeX_ext.h, am/xetex.am: Use makecpool
+	instead of out pool2c.pl.
+	* pool2c.pl: Removed.
+
+2012-04-24  Khaled Hosny  <khaledhosny@eglug.org>
+
+	* xetex.ch: Merge changes from XeTeX repository.
+
+2012-04-19  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* xetex-hz.ch: Added copyright statement.
+	Removed useless blank lines at end of change sets.
+
+2012-04-18  Khaled Hosny  <khaledhosny@eglug.org>
+
+	* xetex-hz.ch, xetex.ch: Merge changes from XeTeX repository.
+
+2012-03-25  Khaled Hosny  <khaledhosny@eglug.org>
+
+	* XeTeX_ext.h, xetex.ch: Merge changes from XeTeX repository.
+
+2012-03-17  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* XeTeX_ext.c, xetex.h (Byte): Remove temporary #define to my_Byte
+	and subsequent #undef.  The typedef conflict between TECkit_Common.h
+	and zlib is now handled differently (by zlib and TECkit).
+
+2012-03-16  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* XeTeXGrLayout.h: Declare XeTeXGrTextSource::featureVariations()
+	required for graphite-2.4.
+
+2012-02-16  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* xetex.ch: Remove test for end-of-file after undump.
+	* xetex.defines: Remove weof().
+
+2012-02-11  Jonathan Kew  <jfkthame@gmail.com>
+
+	* XeTeX_ext.c (makefontdef): pass font pathname to xdvipdfmx
+	  whenever possible, to avoid fontconfig search mismatches
+
+	* xetex.ch (XeTeX_version_string): bump to .6.
+
+2012-02-11  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* xetex.ch: Adapt to zlib-1.2.6 (problem found by Akira).
+	From zlib-1.2.6/ChangeLog: Fix gzeof() to behave just like
+	  feof() when read is not past end of file
+
+2011-09-01  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* XeTeX_ext.h: Do not #include "XeTeXOTMath.h".
+
+2011-08-12  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* XeTeX_ext.c: fix to allow font definition like
+	\font\x="[msmincho.ttc:1]"
+
+2011-07-08  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* xetex.ch: Fix an off-by-one bug initializing mubyte_cswrite.
+	From Roderich Schupp <roderich.schupp@googlemail.com>,
+	Debian Bug#633011, tex-k mail Fri, 8 Jul 2011 15:56:23.
+
+2011-07-06  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* XeTeX_ext.c, pdfimage.cpp, am/xetex.am: Always use poppler
+	instead of xpdf.
+
+2011-04-19  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	Avoid 'differ in signedness' warnings.
+	* xetex.ch (pack_buffered_name): Adapt to modified ../tex.ch.
+	(read_font_info): Cast print_c_string() arg to string.
+
+2011-04-11  Karl Berry  <karl@tug.org>
+
+	* xetex.ch (XeTeX_version_string): bump to .5.
+
+2011-04-07  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* xetex.ch: Reformulate to not depend on eTeX_version_string.
+
+2011-02-25  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* XeTeXFontInst.h: Fix prototype for xmalloc().
+
+	* XeTeXFontMgr_FC.cpp, XeTeX_ext.c: Move (nested) extern
+	declaration of gFreeTypeLibrary from here ...
+	* XeTeX_ext.h: ... to here.
+
+2011-02-22  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* XeTeXOTLayoutEngine.{cpp,h}: Drop support for ICU < 4.2.
+
+2011-01-17  Karl Berry  <karl@tug.org>
+
+	* XeTeX_ext.h: #include <w2c/c-auto.h> for SIZEOF_LONG and
+	NO_DUMP_SHARE, else segfaults/stretchy math problems on
+	x86_64-linux, at least sometimes.  Contributed by Paul Vojta,
+	confirmed by Thanh.
+	https://sourceforge.net/tracker/index.php?func=detail&aid=3053287&group_id=194926&atid=951385
+
+2011-01-08  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* am/xetex.am (xetex_web_srcs): Added enctex.ch.
+
+2011-01-01  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* xetexextra.in: Renamed ...
+	* xetexextra.h: ... into this; #include {e,xe}tex_version.h
+	for {E,XE}TEX_VERSION.
+
+	* xetexextra.c (new): #include <xetexd.h> and <lib/texmfmp.c>.
+
+	* am/xetex.am: xetexextra.[ch] are now distributed;
+	create {e,xe}tex_version.h instead of {e,xe}tex.version. 
+
+2010-09-28  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* xetex.test (new): Just testing 'xetex -version'.
+	* am/xetex.am: Adjusted.
+
+2010-06-10  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* am/xetex.am (xetex_cppflags): Add $(AM_CPPFLAGS).
+
+2010-06-10  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	Reorganize web2c headers.
+	* bmpimage.h, pngimage.[ch]: #include <w2c/config.h> instead
+	of "config.h".
+
+2010-05-18  Karl Berry  <karl@tug.org>
+
+	* xetex.ch (XeTeX_version_string): incr to 0.9995.3.
+
+2010-04-19  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* XeTeX_ext.h: Move extern declarations of papersize and
+	outputdriver from ../lib/texmfmp.c to here; use 'const char *',
+	'const_string' is not defined in this file.
+	* XeTeX_ext.c (papersize, outputdriver): Use 'const char *'.
+
+2010-03-30  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* XeTeXLayoutInterface.cpp: #include "unicode/platform.h" first,
+	required with ICU 4.4 for MinGW32.
+
+2010-02-25  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* XeTeX_ext.c [MINGW32]: First #include <kpathsea/config.h> to
+	avoid conflicting eof() declarations.
+
+2010-02-22  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* pngimage.c (check_for_png): Replace png_check_sig() by
+	png_sig_cmp() for libpng-1.4.
+	From Hanno Boeck <hanno@hboeck,de>.
+
+2009-12-12  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* am/xetex.am: Replace the obsolete $(mkdir_p) by $(MKDIR_P).
+
+2009-12-04  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* XeTeX_ext.c: Remove extern declaration of gettexstring(),
+	now in ../web2c/coerce.h.
+
+2009-11-19  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* XeTeX_ext.c, XeTeX_mac.c: #include <teckit/TECkit_Engine.h>
+	instead of "TECkit_Engine.h".
+	* xetex.h: #include <teckit/TECkit_Common.h> instead of
+	"TECkit_Common.h".
+
+2009-10-25  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* XeTeXOTLayoutEngine,{cpp,h}: Adjust to ICU-4.2.1.
+
+2009-10-24  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* xetex.ch: Use kpse_{in,out}_name_ok(), now in Kpathsea,
+	instead of open_{in,out}_name_ok().
+
+2009-10-12  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* XeTeXOTLayoutEngine.h: Drop #include "layout/HanLayoutEngine.h".
+	Move #include "layout/{Arabic,Indic,Tibetan}LayoutEngine.h" and
+	declaration of class XeTeXHanLayoutEngine from here ...
+	* XeTeXOTLayoutEngine.cpp: ... to here.
+
+2009-10-09  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* FontTableCache.{cpp,h}, MathTable.h, XeTeXFontInst.{cpp,h},
+	XeTeXFontMgr.cpp, XeTeXLayoutInterface.cpp,
+	XeTeXOTLayoutEngine.{cpp,h}, XeTeXOTMath.{cpp,h}, cmaps.{cpp,h},
+	sfnt.h: Include, e.g., "layout/LETypes.h" instead of "LETypes.h"
+	for consistency with installed (system) headers.
+
+2009-10-04  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* xetex.ch (do_extension): Recover variables unused by TeX.
+
+2009-09-04  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* am/xetex.am: Prepare compiler warnings.
+
+2009-08-18  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* am/xetex.am: SyncTeX now integrated into ../texmfmp.h.
+
+2009-08-16  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* am/xetex.am: Adapt to tangle-sh and web2c-sh.
+
+2009-08-13  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* am/xetex.am (xetex_c_h): avoid to split the C code.
+
+2009-07-16  Peter Breitenlohner <peb@mppmu.mpg.de>
+
+	* am/xetex.am: Put ICU_INCLUDES first to avoid an installed
+	version.
+
+2009-05-13  Peter Breitenlohner <peb@mppmu.mpg.de>
+
+	* am/xetex.am: Put FREETYPE2_INCLUDES as early as possible to
+	avoid freetype1/freetype2 problems when both are installed under
+	the same prefix.
+
+2009-05-06  Karl Berry  <karl@tug.org>
+
+	* jpegimage.c: #include <stdlib.h> and <string.h>
+	instead of <memory.h>.
+
+2009-05-05  Peter Breitenlohner <peb@mppmu.mpg.de>
+
+	* am/xetex.am: in CPPFLAGS define U_STATIC_IMPLEMENTATION
+	instead of DLE_USE_CMEMORY, required for Cygwin but also works for
+	others.
+
+2009-05-05  Peter Breitenlohner <peb@mppmu.mpg.de>
+
+	* XeTeX_ext.c, image/pdfimage.cpp: adapt for poppler.
+
+	patches from Norbert Preinig <preining@logic.at>
+

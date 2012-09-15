@@ -1,0 +1,99 @@
+$Id: README 26310 2012-05-12 11:03:50Z peter $
+Copyright 2006-2012 TeX Users Group.
+You may freely use, modify and/or distribute this file.
+
+This TeX Live directory contains the programs that use the kpathsea
+library for configuration and path searching, and the library itself.
+
+Some programs can be built on their own, but others, including kpathsea
+itself, cannot.  Instead, try using the script ../../Build or the
+equivalent configure && make. In general, for TeX Live we only test
+configuring the whole tree.
+
+Upstream sources and last-checked versions follow.  If a url is given,
+that is the upstream, although this does not mean the program is
+actively maintained.  Programs marked with a "?" are not (knowingly)
+maintained here, but the upstream is unknown.  If a program is knowingly
+maintained here in the TL repo, that is explicitly stated.
+
+Anyone -- please research and update any of this information.
+
+
+afm2pl - maintained here
+  http://tex.aanhet.net/afm2pl/
+
+bibtex8 - ?
+
+bibtexu - ?
+  http://omega.enstb.org/yannis/bibtexu/
+
+cjkutils 4.8.3 - checked 11may12
+  http://cjk.ffii.org/cjk-4.8.3.tar.gz
+
+detex 2.8 - checked 10may12
+  http://www.cs.purdue.edu/homes/trinkle/detex/
+
+devnag - from devnag package installed in texmf-dist.
+
+dtl - ?
+
+dvi2tty 5.3.4 - checked 10may12
+  http://www.mesa.nl/pub/dvi2tty/
+  ftp://ftp.mesa.nl/pub/dvi2tty/
+
+dvidvi - ?
+
+dviljk - maintained here, by Joachim Schrod
+
+dvipdfmx 20120420 - checked 20apr12
+  ftp://ftpth.mppmu.mpg.de/pub/peb/TLtests/dvipdfmx-20120420.tar.xz
+
+dvipng 1.14 - checked 10may12
+  http://mirror.ctan.org/dviware/dvipng/ (but maybe stale)
+  http://savannah.nongnu.org/files/?group=dvipng
+
+dvipos - ?
+
+dvipsk - maintained here, by us
+
+dvisvgm - checked 10may12
+  http://downloads.sourceforge.net/dvisvgm/dvisvgm-1.0.11.tar.gz
+
+gsftopk - from Paul Vojta's xdvi?
+
+kpathsea - maintained here, by us
+
+lacheck - checked 25apr11
+  http://mirror.ctan.org/support/lacheck/lacheck-1.26.tar.gz
+
+lcdf-typetools 2.92 - checked 16aug11
+  http://www.lcdf.org/type/
+  http://www.lcdf.org/type/lcdf-typetools-2.92.tar.gz
+
+makeindexk - maintained here, by us
+
+ps2pkm - ?
+
+seetexk - ?
+
+tex4htk - checked 25apr11
+  http://tug.org/tex4ht/
+
+texlive - scripts maintained here, by us
+
+texlive - scripts maintained here, by us
+
+ttf2pk - maintained here, by us
+
+ttfdump - ?
+
+web2c - maintained here, by us - core web2c, plain tex, etc.
+        The TeX variant dirs (pdftexdir, xetexdir, etc.)
+        updated here by their respective maintainers.
+
+xdv2pdf - Khaled Hosny, Jonathan Kew
+
+xdvik 22.85 - checked 10may12
+  http://sourceforge.net/projects/xdvi/files/xdvik/
+
+xdvipdfmx - Khaled Hosny, Jonathan Kew

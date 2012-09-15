@@ -1,0 +1,80 @@
+2012-03-12  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* Imported release 1.0.11.
+	* version.ac: Adapted.
+
+2011-12-22  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* Imported release 1.0.10.
+	* version.ac: Adapted.
+
+2011-11-17  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* Imported release 1.0.9.
+	* version.ac: Adapted.
+	* configure.ac: Add the WIN32 conditional.
+	* Makefile.am [WIN32] (AM_CPPFLAGS): Add `-DTEXLIVEWIN32'.
+
+2011-10-04  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* Makefile.am (DISTCLEANFILES): Add CXXLD.sh.
+
+2011-05-31  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* version.ac: Imported release 1.0.8.
+	* Makefile.am: Added Process.cpp to libdvisvgm.a sources.
+
+2011-05-19  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* configure.ac, version.ac (new): Imported release 1.0.7.
+
+2011-05-02  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* dvisvgm-1.0.6-PATCHES/TL-Changes: Recreated this, documenting
+	changes applied to the original source.
+
+2011-04-27  Karl Berry  <karl@tug.org>
+
+	* Imported release 1.0.6.
+	* configure.ac: Adapted.
+	* dvisvgm-1.0.5-PATCHES: removed dir, all patches applied.
+
+2011-03-04  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* Imported release 1.0.5.
+	* configure.ac: Adapted.
+	* Makefile.am: Added CRC32.cpp to libdvisvgm.a sources.
+
+2010-10-01  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* Imported release 1.0.3.
+	* configure.ac: Adapted.
+
+2010-06-23  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* Imported release 1.0.2.
+	* configure.ac: Adapted.
+
+2010-06-12  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* Imported release 1.0.1.
+	* configure.ac, Makefile.am: Adapted.
+
+2010-03-24  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* configure.ac: Check if dlopen() requires `-ldl'.
+
+2010-03-09  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* configure.ac: Check for kpse_set_program_name() instead of
+	kpse_set_progname().
+
+2009-11-18  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* Makefile.am, configure.ac: Allow to link with libgs, load
+	libgs.so at runtime, or disable PostScript support.
+
+2009-11-13  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* Imported release 0.8.7.
+

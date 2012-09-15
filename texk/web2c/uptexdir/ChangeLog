@@ -1,0 +1,103 @@
+2012-05-22  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* updvitype.test: Cope with spaces in paths returned by
+	kpsewhich.
+
+2012-05-12  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* uptex-m.ch: Restore the 'unnecessary and seemingly wrong'
+	changes; they are required to show the error context.
+	* uptrip/uptrip.diffs: Adapted.
+
+2012-04-29  Takuji Tanaka  <KXD02663@nifty.ne.jp>
+
+	* uptex-m.ch, uppltotf.ch uptftopl.ch, updvitype.ch, upbibtex.ch:
+	Update upTeX version number.
+
+	* uptex-m.ch, kanji.c:
+	Update reference of Unicode blocks to
+	"Blocks-6.1.0.txt Date: 2011-06-14, 18:26:00 GMT [KW, LI]".
+
+2012-03-11  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* uptex-m.ch: remove unnecessary and seemingly wrong changes
+
+2012-03-08  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* uptex-m.ch: fix a long-remained bug in show_context.
+
+2012-03-04  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	Avoid 'differ in signedness' warnings.
+	* uppltotf.ch: Use ustringcast(buffer).
+	* uptex-m.ch: Use ustringcast for buffer and str_pool.
+
+2012-01-15  Takuji Tanaka  <KXD02663@nifty.ne.jp>
+
+	* uptex-m.ch, uppltotf.ch uptftopl.ch, updvitype.ch, upbibtex.ch:
+	Update upTeX version number.
+
+	* uptex-m.ch, kanji.c:
+	Update reference of Unicode blocks to
+	"Blocks-6.0.0.txt Date: 2010-06-04, 11:12:00 PDT [KW]".
+
+2012-01-07  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* kanji.h: revert wrt init_kanji (from TANAKA Takuji-san).
+
+2012-01-05  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* kanji.h: enable -kanji option in updvitype.
+	(patch from TANAKA Takuji-san).
+
+2011-12-19  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* uptex-m.ch, kanji.[ch]: Drop unused param2 of check_kanji().
+
+2011-12-19  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* uptex-m.ch, uptex.defines, kanji.[ch], uppltotf.ch,
+	uppltotf.ch: Avoid Segmentation fault for japanese \catcode
+	or \kcatcode.
+
+2011-12-04  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* uptex-m.ch: change min_halfword because the ConTeXt with
+	euptex falls into an infinite loop if an Overfull \hbox error occurs.
+
+2011-11-25  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* am/uptex.am (uppltotf_CPPFLAGS): Replace '-DDHEX_CHAR_CODE'
+	by '-DPRESERVE_PUTC'.  Mail [ptex:00311] from TANAKA Takuji.
+
+	* am/uptex.am (upbibtex_CPPFLAGS, uptftopl_CPPFLAGS): Drop the
+	useless '-DDHEX_CHAR_CODE'.
+	(updvitype_CPPFLAGS): Replace '-DDHEX_CHAR_CODE' by
+	'-DHEX_CHAR_CODE'.
+
+2011-09-30  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* updvitype.ch: Use const stringcast for get_enc_string().
+
+2011-09-05  Takuji Tanaka  <KXD02663@nifty.ne.jp>
+
+	* updvitype.ch: show encoding in the banner.
+
+2011-08-29  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* kanji.h, uptex.defines: Remove setptexencuptex.
+	* upbibtex.ch: Use nil, not 0 as arg of set_enc_string().
+
+	* uptex-m.ch: Add dump_kanji and undump_kanji.
+	* uptex.defines: Add dumpkanji and undumpkanji.
+	* kanji.c: Factor out init_kanji().
+	* kanji_dump.c: New file for dumping/undumping kanji encoding.
+	* kanji.h: Add init_kanji(), dump_kanji(), and undump_kanji().
+	* am/uptex.am (libukanji_a_SOURCES): Add kanji_dump.c.
+
+2011-08-24  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	Imported upTeX into TeX Live, based on the W32TeX version
+	  from Akira Kakuto <kakuto@fuk.kindai.ac.jp>
+	and on the TL patches in tlsvn23478-uptex-1108111825.tar.xz
+	  from Hironori Kitagawa <h_kitagawa2001@yahoo.co.jp>.

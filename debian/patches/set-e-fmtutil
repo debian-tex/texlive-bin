@@ -1,11 +1,9 @@
 ---
- texk/tetex/fmtutil |    7 +++++--
+ texk/texlive/linked_scripts/tetex/fmtutil.sh |    7 +++++--
  1 file changed, 5 insertions(+), 2 deletions(-)
 
-Index: texlive-bin-2012.20120530/texk/tetex/fmtutil
-===================================================================
---- texlive-bin-2012.20120530.orig/texk/tetex/fmtutil	2012-05-30 10:54:55.000000000 +0900
-+++ texlive-bin-2012.20120530/texk/tetex/fmtutil	2012-05-30 11:00:06.369603296 +0900
+--- texlive-bin.orig/texk/texlive/linked_scripts/tetex/fmtutil.sh
++++ texlive-bin/texk/texlive/linked_scripts/tetex/fmtutil.sh
 @@ -3,6 +3,9 @@
  # Public domain.  Originally written by Thomas Esser.
  # Run with --help for usage.

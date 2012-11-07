@@ -15,16 +15,16 @@ debian-no-linked-scripts
 #build-wovp2ovf
 60_unneeded_linking
 61_path_max.diff
-pmpost-20120415-tl11.diff
+pmpost-20121106-tl12
 pmpost-svg-20120119-tl11.diff
 #xdvi-zoom-with-eps-figures.patch
-patch-dvi2tty -p0
+#upstream included#patch-dvi2tty -p0
 #upstream included# patch-icu -p0
-patch-lacheck -p0
+#upstream included#patch-lacheck -p0
 #upstream included# patch-pdftex -p0
 patch-update-updmap-manpage
 xdvi-upupstream-fixes
 #upstream included# upstream-fix-ini-synctex-segfault
 #upstream included# fix-pipe-in-out-regression
-upstream-fix-ptex-scanning
-cweave-fix-too-short-names
+#upstream included# upstream-fix-ptex-scanning
+#upstream included# cweave-fix-too-short-names

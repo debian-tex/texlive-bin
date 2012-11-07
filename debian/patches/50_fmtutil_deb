@@ -1,18 +1,10 @@
-#! /bin/sh /usr/share/dpatch/dpatch-run
-## 50_fmtutil_deb.dpatch
-##
-## All lines beginning with `## DP:' are a description of the patch.
-## DP: debianize fmtutil, updmap etc, taken from tetex
-
-@DPATCH@
- texk/tetex/fmtutil     |   28 +++++++++-------------------
- texk/tetex/fmtutil.man |    7 +++++--
+---
+ texk/texlive/linked_scripts/tetex/fmtutil.1  |    7 ++++--
+ texk/texlive/linked_scripts/tetex/fmtutil.sh |   28 ++++++++-------------------
  2 files changed, 14 insertions(+), 21 deletions(-)
 
-Index: texlive-bin-2011.20120427/texk/tetex/fmtutil.man
-===================================================================
---- texlive-bin-2011.20120427.orig/texk/tetex/fmtutil.man	2012-04-27 11:31:33.599071967 +0900
-+++ texlive-bin-2011.20120427/texk/tetex/fmtutil.man	2012-04-27 11:31:40.747069403 +0900
+--- texlive-bin.orig/texk/texlive/linked_scripts/tetex/fmtutil.1
++++ texlive-bin/texk/texlive/linked_scripts/tetex/fmtutil.1
 @@ -45,7 +45,7 @@
  no-op in TeX Live
  .TP
@@ -35,10 +27,8 @@ Index: texlive-bin-2011.20120427/texk/tetex/fmtutil.man
  .SH "BUGS"
  None known, but report any bugs found to <tex-k@tug.org> (mailing list).
  .SH "AUTHOR"
-Index: texlive-bin-2011.20120427/texk/tetex/fmtutil
-===================================================================
---- texlive-bin-2011.20120427.orig/texk/tetex/fmtutil	2012-04-27 11:31:33.599071967 +0900
-+++ texlive-bin-2011.20120427/texk/tetex/fmtutil	2012-04-27 11:31:40.747069403 +0900
+--- texlive-bin.orig/texk/texlive/linked_scripts/tetex/fmtutil.sh
++++ texlive-bin/texk/texlive/linked_scripts/tetex/fmtutil.sh
 @@ -542,9 +542,11 @@
        grep -v '^ *#' "$cnf_file" | sed 's@^ *@@; s@ *$@@' | grep . | sort
        cleanup $? ;;

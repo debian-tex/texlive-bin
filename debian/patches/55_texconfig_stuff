@@ -3,14 +3,12 @@
 - remove code that texconfig formats is not longer supported and refer to tlmgr
   we rely on fmtutil being debianized and let texconfig work as before.
 --
- texk/tetex/texconfig     |   52 ++++++++++++-----------------------------------
- texk/tetex/texconfig.man |   28 ++++++++++++++++++++++++-
- 2 files changed, 41 insertions(+), 39 deletions(-)
+ texk/texlive/linked_scripts/tetex/texconfig.1  |   28 ++++++
+ texk/texlive/linked_scripts/tetex/texconfig.sh |  110 +++++++------------------
+ 2 files changed, 60 insertions(+), 78 deletions(-)
 
-Index: texlive-bin-2012.20120516/texk/tetex/texconfig
-===================================================================
---- texlive-bin-2012.20120516.orig/texk/tetex/texconfig	2012-05-25 21:16:45.000000000 +0200
-+++ texlive-bin-2012.20120516/texk/tetex/texconfig	2012-05-25 21:58:53.000000000 +0200
+--- texlive-bin.orig/texk/texlive/linked_scripts/tetex/texconfig.sh
++++ texlive-bin/texk/texlive/linked_scripts/tetex/texconfig.sh
 @@ -52,6 +52,7 @@
        FMT=fmt
        test ! -x /bin/fmt && test ! -f /usr/bin/fmt &&
@@ -256,10 +254,8 @@ Index: texlive-bin-2012.20120516/texk/tetex/texconfig
            case $3 in
              a1|a1r|a2|a2r|a3|a3r|a4|a4r|a5|a5r|a6|a6r|a7|a7r|b1|b1r|b2|b2r|b3|b3r|b4|b4r|b5|b5r|b6|b6r|b7|b7r|c1|c1r|c2|c2r|c3|c3r|c4|c4r|c5|c5r|c6|c6r|c7|c7r|foolscap|legal|us|usr)
                fmgrConfigReplace XDvi paper: "*paper: $3"
-Index: texlive-bin-2012.20120516/texk/tetex/texconfig.man
-===================================================================
---- texlive-bin-2012.20120516.orig/texk/tetex/texconfig.man	2012-05-25 21:16:45.000000000 +0200
-+++ texlive-bin-2012.20120516/texk/tetex/texconfig.man	2012-05-25 21:20:58.000000000 +0200
+--- texlive-bin.orig/texk/texlive/linked_scripts/tetex/texconfig.1
++++ texlive-bin/texk/texlive/linked_scripts/tetex/texconfig.1
 @@ -46,6 +46,20 @@
  .IR TEXMFSYSCONFIG .
  (You may need to be root to do this.)

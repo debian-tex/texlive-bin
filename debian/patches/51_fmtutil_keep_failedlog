@@ -1,11 +1,9 @@
 ---
- texk/tetex/fmtutil |    4 +++-
+ texk/texlive/linked_scripts/tetex/fmtutil.sh |    4 +++-
  1 file changed, 3 insertions(+), 1 deletion(-)
 
-Index: texlive-bin-2011.20120427/texk/tetex/fmtutil
-===================================================================
---- texlive-bin-2011.20120427.orig/texk/tetex/fmtutil	2012-04-27 11:31:40.747069403 +0900
-+++ texlive-bin-2011.20120427/texk/tetex/fmtutil	2012-04-27 11:31:48.051066459 +0900
+--- texlive-bin.orig/texk/texlive/linked_scripts/tetex/fmtutil.sh
++++ texlive-bin/texk/texlive/linked_scripts/tetex/fmtutil.sh
 @@ -763,7 +763,6 @@
        log_warning "\`$engine -ini $tcxflag $jobswitch $prgswitch $texargs' possibly failed."
  

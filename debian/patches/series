@@ -2,29 +2,15 @@
 12b_fix_a2ping_invocation
 12e_fix_vpe_invocation
 23_use_xdvi.bin
-50_fmtutil_deb
+debian-fmtutil-adaptions
 51_fmtutil_keep_failedlog
-53_builtin-searchpath-fix
-55_texconfig_stuff
-#57_texconfig_papersizes_for_upstream
-#58_texconfig_papersizes_use_ucf
+debian-builtin-searchpath
+debian-texconfig-adaptions
 set-e-fmtutil
-#set-e-in-various-scripts
-#partial_lfs_support.diff
 debian-no-linked-scripts
-#build-wovp2ovf
 60_unneeded_linking
 61_path_max.diff
 pmpost-20121106-tl12
 pmpost-svg-20120119-tl11.diff
-#xdvi-zoom-with-eps-figures.patch
-#upstream included#patch-dvi2tty -p0
-#upstream included# patch-icu -p0
-#upstream included#patch-lacheck -p0
-#upstream included# patch-pdftex -p0
-patch-update-updmap-manpage
+debian-updmap-man
 xdvi-upupstream-fixes
-#upstream included# upstream-fix-ini-synctex-segfault
-#upstream included# fix-pipe-in-out-regression
-#upstream included# upstream-fix-ptex-scanning
-#upstream included# cweave-fix-too-short-names

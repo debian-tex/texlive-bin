@@ -4,12 +4,6 @@
 export SHELL=/bin/bash
 export CONFIG_SHELL=/bin/sh
 
-# this is for dh_quilt_patch (--with quilt) which reads this
-# variable and sets QUILT_PATCHES accordingly
-# we set both in case ...
-export QUILT_PATCH_DIR=debian/quilt
-export QUILT_PATCHES=debian/quilt
-
 DEB_HOST_ARCH     ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
 
 ifeq ($(DEB_HOST_ARCH), alpha)
@@ -30,7 +24,7 @@ endif
 # must be adapted to also patch the Makefile.in!
 
 %:
-	dh $@ --with quilt --with autoreconf --builddirectory Work
+	dh $@ --with autoreconf --builddirectory Work
 
 override_dh_autoreconf:
 	dh_autoreconf --as-needed
@@ -124,5 +118,4 @@ override_dh_shlibdeps:
 		-l debian/libptexenc1/usr/lib
 
 override_dh_clean:
-	dh_quilt_unpatch
 	dh_clean -X.orig

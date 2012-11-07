@@ -8,7 +8,7 @@
 #define FLEX_SCANNER
 #define YY_FLEX_MAJOR_VERSION 2
 #define YY_FLEX_MINOR_VERSION 5
-#define YY_FLEX_SUBMINOR_VERSION 35
+#define YY_FLEX_SUBMINOR_VERSION 37
 #if YY_FLEX_SUBMINOR_VERSION > 0
 #define FLEX_BETA
 #endif
@@ -53,7 +53,6 @@ typedef int flex_int32_t;
 typedef unsigned char flex_uint8_t; 
 typedef unsigned short int flex_uint16_t;
 typedef unsigned int flex_uint32_t;
-#endif /* ! C99 */
 
 /* Limits of integral types. */
 #ifndef INT8_MIN
@@ -83,6 +82,8 @@ typedef unsigned int flex_uint32_t;
 #ifndef UINT32_MAX
 #define UINT32_MAX             (4294967295U)
 #endif
+
+#endif /* ! C99 */
 
 #endif /* ! FLEXINT_H */
 
@@ -152,7 +153,12 @@ typedef unsigned int flex_uint32_t;
 typedef struct yy_buffer_state *YY_BUFFER_STATE;
 #endif
 
-extern int yyleng;
+#ifndef YY_TYPEDEF_YY_SIZE_T
+#define YY_TYPEDEF_YY_SIZE_T
+typedef size_t yy_size_t;
+#endif
+
+extern yy_size_t yyleng;
 
 extern FILE *yyin, *yyout;
 
@@ -191,11 +197,6 @@ extern FILE *yyin, *yyout;
 
 #define unput(c) yyunput( c, (yytext_ptr)  )
 
-#ifndef YY_TYPEDEF_YY_SIZE_T
-#define YY_TYPEDEF_YY_SIZE_T
-typedef size_t yy_size_t;
-#endif
-
 #ifndef YY_STRUCT_YY_BUFFER_STATE
 #define YY_STRUCT_YY_BUFFER_STATE
 struct yy_buffer_state
@@ -213,7 +214,7 @@ struct yy_buffer_state
 	/* Number of characters read into yy_ch_buf, not including EOB
 	 * characters.
 	 */
-	int yy_n_chars;
+	yy_size_t yy_n_chars;
 
 	/* Whether we "own" the buffer - i.e., we know we created it,
 	 * and can realloc() it to grow it, and should free() it to
@@ -283,8 +284,8 @@ static YY_BUFFER_STATE * yy_buffer_stack = 0; /**< Stack as an array. */
 
 /* yy_hold_char holds the character lost when yytext is formed. */
 static char yy_hold_char;
-static int yy_n_chars;		/* number of characters read into yy_ch_buf */
-int yyleng;
+static yy_size_t yy_n_chars;		/* number of characters read into yy_ch_buf */
+yy_size_t yyleng;
 
 /* Points to current character in buffer. */
 static char *yy_c_buf_p = (char *) 0;
@@ -312,7 +313,7 @@ static void yy_init_buffer (YY_BUFFER_STATE b,FILE *file  );
 
 YY_BUFFER_STATE yy_scan_buffer (char *base,yy_size_t size  );
 YY_BUFFER_STATE yy_scan_string (yyconst char *yy_str  );
-YY_BUFFER_STATE yy_scan_bytes (yyconst char *bytes,int len  );
+YY_BUFFER_STATE yy_scan_bytes (yyconst char *bytes,yy_size_t len  );
 
 void *yyalloc (yy_size_t  );
 void *yyrealloc (void *,yy_size_t  );
@@ -574,7 +575,7 @@ static int yy_prev_more_offset = 0;
 char yytext[YYLMAX];
 char *yytext_ptr;
 #line 1 "otp-lexer.l"
-/* otp.l: Lexical analysis for OTP files
+/* otp-lexer.l: Lexical analysis for OTP files
 
 This file is part of Omega,
 which is based on the web2c distribution of TeX,
@@ -598,7 +599,7 @@ along with Omega; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 
 */
-#line 27 "otp-lexer.l"
+#line 29 "otp-lexer.l"
 #include "routines.h"
 #include "yystype.h"
 #include "otp-parser.h"
@@ -606,7 +607,7 @@ along with Omega; if not, write to the Free Software Foundation, Inc.,
 #define OTP_MAXCODE 0xFFFF
 int line_number = 1;
 extern YYSTYPE yylval;
-#line 610 "otp-lexer.c"
+#line 611 "otp-lexer.c"
 
 #define INITIAL 0
 
@@ -645,7 +646,7 @@ FILE *yyget_out (void );
 
 void yyset_out  (FILE * out_str  );
 
-int yyget_leng (void );
+yy_size_t yyget_leng (void );
 
 char *yyget_text (void );
 
@@ -695,7 +696,7 @@ static int input (void );
 /* This used to be an fputs(), but since the string might contain NUL's,
  * we now use fwrite().
  */
-#define ECHO fwrite( yytext, yyleng, 1, yyout )
+#define ECHO do { if (fwrite( yytext, yyleng, 1, yyout )) {} } while (0)
 #endif
 
 /* Gets input and stuffs it into "buf".  number of characters read, or YY_NULL,
@@ -706,7 +707,7 @@ static int input (void );
 	if ( YY_CURRENT_BUFFER_LVALUE->yy_is_interactive ) \
 		{ \
 		int c = '*'; \
-		int n; \
+		size_t n; \
 		for ( n = 0; n < max_size && \
 			     (c = getc( yyin )) != EOF && c != '\n'; ++n ) \
 			buf[n] = (char) c; \
@@ -788,9 +789,9 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
     
-#line 43 "otp-lexer.l"
+#line 45 "otp-lexer.l"
 
-#line 794 "otp-lexer.c"
+#line 795 "otp-lexer.c"
 
 	if ( !(yy_init) )
 		{
@@ -855,7 +856,7 @@ yy_match:
 			*(yy_state_ptr)++ = yy_current_state;
 			++yy_cp;
 			}
-		while ( yy_base[yy_current_state] != 131 );
+		while ( yy_current_state != 101 );
 
 yy_find_action:
 		yy_current_state = *--(yy_state_ptr);
@@ -894,24 +895,24 @@ do_action:	/* This label is used only to access EOF actions. */
 	{ /* beginning of action switch */
 case 1:
 YY_RULE_SETUP
-#line 44 "otp-lexer.l"
+#line 46 "otp-lexer.l"
 {}
 	YY_BREAK
 case 2:
 /* rule 2 can match eol */
 YY_RULE_SETUP
-#line 45 "otp-lexer.l"
+#line 47 "otp-lexer.l"
 { line_number++;}
 	YY_BREAK
 case 3:
 /* rule 3 can match eol */
 YY_RULE_SETUP
-#line 46 "otp-lexer.l"
+#line 48 "otp-lexer.l"
 { line_number++;}
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 47 "otp-lexer.l"
+#line 49 "otp-lexer.l"
 {
 		int i, j;
 		yylval.yint=0;
@@ -935,7 +936,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 67 "otp-lexer.l"
+#line 69 "otp-lexer.l"
 {
 		int i, j;
 		yylval.yint=0;
@@ -953,7 +954,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 81 "otp-lexer.l"
+#line 83 "otp-lexer.l"
 {
 		int i, j;
 		yylval.yint=0;
@@ -971,7 +972,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 95 "otp-lexer.l"
+#line 97 "otp-lexer.l"
 {
 		yylval.yint=yytext[1]; 
 		return(NUMBER);
@@ -979,13 +980,13 @@ YY_RULE_SETUP
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 99 "otp-lexer.l"
+#line 101 "otp-lexer.l"
 { yylval.ystring=xstrdup(yytext); return(ID); }
 	YY_BREAK
 case 9:
 /* rule 9 can match eol */
 YY_RULE_SETUP
-#line 100 "otp-lexer.l"
+#line 102 "otp-lexer.l"
 {
 		int i, j, last;
 		char *newtext;
@@ -1005,85 +1006,85 @@ YY_RULE_SETUP
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 116 "otp-lexer.l"
+#line 118 "otp-lexer.l"
 return(RIGHTARROW);
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 117 "otp-lexer.l"
+#line 119 "otp-lexer.l"
 return(LEFTARROW);
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 118 "otp-lexer.l"
+#line 120 "otp-lexer.l"
 return(INPUT);
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 119 "otp-lexer.l"
+#line 121 "otp-lexer.l"
 return(OUTPUT);
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 120 "otp-lexer.l"
+#line 122 "otp-lexer.l"
 return(ALIASES);
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 121 "otp-lexer.l"
+#line 123 "otp-lexer.l"
 return(STATES);
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 122 "otp-lexer.l"
+#line 124 "otp-lexer.l"
 return(TABLES);
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 123 "otp-lexer.l"
+#line 125 "otp-lexer.l"
 return(EXPRESSIONS);
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 124 "otp-lexer.l"
+#line 126 "otp-lexer.l"
 return(PUSH);
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 125 "otp-lexer.l"
+#line 127 "otp-lexer.l"
 return(POP);
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 126 "otp-lexer.l"
+#line 128 "otp-lexer.l"
 return(DIV);
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 127 "otp-lexer.l"
+#line 129 "otp-lexer.l"
 return(MOD);
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 128 "otp-lexer.l"
+#line 130 "otp-lexer.l"
 return(BEG);
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 129 "otp-lexer.l"
+#line 131 "otp-lexer.l"
 return(END);
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 130 "otp-lexer.l"
+#line 132 "otp-lexer.l"
 return(yytext[0]);
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 132 "otp-lexer.l"
+#line 134 "otp-lexer.l"
 ECHO;
 	YY_BREAK
-#line 1087 "otp-lexer.c"
+#line 1088 "otp-lexer.c"
 			case YY_STATE_EOF(INITIAL):
 				yyterminate();
 
@@ -1269,7 +1270,7 @@ static int yy_get_next_buffer (void)
 
 	else
 		{
-			int num_to_read =
+			yy_size_t num_to_read =
 			YY_CURRENT_BUFFER_LVALUE->yy_buf_size - number_to_move - 1;
 
 		while ( num_to_read <= 0 )
@@ -1285,7 +1286,7 @@ static int yy_get_next_buffer (void)
 
 		/* Read in more data. */
 		YY_INPUT( (&YY_CURRENT_BUFFER_LVALUE->yy_ch_buf[number_to_move]),
-			(yy_n_chars), (size_t) num_to_read );
+			(yy_n_chars), num_to_read );
 
 		YY_CURRENT_BUFFER_LVALUE->yy_n_chars = (yy_n_chars);
 		}
@@ -1375,7 +1376,7 @@ static int yy_get_next_buffer (void)
 	if ( ! yy_is_jam )
 		*(yy_state_ptr)++ = yy_current_state;
 
-	return yy_is_jam ? 0 : yy_current_state;
+		return yy_is_jam ? 0 : yy_current_state;
 }
 
     static void yyunput (int c, register char * yy_bp )
@@ -1390,7 +1391,7 @@ static int yy_get_next_buffer (void)
 	if ( yy_cp < YY_CURRENT_BUFFER_LVALUE->yy_ch_buf + 2 )
 		{ /* need to shift things up to make room */
 		/* +2 for EOB chars. */
-		register int number_to_move = (yy_n_chars) + 2;
+		register yy_size_t number_to_move = (yy_n_chars) + 2;
 		register char *dest = &YY_CURRENT_BUFFER_LVALUE->yy_ch_buf[
 					YY_CURRENT_BUFFER_LVALUE->yy_buf_size + 2];
 		register char *source =
@@ -1443,7 +1444,7 @@ static int yy_get_next_buffer (void)
 
 		else
 			{ /* need more input */
-			int offset = (yy_c_buf_p) - (yytext_ptr);
+			yy_size_t offset = (yy_c_buf_p) - (yytext_ptr);
 			++(yy_c_buf_p);
 
 			switch ( yy_get_next_buffer(  ) )
@@ -1608,10 +1609,6 @@ static void yy_load_buffer_state  (void)
 	yyfree((void *) b  );
 }
 
-#ifndef __cplusplus
-extern int isatty (int );
-#endif /* __cplusplus */
-    
 /* Initializes or reinitializes a buffer.
  * This function is sometimes called more than once on the same buffer,
  * such as during a yyrestart() or at EOF.
@@ -1635,7 +1632,7 @@ extern int isatty (int );
         b->yy_bs_column = 0;
     }
 
-        b->yy_is_interactive = file ? (isatty( fileno(file) ) > 0) : 0;
+        b->yy_is_interactive = 0;
     
 	errno = oerrno;
 }
@@ -1724,7 +1721,7 @@ void yypop_buffer_state (void)
  */
 static void yyensure_buffer_stack (void)
 {
-	int num_to_alloc;
+	yy_size_t num_to_alloc;
     
 	if (!(yy_buffer_stack)) {
 
@@ -1816,12 +1813,12 @@ YY_BUFFER_STATE yy_scan_string (yyconst char * yystr )
 
 /** Setup the input buffer state to scan the given bytes. The next call to yylex() will
  * scan from a @e copy of @a bytes.
- * @param bytes the byte buffer to scan
- * @param len the number of bytes in the buffer pointed to by @a bytes.
+ * @param yybytes the byte buffer to scan
+ * @param _yybytes_len the number of bytes in the buffer pointed to by @a bytes.
  * 
  * @return the newly allocated buffer state object.
  */
-YY_BUFFER_STATE yy_scan_bytes  (yyconst char * yybytes, int  _yybytes_len )
+YY_BUFFER_STATE yy_scan_bytes  (yyconst char * yybytes, yy_size_t  _yybytes_len )
 {
 	YY_BUFFER_STATE b;
 	char *buf;
@@ -1908,7 +1905,7 @@ FILE *yyget_out  (void)
 /** Get the length of the current token.
  * 
  */
-int yyget_leng  (void)
+yy_size_t yyget_leng  (void)
 {
         return yyleng;
 }
@@ -2067,7 +2064,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 132 "otp-lexer.l"
+#line 134 "otp-lexer.l"
 
 
 

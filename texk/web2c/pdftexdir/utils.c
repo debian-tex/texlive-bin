@@ -17,19 +17,9 @@ You should have received a copy of the GNU General Public License along
 with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "openbsd-compat.h"
-
 #include <sys/types.h>
-#ifdef WIN32
-#define EX_SOFTWARE EXIT_FAILURE
-#else
-#include <sysexits.h>
-#endif
-#ifdef __MINGW32__
-#include <regex/regex.h>
-#else
 #include <regex.h>
-#endif
+#include <kpathsea/config.h>
 #include <kpathsea/c-proto.h>
 #include <kpathsea/c-stat.h>
 #include <kpathsea/c-fopen.h>
@@ -257,7 +247,7 @@ void pdftex_fail(const char *fmt, ...)
         println();
         abort();
     } else {
-        exit(EX_SOFTWARE);
+        exit(EXIT_FAILURE);
     }
 }
 
@@ -418,13 +408,13 @@ int xputc(int c, FILE * stream)
     return i;
 }
 
-void writestreamlength(integer length, longinteger offset)
+void writestreamlength(longinteger length, longinteger offset)
 {
     if (jobname_cstr == NULL)
         jobname_cstr = xstrdup(makecstring(jobname));
     if (fixedpdfdraftmode == 0) {
         xfseeko(pdffile, (off_t) offset, SEEK_SET, jobname_cstr);
-        fprintf(pdffile, "%li", (long int) length);
+        fprintf(pdffile, "%" LONGINTEGER_PRI "i", length);
         xfseeko(pdffile, (off_t) pdfoffset(), SEEK_SET, jobname_cstr);
     }
 }
@@ -776,6 +766,17 @@ void printID(strnumber filename)
     /* get the file name */
     if (getcwd(pwd, sizeof(pwd)) == NULL)
         pdftex_fail("getcwd() failed (%s), path too long?", strerror(errno));
+#ifdef WIN32
+    {
+        char *p;
+        for (p = pwd; *p; p++) {
+            if (*p == '\\')
+                *p = '/';
+            else if (IS_KANJI(p))
+                p++;
+        }
+    }
+#endif
     file_name = makecstring(filename);
     md5_append(&state, (const md5_byte_t *) pwd, strlen(pwd));
     md5_append(&state, (const md5_byte_t *) "/", 1);
@@ -1280,10 +1281,20 @@ char *stripzeros(char *a)
 
 void initversionstring(char **versions)
 {
-    (void) asprintf(versions,
+    const_string fmt =
                     "Compiled with libpng %s; using libpng %s\n"
                     "Compiled with zlib %s; using zlib %s\n"
-                    "Compiled with %s version %s\n",
+                    "Compiled with %s version %s\n";
+    size_t len = strlen(fmt)
+                    + strlen(PNG_LIBPNG_VER_STRING) + strlen(png_libpng_ver)
+                    + strlen(ZLIB_VERSION) + strlen(zlib_version)
+                    + strlen(xpdfString) + strlen(xpdfVersion)
+                    + 1;
+
+    /* len will be more than enough, because of the placeholder chars in fmt
+       that get replaced by the arguments.  */
+    *versions = xmalloc(len);
+    sprintf(*versions, fmt,
                     PNG_LIBPNG_VER_STRING, png_libpng_ver,
                     ZLIB_VERSION, zlib_version, xpdfString, xpdfVersion);
 }

@@ -1,22 +1,15 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include <kpathsea/config.h>
-#include <kpathsea/tex-file.h>
-#include <ptexenc/ptexenc.h>
 #include "mendex.h"
+#include <kpathsea/tex-file.h>
+#include <kpathsea/variable.h>
+#include <ptexenc/ptexenc.h>
 
 #include "kana.h"
 #include "var.h"
 
-#ifdef KPATHSEA
 #include "kp.h"
-#endif
 
 char *styfile,*idxfile[256],indfile[256],*dicfile,logfile[256];
 
-#ifdef KPATHSEA
 /* default paths */
 #ifndef DEFAULT_INDEXSTYLES
 #define DEFAULT_INDEXSTYLES "."
@@ -25,7 +18,6 @@ char *styfile,*idxfile[256],indfile[256],*dicfile,logfile[256];
 #define DEFAULT_INDEXDICTS "."
 #endif
 KpathseaSupportInfo kp_ist,kp_dict;
-#endif
 
 #define VERSION "version 2.6f [14-Aug-2009]"
 
@@ -33,10 +25,34 @@ int main(int argc, char **argv)
 {
 	int i,j,cc=0,startpagenum=-1,ecount=0;
 	const char *envbuff;
+	char *p;
 
-        set_enc_string(NULL, "EUC");
-#ifdef KPATHSEA
-	KP_init(argv[0]);
+	enable_UPTEX (false); /* disable */
+
+#ifdef WIN32
+	_setmaxstdio(2048);
+        set_enc_string("sjis", "euc");
+        sjisterminal = 0;
+#else
+        set_enc_string(NULL, "euc");
+#endif
+	kpse_set_program_name(argv[0], "mendex");
+
+	p = getenv ("PTEX_KANJI_ENC");
+	if (p) {
+		if (!set_enc_string (p, NULL))
+			fprintf (stderr, "Ignoring bad kanji encoding \"%s\".\n", p);
+	}
+
+#ifdef WIN32
+	p = kpse_var_value ("guess_input_kanji_encoding");
+	if (p) {
+		if (*p == '1' || *p == 'y' || *p == 't')
+			infile_enc_auto = 1;
+		free(p);
+	}
+#endif
+
 	kp_ist.var_name = "INDEXSTYLE";
 	kp_ist.path = DEFAULT_INDEXSTYLES; /* default path. */
 	kp_ist.suffix = "ist";
@@ -45,7 +61,6 @@ int main(int argc, char **argv)
 	kp_dict.path = DEFAULT_INDEXDICTS; /* default path */
 	kp_dict.suffix = "dict";
 	KP_entry_filetype(&kp_dict);
-#endif
 
 /*   check options   */
 
@@ -58,13 +73,10 @@ int main(int argc, char **argv)
 
 			case 'd':
 				if ((argv[i][2]=='\0')&&(i+1<argc)) {
-					i++;
-					dicfile=malloc(strlen(argv[i])+1);
-					strcpy(dicfile,argv[i]);
+					dicfile=xstrdup(argv[++i]);
 				}
 				else {
-					dicfile=malloc(strlen(&argv[i][2])+1);
-					strcpy(dicfile,&argv[i][2]);
+					dicfile=xstrdup(&argv[i][2]);
 				}
 				break;
 
@@ -134,13 +146,10 @@ int main(int argc, char **argv)
 
 			case 's':
 				if ((argv[i][2]=='\0')&&(i+1<argc)) {
-					i++;
-					styfile=malloc(strlen(argv[i])+1);
-					strcpy(styfile,argv[i]);
+					styfile=xstrdup(argv[++i]);
 				}
 				else {
-					styfile=malloc(strlen(&argv[i][2])+1);
-					strcpy(styfile,&argv[i][2]);
+					styfile=xstrdup(&argv[i][2]);
 				}
 				break;
 
@@ -160,6 +169,12 @@ int main(int argc, char **argv)
 				set_enc_string("SJIS", NULL);
 				break;
 
+#ifdef WIN32
+			case 'T':
+				sjisterminal = 1;
+				break;
+#endif
+
 			case 'U':
 				set_enc_string("UTF8", NULL);
 				break;
@@ -168,7 +183,11 @@ int main(int argc, char **argv)
 				fprintf(stderr,"mendex - Japanese index processor, %s (%s).\n",VERSION, get_enc_string());
 				fprintf(stderr," Copyright 2009 ASCII MEDIA WORKS.(ptex-staff@ml.asciimw.jp)\n");
 				fprintf(stderr,"usage:\n");
-				fprintf(stderr,"%% mendex [-ilqrcg] [-s sty] [-d dic] [-o ind] [-t log] [-p no] [idx0 idx1 ...]\n");
+				fprintf(stderr,"%% mendex [-ilqrcgfEJS"
+#ifdef WIN32
+					       "T"
+#endif
+					       "U] [-s sty] [-d dic] [-o ind] [-t log] [-p no] [idx0 idx1 ...]\n");
 				fprintf(stderr,"options:\n");
 				fprintf(stderr,"-i      use stdin as the input file.\n");
 				fprintf(stderr,"-l      use letter ordering.\n");
@@ -185,6 +204,9 @@ int main(int argc, char **argv)
 				fprintf(stderr,"-E      EUC mode.\n");
 				fprintf(stderr,"-J      JIS mode.\n");
 				fprintf(stderr,"-S      ShiftJIS mode.\n");
+#ifdef WIN32
+				fprintf(stderr,"-T      ShiftJIS terminal.\n");
+#endif
 				fprintf(stderr,"-U      UTF-8 mode.\n");
 				fprintf(stderr,"idx...  input files.\n");
 				exit(0);
@@ -195,7 +217,7 @@ int main(int argc, char **argv)
 			cc=strlen(argv[i]);
 			if (cc<4) cc+=4;
 			else if (strcmp(&argv[i][cc-4],".idx")) cc+=4;
-			idxfile[j]=malloc(cc+1);
+			idxfile[j]=xmalloc(cc+1);
 			strcpy(idxfile[j++],argv[i]);
 		}
 	}
@@ -206,14 +228,9 @@ int main(int argc, char **argv)
 	if (idxcount==0) idxcount=fsti=1;
 
 	if (styfile==NULL) {
-#ifdef KPATHSEA
-		envbuff=KP_get_value("INDEXDEFAULTSTYLE",NULL);
-#else
-		envbuff=getenv("INDEXDEFAULTSTYLE");
-#endif
+		envbuff=kpse_var_value("INDEXDEFAULTSTYLE");
 		if (envbuff!=NULL) {
-			styfile=malloc(strlen(envbuff)+1);
-			strcpy(styfile,envbuff);
+			styfile=xstrdup(envbuff);
 		}
 	}
 
@@ -241,7 +258,7 @@ int main(int argc, char **argv)
 		if (i==-1) sprintf(logfile,"%s.ilg",idxfile[0]);
 		}
 	if ((logfile[0] != '\0') && kpse_out_name_ok(logfile))
-		efp=fopen(logfile,"w");
+		efp=fopen(logfile,"wb");
 	if(efp == NULL) {
 		efp=stderr;
 		strcpy(logfile,"stderr");
@@ -292,7 +309,7 @@ int main(int argc, char **argv)
 
 	lines=0;
 	ecount=0;
-	ind=malloc(sizeof(struct index));
+	ind=xmalloc(sizeof(struct index));
 
 	for (i=0;i<idxcount-fsti;i++) {
 		ecount+=idxread(idxfile[i],lines);
@@ -309,7 +326,7 @@ int main(int argc, char **argv)
 	if (lines==0) {
 		verb_printf(efp,"Nothing written in output file.\n");
 		if (efp!=stderr) fclose(efp);
-		exit(-1);
+		exit(255);
 	}
 
 /*   sort index   */
@@ -367,5 +384,5 @@ int main(int argc, char **argv)
 	verb_printf(efp,"Output written in %s.\n",indfile);
 	if (efp!=stderr) fclose(efp);
 
-	exit(0);
+	return 0;
 }

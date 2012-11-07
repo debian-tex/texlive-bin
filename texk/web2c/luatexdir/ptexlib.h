@@ -1,7 +1,7 @@
 /* ptexlib.h
 
    Copyright 1996-2006 Han The Thanh <thanh@pdftex.org>
-   Copyright 2006-2009 Taco Hoekwater <taco@luatex.org>
+   Copyright 2006-2012 Taco Hoekwater <taco@luatex.org>
 
    This file is part of LuaTeX.
 
@@ -18,7 +18,7 @@
    You should have received a copy of the GNU General Public License along
    with LuaTeX; if not, see <http://www.gnu.org/licenses/>. */
 
-/* $Id: ptexlib.h 26566 2012-05-22 10:53:47Z thoekwater $ */
+/* $Id: ptexlib.h 27935 2012-10-10 09:00:00Z peter $ */
 
 #ifndef PTEXLIB_H
 #  define PTEXLIB_H
@@ -33,7 +33,7 @@
 
 #  include "lib/lib.h"
 
-#  ifdef MSVC
+#  ifdef _MSC_VER
 extern double rint(double x);
 #  endif
 
@@ -68,11 +68,6 @@ extern char **suffixlist;       /* in luainit.w */
 
 
 /* pdftexlib macros from ptexmac.h */
-
-/* Not all systems define it. */
-#  ifndef M_PI
-#    define M_PI           3.14159265358979323846       /* pi */
-#  endif
 
 #  ifdef WIN32
 #    define inline __inline
@@ -176,7 +171,6 @@ size_t          T##_limit
 #  include "utils/avlstuff.h"
 #  include "utils/managed-sa.h"
 #  include "image/writeimg.h"
-#  include "openbsd-compat.h"
 #  include "dvi/dvigen.h"
 #  include "pdf/pagetree.h"
 #  include "pdf/pdfgen.h"

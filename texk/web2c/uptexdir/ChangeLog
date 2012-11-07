@@ -1,3 +1,36 @@
+2012-08-22  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* kanji.c (init_default_kanji): Set defaults before testing
+	PTEX_KANJI_ENC from the environment.
+	* kanji.c: All programs use init_default_kanji("utf8","uptex"). 
+
+2012-08-13  TANAKA Takuji <KXD02663@nifty.ne.jp>
+
+	* uptex-m.ch, upbibtex.ch, updvitype.ch, uppltotf.ch, uptftopl.ch,
+	uptex_version.h: upTeX version u1.11.
+
+2012-08-02  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* am/uptex.am: Clarify *tex_version.h dependencies.
+
+2012-07-19  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* am/uptex.am: Distribute uptex_version.h.
+	* uptexextra.h: Use ../ptexdir/ptex_version.h.
+
+2012-07-15  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* upbibtex.ch, updvitype.ch, uppltotf.ch, uptftopl.ch:
+	Adapt to the use my_name.
+
+2012-07-15  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* uptexextra.c: Must #define DLLPROC before reading uptexd.h.
+
+2012-06-30  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* uptexextra.c [W32TeX]: #define DLLPROC for uptex.dll.
+
 2012-05-22  Peter Breitenlohner  <peb@mppmu.mpg.de>
 
 	* updvitype.test: Cope with spaces in paths returned by

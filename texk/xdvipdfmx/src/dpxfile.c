@@ -1,9 +1,9 @@
-/*  $Header: /home/cvsroot/dvipdfmx/src/dpxfile.c,v 1.27 2011/03/05 02:01:28 chofchof Exp $
+/*  
     
     This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
 
-    Copyright (C) 2007 by Jin-Hwan Cho and Shunsaku Hirata,
-    the dvipdfmx project team <dvipdfmx@project.ktug.or.kr>
+    Copyright (C) 2007-2012 by Jin-Hwan Cho and Shunsaku Hirata,
+    the dvipdfmx project team.
     
     Copyright (C) 1998, 1999 by Mark A. Wicks <mwicks@kettering.edu>
 
@@ -60,8 +60,6 @@ dpx_file_set_verbose (void)
   verbose++;
 }
 
-
-#define mystrdup(s1)              (char *) MEM_ADD(strdup(s1))
 
 /* Kpathsea library does not check file type. */
 static int qcheck_filetype (const char *fqpn, int type);
@@ -656,7 +654,7 @@ dpx_find_type1_file (const char *filename)
   char  *fqpn = NULL;
 
   if (is_absolute_path(filename))
-    fqpn = mystrdup(filename);
+    fqpn = strdup(filename);
   else
     fqpn = kpse_find_file(filename, kpse_type1_format, 0);
   if (fqpn && !qcheck_filetype(fqpn, DPX_RES_TYPE_T1FONT)) {
@@ -674,7 +672,7 @@ dpx_find_truetype_file (const char *filename)
   char  *fqpn = NULL;
 
   if (is_absolute_path(filename))
-    fqpn = mystrdup(filename);
+    fqpn = strdup(filename);
   else
     fqpn = kpse_find_file(filename, kpse_truetype_format, 0);
   if (fqpn && !qcheck_filetype(fqpn, DPX_RES_TYPE_TTFONT)) {
@@ -695,7 +693,7 @@ dpx_find_opentype_file (const char *filename)
   q = ensuresuffix(filename, ".otf");
 #ifndef MIKTEX
   if (is_absolute_path(q))
-    fqpn = mystrdup(q);
+    fqpn = strdup(q);
   else
     fqpn = kpse_find_file(q, kpse_opentype_format, 0);
   if (!fqpn) {
@@ -757,7 +755,7 @@ dpx_create_temp_file (void)
   }
 #elif defined(HAVE_MKSTEMP)
 #  define __TMPDIR     "/tmp"
-#  define TEMPLATE     "/dvipdfmx.XXXXXXXX"
+#  define TEMPLATE     "/dvipdfmx.XXXXXX"
   {
     const char *_tmpd;
     int   _fd = -1;
@@ -813,7 +811,6 @@ dpx_delete_temp_file (char *tmp)
  * This should be system dependent. (MiKTeX may want something different)
  * Please modify as appropriate (see also pdfximage.c and dvipdfmx.c).
  */
-
 int
 dpx_file_apply_filter (const char *cmdtmpl,
                       const char *input, const char *output,

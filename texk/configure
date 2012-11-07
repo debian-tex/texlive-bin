@@ -692,8 +692,7 @@ enable_multiplatform
 enable_cxx_runtime_hack
 enable_libtool_hack
 enable_biber
-enable_chktex
-enable_mtx
+enable_m_tx
 enable_pmx
 enable_ps2eps
 enable_psutils
@@ -747,6 +746,7 @@ enable_web_progs
 enable_afm2pl
 enable_bibtex8
 enable_bibtexu
+enable_chktex
 enable_cjkutils
 enable_detex
 enable_devnag
@@ -846,6 +846,7 @@ ac_subdirs_all='web2c
 afm2pl
 bibtex8
 bibtexu
+chktex
 cjkutils
 detex
 devnag
@@ -1502,8 +1503,7 @@ Optional Features:
   --enable-cxx-runtime-hack  link C++ runtime statically
   --enable-libtool-hack   ignore libtool dependency_libs
   --disable-biber         do not build the biber package
-  --disable-chktex        do not build the chktex package
-  --disable-mtx           do not build the mtx package
+  --disable-m-tx          do not build the m-tx package
   --disable-pmx           do not build the pmx package
   --disable-ps2eps        do not build the ps2eps package
   --disable-psutils       do not build the psutils package
@@ -1556,6 +1556,7 @@ Optional Features:
   --disable-afm2pl        do not build the afm2pl package
   --disable-bibtex8       do not build the bibtex8 package
   --disable-bibtexu       do not build the bibtexu package
+  --disable-chktex        do not build the chktex package
   --disable-cjkutils      do not build the cjkutils package
   --disable-detex         do not build the detex package
   --disable-devnag        do not build the devnag package
@@ -3246,40 +3247,21 @@ $as_echo "$as_me: Assuming \`--enable-biber=$enable_biber'" >&6;}
 esac
 
 
-## utils/chktex/ac/withenable.ac: configure.ac fragment for the TeX Live subdirectory utils/chktex/
-## configure options and TL libraries required for chktex
-# Check whether --enable-chktex was given.
-if test "${enable_chktex+set}" = set; then :
-  enableval=$enable_chktex;
-fi
-case $enable_chktex in #(
-  yes|no) :
-     ;; #(
-  *) :
-
-   enable_chktex=$enable_all_pkgs
-     { $as_echo "$as_me:${as_lineno-$LINENO}: Assuming \`--enable-chktex=$enable_chktex'" >&5
-$as_echo "$as_me: Assuming \`--enable-chktex=$enable_chktex'" >&6;}
-     ac_configure_args="$ac_configure_args '--enable-chktex=$enable_chktex'"
-    ;;
-esac
-
-
-## utils/mtx/ac/withenable.ac: configure.ac fragment for the TeX Live subdirectory utils/mtx/
+## utils/m-tx/ac/withenable.ac: configure.ac fragment for the TeX Live subdirectory utils/m-tx/
 ## configure options and TL libraries required for mtx
-# Check whether --enable-mtx was given.
-if test "${enable_mtx+set}" = set; then :
-  enableval=$enable_mtx;
+# Check whether --enable-m-tx was given.
+if test "${enable_m_tx+set}" = set; then :
+  enableval=$enable_m_tx;
 fi
-case $enable_mtx in #(
+case $enable_m_tx in #(
   yes|no) :
      ;; #(
   *) :
 
-   enable_mtx=$enable_all_pkgs
-     { $as_echo "$as_me:${as_lineno-$LINENO}: Assuming \`--enable-mtx=$enable_mtx'" >&5
-$as_echo "$as_me: Assuming \`--enable-mtx=$enable_mtx'" >&6;}
-     ac_configure_args="$ac_configure_args '--enable-mtx=$enable_mtx'"
+   enable_m_tx=$enable_all_pkgs
+     { $as_echo "$as_me:${as_lineno-$LINENO}: Assuming \`--enable-m-tx=$enable_m_tx'" >&5
+$as_echo "$as_me: Assuming \`--enable-m-tx=$enable_m_tx'" >&6;}
+     ac_configure_args="$ac_configure_args '--enable-m-tx=$enable_m_tx'"
     ;;
 esac
 
@@ -3691,7 +3673,6 @@ fi
 test "x$enable_web2c:$enable_pdftex" = xyes:yes && {
   need_xpdf=yes
   need_libpng=yes
-  need_obsdcompat=yes
 }
 # Check whether --enable-luatex was given.
 if test "${enable_luatex+set}" = set; then :
@@ -3707,7 +3688,6 @@ esac
 test "x$enable_web2c:$enable_luatex" = xyes:yes && {
   need_poppler=yes
   need_libpng=yes
-  need_obsdcompat=yes
   need_zziplib=yes
 }
 # Check whether --enable-xetex was given.
@@ -3859,6 +3839,29 @@ esac
 test "x$enable_bibtexu" = xno || {
   need_kpathsea=yes
   need_icu=yes
+}
+
+
+## texk/chktex/ac/withenable.ac: configure.ac fragment for the TeX Live subdirectory texk/chktex/
+## configure options and TL libraries required for chktex
+# Check whether --enable-chktex was given.
+if test "${enable_chktex+set}" = set; then :
+  enableval=$enable_chktex;
+fi
+case $enable_chktex in #(
+  yes|no) :
+     ;; #(
+  *) :
+
+   enable_chktex=$enable_all_pkgs
+     { $as_echo "$as_me:${as_lineno-$LINENO}: Assuming \`--enable-chktex=$enable_chktex'" >&5
+$as_echo "$as_me: Assuming \`--enable-chktex=$enable_chktex'" >&6;}
+     ac_configure_args="$ac_configure_args '--enable-chktex=$enable_chktex'"
+    ;;
+esac
+
+test "x$enable_chktex" = xno || {
+  need_kpathsea=yes
 }
 
 
@@ -4991,10 +4994,6 @@ $as_echo "$as_me: Assuming installed \`t1lib' headers and library" >&6;}
 fi
 
 
-## libs/obsdcompat/ac/withenable.ac: configure.ac fragment for the TeX Live subdirectory libs/obsdcompat/
-## configure options and TL libraries required for obsdcompat
-
-
 ## libs/libpng/ac/withenable.ac: configure.ac fragment for the TeX Live subdirectory libs/libpng/
 ## configure options and TL libraries required for libpng
 
@@ -5516,12 +5515,6 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $MKDIR_P" >&5
 $as_echo "$MKDIR_P" >&6; }
 
-mkdir_p="$MKDIR_P"
-case $mkdir_p in
-  [\\/$]* | ?:[\\/]*) ;;
-  */*) mkdir_p="\$(top_builddir)/$mkdir_p" ;;
-esac
-
 for ac_prog in gawk mawk nawk awk
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
@@ -5716,6 +5709,12 @@ AUTOHEADER=${AUTOHEADER-"${am_missing_run}autoheader"}
 
 
 MAKEINFO=${MAKEINFO-"${am_missing_run}makeinfo"}
+
+# For better backward compatibility.  To be removed once Automake 1.9.x
+# dies out for good.  For more background, see:
+# <http://lists.gnu.org/archive/html/automake/2012-07/msg00001.html>
+# <http://lists.gnu.org/archive/html/automake/2012-07/msg00014.html>
+mkdir_p='$(MKDIR_P)'
 
 # We need awk for the "check" target.  The system "awk" is bad on
 # some platforms.
@@ -5925,6 +5924,16 @@ if test -x $srcdir/bibtexu/configure; then
   DIST_SUBTEXK="$DIST_SUBTEXK bibtexu"
   if false; then
     subdirs="$subdirs bibtexu"
+
+  fi
+fi
+
+
+if test -x $srcdir/chktex/configure; then
+  test "x$enable_chktex" = xno || SUBTEXK="$SUBTEXK chktex"
+  DIST_SUBTEXK="$DIST_SUBTEXK chktex"
+  if false; then
+    subdirs="$subdirs chktex"
 
   fi
 fi

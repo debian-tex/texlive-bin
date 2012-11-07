@@ -110,6 +110,9 @@
 %                 e-TeX and pTeX, in part suggested by Hironori Kitagawa
 %                 <h_kitagawa2001@@yahoo.co.jp>, Mar 2011.
 % Version 2.4 fixed an uninitialized line number bug, released in May 2012.
+% Version 2.5 development was started in Aug 2012; released in ??? 20??.
+%             better tracing of font definitions, reported by
+%                 Bruno Le Floch <blflatex@@gmail.com>, Jul 2012.
 
 % Although considerable effort has been expended to make the e-TeX program
 % correct and reliable, no warranty is implied; the author disclaims any
@@ -290,8 +293,8 @@ helping to determine whether a particular implementation deserves to be
 known as `\eTeX'.
 
 @d eTeX_version=2 { \.{\\eTeXversion} }
-@d eTeX_revision==".4" { \.{\\eTeXrevision} }
-@d eTeX_version_string=='-2.4' {current \eTeX\ version}
+@d eTeX_revision==".5" { \.{\\eTeXrevision} }
+@d eTeX_version_string=='-2.5' {current \eTeX\ version}
 @#
 @d eTeX_banner=='This is e-TeX, Version 3.1415926',eTeX_version_string
   {printed when \eTeX\ starts}
@@ -307,7 +310,7 @@ known as `\eTeX'.
 @#
 @d banner==pdfTeX_banner
 @#
-@d TEX==ETEX {change program name into |ETEX|}
+@d TEX==PDFTEX {change program name into |PDFTEX|}
 @#
 @d TeXXeT_code=0 {the \TeXXeT\ feature is optional}
 @#
@@ -31882,7 +31885,7 @@ define(u,set_font,null_font); scan_optional_equals; scan_file_name;
 @<If this font has already been loaded, set |f| to the internal
   font number and |goto common_ending|@>;
 f:=read_font_info(u,cur_name,cur_area,s);
-common_ending: equiv(u):=f; eqtb[font_id_base+f]:=eqtb[u]; font_id_text(f):=t;
+common_ending: define(u,set_font,f); eqtb[font_id_base+f]:=eqtb[u]; font_id_text(f):=t;
 end;
 
 @ @<Scan the font size specification@>=

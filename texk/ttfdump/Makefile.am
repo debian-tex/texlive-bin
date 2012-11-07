@@ -1,11 +1,12 @@
 ## Makefile.am for the TeX Live subdirectory texk/ttfdump/
 ##
-## Copyright (C) 2009, 2011 Peter Breitenlohner <tex-live@tug.org>
+## Copyright (C) 2009-2012 Peter Breitenlohner <tex-live@tug.org>
 ## You may freely use, modify and/or distribute this file.
 ##
 ACLOCAL_AMFLAGS = -I ../../m4
 
-INCLUDES = -I$(top_srcdir)/include
+INCLUDES = -I$(top_srcdir)/include $(KPATHSEA_INCLUDES)
+AM_CPPFLAGS = -DUNIX -DKPATHSEA
 AM_CFLAGS = $(WARNING_CFLAGS)
 
 noinst_LIBRARIES = libttf.a
@@ -59,15 +60,18 @@ libttf_a_SOURCES = \
 ## Not used (interp.c would just produce compiler warnings).
 ##
 EXTRA_DIST = \
+	include/stack.h \
 	libttf/fixed.c \
 	libttf/interp.c \
 	libttf/stack.c
+
+$(libttf_a_OBJECTS): $(KPATHSEA_DEPEND)
 
 bin_PROGRAMS = ttfdump
 
 ttfdump_SOURCES = src/ttfdump.c
 
-LDADD = libttf.a
+LDADD = libttf.a $(KPATHSEA_LIBS)
 
 dist_man1_MANS = docs/ttfdump.1
 
@@ -78,6 +82,9 @@ EXTRA_DIST += \
 	docs/ttfdump.html \
 	docs/ttfdump.ps
 
+## Rebuild libkpathsea
+@KPATHSEA_RULE@
+
 ## Tests.
 ##
 TESTS = tests/ttfdump.test
@@ -86,12 +93,15 @@ DISTCLEANFILES =
 ## tests/ttfdump.test
 EXTRA_DIST += \
 	tests/FonetikaDaniaIwonaeRegular.ttf \
+	tests/texmfhome.otf \
 	tests/ttfdump.glyf \
 	tests/ttfdump.gpos \
 	tests/ttfdump.gsub \
-	tests/ttfdump.head
+	tests/ttfdump.head \
+	tests/ttfdump.os_2
 DISTCLEANFILES += \
 	FonetikaDaniaIwonaeRegular.ttf \
+	texmfhome.otf \
 	ttftest.*
 
 ## Not used

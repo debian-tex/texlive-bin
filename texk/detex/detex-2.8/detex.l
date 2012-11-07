@@ -1,3 +1,5 @@
+%option never-interactive
+
 %{
 #ifndef lint
 static char	rcsid[] = "$Header: /p/src/local/bin/detex/RCS/detex.l,v 2.22 2007/03/01 20:22:01 trinkle Exp trinkle $";
@@ -79,6 +81,11 @@ static char	rcsid[] = "$Header: /p/src/local/bin/detex/RCS/detex.l,v 2.22 2007/0
 #define PATH_MAX MAXPATHLEN
 #ifdef OS2
 #include <stdlib.h>
+#endif
+
+#ifdef WIN32
+#include <fcntl.h>
+#include <io.h>
 #endif
 
 #endif /* KPATHSEA */
@@ -434,10 +441,10 @@ main(int cArgs, char *rgsbArgs[])
 #endif
 	_splitpath (rgsbArgs[0], drive, dir, fname, ext);
 	sbProgName = strlwr(fname);
-#else
-#ifdef KPATHSEA
+#elif defined(KPATHSEA)
 	kpse_set_program_name (rgsbArgs[0], NULL);
-#endif
+	sbProgName = kpse_program_name;
+#else
 	if ((sbProgName = rindex(rgsbArgs[0], '/')) != NULL)
 	    sbProgName++;
 	else
@@ -460,7 +467,7 @@ main(int cArgs, char *rgsbArgs[])
 			break;
 		    case CHENVOPT:
 			if (++iArgs >= cArgs) {
-				ErrorExit("-e option requires and argument");
+				ErrorExit("-e option requires an argument");
 			}
 			sbEnvList = rgsbArgs[iArgs];
 			break;
@@ -491,6 +498,10 @@ main(int cArgs, char *rgsbArgs[])
 		iArgs++;
 	}
 	SetEnvIgnore(sbEnvList);
+
+#ifdef WIN32
+	_setmode(fileno(stdout), _O_BINARY);
+#endif
 
 	/* process input files */
 	for (; iArgs < cArgs; iArgs++) {
@@ -578,7 +589,7 @@ SetEnvIgnore(const char *sbEnvList)
 	sb = SafeMalloc(strlen(sbEnvList) + 1, "malloc for SetEnvIgnore failed");
 	(void) strcpy(sb, sbEnvList);
 	csbEnvIgnore = SeparateList(sb, rgsbEnvIgnore, CHENVSEP, MAXENVS);
-	if (csbEnvIgnore == ERROR)
+	if (csbEnvIgnore == my_ERROR)
 	    ErrorExit("The environtment list contains too many environments");
 }
 
@@ -736,7 +747,7 @@ SetInputPaths(void)
 	    (void)strcat(sbPaths, DEFAULTINPUTS);
 
 	csbInputPaths = SeparateList(sbPaths, rgsbInputPaths, CHPATHSEP, MAXINPUTPATHS);
-	if (csbInputPaths == ERROR)
+	if (csbInputPaths == my_ERROR)
 #ifdef OS2
 	    ErrorExit("TEXINPUT(S) environment variable has too many paths");
 #else
@@ -749,7 +760,7 @@ SetInputPaths(void)
 ** SeparateList -- takes a chSep separated list sbList, replaces the
 **	chSep's with NULLs and sets rgsbList[i] to the beginning of
 **	the ith word in sbList.  The number of words is returned.  A
-**	ERROR is returned if there are more than csbMax words.
+**	my_ERROR is returned if there are more than csbMax words.
 ******/
 
 int
@@ -762,7 +773,7 @@ SeparateList(char *sbList, char *rgsbList[], char chSep, int csbMax)
 	    if ((sbList = index(sbList, chSep)))
 		*sbList++ = '\0';
 	}
-	return(sbList && *sbList ? ERROR : csbList);
+	return(sbList && *sbList ? my_ERROR : csbList);
 }
 
 /******

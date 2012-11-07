@@ -1,9 +1,9 @@
-/*  $Header: /home/cvsroot/dvipdfmx/src/agl.c,v 1.33 2007/11/14 02:07:14 chofchof Exp $
+/*  
 
     This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
 
-    Copyright (C) 2002 by Jin-Hwan Cho and Shunsaku Hirata,
-    the dvipdfmx project team <dvipdfmx@project.ktug.or.kr>
+    Copyright (C) 2007-2012 by Jin-Hwan Cho and Shunsaku Hirata,
+    the dvipdfmx project team.
 
     Copyright (C) 1998, 1999 by Mark A. Wicks <mwicks@kettering.edu>
 
@@ -53,8 +53,6 @@
 #include "agl.h"
 
 static int verbose = 0;
-
-static int agl_load_line(const char* p, const char* endptr, int is_predef);
 
 void
 agl_set_verbose (void)
@@ -366,48 +364,17 @@ agl_normalized_name (char *glyphname)
 
 static struct ht_table aglmap;
 
-static void
-agl_load_standard_names(void)
-{
-#if 0
-  char** pline = &agl_standard_names[0];
-  while (**pline != 0) {
-    agl_load_line(*pline, *pline + strlen(*pline), 1);
-    ++pline;
-  }
-#else
-#define AGL_BUF_SIZE 1024
-  /* Clumsy, but required for strict const-checking.  */
-  int len;
-  const char** pline = &agl_standard_names[0];
-  char agl_buf[1024];
-  while ((len = strlen(*pline)) > 0) {
-    if (len >= AGL_BUF_SIZE) {
-      WARN("Standard AGL line too long:\n%s", *pline);
-    } else {
-      strcpy(agl_buf, *pline);
-      agl_load_line(agl_buf, agl_buf + len, 1);
-    }
-    ++pline;
-  }
-#endif
-}
-
 void
 agl_init_map (void)
 {
   ht_init_table(&aglmap);
   agl_load_listfile(AGL_EXTRA_LISTFILE, 0);
-#if 0 /* JK: use built-in list of standard names rather than requiring separate file */
   if (agl_load_listfile(AGL_PREDEF_LISTFILE, 1) < 0) {
     WARN("Failed to load AGL file \"%s\"...", AGL_PREDEF_LISTFILE);
   }
   if (agl_load_listfile(AGL_DEFAULT_LISTFILE, 0) < 0) {
     WARN("Failed to load AGL file \"%s\"...", AGL_DEFAULT_LISTFILE);
   }
-#else
-  agl_load_standard_names();
-#endif
 }
 
 static void CDECL
@@ -422,90 +389,6 @@ agl_close_map (void)
   ht_clear_table(&aglmap, hval_free);
 }
 
-static int
-agl_load_line(const char* p, const char* endptr, int is_predef)
-{
-  const char *wbuf = p;
-  agl_name *agln, *duplicate;
-  char     *nextptr, *name;
-  int       n_unicodes, i;
-  long      unicodes[AGL_MAX_UNICODES];
-
-  nextptr = strchr(p, ';');
-  if (!nextptr || nextptr == p)
-    return 0;
-
-  name = parse_ident(&p, nextptr);
-
-  skip_white(&p, endptr);
-  if (!name || p[0] != ';') {
-    WARN("Invalid AGL entry: %s", wbuf);
-    if (name)
-      RELEASE(name);
-    return 0;
-  }
-
-  p++;
-  skip_white(&p, endptr);
-
-  n_unicodes = 0;
-  while (p < endptr &&
-         ((p[0]  >= '0' && p[0] <= '9') ||
-          (p[0]  >= 'A' && p[0] <= 'F'))
-        ) {
-
-    if (n_unicodes >= AGL_MAX_UNICODES) {
-      WARN("Too many Unicode values");
-      break;
-    }
-    unicodes[n_unicodes++] = strtol(p, &nextptr, 16);
-
-    p = nextptr;
-    skip_white(&p, endptr);
-  }
-
-  if (n_unicodes == 0) {
-    WARN("AGL entry ignored (no mapping): %s", wbuf);
-    RELEASE(name);
-    return 0;
-  }
-
-  agln = agl_normalized_name(name);
-  agln->is_predef = is_predef;
-  agln->n_components = n_unicodes;
-  for (i = 0; i < n_unicodes; i++) {
-    agln->unicodes[i] = unicodes[i];
-  }
-
-  duplicate = ht_lookup_table(&aglmap, name, strlen(name));
-  if (!duplicate)
-    ht_append_table(&aglmap, name, strlen(name), agln);
-  else {
-    while (duplicate->alternate)
-      duplicate = duplicate->alternate;
-    duplicate->alternate = agln;
-  }
-
-  if (verbose > 3) {
-    if (agln->suffix)
-      MESG("agl: %s [%s.%s] -->", name, agln->name, agln->suffix);
-    else
-      MESG("agl: %s [%s] -->", name, agln->name);
-    for (i = 0; i < agln->n_components; i++) {
-      if (agln->unicodes[i] > 0xffff) {
-        MESG(" U+%06X", agln->unicodes[i]);
-      } else {
-        MESG(" U+%04X", agln->unicodes[i]);
-      }
-    }
-    MESG("\n");
-  }
-
-  RELEASE(name);
-  return 1;
-}
-
-
 #define WBUF_SIZE 1024
 
 int
@@ -513,6 +396,7 @@ agl_load_listfile (const char *filename, int is_predef)
 {
   int   count = 0;
   const char *p, *endptr;
+  char *nextptr;
   char  wbuf[WBUF_SIZE];
   FILE *fp;
 
@@ -528,14 +412,89 @@ agl_load_listfile (const char *filename, int is_predef)
     MESG("<AGL:%s", filename);
 
   while ((p = mfgets(wbuf, WBUF_SIZE, fp)) != NULL) {
+    agl_name *agln, *duplicate;
+    char     *name;
+    int       n_unicodes, i;
+    long      unicodes[AGL_MAX_UNICODES];
+
     endptr = p + strlen(p);
     skip_white(&p, endptr);
 
     /* Need table version check. */
     if (!p || p[0] == '#' || p >= endptr)
       continue;
+    nextptr = strchr(p, ';');
+    if (!nextptr || nextptr == p)
+      continue;
 
-    count += agl_load_line(p, endptr, is_predef);
+    name = parse_ident(&p, nextptr);
+
+    skip_white(&p, endptr);
+    if (!name || p[0] != ';') {
+      WARN("Invalid AGL entry: %s", wbuf);
+      if (name)
+        RELEASE(name);
+      continue;
+    }
+
+    p++;
+    skip_white(&p, endptr);
+
+    n_unicodes = 0;
+    while (p < endptr &&
+           ((p[0]  >= '0' && p[0] <= '9') ||
+            (p[0]  >= 'A' && p[0] <= 'F'))
+          ) {
+
+      if (n_unicodes >= AGL_MAX_UNICODES) {
+        WARN("Too many Unicode values");
+        break;
+      }
+      unicodes[n_unicodes++] = strtol(p, &nextptr, 16);
+
+      p = nextptr;
+      skip_white(&p, endptr);
+    }
+
+    if (n_unicodes == 0) {
+      WARN("AGL entry ignored (no mapping): %s", wbuf);
+      RELEASE(name);
+      continue;
+    }
+
+    agln = agl_normalized_name(name);
+    agln->is_predef = is_predef;
+    agln->n_components = n_unicodes;
+    for (i = 0; i < n_unicodes; i++) {
+      agln->unicodes[i] = unicodes[i];
+    }
+
+    duplicate = ht_lookup_table(&aglmap, name, strlen(name));
+    if (!duplicate)
+      ht_append_table(&aglmap, name, strlen(name), agln);
+    else {
+      while (duplicate->alternate)
+        duplicate = duplicate->alternate;
+      duplicate->alternate = agln;
+    }
+
+    if (verbose > 3) {
+      if (agln->suffix)
+        MESG("agl: %s [%s.%s] -->", name, agln->name, agln->suffix);
+      else
+        MESG("agl: %s [%s] -->", name, agln->name);
+      for (i = 0; i < agln->n_components; i++) {
+        if (agln->unicodes[i] > 0xffff) {
+          MESG(" U+%06X", agln->unicodes[i]);
+        } else {
+          MESG(" U+%04X", agln->unicodes[i]);
+        }
+      }
+      MESG("\n");
+    }
+
+    RELEASE(name);
+    count++;
   }
   DPXFCLOSE(fp);
 
@@ -600,29 +559,22 @@ long
 agl_name_convert_unicode (const char *glyphname)
 {
   long  ucv = -1;
-  const char *p, *e;
+  const char *p;
 
   if (!agl_name_is_unicode(glyphname))
     return -1;
 
   if (strlen(glyphname) > 7 && *(glyphname+7) != '.') {
     WARN("Mapping to multiple Unicode characters not supported.");
-    /* JK: don't return directly from here;
-    	use the first of the Unicode characters, rather than nothing
     return -1;
-    */    
   }
 
-  if (glyphname[1] == 'n') {
+  if (glyphname[1] == 'n')
     p = glyphname + 3;
-    e = p + 4;
-  }
-  else {
+  else
     p = glyphname + 1;
-    e = p + 6;
-  }
   ucv = 0;
-  while (*p != '\0' && *p != '.' && p < e) {
+  while (*p != '\0' && *p != '.') {
     if (!isdigit(*p) && (*p < 'A' || *p > 'F')) {
       WARN("Invalid char %c in Unicode glyph name %s.", *p, glyphname);
       return -1;
@@ -708,7 +660,7 @@ agl_sput_UTF16BE (const char *glyphstr,
 
   ASSERT(glyphstr && dstpp);
 
-  p      = glyphstr;
+  p      =  glyphstr;
   endptr = strchr(p, '.');
   if (!endptr)
     endptr = p + strlen(p);

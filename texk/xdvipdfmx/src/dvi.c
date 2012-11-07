@@ -1,9 +1,9 @@
-/*  $Header: /home/cvsroot/dvipdfmx/src/dvi.c,v 1.38 2006/12/06 12:50:40 chofchof Exp $
+/*  
     
     This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
 
-    Copyright (C) 2002 by Jin-Hwan Cho and Shunsaku Hirata,
-    the dvipdfmx project team <dvipdfmx@project.ktug.or.kr>
+    Copyright (C) 2002-2012 by Jin-Hwan Cho and Shunsaku Hirata,
+    the dvipdfmx project team.
     
     Copyright (C) 1998, 1999 by Mark A. Wicks <mwicks@kettering.edu>
 
@@ -2253,6 +2253,12 @@ dvi_do_page (long n,
   }
 }
 
+#ifdef WIN32
+#define STR_CMP strcasecmp
+#else
+#define STR_CMP strcmp
+#endif
+
 double
 dvi_init (char *dvi_filename, double mag)
 {
@@ -2271,12 +2277,13 @@ dvi_init (char *dvi_filename, double mag)
   else {
     dvi_file = MFOPEN(dvi_filename, FOPEN_RBIN_MODE);
     if (!dvi_file) {
-      if ((strlen(dvi_filename) > 4)
-          && (    strcmp(dvi_filename + strlen(dvi_filename) - 4, ".dvi") != 0
+      char *p;
+      p = strrchr(dvi_filename, '.');
 #ifdef XETEX
-               || strcmp(dvi_filename + strlen(dvi_filename) - 4, ".xdv") != 0
+      if (p == NULL || (STR_CMP(p, ".dvi") && STR_CMP(p, ".xdv"))) {
+#else
+      if (p == NULL || STR_CMP(p, ".dvi")) {
 #endif
-             )) {
 #ifdef XETEX
         strcat(dvi_filename, ".xdv");
         dvi_file = MFOPEN(dvi_filename, FOPEN_RBIN_MODE);

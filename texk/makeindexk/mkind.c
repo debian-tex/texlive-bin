@@ -3,7 +3,7 @@
  *  This file is part of
  *	MakeIndex - A formatter and format independent index processor
  *
- *  Copyright (C) 1998-2011 by the TeX Live project.
+ *  Copyright (C) 1998-2012 by the TeX Live project.
  *  Copyright (C) 1989 by Chen & Harrison International Systems, Inc.
  *  Copyright (C) 1988 by Olivetti Research Center
  *  Copyright (C) 1987 by Regents of the University of California
@@ -43,7 +43,7 @@ int     idx_dot = TRUE;		       /* flag which shows dot in ilg being
 					* active */
 int     idx_tt = 0;		       /* total entry count (all files) */
 int     idx_et = 0;		       /* erroneous entry count (all files) */
-int     idx_gt = 0;		       /* good entry count (all files) */
+size_t  idx_gt = 0;		       /* good entry count (all files) */
 
 FIELD_PTR *idx_key;
 FILE   *log_fp;
@@ -106,9 +106,9 @@ main(int argc, char *argv[])
     int     log_given = FALSE;
 
 #if USE_KPATHSEA
-    kpse_set_program_name (*argv, NULL);
-#endif
-
+    kpse_set_program_name (argv[0], "makeindex");
+    pgm_fn = kpse_program_name;
+#else
     /* determine program name */
     pgm_fn = strrchr(*argv, DIR_DELIM);
 #ifdef ALT_DIR_DELIM
@@ -123,6 +123,7 @@ main(int argc, char *argv[])
 	pgm_fn = *argv;
     else
 	pgm_fn++;
+#endif /* USE_KPATHSEA */
 
     /* process command line options */
     while (--argc > 0) {
@@ -323,6 +324,9 @@ FATAL1("Option -g invalid, quote character must be different from '%c'.\n",
     if (use_stdin) {
 	idx_fn = "stdin";
 	idx_fp = stdin;
+#ifdef WIN32
+	setmode(fileno(stdin), _O_BINARY);
+#endif
 
 	if (ind_given) {
 	    if (!kpse_out_name_ok(ind_fn) ||
@@ -331,6 +335,9 @@ FATAL1("Option -g invalid, quote character must be different from '%c'.\n",
 	} else {
 	    ind_fn = "stdout";
 	    ind_fp = stdout;
+#ifdef WIN32
+	    setmode(fileno(stdout), _O_BINARY);
+#endif
 	}
 
 	if (ilg_given) {
@@ -404,7 +411,7 @@ check_idx(char *fn, int open_fn)
 		    STRING_MAX,totmem);
 #endif /* DEBUG */
 
-	    if ((tmp_fn = (char *) malloc(STRING_MAX+5)) == NULL)
+	    if ((tmp_fn = malloc(STRING_MAX+5)) == NULL)
 		FATAL("Not enough core...abort.\n");
 	    snprintf(tmp_fn, STRING_MAX+5, "%s%s", base, INDEX_IDX);
 	    idx_fn = tmp_fn;

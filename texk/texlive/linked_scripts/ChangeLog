@@ -1,3 +1,40 @@
+2012-09-09  Karl Berry  <karl@tug.org>
+
+	* Makefile.am (echo-shell-scripts): new target for
+	check-wrapper-consistency.
+
+2012-08-09  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* Makefile.am (installdirs-local): Make sure $(bindir) exists.
+
+2012-08-08  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* fmtutil*, tcfmgr*, texconfig*, texlinks* (new): Moved from
+	../../tetex/ to ./tetex/.
+	* Makefile.am: Moved run-texlinks rule from /../tetex/ to here.
+
+2012-08-07  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* updmap.help2man, tetex/all*, tetex/dvi2fax*, tetex/dvired*,
+	tetex/fontinst*, tetex/kpsetool*, tetex/kpsewhere*,
+	tetex/ps2frag*, tetex/pslatex*, tetex/rubibtex*,
+	tetex/rumakeindex*, tetex/updmap* (new): Moved from ../../tetex/
+	to here.
+	* Makefile.am: Added man1_links and rule for xupdmap.1.
+
+2012-08-06  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* Makefile.am (texmf_*_scripts): Move a2ping/, simpdftex/,
+	tetex/, and texdoc/ scripts from texmf/ to texmf-dist/.
+
+	* tetex/{e2pall,texdoctk}.1, thumbpdf/thumbpdf.1 (new):
+	Moved from ../../tetex/{e2pall,texdoctk,thumbpdf}.man to here.
+	* Makefile.am: Added dist_man_MANS.
+
+2012-07-28  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* Makefile.am (bin_links) [WIN32]: Skip shell script links.
+
 2011-12-08  Peter Breitenlohner  <peb@mppmu.mpg.de>
 
 	* Makefile.am: Rename the target scripts.tmp into scripts-list

@@ -1,14 +1,14 @@
-/*  $Header: /home/cvsroot/dvipdfmx/src/dvipdfmx.c,v 1.64 2008/05/22 10:08:02 matthias Exp $
+/*  
     
 	This is xdvipdfmx, an extended version of...
 
-    DVIPDFMx, an eXtended version of DVIPDFM by Mark A. Wicks.
+    DVIPDFMx, an eXtended-2012 version of DVIPDFM by Mark A. Wicks.
 
-	Copyright (c) 2006 SIL International (Jonathan Kew) and Jin-Hwan Cho
+	Copyright (c) 2006 SIL.
 	(xdvipdfmx extensions for XeTeX support)
 
     Copyright (C) 2008 by Jin-Hwan Cho, Matthias Franz, and Shunsaku Hirata,
-    the DVIPDFMx project team <dvipdfmx@project.ktug.or.kr>
+    the DVIPDFMx project team.
     
     Copyright (C) 1998, 1999 by Mark A. Wicks <mwicks@kettering.edu>
 
@@ -109,6 +109,12 @@ char *dvi_filename = NULL, *pdf_filename = NULL;
 static void
 read_config_file (const char *config);
 
+#ifdef WIN32
+#define STRN_CMP strncasecmp
+#else
+#define STRN_CMP strncmp
+#endif
+
 static void
 set_default_pdf_filename(void)
 {
@@ -117,16 +123,16 @@ set_default_pdf_filename(void)
   dvi_base = xbasename(dvi_filename);
   if (mp_mode &&
       strlen(dvi_base) > 4 &&
-      !strncmp(".mps", dvi_base + strlen(dvi_base) - 4, 4)) {
+      !STRN_CMP(".mps", dvi_base + strlen(dvi_base) - 4, 4)) {
     pdf_filename = NEW(strlen(dvi_base)+1, char);
     strncpy(pdf_filename, dvi_base, strlen(dvi_base) - 4);
     pdf_filename[strlen(dvi_base)-4] = '\0';
   } else if (strlen(dvi_base) > 4 &&
 #ifdef XETEX
-             (!strncmp(".dvi", dvi_base+strlen(dvi_base)-4, 4) ||
-              !strncmp(".xdv", dvi_base+strlen(dvi_base)-4, 4))) {
+             (!STRN_CMP(".dvi", dvi_base+strlen(dvi_base)-4, 4) ||
+              !STRN_CMP(".xdv", dvi_base+strlen(dvi_base)-4, 4))) {
 #else
-             !strncmp(".dvi", dvi_base+strlen(dvi_base)-4, 4)) {
+             !STRN_CMP(".dvi", dvi_base+strlen(dvi_base)-4, 4)) {
 #endif
     pdf_filename = NEW(strlen(dvi_base)+1, char);
     strncpy(pdf_filename, dvi_base, strlen(dvi_base)-4);
@@ -821,17 +827,19 @@ main (int argc, char *argv[])
 {
   double dvi2pts;
 
-  if (strcmp(argv[0], "ebb") == 0)
+  const char *av0 = xbasename(argv[0]);
+  if (STRN_CMP(av0, "ebb", 3) == 0)
     return extractbb(argc, argv, EBB_OUTPUT);
-  else if (strcmp(argv[0], "xbb") == 0 || strcmp(argv[0], "extractbb") == 0)
+  else if (STRN_CMP(av0, "xbb", 3) == 0 || STRN_CMP(av0, "extractbb", 9) == 0)
     return extractbb(argc, argv, XBB_OUTPUT);
-
-  mem_debug_init();
 
 #ifdef MIKTEX
   miktex_initialize();
 #else
   kpse_set_program_name(argv[0], "dvipdfmx"); /* we pretend to be dvipdfmx for kpse purposes */
+#ifdef WIN32
+  texlive_gs_init ();
+#endif
 #endif
 
   paperinit();
@@ -963,8 +971,6 @@ main (int argc, char *argv[])
 #ifdef MIKTEX
   miktex_uninitialize ();
 #endif
-
-  mem_debug_check();
 
   return 0;
 }

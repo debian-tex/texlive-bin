@@ -172,11 +172,6 @@ char	*getenv();
 #endif
 #endif /* undef FOPEN_WBIN_MODE */
 
-
-#ifndef __STDC__
-#define	const	/* nothing */
-#endif /* not __STDC__ */
-
 #else /* KPATHSEA */
 
 #include <kpathsea/config.h>
@@ -410,8 +405,8 @@ Boolean		test		= False;
 char		*fontname;
 int		fontlen;
 char		*mapline	= NULL;
-const char	*mapfile	= NULL;
-const char	*gspath		= GS_PATH;	/* gs interpreter path */
+char		*mapfile	= NULL;
+char		gspath[]	= GS_PATH;	/* gs interpreter path */
 Boolean		dosnames	= False;
 Boolean		quiet		= False;
 
@@ -2251,7 +2246,7 @@ Author of gsftopk: Paul Vojta.");
 #ifdef WIN32
 	setmode(fileno(stdout), _O_BINARY);
 #endif
-	kpse_set_program_name(argv[0], NULL);
+	kpse_set_program_name(argv[0], "gsftopk");
 	kpse_init_prog("GSFTOPK", (int) (dpi + 0.5), NULL, "cmr10");
 	if (!test)
 	    xputenv_int("KPATHSEA_DPI", (int) (dpi + 0.5));

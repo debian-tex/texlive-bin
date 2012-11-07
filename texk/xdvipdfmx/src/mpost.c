@@ -1,9 +1,9 @@
-/*  $Header: /home/cvsroot/dvipdfmx/src/mpost.c,v 1.41 2008/06/05 06:27:42 chofchof Exp $
+/*  
 
     This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
 
-    Copyright (C) 2007 by Jin-Hwan Cho and Shunsaku Hirata,
-    the dvipdfmx project team <dvipdfmx@project.ktug.or.kr>
+    Copyright (C) 2007-2012 by Jin-Hwan Cho and Shunsaku Hirata,
+    the dvipdfmx project team.
 
     Copyright (C) 1998, 1999 by Mark A. Wicks <mwicks@kettering.edu>
 
@@ -1188,12 +1188,12 @@ do_operator (const char *token, double x_user, double y_user)
   case SETLINECAP:
     error = pop_get_numbers(values, 1);
     if (!error)
-      error = pdf_dev_setlinecap(values[0]);
+      error = pdf_dev_setlinecap((int)values[0]);
     break;
   case SETLINEJOIN:
     error = pop_get_numbers(values, 1);
     if (!error)
-      error = pdf_dev_setlinejoin(values[0]);
+      error = pdf_dev_setlinejoin((int)values[0]);
     break;
   case SETLINEWIDTH:
     error = pop_get_numbers(values, 1);

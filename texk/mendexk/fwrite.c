@@ -1,12 +1,9 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include "mendex.h"
+
 #include <stdarg.h>
 
-#include <kpathsea/config.h>
 #include <kpathsea/tex-file.h>
 #include <ptexenc/ptexenc.h>
-#include "mendex.h"
 
 #include "exkana.h"
 #include "exvar.h"
@@ -38,35 +35,31 @@ int fprintf2(FILE *fp, const char *format, ...)
     return n;
 }
 
-int warn_printf(FILE *fp, const char *format, ...)
+void warn_printf(FILE *fp, const char *format, ...)
 {
     char print_buff[8000];
     va_list argptr;
-    int n;
 
     va_start(argptr, format);
-    n = vsnprintf(print_buff, sizeof print_buff, format, argptr);
+    vsnprintf(print_buff, sizeof print_buff, format, argptr);
     va_end(argptr);
 
     warn++;    
     fputs(print_buff, stderr);
     if (fp!=stderr) fputs(print_buff, fp);
-    return n;
 }
 
-int verb_printf(FILE *fp, const char *format, ...)
+void verb_printf(FILE *fp, const char *format, ...)
 {
     char print_buff[8000];
     va_list argptr;
-    int n;
 
     va_start(argptr, format);
-    n = vsnprintf(print_buff, sizeof print_buff, format, argptr);
+    vsnprintf(print_buff, sizeof print_buff, format, argptr);
     va_end(argptr);
 
     if (verb!=0)    fputs(print_buff, stderr);
     if (fp!=stderr) fputs(print_buff, fp);
-    return n;
 }
 
 
@@ -77,8 +70,13 @@ void indwrite(char *filename, struct index *ind, int pagenum)
 	char datama[256],lbuff[4096];
 	FILE *fp;
 
-	if (filename[0]!='\0' && kpse_out_name_ok(filename)) fp=fopen(filename,"w");
-	else fp=stdout;
+	if (filename[0]!='\0' && kpse_out_name_ok(filename)) fp=fopen(filename,"wb");
+	else {
+		fp=stdout;
+#ifdef WIN32
+		setmode(fileno(fp), _O_BINARY);
+#endif
+	}
 
 	convert(atama,datama);
 	fputs(preamble,fp);

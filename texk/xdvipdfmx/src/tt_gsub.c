@@ -1,9 +1,9 @@
-/*  $Header: /home/cvsroot/dvipdfmx/src/tt_gsub.c,v 1.14 2005/06/27 09:04:52 hirata Exp $
+/*  
     
     This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
 
-    Copyright (C) 2002 by Jin-Hwan Cho and Shunsaku Hirata,
-    the dvipdfmx project team <dvipdfmx@project.ktug.or.kr>
+    Copyright (C) 2002-2012 by Jin-Hwan Cho and Shunsaku Hirata,
+    the dvipdfmx project team.
     
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -1265,9 +1265,9 @@ otl_gsub_apply_ligature (struct otl_gsub_subtab *subtab,
 
       ligset = &(data->LigatureSet[idx]);
       for (j = 0; j < ligset->LigatureCount; j++) {
-        if (!glyph_seq_cmp(&gid_in[1], num_gids - 1,
+        if (!glyph_seq_cmp(&gid_in[1], (USHORT)(num_gids - 1),
                            ligset->Ligature[j].Component,
-                           ligset->Ligature[j].CompCount - 1)) {
+                           (USHORT)(ligset->Ligature[j].CompCount - 1))) {
           *gid_out = ligset->Ligature[j].LigGlyph;
           return 0; /* found */
         }

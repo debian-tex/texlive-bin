@@ -1,9 +1,9 @@
-/*  $Header: /home/cvsroot/dvipdfmx/src/pdfobj.c,v 1.59 2008/06/07 09:54:38 chofchof Exp $
+/*  
 
     This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
 
-    Copyright (C) 2007 by Jin-Hwan Cho and Shunsaku Hirata,
-    the dvipdfmx project team <dvipdfmx@project.ktug.or.kr>
+    Copyright (C) 2007-2012 by Jin-Hwan Cho and Shunsaku Hirata,
+    the dvipdfmx project team.
     
     Copyright (C) 1998, 1999 by Mark A. Wicks <mwicks@kettering.edu>
 
@@ -538,12 +538,11 @@ void pdf_out_char (FILE *file, char c)
   }
 }
 
+static char xchar[] = "0123456789abcdef";
+
 #define pdf_out_xchar(f,c) do {\
-  int __tmpnum;\
-  __tmpnum = ((c) >> 4) & 0x0f;\
-  pdf_out_char((f), (((__tmpnum) >= 10) ? (__tmpnum)+'W' : (__tmpnum)+'0'));\
-  __tmpnum = (c) & 0x0f;\
-  pdf_out_char((f), (((__tmpnum) >= 10) ? (__tmpnum)+'W' : (__tmpnum)+'0'));\
+  pdf_out_char((f), xchar[((c) >> 4) & 0x0f]);\
+  pdf_out_char((f), xchar[(c) & 0x0f]);\
 } while (0)
 
 static
@@ -1216,6 +1215,7 @@ pdf_add_array (pdf_obj *array, pdf_obj *object)
   return;
 }
 
+#if 0
 void
 pdf_put_array (pdf_obj *array, unsigned idx, pdf_obj *object)
 {
@@ -1268,6 +1268,7 @@ pdf_shift_array (pdf_obj *array)
 
   return result;
 }
+#endif /* 0 */
 
 /* Prepend an object to an array */
 void
@@ -1289,6 +1290,7 @@ pdf_unshift_array (pdf_obj *array, pdf_obj *object)
   data->size++;
 }
 
+#if 0
 pdf_obj *
 pdf_pop_array (pdf_obj *array)
 {
@@ -1307,7 +1309,7 @@ pdf_pop_array (pdf_obj *array)
 
   return result;
 }
-
+#endif /* 0 */
 
 static void
 write_dict (pdf_dict *dict, FILE *file)
@@ -1397,6 +1399,7 @@ pdf_add_dict (pdf_obj *dict, pdf_obj *key, pdf_obj *value)
   return 0;
 }
 
+#if 0
 void
 pdf_put_dict (pdf_obj *dict, const char *key, pdf_obj *value)
 {
@@ -1439,6 +1442,7 @@ pdf_put_dict (pdf_obj *dict, const char *key, pdf_obj *value)
     data->value = value;
   }
 }
+#endif /* 0 */
 
 /* pdf_merge_dict makes a link for each item in dict2 before stealing it */
 void
@@ -1875,6 +1879,7 @@ pdf_stream_uncompress (pdf_obj *src) {
   return dst;
 }
 
+#if 0
 void
 pdf_stream_set_flags (pdf_obj *stream, int flags)
 {
@@ -1897,6 +1902,7 @@ pdf_stream_get_flags (pdf_obj *stream)
 
   return data->_flags;
 }
+#endif /* 0 */
 
 static void
 pdf_write_obj (pdf_obj *object, FILE *file)

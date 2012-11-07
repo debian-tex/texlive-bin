@@ -3,6 +3,7 @@
    This file is public domain.  */
 
 #define	EXTERN /* Instantiate data from euptexd.h here.  */
+#define DLLPROC dlleuptexmain
 
 /* This file defines TeX and eupTeX.  */
 #include <euptexd.h>

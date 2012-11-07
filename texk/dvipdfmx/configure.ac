@@ -1,15 +1,14 @@
 dnl Process this file with autoconf to produce a configure script.
 dnl
-dnl   Copyright (C) 2009-2011 Peter Breitenlohner <tex-live@tug.org>
+dnl   Copyright (C) 2009-2012 Peter Breitenlohner <tex-live@tug.org>
 dnl
 dnl   This file is free software; the copyright holder
 dnl   gives unlimited permission to copy and/or distribute it,
 dnl   with or without modifications, as long as this notice is preserved.
 dnl
-m4_include([version.ac])[] dnl define dvipdfmx_version
-AC_INIT([dvipdfmx], dvipdfmx_version, [tex-k@tug.org])
+AC_INIT([dvipdfmx], [20120420], [tex-k@tug.org])
 AC_PREREQ([2.65])
-AC_CONFIG_SRCDIR([dvipdfmx-]dvipdfmx_version[/src/dvipdfmx.c])
+AC_CONFIG_SRCDIR([src/dvipdfmx.c])
 AC_CONFIG_AUX_DIR([../../build-aux])
 AC_CONFIG_MACRO_DIR([../../m4])
 
@@ -18,9 +17,11 @@ KPSE_COMMON([dvipdfmx])
 
 AC_CONFIG_HEADERS([config.h])
 
+KPSE_LT_HACK
+
 dnl Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS([stdint.h inttypes.h sys/types.h sys/wait.h])
+AC_CHECK_HEADERS([unistd.h stdint.h inttypes.h sys/types.h sys/wait.h])
 
 dnl Checks for library functions.
 AC_FUNC_MEMCMP
@@ -42,7 +43,6 @@ AC_CHECK_MEMBER([struct tm.tm_gmtoff],
                            [Define if struct tm has tm_gmtoff as a member.])],
                 [],
                 [[#include <time.h>]])
-
 
 AC_CHECK_SIZEOF([char])
 AC_CHECK_SIZEOF([short])
@@ -72,14 +72,19 @@ KPSE_RESTORE_FLAGS
 echo timestamp >config.force
 fi
 
-AC_DEFINE([__TDS_VERSION__], [0x200406L],
-          [Define to 0x200406L if your libkpathsea supports enc formats.])
+dnl Check for additional libraries.
 
-AC_SUBST([DVIPDFMX_TREE], [dvipdfmx-]dvipdfmx_version)
+if test "x$enable_texlive_build" != xyes || test ! -d $srcdir/../kpathsea; then
+  CHO_CHECK_LIBPAPER
+fi
 
 KPSE_CHECK_WIN32
 AM_CONDITIONAL([WIN32], [test "x$kpse_cv_have_win32" != xno])
 
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([Makefile
+		 data/Makefile
+		 man/Makefile
+		 src/Makefile
+		 ])
 
 AC_OUTPUT

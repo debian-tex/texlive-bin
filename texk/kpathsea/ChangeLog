@@ -1,3 +1,73 @@
+2012-10-03  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* mingw32.c: use stat in static int is_dir ().
+
+2012-10-02  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* win32lib.c: use stat in static int is_dir ().
+
+2012-10-01  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* win32lib.c: remove _osver since it is obsolete.
+
+2012-09-28  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* win32lib.h: remove definition of mkdir.
+	* c-proto.h: introduce NO_KPSE_DLL as in getopt.h.
+
+2012-08-11  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* c-std.h: Define M_PI if not defined by <math.h> (old MSVC).
+
+2012-08-08  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* Makefile.am: Use ../am/bin_links.am.
+
+2012-08-02  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* win32lib.h: remove definition of pipe.
+
+2012-08-01  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* configure.ac: Bail out for a badly broken snprintf()
+        (hopefully this will not happen).
+	Check if we need (v)snprintf wrapper functions.
+	* config.h: If needed, declare (v)snprintf wrapper functions.
+	* progname.c (kpathsea_set_program_name): Check snprintf sanity.
+
+2012-07-25  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* configure.ac: Add AC_CHECK_SIZEOF([long]).
+	* types.h: #include <inttypes.h> and <stdint.h> if they exist.
+	If necessary #define PRId64 & Co.
+
+2012-07-25  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* getopt.c [WIN32 && ! __CYGWIN__]: Use __CYGWIN__ instead of
+	__CYGWIN32__ which is deprecated and may be removed.
+	Mail from Ken Brown <kbrow1i@gmail.com>, Tue, 24 Jul 2012.
+
+2012-07-23  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* mingw32.h (win32_popen): Static inline wrapper for _popen()
+	to use always binary mode.
+
+2012-07-23  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* win32lib.c: rewrite kpathsea_win32_popen to use always binary
+	mode.
+
+2012-07-13  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* Makefile.am (libkpathsea_la_SOURCES): Skip compilation of
+	xfseeko.c and xftello.c for MSVC.
+	* win32lib.h: Drop xfseeko() and xftello() prototypes, they will
+	subsequently be defined in lib.h.
+
+2012-07-09  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* version.ac: Update version number 6.1.0 => 6.1.1dev.
+
 2012-05-29  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
 
 	* win32lib.c: rewrite win32_system.

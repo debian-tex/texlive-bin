@@ -63,7 +63,7 @@ override_dh_auto_configure:
 	--disable-lacheck			\
 	--disable-tex4htk			\
 	--disable-pmx				\
-	--disable-mtx				\
+	--disable-m-tx				\
 	--enable-ipc				
 
 override_dh_auto_install:
@@ -77,9 +77,7 @@ override_dh_install:
 	rm -f debian/texlive-binaries/usr/share/info/dir*
 	rm debian/texlive-binaries/usr/share/man/man1/latex.1*
 	rm debian/texlive-binaries/usr/share/man/man1/pdflatex.1*
-	rm debian/texlive-binaries/usr/share/man/man1/thumbpdf.1*
 	rm debian/texlive-binaries/usr/share/man/man1/lamed.1*
-	rm debian/texlive-binaries/usr/share/man/man1/e2pall.1*
 	rm debian/texlive-binaries/usr/share/man/man1/eplain.1*
 	rm debian/texlive-binaries/usr/share/man/man1/amstex.1*
 	# for alternatives treatment we rename usr/bin/bibtex to

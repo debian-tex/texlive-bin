@@ -1,3 +1,15 @@
+texlive-bin (2012.20121112-1) UNRELEASED; urgency=low
+
+  * new upstream build for testing
+
+ -- Norbert Preining <preining@debian.org>  Mon, 12 Nov 2012 07:48:24 +0900
+
+texlive-bin (2012.20120628-4) unstable; urgency=low
+
+  * add build-dependency on libgs-dev to support PostScript in dvisvgm
+
+ -- Norbert Preining <preining@debian.org>  Tue, 20 Nov 2012 07:44:11 +0900
+
 texlive-bin (2012.20120628-3) unstable; urgency=low
 
   * fix too short name space for cweave (original file has this fix

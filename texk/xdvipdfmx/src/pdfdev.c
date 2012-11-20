@@ -1,9 +1,9 @@
-/*  $Header: /home/cvsroot/dvipdfmx/src/pdfdev.c,v 1.66 2008/06/05 06:27:42 chofchof Exp $
+/*  
     
     This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
 
-    Copyright (C) 2002 by Jin-Hwan Cho and Shunsaku Hirata,
-    the dvipdfmx project team <dvipdfmx@project.ktug.or.kr>
+    Copyright (C) 2002-2012 by Jin-Hwan Cho and Shunsaku Hirata,
+    the dvipdfmx project team.
     
     Copyright (C) 1998, 1999 by Mark A. Wicks <mwicks@kettering.edu>
 
@@ -838,6 +838,7 @@ dev_set_font (int font_id)
 
 /* Access text state parameters.
  */
+#if 0
 int
 pdf_dev_currentfont (void)
 {
@@ -856,6 +857,7 @@ pdf_dev_get_font_ptsize (int font_id)
 
   return 1.0;
 }
+#endif /* 0 */
 
 int
 pdf_dev_get_font_wmode (int font_id)

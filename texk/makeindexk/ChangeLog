@@ -1,3 +1,43 @@
+2012-10-16  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* mkind.h: Drop duplicate '#include "c-auto.h"'.
+
+2012-10-15  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* mkind.c: Avoid TL vs W32TeX diffs (from Akira).
+
+2012-07-28  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* mkind.c, scanid.c: Do not typecast the result of malloc().
+
+2012-07-27  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	Cleanup Nelson Beebe's qqsort() used instead of qsort().
+	* qsort.[ch] (qqsort): Declare exactly as qsort().
+	(qq_compar_fn_t) Declare and use the comparison function type.
+	* mkind.[ch] (idx_gt): Change type 'int' into 'size_t'.
+	* mkind.h, scanid.c: Constify group_type() arg.
+	* sortid.c: Constify all comparison function args.
+
+2012-07-26  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* mkind.[ch] [WIN32]: Use binary mode for input and output
+	(from W32TeX).
+	* mkind.h: Drop extern declaration of qqsort() and main().
+	* qsort.h (new): Extern declaration of of qqsort().
+	* qsort.c: Replace #include "mkind.h" by #include "qsort.h".
+	* sortid.c: Add #include "qsort.h".
+	* Makefile.am (makeindex_SOURCES): Add the new file qsort.h.
+
+	* tests/makeindex.test (new): Shell script for a test case.
+	* tests/sample.idx (new): Test input.
+	* tests/sample.ind (new): Expected output.
+	* Makefile.am: Adapted.
+
+2012-07-15  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* mkind.c: Pass program name string to kpse_set_program_name.
+
 2011-09-30  Peter Breitenlohner  <peb@mppmu.mpg.de>
 
 	* mkind.c (main): The argument of kpse_set_program_name() must

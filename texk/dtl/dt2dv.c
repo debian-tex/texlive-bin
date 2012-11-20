@@ -33,14 +33,12 @@
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#else
-#ifndef __cplusplus
-extern int isatty (int );
-#endif /* __cplusplus */
 #endif
 
 #ifdef KPATHSEA
+#include <kpathsea/config.h>
 #include <kpathsea/c-fopen.h>
+#include <kpathsea/progname.h>
 #endif
 
 #include "dtl.h"
@@ -50,7 +48,7 @@ int rd_stdin = 0;
 int wr_stdout = 0;
 
 /* maximum number of characters in a DTL input line */
-#define MAXLINE  1024
+#define MAXLINE  8192
 
 /* input line */
 typedef struct
@@ -350,7 +348,12 @@ main
 #endif
   int i;
 
+#ifdef KPATHSEA
+  kpse_set_program_name(argv[0], "dv2dt");
+  progname = kpse_program_name;
+#else
   progname = argv[0];  /* name of this program */
+#endif
 
   /* memory violation signal handler */
   /* Not supported under Win32 */
@@ -1111,13 +1114,16 @@ read_char
       dinfo();
       status = 0;
     }
-    else if ( ! isprint (c) && ! isspace (c))
+    else if ( ! isprint (c) && ! isspace (c)
+#ifdef WIN32
+            && ! isknj (c) && ! isknj2 (c) 
+#endif
+            )
     {
       PRINT_PROGNAME;
       fprintf (stderr,
-        "(read_char) : character %d %s.\n",
-        c,
-        "not printable and not white space");
+        "(read_char) : character %d not printable and not white space.\n",
+        c);
       dinfo();
       status = 0;
     }
@@ -1154,8 +1160,8 @@ read_variety
   {
     PRINT_PROGNAME;
     fprintf (stderr, "(read_variety) : DTL FILE ERROR (%s) : ", dtl_filename);
-    fprintf (stderr, "DTL signature must begin with \"%s\", not \"%s\".\n",
-      "variety", token);
+    fprintf (stderr, "DTL signature must begin with \"variety\", not \"%s\".\n",
+      token);
     dexit (1);
   }
 
@@ -1960,8 +1966,8 @@ check_bmes
     PRINT_PROGNAME;
     fprintf (stderr, "(check_bmes) : DTL FILE ERROR (%s) : ",
       dtl_filename);
-    fprintf (stderr, "BMES_CHAR (`%c') %s, not `%c' (char %d).\n",
-      BMES_CHAR, "expected before string", ch, ch);
+    fprintf (stderr, "BMES_CHAR (`%c') expected before string, not `%c' (char %d).\n",
+      BMES_CHAR, ch, ch);
     dexit (1);
   }
 
@@ -1996,8 +2002,8 @@ check_emes
     PRINT_PROGNAME;
     fprintf (stderr, "(check_emes) : DTL FILE ERROR (%s) : ",
       dtl_filename);
-    fprintf (stderr, "EMES_CHAR (`%c') %s, not `%c' (char %d).\n",
-      EMES_CHAR, "expected to follow string", ch, ch);
+    fprintf (stderr, "EMES_CHAR (`%c') expected to follow string, not `%c' (char %d).\n",
+      EMES_CHAR, ch, ch);
     dexit (1);
   }
 
@@ -2007,7 +2013,7 @@ check_emes
 
 
 /* Size typically used in this program for Lstring variables */
-#define LSIZE 1024
+#define LSIZE 16384
 
 
 Void

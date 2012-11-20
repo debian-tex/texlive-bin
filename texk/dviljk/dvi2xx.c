@@ -167,10 +167,12 @@ main(int argc, char *argv[])
   y_origin = YDEFAULTOFF; /* y-origin in dots                    */
 
   setbuf(ERR_STREAM, NULL);
-  G_progname = argv[0];
 #ifdef KPATHSEA
   kpse_set_program_name(argv[0], "dvilj");
   kpse_set_program_enabled (kpse_pk_format, MAKE_TEX_PK_BY_DEFAULT, kpse_src_compile);
+  G_progname = kpse_program_name;
+#else
+  G_progname = argv[0];
 #endif
   DecodeArgs(argc, argv);
 
@@ -246,11 +248,11 @@ main(int argc, char *argv[])
 
   /* it is important that these be the very first things output !!! */
   if ( G_header )
-    CopyFile( HeaderFileName );
+    my_CopyFile( HeaderFileName );
 
   /*****************************/
   /*for( i0=0; i0<nif; i0++ )  */    /* copy all included files */
-  /*    CopyFile( Ifile[i0] ); */
+  /*    my_CopyFile( Ifile[i0] ); */
   /*****************************/
 
 #ifdef IBM3812
@@ -268,7 +270,7 @@ main(int argc, char *argv[])
      reset sequence (\eE). According to PJL Reference Manual (p. 4-3) the
      correct order is (1) UEL, (2) PJL commands, (3) Reset and PCL job, (4)
      Reset, (5) UEL. */
-  if (ResetPrinter) {
+  if (my_ResetPrinter) {
     EMIT1("\033%%-12345X"); /* UEL: Universal Exit Language */
     EMIT2("@PJL SET RESOLUTION=%d\012",RESOLUTION);
     EMIT1("@PJL SET PAGEPROTECT=OFF\012");
@@ -283,7 +285,7 @@ main(int argc, char *argv[])
   if (econoMode && !LJ6)
     EMIT1("\033*v1T");
 # else
-  if (ResetPrinter)
+  if (my_ResetPrinter)
     EMIT1("\033E");
 # endif
 # ifdef LJ2P
@@ -642,7 +644,7 @@ main(int argc, char *argv[])
 
 /*------------------------ begin dviIO.c ----------------------------------*/
 
-/* The following functions buffer input/output during CopyFile / CopyHPFile
+/* The following functions buffer input/output during my_CopyFile / CopyHPFile
    Write functions are only needed if RISC_BUFFER is defined; otherwise output
    is not buffered. */
 
@@ -706,12 +708,12 @@ b_oflush(FILEPTR spfp)
 /* end of buffer handling functions */
 
 
-/*-->CopyFile*/   /* copy a file straight through to output */
+/*-->my_CopyFile*/   /* copy a file straight through to output */
 /*********************************************************************/
-/***************************** CopyFile ******************************/
+/***************************** my_CopyFile ***************************/
 /*********************************************************************/
 void
-CopyFile(const char *str )
+my_CopyFile(const char *str )
 {
   FILEPTR spfp;
   int     todo;
@@ -2911,7 +2913,7 @@ Primary author of Dvi2xx: Gustaf Neumann; -k maintainer: K. Berry.");
         break;
 #ifdef LJ
       case 'g':       /* do not reset printer (go) */
-        ResetPrinter = _FALSE;
+        my_ResetPrinter = _FALSE;
         break;
 #endif
       case 'h':     /* copy header file through to output  */
@@ -3526,14 +3528,13 @@ void AllDone(bool PFlag)
 /*****************************  DoSpecial  ***************************/
 /*********************************************************************/
 
-#define PATTERN LJPATTERN
 typedef enum {
   ORIENTATION,
   RESETPOINTS,
   DEFPOINT,
   FILL,
   GRAY,
-  PATTERN,
+  my_PATTERN,
   COMMENT,
   HPFILE,
   HPFILE_VERBATIM,
@@ -3554,7 +3555,7 @@ KeyDesc KeyTab[] = {
   { FILL, "fill", String},
   { GRAY, "gray", Integer},
   { GRAY, "grey", Integer},
-  { PATTERN, "pattern", Integer},
+  { my_PATTERN, "pattern", Integer},
   { COMMENT, "comment", String},
   { HPFILE, "hpfile", String},
   { HPFILE_VERBATIM, "hpfile-verbatim", String},
@@ -3623,7 +3624,7 @@ ParseNumbers(char *str, int *result, int number, char **end)
 
 
 /* Diagram commands are parsed separately since the format varies from the one
-+    used by the other special commands */
+   used by the other special commands.  */
 bool ParseDiagram(char *str)
 {
   diagtrafo dt;
@@ -3711,6 +3712,7 @@ static char * mkdtemp ( char * template )
     return NULL;
   }
 #ifdef WIN32
+#undef mkdir
 #define mkdir(path, mode) mkdir(path)
 #endif
   if ( mkdir(template, 0700) == -1 ) {
@@ -3876,7 +3878,7 @@ void DoSpecial(char *str, int n)
 	}
         break;
 
-      case PATTERN:
+      case my_PATTERN:
         if ((k.v.i >= 0) && (k.v.i < 7)) {
           Pattern = k.v.i;
           GrayFill = _FALSE;
@@ -4017,20 +4019,39 @@ void DoSpecial(char *str, int n)
 	 We need to create the temporary directory only once per
 	 run; it will be deleted in AllDone(). */
       if ( tmp_dir[0] == '\0' ) {
-	const char * base_dir;
-	if ( (base_dir = getenv("TMPDIR")) == NULL ) {
-	  base_dir = "/tmp";
-	} else if ( strlen(base_dir) > STRSIZE - sizeof("/dviljkXXXXXX/include.pcl") ) {
-	  Warning ("TMPDIR %s is too long, using /tmp instead", base_dir);
-	  base_dir = "/tmp";
+	const char * base_dir, * base_base;
+#ifdef WIN32
+	char *def_tmp;
+	if ( (base_dir = getenv("WINDIR")) == NULL )
+	  base_dir = "";
+	def_tmp = concat (base_dir, "/Temp");
+	if ( (base_dir = getenv("TMPDIR")) == NULL &&
+	     (base_dir = getenv("TMP")) == NULL &&
+	     (base_dir = getenv("TEMP")) == NULL )
+#else
+# define def_tmp "/tmp"
+	if ( (base_dir = getenv("TMPDIR")) == NULL )
+#endif
+	  base_dir = def_tmp;
+	else if ( strlen(base_dir) > STRSIZE - sizeof("/dviljkXXXXXX/include.pcl") ) {
+	  Warning ("TMPDIR %s is too long, using %s instead", base_dir, def_tmp);
+	  base_dir = def_tmp;
 	}
 	/* FIXME: Actually, we would need a function to sanitize base_dir here.
 	   There may still be constructs like /.. or similar. [03 Jul 07 -js] */
-	if ( base_dir[0] == '/'  && base_dir[1] == '\0' ) {
-	  Warning ("Feeling naughty, do we? / is no temporary directory, dude");
-	  base_dir = "/tmp";
+	base_base = base_dir;
+#ifdef WIN32
+	if ( isalnum(base_dir[0]) && base_dir[1] == ':' )
+	  base_base += 2;
+#endif
+	if ( IS_DIR_SEP_CH(base_base[0]) && base_base[1] == '\0' ) {
+	  Warning ("Feeling naughty, do we? %s is no temporary directory, dude", base_dir);
+	  base_dir = def_tmp;
 	}
 	strcpy (tmp_dir, base_dir);
+#ifdef WIN32
+	free (def_tmp);
+#endif
 	strcat (tmp_dir, "/dviljkXXXXXX");
 	if ( mkdtemp(tmp_dir) == NULL ) {
 	  Warning ("Could not create temporary directory %s, errno = %d; ignoring include file special",
@@ -4108,7 +4129,7 @@ void DoSpecial(char *str, int n)
     if ( file_type == HPFile )
       CopyHPFile( include_file );
     else if ( file_type == VerbFile )
-      CopyFile( include_file );
+      my_CopyFile( include_file );
     else if ( file_type == None )
       /* do nothing */ ;
     else
@@ -5045,11 +5066,10 @@ printf("[%ld]=%lf * %lf * %lf + 0.5 = %ld\n",
       else
         tcharptr->charsize = SMALL_SIZE;
 #ifdef LJ
-#undef max
-# define  max(x,y)       if ((y)>(x)) x = y
+# define set_max(x,y) if ((y)>(x)) x = y
 
-      max(tfontptr->max_width,tcharptr->width);
-      max(tfontptr->max_height,tcharptr->height);
+      set_max(tfontptr->max_width,tcharptr->width);
+      set_max(tfontptr->max_height,tcharptr->height);
       if (tcharptr->yOffset > 0  && (int)tfontptr->max_yoff < (int)tcharptr->yOffset)
         tfontptr->max_yoff = tcharptr->yOffset;
       if ((depth = tcharptr->height - tcharptr->yOffset)>max_depth)
@@ -5191,8 +5211,8 @@ printf("[%ld]=%lf * %lf * %lf + 0.5 = %ld\n",
         tcharptr->height,tfontptr->max_height,
         tcharptr->yOffset,tfontptr->max_yoff);
         */
-      max(tfontptr->max_width, tcharptr->width);
-      max(tfontptr->max_height,tcharptr->height);
+      set_max(tfontptr->max_width, tcharptr->width);
+      set_max(tfontptr->max_height,tcharptr->height);
       if (tcharptr->yOffset > 0  && (int)tfontptr->max_yoff < (int)tcharptr->yOffset)
         tfontptr->max_yoff = tcharptr->yOffset;
 

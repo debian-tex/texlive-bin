@@ -1,9 +1,9 @@
-/*  $Header: /home/cvsroot/dvipdfmx/src/cidtype2.c,v 1.38 2011/03/06 03:14:13 chofchof Exp $
+/*  
     
     This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
 
-    Copyright (C) 2002 by Jin-Hwan Cho and Shunsaku Hirata,
-    the dvipdfmx project team <dvipdfmx@project.ktug.or.kr>
+    Copyright (C) 2002-2012 by Jin-Hwan Cho and Shunsaku Hirata,
+    the dvipdfmx project team.
     
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -317,7 +317,7 @@ add_TTCIDVMetrics (pdf_obj *fontdict, struct tt_glyphs *g,
     if (!is_used_char2(used_chars, cid))
       continue;
     gid = (cidtogidmap) ? ((cidtogidmap[2*cid] << 8)|cidtogidmap[2*cid+1]) : cid;
-    idx = tt_get_index(g, cid);
+    idx = tt_get_index(g, (USHORT)cid);
     if (cid != 0 && idx == 0)
       continue;
     advanceHeight = PDFUNIT(g->gd[idx].advh);
@@ -705,7 +705,7 @@ CIDFont_type2_dofont (CIDFont *font)
 	if (gid == 0 && unicode_cmap) {
 	  long alt_code;
 
-	  alt_code = fix_CJK_symbols(code);
+	  alt_code = fix_CJK_symbols((unsigned short)code);
 	  if (alt_code != code) {
 	    gid = tt_cmap_lookup(ttcmap, alt_code);
 	    if (gid != 0) {
@@ -787,7 +787,7 @@ CIDFont_type2_dofont (CIDFont *font)
 	if (gid == 0 && unicode_cmap) {
 	  long alt_code;
 
-	  alt_code = fix_CJK_symbols(code);
+	  alt_code = fix_CJK_symbols((unsigned short)code);
 	  if (alt_code != code) {
 	    gid = tt_cmap_lookup(ttcmap, alt_code);
 	    if (gid != 0) {

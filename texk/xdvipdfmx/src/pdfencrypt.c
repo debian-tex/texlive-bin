@@ -1,9 +1,9 @@
-/*  $Header: /home/cvsroot/dvipdfmx/src/pdfencrypt.c,v 1.10 2008/02/12 18:44:40 matthias Exp $
+/*  
  
     This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
 
-    Copyright (C) 2002 by Jin-Hwan Cho and Shunsaku Hirata,
-    the dvipdfmx project team <dvipdfmx@project.ktug.or.kr>
+    Copyright (C) 2002-2012 by Jin-Hwan Cho and Shunsaku Hirata,
+    the dvipdfmx project team.
     
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -359,6 +359,8 @@ static char *getpass (const char *prompt)
     pwd_buf[i] = getch();
     if (pwd_buf[i] == '\r')
       break;
+    fputs("*", stderr);
+    fflush(stderr);
   }
   pwd_buf[i] = '\0';
   fputs("\n", stderr);

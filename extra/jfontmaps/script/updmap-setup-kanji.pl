@@ -19,8 +19,8 @@ use Getopt::Long qw(:config no_autoabbrev ignore_case_always);
 use strict;
 
 my $prg = "updmap-setup-kanji";
-my $vers = "0.9.6dev";
-my $version = '$Id: updmap-setup-kanji.pl 26896 2012-06-19 00:30:05Z preining $';
+my $vers = "0.9.6";
+my $version = '$Id: updmap-setup-kanji.pl 27277 2012-08-02 00:16:14Z karl $';
 
 my $updmap_real = "updmap";
 my $updmap = $updmap_real;

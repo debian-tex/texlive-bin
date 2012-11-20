@@ -3,6 +3,7 @@
    This file is public domain.  */
 
 #define	EXTERN /* Instantiate data from alephd.h here.  */
+#define DLLPROC dllalephmain
 
 /* This file defines TeX and Aleph.  */
 #include <alephd.h>

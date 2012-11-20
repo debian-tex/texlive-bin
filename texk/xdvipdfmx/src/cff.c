@@ -1,9 +1,9 @@
-/*  $Header: /home/cvsroot/dvipdfmx/src/cff.c,v 1.16 2008/10/13 19:42:48 matthias Exp $
+/*  
     
     This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
 
-    Copyright (C) 2002 by Jin-Hwan Cho and Shunsaku Hirata,
-    the dvipdfmx project team <dvipdfmx@project.ktug.or.kr>
+    Copyright (C) 2002-2012 by Jin-Hwan Cho and Shunsaku Hirata,
+    the dvipdfmx project team.
     
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -521,6 +521,21 @@ long cff_get_sid (cff_font *cff, const char *str)
 	return (i + CFF_STDSTR_MAX);
     }
   }
+
+  for (i = 0; i < CFF_STDSTR_MAX; i++) {
+    if (!strcmp(str, cff_stdstr[i]))
+      return i;
+  }
+
+  return -1;
+}
+
+long cff_get_seac_sid (cff_font *cff, const char *str)
+{
+  card16 i;
+
+  if (!cff || !str)
+    return -1;
 
   for (i = 0; i < CFF_STDSTR_MAX; i++) {
     if (!strcmp(str, cff_stdstr[i]))

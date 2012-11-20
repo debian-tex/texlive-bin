@@ -301,12 +301,6 @@ else
   wterm(')');
 @z
 
-@x l.1820 - pTeX
-k:=first; while k < last do begin print_buffer(k) end;
-@y
-if last<>first then for k:=first to last-1 do print(buffer[k]);
-@z
-
 @x [8.111] l.2436 - pTeX: check hi/ho
   (mem_top+sup_main_memory>=max_halfword) then bad:=14;
 @y
@@ -2149,7 +2143,7 @@ if cur_tok<cs_token_flag then
 else if cur_tok<cs_token_flag+single_base then
   cur_val:=cur_tok-cs_token_flag-active_base
 else cur_val:=cur_tok-cs_token_flag-single_base;
-if (cur_val>255)and(cur_cmd<kanji) then
+if (cur_val>255)and((cur_cmd<kanji)or(cur_cmd>max_char_code)) then
   begin print_err("Improper alphabetic or KANJI constant");
 @.Improper alphabetic constant@>
   help2("A one-character control sequence belongs after a ` mark.")@/
@@ -5264,26 +5258,6 @@ if h=x then begin
 else link(p):=tail;
 { bugfix: if |p| is KANJI char, |link(p)|:=|tail| collapses |p| and kern after accent. }
 p:=q;
-@z
-
-@x l.22334 - pTeX
-procedure cs_error;
-begin
-if cur_chr = 10 then
-begin
-  print_err("Extra "); print_esc("endmubyte");
-@.Extra \\endmubyte@>
-  help1("I'm ignoring this, since I wasn't doing a \mubyte.");
-end else begin
-  print_err("Extra "); print_esc("endcsname");
-@.Extra \\endcsname@>
-  help1("I'm ignoring this, since I wasn't doing a \csname.");
-end;
-@y
-procedure cs_error;
-begin print_err("Extra "); print_esc("endcsname");
-@.Extra \\endcsname@>
-help1("I'm ignoring this, since I wasn't doing a \csname.");
 @z
 
 @x [48.1138] l.22385 - pTeX: init math : direction < 0 ... math direction

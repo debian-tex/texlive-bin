@@ -1,9 +1,9 @@
-/*  $Header: /home/cvsroot/dvipdfmx/src/pdfcolor.h,v 1.8 2007/11/22 11:45:39 chofchof Exp $
+/*  
     
     This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
 
-    Copyright (C) 2002 by Jin-Hwan Cho and Shunsaku Hirata,
-    the dvipdfmx project team <dvipdfmx@project.ktug.or.kr>
+    Copyright (C) 2002-2012 by Jin-Hwan Cho and Shunsaku Hirata,
+    the dvipdfmx project team.
     
     Copyright (C) 1998, 1999 by Mark A. Wicks <mwicks@kettering.edu>
 
@@ -74,8 +74,11 @@ extern void     pdf_init_colors  (void);
 extern void     pdf_close_colors (void);
 
 extern pdf_obj *pdf_get_colorspace_reference      (int cspc_id);
+
+#if 0
 extern int      pdf_get_colorspace_num_components (int cspc_id);
 extern int      pdf_get_colorspace_subtype        (int cspc_id);
+#endif
 
 /* Not working */
 extern int      pdf_colorspace_load_ICCBased      (const char *ident,

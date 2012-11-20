@@ -1,9 +1,9 @@
-/*  $Header: /home/cvsroot/dvipdfmx/src/pdffont.h,v 1.10 2008/05/18 14:49:20 chofchof Exp $
+/*  
 
     This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
 
-    Copyright (C) 2002 by Jin-Hwan Cho and Shunsaku Hirata,
-    the dvipdfmx project team <dvipdfmx@project.ktug.or.kr>
+    Copyright (C) 2002-2012 by Jin-Hwan Cho and Shunsaku Hirata,
+    the dvipdfmx project team.
     
     Copyright (C) 1998, 1999 by Mark A. Wicks <mwicks@kettering.edu>
 
@@ -66,7 +66,9 @@ extern int      pdf_get_font_subtype   (int font_id);
 extern pdf_obj *pdf_get_font_reference (int font_id);
 extern char    *pdf_get_font_usedchars (int font_id);
 
+#if 0
 extern char    *pdf_get_font_fontname  (int font_id); /* without unique tag */
+#endif /* 0 */
 extern int      pdf_get_font_encoding  (int font_id);
 extern int      pdf_get_font_wmode     (int font_id);
 extern unsigned short *pdf_get_font_ft_to_gid (int font_id);
@@ -90,7 +92,9 @@ extern char    *pdf_font_get_usedchars  (pdf_font *font);
 extern int      pdf_font_get_encoding   (pdf_font *font);
 
 extern int      pdf_font_get_flag       (pdf_font *font, int mask);
+#if 0
 extern int      pdf_font_get_flags      (pdf_font *font);
+#endif /* 0 */
 extern double   pdf_font_get_param      (pdf_font *font, int type);
 
 extern int      pdf_font_get_index      (pdf_font *font);

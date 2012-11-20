@@ -1,9 +1,9 @@
-/*  $Header: /home/cvsroot/dvipdfmx/src/type1.c,v 1.46 2009/08/28 00:26:17 matthias Exp $
+/*  
 
     This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
 
-    Copyright (C) 2008 by Jin-Hwan Cho, Matthias Franz, and Shunsaku Hirata,
-    the dvipdfmx project team <dvipdfmx@project.ktug.or.kr>
+    Copyright (C) 2008-2012 by Jin-Hwan Cho, Matthias Franz, and Shunsaku Hirata,
+    the dvipdfmx project team.
 
     Copyright (C) 1998, 1999 by Mark A. Wicks <mwicks@kettering.edu>
 
@@ -737,7 +737,7 @@ pdf_font_load_type1 (pdf_font *font)
 	  if (verbose > 2)
 	    MESG("/%s", achar_name);
 	  GIDMap[num_glyphs++] = achar_gid;
-	  charset->data.glyphs[charset->num_entries] = cff_get_sid(cffont, achar_name);
+	  charset->data.glyphs[charset->num_entries] = cff_get_seac_sid(cffont, achar_name);
 	  charset->num_entries += 1;
 	}
 
@@ -749,7 +749,7 @@ pdf_font_load_type1 (pdf_font *font)
 	  if (verbose > 2)
 	    MESG("/%s", bchar_name);
 	  GIDMap[num_glyphs++] = bchar_gid;
-	  charset->data.glyphs[charset->num_entries] = cff_get_sid(cffont, bchar_name);
+	  charset->data.glyphs[charset->num_entries] = cff_get_seac_sid(cffont, bchar_name);
 	  charset->num_entries += 1;
 	}
 	have_seac = 1;

@@ -216,7 +216,13 @@ extern const char *outputdriver;
  * also used in XeTeXFontMgr_FC.cpp and XeTeX_ext.c.  */
 #include <ft2build.h>
 #include FT_FREETYPE_H
+#ifdef __cplusplus
+extern "C" {
+#endif
 extern FT_Library gFreeTypeLibrary;
+#ifdef __cplusplus
+}
+#endif
 
 #include <stdio.h> /* for FILE */
 
@@ -231,7 +237,6 @@ extern "C" {
 
 	void setinputfileencoding(unicodefile f, integer mode, integer encodingData);
 	void uclose(unicodefile f);
-	int input_line_icu(unicodefile f);
 	void linebreakstart(integer localeStrNum, const UniChar* text, integer textLength);
 	int linebreaknext();
 	int getencodingmodeandinfo(integer* info);

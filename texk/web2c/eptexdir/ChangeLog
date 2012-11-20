@@ -1,3 +1,30 @@
+2012-09-04  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* eptexextra.h: Set AUTHOR to "Peter Breitenlohner" and
+	BUG_ADDRESS to "tex-k@tug.org" (from W32TeX).
+
+2012-08-13  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* fam256.ch: Slightly reduce one changeset to simplify e-upTeX.
+
+2012-08-02  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* eptex.ech, eptrip/etrip.tex: Adapt to e-TeX Version 2.5.
+	* am/eptex.am: Clarify *tex_version.h dependencies.
+
+2012-07-19  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* am/eptex.am: Distribute eptex_version.h.
+	* eptexextra.h: Use ../[ep]texdir/[ep]tex_version.h.
+
+2012-07-15  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* eptexextra.c: Must #define DLLPROC before reading eptexd.h.
+
+2012-06-30  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* eptexextra.c [W32TeX]: #define DLLPROC for eptex.dll.
+
 2012-05-12  Peter Breitenlohner  <peb@mppmu.mpg.de>
 
 	* eptrip/eptrip.diffs, eptrip/etrip.log: Updated.

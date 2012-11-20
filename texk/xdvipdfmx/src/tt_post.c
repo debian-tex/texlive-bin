@@ -1,9 +1,9 @@
-/*  $Header: /home/cvsroot/dvipdfmx/src/tt_post.c,v 1.3 2009/08/17 00:49:45 chofchof Exp $
+/*  
     
     This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
 
-    Copyright (C) 2002 by Jin-Hwan Cho and Shunsaku Hirata,
-    the dvipdfmx project team <dvipdfmx@project.ktug.or.kr>
+    Copyright (C) 2002-2012 by Jin-Hwan Cho and Shunsaku Hirata,
+    the dvipdfmx project team.
     
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -50,15 +50,20 @@ read_v2_post_names (struct tt_post_table *post, sfnt *sfont)
     idx = sfnt_get_ushort(sfont);
     if (idx >= 258) {
       if (idx > 32767) {
-	/* although this is strictly speaking out of spec, it seems to work
-	   and there are real-life fonts that use it */
+	/* Although this is strictly speaking out of spec, it seems to work
+	   and there are real-life fonts that use it.
+           We show a warning only once, instead of thousands of times */
 	static char warning_issued = 0;
 	if (!warning_issued) {
 	  WARN("TrueType post table name index %u > 32767", idx);
 	  warning_issued = 1;
 	}
-	/* don't zero the index - we assume it's valid */
-	/* idx = 0; */
+        /* In a real-life large font, (x)dvipdfmx crashes if we use
+           nonvanishing idx in the case of idx > 32767.
+           If we set idx = 0, (x)dvipdfmx works fine for the font and
+           created pdf seems fine. The post table may not be important
+           in such a case */
+        idx = 0;
       }
       post->count++;
     }
@@ -186,7 +191,7 @@ tt_release_post_table (struct tt_post_table *post)
   ASSERT(post);
 
   if (post->glyphNamePtr && post->Version != 0x00010000UL)
-    RELEASE(post->glyphNamePtr);
+    RELEASE((void *)post->glyphNamePtr);
   if (post->names) {
     for (i = 0; i < post->count; i++) {
       if (post->names[i])

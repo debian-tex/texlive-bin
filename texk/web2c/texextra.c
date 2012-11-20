@@ -3,6 +3,7 @@
    This file is public domain.  */
 
 #define	EXTERN /* Instantiate data from texd.h here.  */
+#define DLLPROC dlltexmain
 
 /* This file defines TeX and onlyTeX.  */
 #include <texd.h>

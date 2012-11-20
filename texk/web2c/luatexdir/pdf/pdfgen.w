@@ -623,14 +623,14 @@ void pdf_begin_stream(PDF pdf)
 }
 
 @ @c
-static void write_stream_length(PDF pdf, int length, longinteger offset)
+static void write_stream_length(PDF pdf, longinteger length, longinteger offset)
 {
     if (jobname_cstr == NULL)
         jobname_cstr = makecstring(job_name);
     if (pdf->draftmode == 0) {
         xfseeko(pdf->file, (off_t) offset, SEEK_SET, jobname_cstr);
-        fprintf(pdf->file, "%li", (long int) length);
-        xfseeko(pdf->file, pdf_offset(pdf), SEEK_SET, jobname_cstr);
+        fprintf(pdf->file, "%" LONGINTEGER_PRI "i", length);
+        xfseeko(pdf->file, (off_t) pdf_offset(pdf), SEEK_SET, jobname_cstr);
     }
 }
 
@@ -644,7 +644,7 @@ void pdf_end_stream(PDF pdf)
         pdf->stream_length = pdf_offset(pdf) - pdf_saved_offset(pdf);
     pdf_flush(pdf);
     if (pdf->seek_write_length)
-        write_stream_length(pdf, (int) pdf->stream_length,
+        write_stream_length(pdf, pdf->stream_length,
                             pdf->stream_length_offset);
     pdf->seek_write_length = false;
     if (pdf->last_byte != pdf_newline_char)
@@ -1380,6 +1380,17 @@ static void print_ID(PDF pdf, const char *file_name)
     /* get the file name */
     if (getcwd(pwd, sizeof(pwd)) == NULL)
         pdftex_fail("getcwd() failed (%s), (path too long?)", strerror(errno));
+#ifdef WIN32
+    {
+        char *p;
+        for (p = pwd; *p; p++) {
+            if (*p == '\\')
+                *p = '/';
+            else if (IS_KANJI(p))
+                p++;
+        }
+    }
+#endif
     md5_append(&state, (const md5_byte_t *) pwd, (int) strlen(pwd));
     md5_append(&state, (const md5_byte_t *) "/", 1);
     md5_append(&state, (const md5_byte_t *) file_name, (int) strlen(file_name));

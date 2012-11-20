@@ -1,3 +1,53 @@
+2012-10-16  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* convert.c: Move common #include's from here ...
+	* fread.c: ... and here ...
+	* fwrite.c: ... and here ...
+	* main.c: ... and here ...
+	* pageread.c: ... and here ...
+	* sort.c: ... and here ...
+	* styfile.c: ... and here ...
+	* mendex.h: ... to here and add '#include <c-auto.h>'.
+	* kp.c: Add '#include "mendex.h"' for common #include's.
+
+	Avoid TL vs W32TeX diffs.
+	* main.c: Use "PTEX_KANJI_ENC" and "guess_input_kanji_encoding".
+	[WIN32}: Add command line option '-T' (from W32TeX).
+
+2012-09-06  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* main.c [WIN32]: Use "sjis" file encoding (from W32TeX).
+
+2012-07-28  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* convert.c, pageread.c, styfile.c: Handle input files with
+	Dos/Windows (CRLF) line endings (from W32TeX).
+
+	Use Nelson Beebe's qqsort() instead of qsort() (from W32TeX).
+	* convert.c, sort.c: Add #include "qsort.h".
+	* qsort.[ch] (new): Copied from ../makeindexk.
+	* Makefile.am (mendex_SOURCES): Add the new files.
+
+2012-07-27  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* convert.c, kp.[ch], main.c, styfile.c: Always use KPATHSEA.
+	* Makefile.am (AM_CPPFLAGS): Remove '-DKPATHSEA'.
+	* convert.c, fread.c, main.c, sort.c: Use xmalloc().
+	* fread.c, main.c: Use xstrdup() instead of malloc()+strcpy().
+	* fwrite.c, mendex.h, kp.[ch]: Change {verb,warn}_printf() and
+	KP_entry_filetype() return type from 'int' into 'void'.
+
+2012-07-26  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* fwrite.c, main.c: Use binary mode for input and output
+	(from W32TeX).
+	* convert.c, fread.c, main.c: Use 8-bit exit() codes.
+	* main.c: Terminate main() with return instead of exit().
+
+2012-07-15  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* kp.c: Pass program name string to kpse_set_program_name.
+
 2012-03-04  Peter Breitenlohner  <peb@mppmu.mpg.de>
 
 	Avoid 'differ in signedness' warnings.
@@ -47,9 +97,6 @@
 	char' or 'unsigned char *' to plain 'char' or 'char *', but
 	always cast string bytes to 'unsigned char' when tested for '<',
 	'<=', '>', or '>='.
-
-	* convert.c, fread.c, main.c, sort.c: Do not typecast the
-	result of malloc().
 
 2010-04-17  Peter Breitenlohner  <peb@mppmu.mpg.de>
 

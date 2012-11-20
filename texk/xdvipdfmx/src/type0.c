@@ -1,9 +1,9 @@
-/*  $Header: /home/cvsroot/dvipdfmx/src/type0.c,v 1.23 2005/06/27 09:04:53 hirata Exp $
+/*  
     
     This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
 
-    Copyright (C) 2002 by Jin-Hwan Cho and Shunsaku Hirata,
-    the dvipdfmx project team <dvipdfmx@project.ktug.or.kr>
+    Copyright (C) 2002-2012 by Jin-Hwan Cho and Shunsaku Hirata,
+    the dvipdfmx project team.
     
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -290,6 +290,7 @@ Type0Font_get_wmode (Type0Font *font)
   return font->wmode;
 }
 
+#if 0
 char *
 Type0Font_get_encoding (Type0Font *font)
 {
@@ -297,6 +298,7 @@ Type0Font_get_encoding (Type0Font *font)
 
   return font->encoding;
 }
+#endif /* 0 */
 
 char *
 Type0Font_get_usedchars (Type0Font *font)

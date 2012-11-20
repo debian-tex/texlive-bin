@@ -6,6 +6,9 @@
 /* Define to 1 if the `closedir' function returns void instead of `int'. */
 #undef CLOSEDIR_VOID
 
+/* Directory for glyphlist.txt files. */
+#undef GLYPHLISTDIR
+
 /* Define if the va_list type is addressable. */
 #undef HAVE_ADDRESSABLE_VA_LIST
 
@@ -47,6 +50,10 @@
 
 /* Define to 1 if you have the `ctime' function. */
 #undef HAVE_CTIME
+
+/* Define to 1 if you have the declaration of `kpse_enc_format', and to 0 if
+   you don't. */
+#undef HAVE_DECL_KPSE_ENC_FORMAT
 
 /* Define to 1 if you have the declaration of `kpse_opentype_format', and to 0
    if you don't. */
@@ -265,9 +272,6 @@
 /* kpsewhich's $SELFAUTOPARENT variable */
 #undef SELFAUTOPARENT
 
-/* Data directory. */
-#undef SHAREDIR
-
 /* The size of `unsigned int', as computed by sizeof. */
 #undef SIZEOF_UNSIGNED_INT
 
@@ -313,6 +317,11 @@
 /* Define for large files, on AIX-style hosts. */
 #undef _LARGE_FILES
 
+/* Define for Solaris 2.5.1 so the uint64_t typedef from <sys/synch.h>,
+   <pthread.h>, or <semaphore.h> is not used. If the typedef were allowed, the
+   #define below would cause a syntax error. */
+#undef _UINT64_T
+
 /* Define to empty if `const' does not conform to ANSI C. */
 #undef const
 
@@ -322,5 +331,13 @@
 #undef inline
 #endif
 
+/* Define to the type of a signed integer type of width exactly 64 bits if
+   such a type exists and the standard includes do not define it. */
+#undef int64_t
+
 /* Define to `unsigned int' if <sys/types.h> does not define. */
 #undef size_t
+
+/* Define to the type of an unsigned integer type of width exactly 64 bits if
+   such a type exists and the standard includes do not define it. */
+#undef uint64_t

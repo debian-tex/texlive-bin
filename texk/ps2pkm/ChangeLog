@@ -1,3 +1,53 @@
+2012-10-15  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	Remove TL vs W32TeX diffs (from Akira).
+	* pkout.c: Add casts to avoid MSVC warnings.
+
+2012-10-15  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	Reduce TL vs W32TeX diffs (from Akira).
+	* mag.c [WIN32]: Add '#include <fcntl.h>' for setmode().
+	* t1funcs.c: Add casts to avoid MSVC warnings.
+
+2012-08-23  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* pfb2pfa.c (main): Drop unnecessary nested fatal() prototype.
+
+2012-07-25  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* pkout.c (pk_runlengths): Pretend that the first pixel of an
+	empty glyph is white; avoid using uninitialized data.
+	Found by Martin Schroeder <martin@oneiros.de>.
+
+2012-07-15  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* ps2pk.c: Invoke kpse_set_program_name() with original argv[0]
+	and program name string.
+	* mag.c, ps2pk.c: ANSI C function declarations and definitions.
+	No nested function declarations. Declare functions as static.
+	* tests/ps2pk.test: Set environment for kpatsea file search.
+
+2012-07-12  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* pk2bm.c: Cast arg2 of readchar() to avoid MSVC warning.
+
+2012-07-11  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* tests/ps2pk.test (new): Shell script for a test case.
+	* tests/Symbol.afm, tests/Symbol.pfb (new): Test input.
+	* tests/Symbol.pfa, tests/Symbol.alpha.{hex,pix},
+	tests/Symbol10.300pk (new): Expected output.
+	* Makefile.am: Adapted.
+
+2012-07-10  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* mag.c, pk2bm.c: Use binary mode for output files (from W32TeX).
+
+	* pfb2pfa.c: Drop unused ambiguous code.
+
+	* Makefile.am: Pk2bm does not use KPATHSEA.
+	* pk2bm.c, pkin.[ch]: ANSI C function prototypes and definitions.
+
 2011-07-19  Peter Breitenlohner  <peb@mppmu.mpg.de>
 
 	* type1.c [FABS, CEIL, FLOOR]: Use routines from libm, the

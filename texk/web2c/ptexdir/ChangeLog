@@ -1,3 +1,41 @@
+2012-11-11  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* ptex-base.ch: Remove native buffer printing code.
+
+2012-11-10  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* ptex-base.ch (cs_error): Remove "endmubyte" code.
+
+2012-08-22  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* ppltotf.ch: Remove putc kludge, convert knows (u)ppltotf.
+
+	* kanji.c (init_default_kanji): Set defaults before testing
+	PTEX_KANJI_ENC from the environment.
+	* kanji.c: WIN32 defaults differ, except for pBibTeX.
+
+2012-07-19  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* am/ptex.am: Distribute ptex_version.h.
+
+2012-07-17  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* ptex-base.ch: fix a bug in
+	@<Scan an alphabetic character code into |cur_val|@>
+
+2012-07-15  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* pbibtex.ch, pdvitype.ch, ppltotf.ch, ptftopl.ch:
+	Adapt to the use my_name.
+
+2012-07-15  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* ptexextra.c: Must #define DLLPROC before reading ptexd.h.
+
+2012-06-30  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* ptexextra.c [W32TeX]: #define DLLPROC for ptex.dll.
+
 2012-05-22  Peter Breitenlohner  <peb@mppmu.mpg.de>
 
 	* pdvitype.test, sample.test: Cope with spaces in paths returned

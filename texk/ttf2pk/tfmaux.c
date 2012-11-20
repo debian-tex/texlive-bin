@@ -50,7 +50,7 @@ static int unsort[257];
  *   A simple function for sorting sf_array (in inverse order)
  */
 
-static int XCDECL
+static int
 compare_sf(const void *a, const void *b)
 {
   return (int)(((const struct sf *)b)->sf_code - ((const struct sf *)a)->sf_code);
@@ -163,8 +163,7 @@ remap(long *what,
 
 
 static void
-write16(register short what,
-        register FILE *out)
+write16(int what, FILE *out)
 {
   (void)fputc(what >> 8, out);
   (void)fputc(what & 0xFF, out);
@@ -283,7 +282,6 @@ buildtfm(Font *fnt)
   register int i, j;
   register ttfinfo *ti;
   int byte1, old_byte1, byte2;
-  long cksum;
   double Slant;
   char buffer[256];
   struct sf sf_array[256];
@@ -366,8 +364,8 @@ buildtfm(Font *fnt)
   }
 
   header = (long *)mymalloc(40000L);
-  cksum = checksum(fnt->inencptrs);
-  header[0] = cksum;
+  fnt->cksum = checksum(fnt->inencptrs);
+  header[0] = fnt->cksum;
   header[1] = 0xA00000;                     /* 10pt design size */
 
   (void)makebcpl(header + 2, fnt->codingscheme, 39);
@@ -510,7 +508,8 @@ buildtfm(Font *fnt)
       old_byte1 = byte1;
       nl++;
     }
-    ligkern[nl - 1] |= 0x80000000L;
+    if (nl > 0)
+      ligkern[nl - 1] |= 0x80000000L;
   }
 
   kerns = ligkern + nl;
@@ -607,7 +606,7 @@ writeenc(Font *fnt)
   strcat(enc_name, fnt->fullname);
   strcat(enc_name, ".enc");
 
-  if ((out = fopen(enc_name, "wt")) == NULL)
+  if ((out = fopen(enc_name, "wb")) == NULL)
     oops("Cannot open enc file `%s'.", enc_name);
 
   free(enc_name);

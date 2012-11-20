@@ -1,7 +1,7 @@
 /* epdf.h
 
    Copyright 1996-2006 Han The Thanh <thanh@pdftex.org>
-   Copyright 2006-2010 Taco Hoekwater <taco@luatex.org>
+   Copyright 2006-2012 Taco Hoekwater <taco@luatex.org>
    This file is part of LuaTeX.
 
    LuaTeX is free software; you can redistribute it and/or modify it under
@@ -76,7 +76,6 @@ extern "C" {
 
 #  include <c-auto.h>           /* define SIZEOF_LONG */
 
-#  include "openbsd-compat.h"
 #  include "image.h"
 #  include "utils/avlstuff.h"
 #  include "pdf/pdftypes.h"
@@ -87,7 +86,7 @@ extern "C" {
     /* pdfgen.c */
     __attribute__ ((format(printf, 2, 3)))
     extern void pdf_printf(PDF, const char *fmt, ...);
-    extern void pdf_begin_obj(PDF, int, bool);
+    extern void pdf_begin_obj(PDF, int, int);
     extern void pdf_end_obj(PDF);
     extern void pdf_begin_stream(PDF);
     extern void pdf_end_stream(PDF);
@@ -107,15 +106,13 @@ extern "C" {
     extern void epdf_free(void);
 
     /* utils.c */
-    __attribute__ ((format(printf, 1, 2)))
-    extern void pdftex_warn(const char *fmt, ...);
-    __attribute__ ((noreturn, format(printf, 1, 2)))
-    extern void pdftex_fail(const char *fmt, ...);
     extern char *convertStringToPDFString(char *in, int len);
     extern char *stripzeros(char *a);
 
     /* lepdflib.c */
     int luaopen_epdf(lua_State * L);
+
+#  include "luatex-common.h"
 
 };
 

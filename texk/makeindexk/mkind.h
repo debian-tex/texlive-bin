@@ -3,7 +3,7 @@
  *  This file is part of
  *	MakeIndex - A formatter and format independent index processor
  *
- *  Copyright (C) 1998-2011 by the TeX Live project.
+ *  Copyright (C) 1998-2012 by the TeX Live project.
  *  Copyright (C) 1989 by Chen & Harrison International Systems, Inc.
  *  Copyright (C) 1988 by Olivetti Research Center
  *  Copyright (C) 1987 by Regents of the University of California
@@ -25,7 +25,7 @@
  *
  */
 
-#include "c-auto.h"
+#include <c-auto.h>
 
 /***********************************************************************
 
@@ -95,7 +95,6 @@
 #include <kpathsea/progname.h>
 #include <kpathsea/tex-glyph.h>
 #include <kpathsea/expand.h>
-#include <c-auto.h>
 #endif
 
 #include    <stdio.h>
@@ -287,8 +286,8 @@ extern int mk_getc (FILE *str);         /* line endings patch */
     EXIT(1); \
 }
 
-#define OPEN_IN(FP)   fopen(FP, "r")
-#define OPEN_OUT(FP)  fopen(FP, "w")
+#define OPEN_IN(FP)   fopen(FP, "rb")
+#define OPEN_OUT(FP)  fopen(FP, "wb")
 #define CLOSE(FP)     fclose(FP)
 
 #define ISDIGIT(C)  ('0' <= C && C <= '9')
@@ -507,7 +506,7 @@ extern NODE_PTR tail;
 
 extern int idx_dot;
 extern int idx_tt;
-extern int idx_gt;
+extern size_t idx_gt;
 extern int idx_et;
 extern int idx_dc;
 
@@ -545,10 +544,7 @@ fprintf(ilg_fp, \
 }
 
 extern void gen_ind (void);
-extern int group_type (char *str);
-extern int main (int argc, char **argv);
-extern void qqsort (char *base, int n, int size,
-		int (*compar)(char*,char*));
+extern int group_type (const char *str);
 extern void scan_idx (void);
 extern void scan_sty (void);
 extern void sort_idx (void);

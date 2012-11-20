@@ -1,12 +1,12 @@
 #!/usr/bin/env perl
-# $Id: tlmgr.pl 26857 2012-06-08 00:31:28Z karl $
+# $Id: tlmgr.pl 28216 2012-11-09 12:34:08Z preining $
 #
 # Copyright 2008, 2009, 2010, 2011, 2012 Norbert Preining
 # This file is licensed under the GNU General Public License version 2
 # or any later version.
 
-my $svnrev = '$Revision: 26857 $';
-my $datrev = '$Date: 2012-06-08 02:31:28 +0200 (Fri, 08 Jun 2012) $';
+my $svnrev = '$Revision: 28216 $';
+my $datrev = '$Date: 2012-11-09 13:34:08 +0100 (Fri, 09 Nov 2012) $';
 my $tlmgrrevision;
 my $prg;
 if ($svnrev =~ m/: ([0-9]+) /) {
@@ -170,6 +170,7 @@ sub main {
                          "no-depends-at-all" => 1,
                          "force" => 1,
                          "dry-run|n" => 1 },
+    "repository"    => { "with-platforms" => 1 },
     "restore"       => { "backupdir" => "=s",
                          "dry-run|n" => 1,
                          "all" => 1,
@@ -280,8 +281,24 @@ sub main {
     # But not all Unix platforms have it, and on Windows our Config.pm
     # can apparently interfere, so always skip it there.
     my @noperldoc = ();
-    if (win32() || ! TeXLive::TLUtils::which("perldoc")) {
+    if (win32()) {
       @noperldoc = ("-noperldoc", "1");
+    } else {
+      if (!TeXLive::TLUtils::which("perldoc")) {
+        @noperldoc = ("-noperldoc", "1");
+      } else {
+        # checking only for the existence of perldoc is not enough
+        # because stupid Debian/Ubuntu ships a stub that does nothing
+        # which is very very bad idea
+        # try to check for that, too
+        my $ret = system("perldoc -V > /dev/null 2>&1");
+        if ($ret == 0) {
+          debug("Working perldoc found, using it.\n");
+        } else {
+          tlwarn("Your perldoc seems to be non functional!\n");
+          @noperldoc = ("-noperldoc", "1");
+        }
+      }
     }
     # in some cases LESSPIPE of less breaks control characters
     # and the output of pod2usage is broken.
@@ -521,6 +538,9 @@ sub execute_action {
     finish(0);
   } elsif ($action =~ m/^repository$/i) {
     action_repository();
+    finish(0);
+  } elsif ($action =~ m/^pinning$/i) {
+    action_pinning();
     finish(0);
   } elsif ($action =~ m/^candidates$/i) {
     action_candidates();
@@ -1901,7 +1921,6 @@ sub write_w32_updater {
   my $opt_doc = $localtlpdb->option("install_docfiles");
   my $root = $localtlpdb->root;
   my $temp = "$root/temp";
-  my $repo = $remotetlpdb->root . "/$Archive";
   TeXLive::TLUtils::mkdirhier($temp);
   tlwarn("Backup option not implemented for infrastructure update.\n") if ($opts{"backup"});
   if ($media eq 'local_uncompressed') {
@@ -1911,7 +1930,17 @@ sub write_w32_updater {
   }
   my (@upd_tar, @upd_tlpobj, @upd_info, @rst_tar, @rst_tlpobj, @rst_info);
   foreach my $pkg (@w32_updated) {
-    my $mediatlp = $remotetlpdb->get_package($pkg);
+    my $repo;
+    my $mediatlp;
+    if ($media eq "virtual") {
+      my $maxtlpdb;
+      (undef, undef, $mediatlp, $maxtlpdb) = 
+        $remotetlpdb->virtual_candidate($pkg);
+      $repo = $maxtlpdb->root . "/$Archive";
+    } else {
+      $mediatlp = $remotetlpdb->get_package($pkg);
+      $repo = $remotetlpdb->root . "/$Archive";
+    }
     my $localtlp = $localtlpdb->get_package($pkg);
     my $oldrev = $localtlp->revision;
     my $newrev = $mediatlp->revision;
@@ -2005,7 +2034,7 @@ sub write_w32_updater {
     
 :update
   for %%I in (@upd_tar) do (
-    temp\\tar.exe -xf temp\\%%I
+    temp\\tar.exe -xmf temp\\%%I
     if errorlevel 1 goto :rollback
   )
   tlpkg\\tlperl\\bin\\perl.exe .\\texmf\\scripts\\texlive\\tlmgr.pl _include_tlpobj @upd_tlpobj
@@ -2023,7 +2052,7 @@ sub write_w32_updater {
   >con echo failed self update: @upd_info
   >con echo Rolling back to previous version ...
   for %%I in (@rst_tar) do (
-    temp\\tar.exe -xf temp\\%%I
+    temp\\tar.exe -xmf temp\\%%I
     if errorlevel 1 goto :panic
   )
   tlpkg\\tlperl\\bin\\perl.exe .\\texmf\\scripts\\texlive\\tlmgr.pl _include_tlpobj @rst_tlpobj
@@ -2268,7 +2297,7 @@ sub action_update {
   # if --list is given:    nothing
   # other options just change the behaviour
   if (!($opts{"list"} || @ARGV || $opts{"all"} || $opts{"self"})) {
-    tlwarn("tlmgr update: please specify a list of packages, --all, --self, or --list.\n");
+    tlwarn("tlmgr update: specify --list, --all, --self, or a list of package names.\n");
     return;
   }
 
@@ -3470,10 +3499,25 @@ sub show_list_of_packages {
   return;
 }
 
+#  PINNING
+#
+# this action manages the pinning file
+# of course it can be edited by hand, but we want to make this
+# easier for people to use
+# tlmgr pinning show
+# tlmgr pinning check
+# tlmgr pinning add <repo> <pkgglob> [<pkgglob>, ...]
+# tlmgr pinning remove <repo> <pkgglob> [<pkgglob>, ...]
+# tlmgr pinning remove <repo> --all
+sub action_pinning {
+  tlwarn("Not implemented by now, sorry!\n");
+}
+
 #  REPOSITORY
 #
 # this action manages the list of repositories
 # tlmgr repository list               -> lists repositories
+# tlmgr repository list path|tag      -> lists content of repo path|tag
 # tlmgr repository add path [tag]     -> add repository with optional tag
 # tlmgr repository remove [path|tag]  -> removes repository or tag
 # tlmgr repository set path[#tag] [path[#tag] ...] -> sets the list
@@ -3489,11 +3533,13 @@ sub array_to_repository {
   }
   for my $k (keys %r) {
     my $v = $r{$k};
-    if ($k eq $v) {
-      push @ret, $k;
-    } else {
-      push @ret, "$v#$k";
+    if ($k ne $v) {
+      $v = "$v#$k";
     }
+    # encode spaces and % in the path and tags
+    $v =~ s/%/%25/g;
+    $v =~ s/ /%20/g;
+    push @ret, $v;
   }
   return "@ret";
 }
@@ -3507,13 +3553,36 @@ sub repository_to_array {
     return %r;
   }
   for my $rr (@repos) {
+    my $tag;
+    my $url;
+    # decode spaces and % in reverse order
+    $rr =~ s/%20/ /g;
+    $rr =~ s/%25/%/g;
+    $tag = $url = $rr;
     if ($rr =~ m/^([^#]+)#(.*)$/) {
-      $r{$2} = $1;
-    } else {
-      $r{$rr} = $rr;
+      $tag = $2;
+      $url = $1;
     }
+    $r{$tag} = $url;
   }
   return %r;
+}
+sub merge_sub_packages {
+  my %pkgs;
+  for my $p (@_) {
+    if ($p =~ m/^(.*)\.([^.]*)$/) {
+      my $n = $1;
+      my $a = $2;
+      if ($p eq "texlive.infra") {
+        push @{$pkgs{$p}}, "all";
+      } else {
+        push @{$pkgs{$n}}, $a;
+      }
+    } else {
+      push @{$pkgs{$p}}, "all";
+    }
+  }
+  return %pkgs;
 }
 sub action_repository {
   init_local_db();
@@ -3521,14 +3590,50 @@ sub action_repository {
   $what = "list" if !defined($what);
   my %repos = repository_to_array($localtlpdb->option("location"));
   if ($what =~ m/^list$/i) {
-    print "List of repositories (with tags if set):\n";
-    for my $k (keys %repos) {
-      my $v = $repos{$k};
-      print "\t$v";
-      if ($k ne $v) {
-        print " ($k)";
+    if (@ARGV) {
+      # list what is in a repository
+      for my $repo (@ARGV) {
+        my $loc = $repo;
+        if (defined($repos{$repo})) {
+          $loc = $repos{$repo};
+        }
+        my ($tlpdb, $errormsg) = setup_one_remotetlpdb($loc);
+        if (!defined($tlpdb)) {
+          tlwarn("cannot locate get TLPDB from $loc\n\n");
+        } else {
+          print "Packages at $loc:\n";
+          my %pkgs = merge_sub_packages($tlpdb->list_packages);
+          for my $p (sort keys %pkgs) {
+            next if ($p =~ m/00texlive/);
+            print "  $p";
+            if (!$opts{'with-platforms'}) {
+              print "\n";
+            } else {
+              my @a = @{$pkgs{$p}};
+              if ($#a == 0) {
+                if ($a[0] eq "all") {
+                  # no further information necessary
+                  print "\n";
+                } else {
+                  print ".$a[0]\n";
+                }
+              } else {
+                print " (@{$pkgs{$p}})\n";
+              }
+            }
+          }
+        }
       }
-      print "\n";
+    } else {
+      print "List of repositories (with tags if set):\n";
+      for my $k (keys %repos) {
+        my $v = $repos{$k};
+        print "\t$v";
+        if ($k ne $v) {
+          print " ($k)";
+        }
+        print "\n";
+      }
     }
     return;
   }
@@ -5596,11 +5701,11 @@ L<http://tug.org/texlive/tlmgr.html>, along with procedures for updating
 C<tlmgr> itself and information about test versions.
 
 TeX Live is organized into a few top-level I<schemes>, each of which is
-defined as a different set of I<collections> and I<packages>, where a
+specified as a different set of I<collections> and I<packages>, where a
 collection is a set of packages, and a package is what contains actual
 files.  Schemes typically contain a mix of collections and packages, but
 each package is included in exactly one collection, no more and no less.
-Installation can be customized and managed at any level.
+A TeX Live installation can be customized and managed at any level.
 
 See L<http://tug.org/texlive/doc> for all the TeX Live documentation
 available.
@@ -5686,9 +5791,9 @@ you can select a different language by giving this option with a
 language code (based on ISO 639-1).  Currently supported (but not
 necessarily completely translated) are: English (en, default), Czech
 (cs), German (de), French (fr), Italian (it), Japanese (ja), Dutch (nl),
-Polish (pl), Brazilian Portuguese (pt_br), Russian (ru), Slovak (sk),
+Polish (pl), Brazilian Portuguese (pt_BR), Russian (ru), Slovak (sk),
 Slovenian (sl), Serbian (sr), Vietnamese (vi), simplified Chinese
-(zh-cn), and traditional Chinese (zh-tw).
+(zh_CN), and traditional Chinese (zh_TW).
 
 =item B<--machine-readable>
 
@@ -5706,7 +5811,7 @@ different file for the log.
 =item B<--pause>
 
 This option makes C<tlmgr> wait for user input before exiting.  Useful on
-Windows to avoid command windows disappearing.
+Windows to avoid disappearing command windows.
 
 =item B<--persistent-downloads>
 
@@ -5730,7 +5835,7 @@ debugging.
 =item B<--debug-translation>
 
 In GUI mode, this switch makes C<tlmgr> report any missing, or more
-likely untranslated, messages to standard error.  Helpful for
+likely untranslated, messages to standard error.  This can help
 translators to see what remains to be done.
 
 =back
@@ -6127,6 +6232,8 @@ written to the terminal.
 
 =item B<repository list>
 
+=item B<repository list I<path|tag>>
+
 =item B<repository add I<path> [I<tag>]>
 
 =item B<repository remove I<path|tag>>
@@ -6137,8 +6244,15 @@ This action manages the list of repositories.  See L</"MULTIPLE
 REPOSITORIES"> below for detailed explanations.
 
 The first form (C<list>) lists all configured repositories and the
-respective tags if set.  The second form (C<add>) adds a repository
-(optionally attaching a tag) to the list of repositories.  The third
+respective tags if set. If a path, url, or tag is given after the
+C<list> keyword, it is interpreted as source from where to 
+initialize a TeX Live Database and lists the contained packages.
+This can also be an up-to-now not used repository, both locally
+and remote. If one pass in addition C<--with-platforms>, for each
+package the available platforms (if any) are listed, too.
+
+The third form (C<add>) adds a repository
+(optionally attaching a tag) to the list of repositories.  The forth
 form (C<remove>) removes a repository, either by full path/url, or by
 tag.  The last form (C<set>) sets the list of repositories to the items
 given on the command line, not keeping previous settings

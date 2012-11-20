@@ -1,8 +1,8 @@
 
--- $Id: runscript.tlu 25642 2012-03-14 23:17:30Z trzeciak $
+-- $Id: runscript.tlu 27344 2012-08-08 14:57:33Z peter $
 
-local svnrevision = string.match("$Revision: 25642 $", "%d+") or "0"
-local svndate     = string.match("$Date: 2012-03-15 08:17:30 +0900 (Thu, 15 Mar 2012) $", "[-%d]+") or "2009-12-04"
+local svnrevision = string.match("$Revision: 27344 $", "%d+") or "0"
+local svndate     = string.match("$Date: 2012-08-08 23:57:33 +0900 (Wed, 08 Aug 2012) $", "[-%d]+") or "2009-12-04"
 local bannerstr   = "runscript wrapper utility (rev. " ..
                     svnrevision .. ", " .. svndate .. ")\n" .. 
                     "usage:   runscript script-name [arguments]\n" ..
@@ -228,6 +228,8 @@ local docstr = [[
         - added '-i', '.' to psview argument list (author's request)
         - added environment clean up from Perl specific variables 
           (when not using external Perl)
+    2012/08/05
+        - added alias for fmtutil
 ]]
 
 -- HELPER SUBROUTINES --
@@ -533,6 +535,8 @@ elseif progname == 'dviout' then
               [[^r\vf\\^s.vf;^r\ovf\\^s.ovf;^r\tfm\\^s.tfm" "-TEXROOT=']] ..
               table.concat(texrt, ';') .. [['"]]
   ARGV = {[0]=TEXDIR..'/tlpkg/dviout/dviout.exe', 'dviout', par}
+elseif progname == 'fmtutil' and sysprog then
+  ARGV = {[0]=BINDIR..'/fmtutil.exe', 'fmtutil', argline}
 elseif progname == 'psv' then
   argline = '-sINPUT='..argline
   ARGV = {[0]=TEXDIR..'/tlpkg/tlpsv/gswxlua.exe', 'gswxlua', 

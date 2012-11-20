@@ -3,6 +3,7 @@
    This file is public domain.  */
 
 #define	EXTERN /* Instantiate data from pdftexd.h here.  */
+#define DLLPROC dllpdftexmain
 
 /* This file defines TeX and pdfTeX.  */
 #include <pdftexd.h>

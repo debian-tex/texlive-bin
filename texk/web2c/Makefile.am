@@ -1,6 +1,6 @@
 ## Makefile.am for the TeX Live subdirectory texk/web2c/
 ##
-## Copyright (C) 2009-2011 Peter Breitenlohner <tex-live@tug.org>
+## Copyright (C) 2009-2012 Peter Breitenlohner <tex-live@tug.org>
 ## You may freely use, modify and/or distribute this file.
 ##
 ACLOCAL_AMFLAGS = -I ../../m4 -I m4
@@ -91,8 +91,6 @@ $(proglib): ${srcdir}/lib/*.c
 @XPDF_RULE@
 ## Rebuild poppler
 @POPPLER_RULE@
-## Rebuild libopenbsd-compat
-@OBSDCOMPAT_RULE@
 ## Rebuild libzzip
 @ZZIPLIB_RULE@
 ## Rebuild libgraphite
@@ -110,13 +108,11 @@ buildenv = TEXMFCNF=$(srcdir)/../kpathsea
 # Calling tangle & Co.
 tangle = WEBINPUTS=.:$(srcdir) $(buildenv) $(TANGLE)
 tangleboot = WEBINPUTS=.:$(srcdir) $(buildenv) $(TANGLEBOOT)
-otangle = WEBINPUTS=.:$(srcdir) $(buildenv) $(OTANGLE)
 ctangle = $(buildenv) $(CTANGLE)
 tie = WEBINPUTS=.:$(srcdir) $(buildenv) $(TIE)
 
 # Calling tangle & Co. via tangle-sh (several output files)
 texmf_tangle = WEBINPUTS=.:$(srcdir) $(SHELL) ./tangle-sh $@ $(TANGLE)
-o_tangle = WEBINPUTS=.:$(srcdir) $(SHELL) ./tangle-sh $@ $(OTANGLE)
 
 # For trip, trap, and other tests
 DIFF = diff

@@ -1,11 +1,7 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include "mendex.h"
 
-#include <kpathsea/config.h>
 #include <kpathsea/tex-file.h>
 #include <ptexenc/ptexenc.h>
-#include "mendex.h"
 
 #include "exkana.h"
 #include "exvar.h"
@@ -27,6 +23,9 @@ int idxread(char *filename, int start)
 
 	if (filename==NULL) {
 		fp=stdin;
+#ifdef WIN32
+		setmode(fileno(fp), _O_BINARY);
+#endif
 		verb_printf(efp, "Scanning input file stdin.");
 	}
 	else {
@@ -119,11 +118,7 @@ LOOP:
 							n++;
 							goto LOOP;
 						}
-						ind[i].idx[indent]=malloc(k+1);
-						if (ind[i].idx[indent]==NULL) {
-							fprintf(stderr,"Malloc error.(ind[%d].idx[%d])\n",i,indent);
-							exit(-1);
-						}
+						ind[i].idx[indent]=xmalloc(k+1);
 						strncpy(ind[i].idx[indent],wbuff,k);
 						ind[i].idx[indent][k]='\0';
 						if (!wflg) ind[i].org[indent]=NULL;
@@ -142,11 +137,7 @@ LOOP:
 							n++;
 							goto LOOP;
 						}
-						ind[i].org[indent]=malloc(k+1);
-						if (ind[i].org[indent]==NULL) {
-							fprintf(stderr,"Malloc error.(ind[%d].org[%d])\n",i,indent);
-							exit(-1);
-						}
+						ind[i].org[indent]=xmalloc(k+1);
 						strncpy(ind[i].org[indent],wbuff,k);
 						ind[i].org[indent][k]='\0';
 						wflg=1;
@@ -170,11 +161,7 @@ LOOP:
 						}
 						else estr[0]='\0';
 
-						ind[i].idx[indent]=malloc(k+1);
-						if (ind[i].idx[indent]==NULL) {
-							fprintf(stderr,"Malloc error.(ind[%d].idx[%d])\n",i,indent);
-							exit(-1);
-						}
+						ind[i].idx[indent]=xmalloc(k+1);
 						strncpy(ind[i].idx[indent],wbuff,k);
 						ind[i].idx[indent][k]='\0';
 						if (strlen(ind[i].idx[indent])==0) {
@@ -240,12 +227,7 @@ LOOP:
 					n++;
 					goto LOOP;
 				}
-				ind[i].dic[k]=malloc(strlen(table)+1);
-				if (ind[i].dic[k]==NULL) {
-					fprintf(stderr,"Malloc error.(ind[%d].dic[%d])\n",i,k);
-					exit(-1);
-				}
-				strcpy(ind[i].dic[k],table);
+				ind[i].dic[k]=xstrdup(table);
 			}
 			else {
 				cc=convert(ind[i].org[k],table);
@@ -257,12 +239,7 @@ LOOP:
 					n++;
 					goto LOOP;
 				}
-				ind[i].dic[k]=malloc(strlen(table)+1);
-				if (ind[i].dic[k]==NULL) {
-					fprintf(stderr,"Malloc error.(ind[%d].dic[%d])\n",i,k);
-					exit(-1);
-				}
-				strcpy(ind[i].dic[k],table);
+				ind[i].dic[k]=xstrdup(table);
 			}
 		}
 		acc++;
@@ -271,7 +248,7 @@ LOOP:
 
 		if (i==0) {
 			ind[0].num=0;
-			ind[0].p=malloc(sizeof(struct page)*16);
+			ind[0].p=xmalloc(sizeof(struct page)*16);
 			for (;buff[j]!=arg_open && buff[j]!='\n' && buff[j]!='\0';j++);
 			if (buff[j]=='\n' || buff[j]=='\0') {
 				verb_printf(efp,"\nWarning: Missing second argument in %s, line %d.",filename,ind[i].lnum);
@@ -296,12 +273,7 @@ LOOP:
 				else if (buff[j]==arg_close) {
 					if (nest==0) {
 						table[k]='\0';	
-						ind[0].p[0].page=malloc(strlen(table)+1);
-						if (ind[0].p[0].page==NULL) {
-							fprintf(stderr,"Malloc error.(ind[0].p[0].page)\n");
-							exit(-1);
-						}
-						strcpy(ind[0].p[0].page,table);
+						ind[0].p[0].page=xstrdup(table);
 						break;
 					}
 					else nest--;
@@ -313,12 +285,7 @@ LOOP:
 				}
 				table[k]=buff[j];
 			}
-			ind[0].p[0].enc=malloc(strlen(estr)+1);
-			if (ind[0].p[0].enc==NULL) {
-				fprintf(stderr,"Malloc error.(ind[0].p[0].enc)\n");
-				exit(-1);
-			}
-			strcpy(ind[0].p[0].enc,estr);
+			ind[0].p[0].enc=xstrdup(estr);
 			chkpageattr(&ind[0].p[0]);
 		}
 		else {
@@ -398,17 +365,15 @@ LOOP:
 					ind[l].num++;
 					if (!((ind[l].num)%16)) ind[l].p=(struct page *)realloc(ind[l].p,sizeof(struct page)*((int)((ind[l].num)/16)+1)*16);
 
-					ind[l].p[ind[l].num].page=malloc(strlen(table)+1);	
-					strcpy(ind[l].p[ind[l].num].page,table);
+					ind[l].p[ind[l].num].page=xstrdup(table);	
 
-					ind[l].p[ind[l].num].enc=malloc(strlen(estr)+1);	
-					strcpy(ind[l].p[ind[l].num].enc,estr);
+					ind[l].p[ind[l].num].enc=xstrdup(estr);	
 					chkpageattr(&ind[l].p[ind[l].num]);
 				}
 			}
 			else {
 				ind[i].num=0;
-				ind[i].p=malloc(sizeof(struct page)*16);
+				ind[i].p=xmalloc(sizeof(struct page)*16);
 				for (;buff[j]!=arg_open && buff[j]!='\n' && buff[j]!='\0';j++);
 				if (buff[j]=='\n' || buff[j]=='\0') {
 					verb_printf(efp,"\nWarning: Missing second argument in %s, line %d.",filename,ind[i].lnum);
@@ -433,8 +398,7 @@ LOOP:
 					if (buff[j]==arg_close) {
 						if (nest==0) {
 							table[k]='\0';	
-							ind[i].p[0].page=malloc(strlen(table)+1);	
-							strcpy(ind[i].p[0].page,table);
+							ind[i].p[0].page=xstrdup(table);	
 							break;
 						}
 						else nest--;
@@ -446,8 +410,7 @@ LOOP:
 					}
 					table[k]=buff[j];
 				}
-				ind[l].p[0].enc=malloc(strlen(estr)+1);	
-				strcpy(ind[i].p[0].enc,estr);
+				ind[l].p[0].enc=xstrdup(estr);	
 				chkpageattr(&ind[i].p[0]);
 			}
 		}
@@ -555,13 +518,13 @@ ATTRLOOP:
 	if (cc<2) p->attr[++cc]= -1;
 }
 
-char *mfgets(char *buf, int byte, FILE *fp)
+char *mfgets(char *buf, int size, FILE *fp)
 {
 	int c, len;
 
-	if ((len = input_line2(fp, (unsigned char *) buf, 0, byte, &c)) == 0) return NULL;
+	if ((len = input_line2(fp, (unsigned char *) buf, 0, size, &c)) == 0) return NULL;
 	if (c == '\n' || c == '\r') {
-		if (len+1 < byte) strcat(buf+len, "\n");
+		if (len+1 < size) strcat(buf+len, "\n");
 		else ungetc(c, fp);
 	}
 	if (c == EOF) return NULL;

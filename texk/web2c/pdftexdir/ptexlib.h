@@ -35,8 +35,6 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 /* avl */
 #  include "avlstuff.h"
 
-#  include "openbsd-compat.h"
-
 /* pdftexlib type declarations */
 typedef struct {
     const char *pdfname;
@@ -215,7 +213,7 @@ extern void libpdffinish(void);
 extern char *makecfilename(strnumber s);
 extern void make_subset_tag(fd_entry *);
 extern void setjobid(int, int, int, int);
-extern void writestreamlength(integer, longinteger);
+extern void writestreamlength(longinteger, longinteger);
 extern void printID(strnumber);
 extern void printcreationdate(void);
 extern void printmoddate(void);
@@ -259,7 +257,7 @@ extern void allocvffnts(void);
 
 /* vfpacket.c */
 extern integer newvfpacket(internalfontnumber);
-extern void storepacket(internalfontnumber, eightbits, strnumber);
+extern void storepacket(internalfontnumber, integer, strnumber);
 extern void startpacket(internalfontnumber, eightbits);
 extern eightbits packetbyte(void);
 extern void poppacketstate(void);

@@ -12,6 +12,7 @@
 #include <kpathsea/config.h>
 #include <kpathsea/c-std.h>
 #include <kpathsea/c-limits.h>
+#include <kpathsea/c-pathch.h>
 #include <kpathsea/magstep.h>
 #include <kpathsea/proginit.h>
 #include <kpathsea/progname.h>
@@ -267,8 +268,6 @@ const char *MFMODE     = MFMODE600;
 # define  XDEFAULTOFF   RESOLUTION   /*x default offset on page 1in (LJ2)*/
 # define  YDEFAULTOFF   RESOLUTION    /* y default offset on page 1inch */
 #endif
-# undef max
-# define  max(x,y)       if ((y)>(x)) x = y
 # ifndef vms
 #  define  INT_ASCII(b,i) \
    if (i == 0) b[0] = '\0'; else sprintf((char *)b,"%hd",i)
@@ -329,10 +328,6 @@ int     intdos();
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#undef CopyFile
-#define CopyFile LJCopyFile
-#undef ResetPrinter
-#define ResetPrinter LJResetPrinter
 #endif
 
 #ifndef USEPXL
@@ -457,7 +452,7 @@ void    AllDone(bool);
 void    AssureBinary(FILEPTR);  /* DOS and Microsoft C dependent !!! */
 #endif
 void    CloseFiles(void);
-void    CopyFile(const char *);
+void    my_CopyFile(const char *);
 void    CopyHPFile(char *);
 void    DecodeArgs(int, char *[]);
 #ifdef __riscos
@@ -535,7 +530,7 @@ bool    FirstAlternate = _FALSE; /* first page from alternate casette ?   */
 #endif
 bool    Reverse = _FALSE;        /* process DVI pages in reverse order?   */
 bool    Landscape = _FALSE;      /* print document in ladscape mode       */
-bool    ResetPrinter = _TRUE;    /* reset printer at the begin of the job */
+bool    my_ResetPrinter = _TRUE; /* reset printer at the begin of the job */
 bool    DoublePage = _FALSE;     /* print on both sides of a paper        */
 bool    PrintSecondPart = _TRUE; /* print First Part when DoublePage      */
 bool    PrintFirstPart  = _TRUE; /* print Second Part when DoublePage     */

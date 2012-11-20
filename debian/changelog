@@ -2,7 +2,7 @@ texlive-bin (2012.20121120-1) experimental; urgency=low
 
   * new upstream build
 
- -- Norbert Preining <preining@debian.org>  Tue, 20 Nov 2012 09:08:49 +0900
+ -- Norbert Preining <preining@debian.org>  Tue, 20 Nov 2012 17:57:16 +0900
 
 texlive-bin (2012.20120628-4) unstable; urgency=low
 

@@ -1,7 +1,7 @@
 ---
  texk/kpathsea/texmf.cnf           |    1 
  texk/web2c/Makefile.am            |    3 
- texk/web2c/ac/web2c.ac            |    5 
+ texk/web2c/ac/web2c.ac            |    1 
  texk/web2c/configure.ac           |    1 
  texk/web2c/pmplibdir/am/pmpost.am |   78 ++++++
  texk/web2c/pmplibdir/jfm.ch       |  110 ++++++++
@@ -9,7 +9,7 @@
  texk/web2c/pmplibdir/jmppsw.ch    |   76 +++++
  texk/web2c/pmplibdir/pdvitomp.ch  |  494 ++++++++++++++++++++++++++++++++++++++
  texk/web2c/pmplibdir/pmpost.ch    |  234 ++++++++++++++++++
- 10 files changed, 1285 insertions(+)
+ 10 files changed, 1281 insertions(+)
 
 --- texlive-bin.orig/texk/kpathsea/texmf.cnf
 +++ texlive-bin/texk/kpathsea/texmf.cnf
@@ -23,7 +23,7 @@
  % interactive `e' option.  %d is replaced by the line number and %s by
 --- texlive-bin.orig/texk/web2c/Makefile.am
 +++ texlive-bin/texk/web2c/Makefile.am
-@@ -159,6 +159,9 @@
+@@ -157,6 +157,9 @@
  ## MetaPost
  include $(srcdir)/mplibdir/am/mplib.am
  
@@ -35,18 +35,14 @@
  
 --- texlive-bin.orig/texk/web2c/ac/web2c.ac
 +++ texlive-bin/texk/web2c/ac/web2c.ac
-@@ -75,6 +75,11 @@
-               AS_HELP_STRING([--disable-mp],
-                              [do not build METAPOST],
-                              kpse_indent_26))[]dnl
-+## configure options for PMP
-+AC_ARG_ENABLE([pmp],
-+              AS_HELP_STRING([--disable-pmp],
-+                             [do not build pMETAPOST],
-+                             kpse_indent_26))[]dnl
- ## configure options for WEB programs
- AC_ARG_ENABLE([web-progs],
-               AS_HELP_STRING([--disable-web-progs],
+@@ -41,6 +41,7 @@
+ [[pdftex], [yes], [yes], [pdfTeX],  [xpdf libpng]],
+ [[luatex], [yes], [],    [luaTeX],  [poppler libpng zziplib]],
+ [[mp],     [yes], [],    [MetaPost],[libpng]],
++[[pmp],    [yes], [],    [pMetaPost],[libpng]],
+ [[xetex],  [yes], [yes], [XeTeX],   [poppler libpng freetype2 icu-xetex teckit graphite]],
+ ])[]dnl
+ m4_foreach([Kpse_Prog], [kpse_tex_progs],
 --- texlive-bin.orig/texk/web2c/configure.ac
 +++ texlive-bin/texk/web2c/configure.ac
 @@ -195,6 +195,7 @@

@@ -13,7 +13,7 @@ Depends: ${shlibs:Depends}, ${misc:Depends}, texlive-common (>= 2011), tex-commo
 Recommends: texlive-base, luatex, python, ruby, wish
 Replaces: texlive-metapost (<< 2010), texlive-base (<< 2010), ptex-bin, mendexk, jmpost
 Conflicts: mendexk, makejvf, jmpost
-Breaks: texlive-base (<< 2010)
+Breaks: texlive-base (<< 2010), jtex-bin, multex-bin
 Provides: texlive-base-bin, makejvf, mendexk, jmpost
 Description: Binaries for TeX Live
  This package contains all the binaries of TeX Live packages.

@@ -1,16 +1,8 @@
-12a_fix_thumbpdf_invocation
-12b_fix_a2ping_invocation
-12e_fix_vpe_invocation
 23_use_xdvi.bin
-debian-fmtutil-adaptions
-51_fmtutil_keep_failedlog
 debian-builtin-searchpath
-debian-texconfig-adaptions
-set-e-fmtutil
 debian-no-linked-scripts
 60_unneeded_linking
 61_path_max.diff
 pmpost-20121106-tl12
 pmpost-svg-20120119-tl11.diff
-debian-updmap-man
 xdvi-upupstream-fixes

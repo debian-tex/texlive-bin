@@ -23,7 +23,7 @@
  % interactive `e' option.  %d is replaced by the line number and %s by
 --- texlive-bin.orig/texk/web2c/Makefile.am
 +++ texlive-bin/texk/web2c/Makefile.am
-@@ -157,6 +157,9 @@
+@@ -155,6 +155,9 @@
  ## MetaPost
  include $(srcdir)/mplibdir/am/mplib.am
  

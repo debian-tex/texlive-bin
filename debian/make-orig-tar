@@ -1,4 +1,22 @@
 
+
+debversion=$(dpkg-parsechangelog  | grep ^Version: | awk '{print$2}')
+origversion=$(echo $debversion | sed -e 's/-.*//')
+
+(
+  cd ..
+  tar -cJf texlive-bin_${origversion}.orig.tar.xz \
+  	--exclude=texlive-bin/.git		\
+	--exclude=texlive-bin/debian		\
+	texlive-bin
+)
+
+
+
+exit 0
+
+### OLD HERE
+
 verstr=texlive-bin-2012.`date +%Y%m%d`
 pkgstr=texlive-bin_2012.`date +%Y%m%d`
 if [ -r $verstr ] ; then

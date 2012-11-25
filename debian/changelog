@@ -1,9 +1,9 @@
-texlive-bin (2012.20121124-1) UNRELEASED; urgency=low
+texlive-bin (2012.20121124-1) experimental; urgency=low
 
   * depend on texlive-common >= 2012.20121120 to prohibit partial
     update of only texlive-binaries (Closes: #694126)
 
- -- Norbert Preining <preining@debian.org>  Sat, 24 Nov 2012 21:14:08 +0900
+ -- Norbert Preining <preining@debian.org>  Sun, 25 Nov 2012 14:22:09 +0900
 
 texlive-bin (2012.20121120-1) experimental; urgency=low
 

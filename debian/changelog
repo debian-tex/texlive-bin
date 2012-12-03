@@ -1,3 +1,10 @@
+texlive-bin (2012.20121124-2) UNRELEASED; urgency=low
+
+  * UNRELEASED
+  * add Vcs-fields (Closes: #695054)
+
+ -- Norbert Preining <preining@debian.org>  Tue, 04 Dec 2012 07:21:17 +0900
+
 texlive-bin (2012.20121124-1) experimental; urgency=low
 
   * depend on texlive-common >= 2012.20121120 to prohibit partial

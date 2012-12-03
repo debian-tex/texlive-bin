@@ -6,6 +6,8 @@ Uploaders: Norbert Preining <preining@debian.org>, Frank Küster <frank@kuestere
 Build-Depends: debhelper (>= 7.0.50~), sharutils, ed, libncurses5-dev | libncurses-dev, libxaw7-dev, libpng-dev, zlib1g-dev | libz-dev, libgd2-xpm-dev | libgd2-noxpm-dev, flex, bison, libpoppler-private-dev (>= 0.12.4), libfontconfig1-dev, dh-autoreconf, time, libgraphite-dev (>= 1:2.3.1), libgs-dev
 Standards-Version: 3.9.3
 Homepage: http://www.tug.org/texlive/
+Vcs-Git: git://anonscm.debian.org/debian-tex/texlive-bin.git
+Vcs-Browser: http://anonscm.debian.org/gitweb/?p=debian-tex/texlive-bin.git
 
 Package: texlive-binaries
 Architecture: any

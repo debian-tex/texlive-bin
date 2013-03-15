@@ -23,7 +23,7 @@
  % interactive `e' option.  %d is replaced by the line number and %s by
 --- texlive-bin.orig/texk/web2c/Makefile.am
 +++ texlive-bin/texk/web2c/Makefile.am
-@@ -155,6 +155,9 @@
+@@ -177,6 +177,9 @@
  ## MetaPost
  include $(srcdir)/mplibdir/am/mplib.am
  
@@ -40,12 +40,12 @@
  [[luatex], [yes], [],    [luaTeX],  [poppler libpng zziplib]],
  [[mp],     [yes], [],    [MetaPost],[libpng]],
 +[[pmp],    [yes], [],    [pMetaPost],[libpng]],
- [[xetex],  [yes], [yes], [XeTeX],   [poppler libpng freetype2 icu-xetex teckit graphite]],
+ [[xetex],  [yes], [yes], [XeTeX],   [poppler libpng freetype2 icu teckit graphite2 harfbuzz]],
  ])[]dnl
  m4_foreach([Kpse_Prog], [kpse_tex_progs],
 --- texlive-bin.orig/texk/web2c/configure.ac
 +++ texlive-bin/texk/web2c/configure.ac
-@@ -195,6 +195,7 @@
+@@ -198,6 +198,7 @@
                       [KPSE_MFWIN_DEFINE(Kpse_Win)])])[]dnl
  
  AM_CONDITIONAL([MP], [test "x$enable_mp" != xno])

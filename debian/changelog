@@ -4,7 +4,7 @@ texlive-bin (2012.20130315.29398-1) experimental; urgency=low
   * add Vcs-fields (Closes: #695054)
   * bump texlive-common dependency to 2012.20130315
 
- -- Norbert Preining <preining@debian.org>  Fri, 15 Mar 2013 19:40:11 +0900
+ -- Norbert Preining <preining@debian.org>  Sat, 16 Mar 2013 08:16:33 +0900
 
 texlive-bin (2012.20121124-1) experimental; urgency=low
 

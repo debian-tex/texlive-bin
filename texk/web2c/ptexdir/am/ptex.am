@@ -1,12 +1,12 @@
 ## texk/web2c/ptexdir/am/ptex.am: Makefile fragment for pTeX.
 ##
-## Copyright (C) 2010-2012 Peter Breitenlohner <tex-live@tug.org>
+## Copyright (C) 2010-2013 Peter Breitenlohner <tex-live@tug.org>
 ## You may freely use, modify and/or distribute this file.
 
 ptex_cppflags = $(PTEXENC_INCLUDES) $(AM_CPPFLAGS)
 ptex_ldadd = libkanji.a $(pproglib) $(PTEXENC_LIBS) $(LDADD)
 ptex_dependencies = libkanji.a $(pproglib) $(PTEXENC_DEPEND) $(default_dependencies)
-p_tangle = WEBINPUTS=.:$(srcdir)/ptexdir:$(srcdir) $(buildenv) $(TANGLE)
+p_tangle = $(tangle_silent)WEBINPUTS=.:$(srcdir)/ptexdir:$(srcdir) $(buildenv) $(TANGLE)
 
 pweb_programs = pbibtex pdvitype ppltotf ptftopl
 
@@ -78,9 +78,8 @@ ptex-tangle: tangle$(EXEEXT) ptex.web ptex.ch tangle-sh
 	@$(texmf_tangle) ptex ptex
 
 # Extract ptex version
-ptexdir/ptex_version.h: ptexdir/ptex-base.ch
-	$(MKDIR_P) ptexdir
-	grep '^@d pTeX_version_string==' $(srcdir)/ptexdir/ptex-base.ch \
+$(srcdir)/ptexdir/ptex_version.h: @MAINTAINER_MODE_TRUE@ ptexdir/ptex-base.ch
+	$(AM_V_GEN)grep '^@d pTeX_version_string==' $(srcdir)/ptexdir/ptex-base.ch \
 	  | sed "s/^.*'-/#define PTEX_VERSION \"/;s/'.*$$/\"/" >$@
 
 # Generate ptex.web
@@ -111,9 +110,9 @@ pbibtex_CPPFLAGS = $(ptex_cppflags)
 pbibtex_LDADD  = $(ptex_ldadd)
 pbibtex_DEPENDENCIES = $(ptex_dependencies)
 pbibtex.c pbibtex.h: pbibtex-web2c
-	$(web2c) pbibtex
+	@$(web2c) pbibtex
 pbibtex-web2c: pbibtex.p $(web2c_depend) ptexdir/ptex.defines web2c/cvtbib.sed
-	$(web2c) pbibtex
+	@$(web2c) pbibtex
 pbibtex.p: tangle$(EXEEXT) pbibtex.web ptexdir/pbibtex.ch
 	$(p_tangle) pbibtex pbibtex
 pbibtex.web: tie$(EXEEXT) bibtex.web bibtex.ch
@@ -131,9 +130,9 @@ pdvitype_CPPFLAGS = $(ptex_cppflags) -DHEX_CHAR_CODE
 pdvitype_LDADD = $(ptex_ldadd)
 pdvitype_DEPENDENCIES = $(ptex_dependencies)
 pdvitype.c pdvitype.h: pdvitype-web2c
-	$(web2c) pdvitype
+	@$(web2c) pdvitype
 pdvitype-web2c: pdvitype.p $(web2c_depend) ptexdir/ptex.defines
-	$(web2c) pdvitype
+	@$(web2c) pdvitype
 pdvitype.p: tangle$(EXEEXT) pdvitype.web ptexdir/pdvitype.ch
 	$(p_tangle) pdvitype pdvitype
 pdvitype.web: tie$(EXEEXT) dvitype.web dvitype.ch
@@ -150,9 +149,9 @@ ppltotf_CPPFLAGS = $(ptex_cppflags) -DPRESERVE_PUTC
 ppltotf_LDADD  = $(ptex_ldadd)
 ppltotf_DEPENDENCIES = $(ptex_dependencies)
 ppltotf.c ppltotf.h: ppltotf-web2c
-	$(web2c) ppltotf
+	@$(web2c) ppltotf
 ppltotf-web2c: ppltotf.p $(web2c_depend) ptexdir/ptex.defines
-	$(web2c) ppltotf
+	@$(web2c) ppltotf
 ppltotf.p: tangle$(EXEEXT) ppltotf.web ptexdir/ppltotf.ch
 	$(p_tangle) ppltotf ppltotf
 ppltotf.web: tie$(EXEEXT) pltotf.web pltotf.ch
@@ -167,9 +166,9 @@ ptftopl_CPPFLAGS = $(ptex_cppflags)
 ptftopl_LDADD  = $(ptex_ldadd)
 ptftopl_DEPENDENCIES = $(ptex_dependencies)
 ptftopl.c ptftopl.h: ptftopl-web2c
-	$(web2c) ptftopl
+	@$(web2c) ptftopl
 ptftopl-web2c: ptftopl.p $(web2c_depend) ptexdir/ptex.defines
-	$(web2c) ptftopl
+	@$(web2c) ptftopl
 ptftopl.p: tangle$(EXEEXT) ptftopl.web ptexdir/ptftopl.ch
 	$(p_tangle) ptftopl ptftopl
 ptftopl.web: tie$(EXEEXT) tftopl.web tftopl.ch
@@ -201,35 +200,32 @@ endif PWEB
 ##
 ## ptexdir/nissya.test
 EXTRA_DIST += ptexdir/tests/nissya_bib.aux ptexdir/tests/nissya.bst ptexdir/tests/sample.bib
-DISTCLEANFILES += tests/nissya_bib.*
+DISTCLEANFILES += ptests/nissya_bib.*
 ## ptexdir/pbibtex.test
-DISTCLEANFILES += tests/xexampl.aux tests/xexampl.bbl tests/xexampl.blg
+DISTCLEANFILES += ptests/xexampl.aux ptests/xexampl.bbl ptests/xexampl.blg
 ## ptexdir/pbibtex-mem.test
 EXTRA_DIST += tests/memdata1.bst tests/memdata2.bst tests/memdata3.bst
-DISTCLEANFILES += tests/memtest.bib tests/memtest?.*
+DISTCLEANFILES += ptests/memtest.bib ptests/memtest?.*
 ## ptexdir/pdvitype.test
-DISTCLEANFILES += tests/xstory.dvityp tests/xpagenum.typ
+DISTCLEANFILES += ptests/xstory.dvityp ptests/xpagenum.typ
 ## ptexdir/ppltotf.test
-DISTCLEANFILES += tests/xcmr10.tfm
+DISTCLEANFILES += ptests/xcmr10.tfm
 ## ptexdir/ptftopl.test
-DISTCLEANFILES += tests/xcmr10.pl
+DISTCLEANFILES += ptests/xcmr10.pl
 ## ptexdir/sample.test
 EXTRA_DIST += ptexdir/tests/goth10.tfm ptexdir/tests/sample.dvi
-DISTCLEANFILES += tests/xsample.typ
+DISTCLEANFILES += ptests/xsample.typ
 ## ptexdir/yokotate.test
 EXTRA_DIST += ptexdir/tests/min10.pl ptexdir/tests/min10.tfm
 EXTRA_DIST += ptexdir/tests/tmin10.pl ptexdir/tests/tmin10.tfm
-DISTCLEANFILES += tests/x*min10.*
+DISTCLEANFILES += ptests/x*min10.*
 ## ptexdir/ptrip.test
 EXTRA_DIST += ptexdir/ptrip/ptrip.diffs ptexdir/ptrip/texmf.cnf
 ptrip.diffs: ptex$(EXEEXT)
 	$(triptrap_diffs) $@
 .PHONY: ptrip-clean
 ptrip-clean:
-	rm -f trip.tfm trip.pl trip.tex trip.fmt ptripin.fot ptripin.log
-	rm -f ptrip.fot ptrip.log trip.log trip.dvi trip.typ
-	rm -f ptrip.fot ptrip.log ptrip.dvi ptrip.typ
-	rm -f tripos.tex 8terminal.tex
-	rm -rf tfm
+	rm -rf ptripdir
+
 DISTCLEANFILES += ptrip.diffs
 

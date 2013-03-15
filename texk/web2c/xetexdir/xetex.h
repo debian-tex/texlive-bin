@@ -1,9 +1,9 @@
 /****************************************************************************\
  Part of the XeTeX typesetting system
- copyright (c) 1994-2008 by SIL International
- copyright (c) 2009 by Jonathan Kew
+ Copyright (c) 1994-2008 by SIL International
+ Copyright (c) 2009 by Jonathan Kew
 
- Written by Jonathan Kew
+ SIL Author(s): Jonathan Kew
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
@@ -50,18 +50,15 @@ authorization from the copyright holders.
 
 #define setjustifiednativeglyphs(p)		store_justified_native_glyphs(&(mem[p]))
 
-#define getnativeitaliccorrection(p)		get_native_ital_corr(&(mem[p]))
-#define getnativeglyphitaliccorrection(p)	get_native_glyph_ital_corr(&(mem[p]))
+#define getnativeitaliccorrection(p)		get_native_italic_correction(&(mem[p]))
+#define getnativeglyphitaliccorrection(p)	get_native_glyph_italic_correction(&(mem[p]))
 
-#define getnativeglyph(p,i)			get_native_glyph_id(&(mem[p]), i)
+#define getnativeglyph(p,i)			get_native_glyph(&(mem[p]), i)
 
 #define makexdvglypharraydata(p)		makeXDVGlyphArrayData(&(mem[p]))
 #define xdvbufferbyte(i)			xdvbuffer[i]
 
 #define getnativewordcp(p,s)			get_native_word_cp(&(mem[p]), s)
-
-
-void* get_ot_assembly_ptr(int f, int g, int horiz); /* function in XeTeXOTMath.cpp */
 
 #define pic_node_size				8
 
@@ -94,6 +91,7 @@ void* get_ot_assembly_ptr(int f, int g, int horiz); /* function in XeTeXOTMath.c
 #define getotassemblyptr			get_ot_assembly_ptr
 #define getotmathitalcorr			get_ot_math_ital_corr
 #define getotmathaccentpos			get_ot_math_accent_pos
+#define getotmathkern				get_ot_math_kern
 #define otpartcount				ot_part_count
 #define otpartglyph				ot_part_glyph
 #define otpartisextender			ot_part_is_extender
@@ -101,6 +99,8 @@ void* get_ot_assembly_ptr(int f, int g, int horiz); /* function in XeTeXOTMath.c
 #define otpartendconnector			ot_part_end_connector
 #define otpartfulladvance			ot_part_full_advance
 #define otminconnectoroverlap			ot_min_connector_overlap
+/* prototypes used in xetex.web */
+#include "XeTeXOTMath.h"
 
 /* Unicode file reading modes */
 #define AUTO					0	/* default: will become one of 1..3 at file open time, after sniffing */
@@ -114,12 +114,12 @@ void* get_ot_assembly_ptr(int f, int g, int horiz); /* function in XeTeXOTMath.c
 #undef Xchr
 #define Xchr(x)					(x)
 
-#ifdef XETEX_MAC
-#undef input				/* this is defined in texmfmp.h, but we don't need it and it confuses the carbon headers */
-#undef output
-#include <Carbon/Carbon.h>		/* for Mac OS X, it's handy to have the Carbon APIs available */
-#endif
-
 #include "trans.h"			/* functions for affine transform operations */
 #include <teckit/TECkit_Common.h>	/* include this before XeTeX_ext.h */
 #include "XeTeX_ext.h"			/* other extension functions */
+
+#include <math.h>
+/* apparently M_PI isn't defined by <math.h> under VC++ */
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif

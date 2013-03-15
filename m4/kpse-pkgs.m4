@@ -24,12 +24,15 @@
 AC_DEFUN([KPSE_LIBS_PKGS],
 [dnl generic libraries 'libs/*'
 m4_define([kpse_libs_pkgs], [
+harfbuzz
 icu
 teckit
-graphite
+graphite2
 zziplib
 xpdf
 poppler
+cairo
+pixman
 gd
 freetype2
 freetype
@@ -57,12 +60,15 @@ AC_REQUIRE([KPSE_T1LIB_SYSTEM_FLAGS])[]dnl
 AC_REQUIRE([KPSE_FREETYPE_SYSTEM_FLAGS])[]dnl
 AC_REQUIRE([KPSE_FREETYPE2_SYSTEM_FLAGS])[]dnl
 AC_REQUIRE([KPSE_GD_SYSTEM_FLAGS])[]dnl
+AC_REQUIRE([KPSE_PIXMAN_SYSTEM_FLAGS])[]dnl
+AC_REQUIRE([KPSE_CAIRO_SYSTEM_FLAGS])[]dnl
 AC_REQUIRE([KPSE_XPDF_SYSTEM_FLAGS])[]dnl
 AC_REQUIRE([KPSE_POPPLER_SYSTEM_FLAGS])[]dnl
 AC_REQUIRE([KPSE_ZZIPLIB_SYSTEM_FLAGS])[]dnl
-AC_REQUIRE([KPSE_GRAPHITE_SYSTEM_FLAGS])[]dnl
+AC_REQUIRE([KPSE_GRAPHITE2_SYSTEM_FLAGS])[]dnl
 AC_REQUIRE([KPSE_TECKIT_SYSTEM_FLAGS])[]dnl
 AC_REQUIRE([KPSE_ICU_SYSTEM_FLAGS])[]dnl
+AC_REQUIRE([KPSE_HARFBUZZ_SYSTEM_FLAGS])[]dnl
 ]) # KPSE_ALL_SYSTEM_FLAGS
 
 # KPSE_UTILS_PKGS()
@@ -76,6 +82,7 @@ pmx
 ps2eps
 psutils
 t1utils
+texdoctk
 tpic2pdftex
 vlna
 xindy
@@ -120,7 +127,6 @@ ttfdump
 xdv2pdf
 xdvik
 xdvipdfmx
-tetex
 texlive
 ])]) # KPSE_TEXK_PKGS
 

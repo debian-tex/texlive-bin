@@ -107,6 +107,11 @@ pdf_font_make_uniqueTag (char *tag)
 
 struct pdf_font
 {
+#ifdef XETEX
+  FT_Face  ft_face;
+  unsigned short *ft_to_gid;
+#endif
+
   char    *ident;
   int      subtype;
 
@@ -148,6 +153,10 @@ static void
 pdf_init_font_struct (pdf_font *font)
 {
   ASSERT(font);
+
+#ifdef XETEX
+  font->ft_face  = NULL;
+#endif
 
   font->ident    = NULL;
   font->map_name = NULL;
@@ -377,7 +386,7 @@ pdf_get_font_fontname (int font_id)
 
   return font->fontname;
 }
-#endif
+#endif /* 0 */
 
 int
 pdf_get_font_encoding (int font_id)
@@ -448,7 +457,7 @@ try_load_ToUnicode_CMap (pdf_font *font)
 void
 pdf_close_fonts (void)
 {
-  int  font_id, retval;
+  int  font_id;
 
   for (font_id = 0;
        font_id < font_cache.count; font_id++) {
@@ -489,24 +498,22 @@ pdf_close_fonts (void)
       if (__verbose)
 	MESG("[Type1]");
       if (!pdf_font_get_flag(font, PDF_FONT_FLAG_BASEFONT))
-	retval = pdf_font_load_type1(font);
-      else
-	retval = 0;
+	pdf_font_load_type1(font);
       break;
     case PDF_FONT_FONTTYPE_TYPE1C:
       if (__verbose)
 	MESG("[Type1C]");
-      retval = pdf_font_load_type1c(font);
+      pdf_font_load_type1c(font);
       break;
     case PDF_FONT_FONTTYPE_TRUETYPE:
       if (__verbose)
 	MESG("[TrueType]");
-      retval = pdf_font_load_truetype(font);
+      pdf_font_load_truetype(font);
       break;
     case PDF_FONT_FONTTYPE_TYPE3:
       if (__verbose)
 	MESG("[Type3/PK]");
-      retval = pdf_font_load_pkfont (font);
+      pdf_font_load_pkfont (font);
       break;
     case PDF_FONT_FONTTYPE_TYPE0:
       break;
@@ -670,6 +677,11 @@ pdf_font_findresource (const char *tex_name,
       font    = GET_FONT(font_id);
       pdf_init_font_struct(font);
 
+#ifdef XETEX
+      font->ft_to_gid = Type0Font_get_ft_to_gid(type0_id);
+      font->ft_face = mrec->opt.ft_face;
+#endif
+
       font->font_id     = type0_id;
       font->subtype     = PDF_FONT_FONTTYPE_TYPE0;
       font->encoding_id = cmap_id;
@@ -747,6 +759,10 @@ pdf_font_findresource (const char *tex_name,
 
       pdf_init_font_struct(font);
 
+#ifdef XETEX
+      font->ft_face = mrec ? mrec->opt.ft_face : NULL;
+#endif
+
       font->point_size  = font_scale;
       font->encoding_id = encoding_id;
       font->ident       = NEW(strlen(fontname) + 1, char);
@@ -789,6 +805,28 @@ pdf_font_is_in_use (pdf_font *font)
 
   return ((font->reference) ? 1 : 0);
 }
+
+#ifdef XETEX
+FT_Face
+pdf_font_get_ft_face (pdf_font *font)
+{
+  ASSERT(font);
+
+  return font->ft_face;
+}
+
+unsigned short *
+pdf_get_font_ft_to_gid (int font_id)
+{
+  pdf_font *font;
+
+  CHECK_ID(font_id);
+
+  font = GET_FONT(font_id);
+
+  return font->ft_to_gid;
+}
+#endif
 
 int
 pdf_font_get_index (pdf_font *font)
@@ -899,7 +937,7 @@ pdf_font_get_flags (pdf_font *font)
 
   return font->flags;
 }
-#endif
+#endif /* 0 */
 
 double
 pdf_font_get_param (pdf_font *font, int param_type)

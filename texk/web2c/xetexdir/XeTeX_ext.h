@@ -1,9 +1,11 @@
 /****************************************************************************\
  Part of the XeTeX typesetting system
- copyright (c) 1994-2008 by SIL International
- copyright (c) 2009, 2011 by Jonathan Kew
+ Copyright (c) 1994-2008 by SIL International
+ Copyright (c) 2009, 2011 by Jonathan Kew
+ Copyright (c) 2012, 2013 by Jiang Jiang
+ Copyright (c) 2012, 2013 by Khaled Hosny
 
- Written by Jonathan Kew
+ SIL Author(s): Jonathan Kew
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
@@ -33,29 +35,15 @@ authorization from the copyright holders.
 #ifndef __XETEXEXT_H
 #define __XETEXEXT_H
 
+#include <unicode/utypes.h>
 #include <w2c/c-auto.h>  /* needed for SIZEOF_LONG and NO_DUMP_SHARE */
-/***** copied from TeX/texk/web2c/config.h -- difficult to include in C++ source files ******/
-#ifndef INTEGER_TYPE
-
-#if SIZEOF_LONG > 4 && !defined (NO_DUMP_SHARE)
-/* If we have 64-bit longs and want to share format files (with 32-bit
-   machines), use `int'.  */
-#define INTEGER_IS_INT
+#ifdef __cplusplus
+extern "C" {
 #endif
-
-#ifdef INTEGER_IS_INT
-#define INTEGER_TYPE int
-#define INTEGER_MAX INT_MAX
-#define INTEGER_MIN INT_MIN
-#else
-#define INTEGER_TYPE long
-#define INTEGER_MAX LONG_MAX
-#define INTEGER_MIN LONG_MIN
-#endif /* not INTEGER_IS_INT */
-
-typedef INTEGER_TYPE integer;
-#endif /* not INTEGER_TYPE */
-/***** end of config.h stuff *****/
+#include <w2c/config.h>
+#ifdef __cplusplus
+}
+#endif
 
 #ifndef XETEX_UNICODE_FILE_DEFINED
 typedef struct UFILE* unicodefile;
@@ -67,36 +55,25 @@ typedef struct UFILE* unicodefile;
 #define FONT_FLAGS_COLORED	0x01
 #define FONT_FLAGS_VERTICAL	0x02
 
-#define kXeTeXEmboldenTag	0x10000 /* user-defined ATSUAttributeTag to carry 'embolden' value */
-
-
 /* some typedefs that XeTeX uses - on Mac OS, we get these from Apple headers,
    but otherwise we'll need these substitute definitions */
 
 #ifdef XETEX_MAC
-#include <Carbon/Carbon.h>
+#include <CoreFoundation/CoreFoundation.h>
+#include <ApplicationServices/ApplicationServices.h>
 #else
-#ifndef __TECkit_Common_H__
-typedef unsigned char	UInt8;
-typedef unsigned short	UInt16;
-typedef unsigned int	UInt32;
-typedef UInt16			UniChar;
-#endif
-
-typedef signed char		SInt8;
-typedef short			SInt16;
-typedef int				SInt32;
-
-typedef SInt32			OSStatus;
-typedef SInt32			Fixed;
+typedef int32_t			Fixed;
 typedef struct {
 	Fixed	x;
 	Fixed	y;
 } FixedPoint;
 #endif
 
+typedef uint32_t OTTag;
+typedef uint16_t GlyphID;
 
-/* these are also in xetex-new.ch and must correspond! */
+
+/* these are also in xetex.web and must correspond! */
 
 #define pdfbox_crop	1
 #define pdfbox_media	2
@@ -137,7 +114,7 @@ typedef struct {
 #define XeTeX_selector_name	9
 
 
-/* definitions used to access info in a native_word_node; must correspond with defines in xetex-new.ch */
+/* definitions used to access info in a native_word_node; must correspond with defines in xetex.web */
 #define width_offset		1
 #define depth_offset		2
 #define height_offset		3
@@ -151,7 +128,7 @@ typedef struct {
 #define native_font(node)			node[native_info_offset].qqqq.b1
 #define native_glyph_count(node)	node[native_info_offset].qqqq.b3
 #define native_glyph_info_ptr(node)	node[native_glyph_info_offset].ptr
-#define native_glyph_info_size		10	/* info for each glyph is location (FixedPoint) + glyph ID (UInt16) */
+#define native_glyph_info_size		10	/* info for each glyph is location (FixedPoint) + glyph ID (uint16_t) */
 
 #define native_glyph(p)		native_length(p)	/* glyph ID field in a glyph_node */
 
@@ -159,31 +136,8 @@ typedef struct {
 #define	XDV_GLYPH_ARRAY		253
 
 /* OT-related constants we need */
-#define kGSUB	0x47535542
-#define kGPOS	0x47504f53
-
-#define kLatin	0x6c61746e
-#define kSyriac	0x73797263
-#define kArabic	0x61726162
-#define kThaana	0x74686161
-#define kHebrew	0x68656272
-
-
-struct postTable {
-	Fixed	format;
-	Fixed	italicAngle;
-	SInt16	underlinePosition;
-	SInt16	underlineThickness;
-	UInt16	isFixedPitch;
-	UInt16	reserved;
-	UInt32	minMemType42;
-	UInt32	maxMemType42;
-	UInt32	minMemType1;
-	UInt32	maxMemType1;
-};
-
-#define kPost	0x706f7374
-#define kCmap	0x636d6170
+#define kGSUB	HB_TAG('G','S','U','B')
+#define kGPOS	HB_TAG('G','P','O','S')
 
 typedef struct
 {
@@ -195,19 +149,19 @@ typedef struct
 
 
 /* For Unicode encoding form interpretation... */
-extern const UInt32 offsetsFromUTF8[6];
-extern const UInt8 bytesFromUTF8[256];
-extern const UInt8 firstByteMark[7];
+extern const uint32_t offsetsFromUTF8[6];
+extern const uint8_t bytesFromUTF8[256];
+extern const uint8_t firstByteMark[7];
 
 extern const int halfShift;
-extern const UInt32 halfBase;
-extern const UInt32 halfMask;
-extern const UInt32 kSurrogateHighStart;
-extern const UInt32 kSurrogateHighEnd;
-extern const UInt32 kSurrogateLowStart;
-extern const UInt32 kSurrogateLowEnd;
-extern const UInt32 byteMask;
-extern const UInt32 byteMark;
+extern const uint32_t halfBase;
+extern const uint32_t halfMask;
+extern const uint32_t kSurrogateHighStart;
+extern const uint32_t kSurrogateHighEnd;
+extern const uint32_t kSurrogateLowStart;
+extern const uint32_t kSurrogateLowEnd;
+extern const uint32_t byteMask;
+extern const uint32_t byteMark;
 
 extern const char *papersize;
 extern const char *outputdriver;
@@ -228,7 +182,21 @@ extern FT_Library gFreeTypeLibrary;
 
 #include "trans.h"
 
+#ifdef HAVE_STDBOOL_H
+# include <stdbool.h>
+#else
+/* boolean is an enum type from kpathsea/types.h loaded in
+   kpathsea/kpathsea.h, use it as fallback */
+#ifndef __cplusplus
+# define bool boolean
+#endif
+#endif
+
 #include "XeTeXLayoutInterface.h"
+
+#ifdef XETEX_MAC
+extern const CFStringRef kXeTeXEmboldenAttributeName;
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -237,15 +205,14 @@ extern "C" {
 
 	void setinputfileencoding(unicodefile f, integer mode, integer encodingData);
 	void uclose(unicodefile f);
-	void linebreakstart(integer localeStrNum, const UniChar* text, integer textLength);
+	void linebreakstart(int f, integer localeStrNum, const uint16_t* text, integer textLength);
 	int linebreaknext();
 	int getencodingmodeandinfo(integer* info);
 	void printutf8str(const unsigned char* str, int len);
 	void printchars(const unsigned short* str, int len);
-	void* load_mapping_file(const char* s, const char* e, char byteMapping);
 	void* findnativefont(unsigned char* name, integer scaled_size);
 	void releasefontengine(void* engine, int type_flag);
-	int readCommonFeatures(const char* feat, const char* end, float* extend, float* slant, float* embolden, float* letterspace, UInt32* rgbValue);
+	int readCommonFeatures(const char* feat, const char* end, float* extend, float* slant, float* embolden, float* letterspace, uint32_t* rgbValue);
 
 	/* the metrics params here are really TeX 'scaled' values, but that typedef isn't available every place this is included */
 	void otgetfontmetrics(void* engine, integer* ascent, integer* descent, integer* xheight, integer* capheight, integer* slant);
@@ -266,17 +233,17 @@ extern "C" {
 	integer otfontget3(integer what, void* engine, integer param1, integer param2, integer param3);
 	int makeXDVGlyphArrayData(void* p);
 	int makefontdef(integer f);
-	int applymapping(void* cnv, const UniChar* txtPtr, int txtLen);
+	int applymapping(void* cnv, const uint16_t* txtPtr, int txtLen);
 	void store_justified_native_glyphs(void* node);
 	void measure_native_node(void* node, int use_glyph_metrics);
-	Fixed get_native_ital_corr(void* node);
-	Fixed get_native_glyph_ital_corr(void* node);
+	Fixed get_native_italic_correction(void* node);
+	Fixed get_native_glyph_italic_correection(void* node);
 	void measure_native_glyph(void* node, int use_glyph_metrics);
 	integer mapchartoglyph(integer font, integer ch);
 	integer mapglyphtoindex(integer font);
 	integer getfontcharrange(integer font, int first);
 	void printglyphname(integer font, integer gid);
-	UInt16 get_native_glyph_id(void* pNode, unsigned index);
+	uint16_t get_native_glyph(void* pNode, unsigned index);
 
 	void grprintfontname(integer what, void* pEngine, integer param1, integer param2);
 	integer grfontgetnamed(integer what, void* pEngine);
@@ -284,8 +251,6 @@ extern "C" {
 
 	double read_double(const char** s);
 	unsigned int read_rgb_a(const char** cp);
-
-	const char* getGlyphNamePtr(const char* buffer, int tableSize, UInt16 gid, int* len);
 
 	int countpdffilepages();
 	int find_pic_file(char** path, realrect* bounds, int pdfBoxType, int page);
@@ -304,63 +269,54 @@ extern "C" {
 	int applytfmfontmapping(void* mapping, int c);
 
 #ifndef XETEX_MAC
-typedef void* ATSUStyle; /* dummy declaration just so the stubs can compile */
+typedef void* CFDictionaryRef; /* dummy declaration just so the stubs can compile */
 #endif
 
-	int atsufontget(int what, ATSUStyle style);
-	int atsufontget1(int what, ATSUStyle style, int param);
-	int atsufontget2(int what, ATSUStyle style, int param1, int param2);
-	int atsufontgetnamed(int what, ATSUStyle style);
-	int atsufontgetnamed1(int what, ATSUStyle style, int param);
-	void atsuprintfontname(int what, ATSUStyle style, int param1, int param2);
+	int aatfontget(int what, CFDictionaryRef attrs);
+	int aatfontget1(int what, CFDictionaryRef attrs, int param);
+	int aatfontget2(int what, CFDictionaryRef attrs, int param1, int param2);
+	int aatfontgetnamed(int what, CFDictionaryRef attrs);
+	int aatfontgetnamed1(int what, CFDictionaryRef attrs, int param);
+	void aatprintfontname(int what, CFDictionaryRef attrs, int param1, int param2);
 	/* the metrics params here are really TeX 'scaled' (or MacOS 'Fixed') values, but that typedef isn't available every place this is included */
-	void atsugetfontmetrics(ATSUStyle style, integer* ascent, integer* descent, integer* xheight, integer* capheight, integer* slant);
+	void aatgetfontmetrics(CFDictionaryRef attrs, integer* ascent, integer* descent, integer* xheight, integer* capheight, integer* slant);
 
 #ifdef XETEX_MAC
 
-#if defined(MAC_OS_X_VERSION_10_7) && (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_7)
-	#include <ApplicationServices/ApplicationServices.h>
-	/* These functions have been removed on 10.7; as a workaround, just do
-	 * a cast as the ATSFontRef and ATSUFontID should have the same value... */
-	#define FMGetFontFromATSFontRef(x) ((ATSUFontID) x)
-	#define FMGetATSFontRefFromFont(x) ((ATSFontRef) x)
-#endif
-
 /* functions in XeTeX_mac.c */
-	void* loadAATfont(ATSFontRef fontRef, integer scaled_size, const char* cp1);
-	void DoAtsuiLayout(void* node, int justify);
-	void GetGlyphBBox_AAT(ATSUStyle style, UInt16 gid, GlyphBBox* bbox);
-	float GetGlyphWidth_AAT(ATSUStyle style, UInt16 gid);
-	void GetGlyphHeightDepth_AAT(ATSUStyle style, UInt16 gid, float* ht, float* dp);
-	void GetGlyphSidebearings_AAT(ATSUStyle style, UInt16 gid, float* lsb, float* rsb);
-	int MapCharToGlyph_AAT(ATSUStyle style, UInt32 ch);
-	int MapGlyphToIndex_AAT(ATSUStyle style, const char* glyphName);
-	int GetGlyphIDFromCGFont(ATSFontRef atsFontRef, const char* glyphName);
-	float GetGlyphItalCorr_AAT(ATSUStyle style, UInt16 gid);
-	char* GetGlyphName_AAT(ATSUStyle style, UInt16 gid, int* len);
-	char* GetGlyphNameFromCGFont(ATSFontRef atsFontRef, UInt16 gid, int* len);
-	int GetFontCharRange_AAT(ATSUStyle style, int reqFirst);
-	ATSUFontVariationAxis find_axis_by_name(ATSUFontID fontID, const char* name, int nameLength);
-	ATSUFontFeatureType find_feature_by_name(ATSUFontID fontID, const char* name, int nameLength);
-	ATSUFontFeatureSelector find_selector_by_name(ATSUFontID fontID, ATSUFontFeatureType featureType, const char* name, int nameLength);
+	void* loadAATfont(CTFontDescriptorRef descriptor, integer scaled_size, const char* cp1);
+	void DoAATLayout(void* node, int justify);
+	void GetGlyphBBox_AAT(CFDictionaryRef fontAttrs, uint16_t gid, GlyphBBox* bbox);
+	double GetGlyphWidth_AAT(CFDictionaryRef fontAttrs, uint16_t gid);
+	void GetGlyphHeightDepth_AAT(CFDictionaryRef fontAttrs, uint16_t gid, float* ht, float* dp);
+	void GetGlyphSidebearings_AAT(CFDictionaryRef fontAttrs, uint16_t gid, float* lsb, float* rsb);
+	double GetGlyphItalCorr_AAT(CFDictionaryRef fontAttrs, uint16_t gid);
+	int MapCharToGlyph_AAT(CFDictionaryRef fontAttrs, UInt32 ch);
+	int MapGlyphToIndex_AAT(CFDictionaryRef attributes, const char* glyphName);
+	char* GetGlyphNameFromCTFont(CTFontRef ctFontRef, uint16_t gid, int* len);
+	CFDictionaryRef findDictionaryInArray(CFArrayRef array, const void* nameKey, const char* name, int nameLength);
+	CFDictionaryRef findDictionaryInArrayWithIdentifier(CFArrayRef array, const void* identifierKey, int identifier);
+	CFNumberRef findSelectorByName(CFDictionaryRef feature, const char* name, int nameLength);
+	char* getNameFromCTFont(CTFontRef ctFontRef, CFStringRef nameKey);
+	char* getFileNameFromCTFont(CTFontRef ctFontRef, int* index);
+	int GetFontCharRange_AAT(CFDictionaryRef fontAttrs, int reqFirst);
+	CTFontRef fontFromAttributes(CFDictionaryRef fontAttrs);
+	CTFontRef fontFromInteger(integer font);
 #endif
 #ifdef __cplusplus
 };
 #endif
 
-/* some Mac OS X functions that we provide ourselves for other platforms */
-#ifndef XETEX_MAC
 #ifdef __cplusplus
 extern "C" {
 #endif
-	double	Fix2X(Fixed f);
-	Fixed	X2Fix(double d);
+	double	Fix2D(Fixed f);
+	Fixed	D2Fix(double d);
 #ifdef __cplusplus
 };
 #endif
-#endif
 
-// copied from xetex-hz.ch
+// copied from xetex.web
 #define LEFT_SIDE  0    
 #define RIGHT_SIDE 1    
 

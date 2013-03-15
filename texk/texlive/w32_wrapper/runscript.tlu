@@ -1,8 +1,8 @@
 
--- $Id: runscript.tlu 27344 2012-08-08 14:57:33Z peter $
+-- $Id: runscript.tlu 29058 2013-02-08 08:34:17Z peter $
 
-local svnrevision = string.match("$Revision: 27344 $", "%d+") or "0"
-local svndate     = string.match("$Date: 2012-08-08 23:57:33 +0900 (Wed, 08 Aug 2012) $", "[-%d]+") or "2009-12-04"
+local svnrevision = string.match("$Revision: 29058 $", "%d+") or "0"
+local svndate     = string.match("$Date: 2013-02-08 17:34:17 +0900 (Fri, 08 Feb 2013) $", "[-%d]+") or "2009-12-04"
 local bannerstr   = "runscript wrapper utility (rev. " ..
                     svnrevision .. ", " .. svndate .. ")\n" .. 
                     "usage:   runscript script-name [arguments]\n" ..
@@ -548,7 +548,7 @@ elseif progname == 'repstopdf' or progname == 'rpdfcrop' then
   argline = '--restricted ' .. argline
   progname = string.sub(progname, 2, -1)
 elseif progname == 'texworks' then
-  local winver = tonumber(string.match(os.uname().version, '%D*(%d+\.?%d*)'))
+  local winver = tonumber(string.match(os.uname().version, '%D*(%d+%.?%d*)'))
   assert(winver >= 5.01, "Windows XP or newer required to run TeXworks")
   local TW_LIBPATH = kpse.var_value('TW_LIBPATH') or 
                      kpse.var_value('TEXMFCONFIG')..'/texworks'

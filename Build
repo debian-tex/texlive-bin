@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: Build 26987 2012-07-10 11:09:12Z peter $
+# $Id: Build 28856 2013-01-17 23:56:50Z karl $
 # Public domain.  Originally written many years ago by Sebastian Rahtz.
 # To build again, try Build --no-clean.
 # To build without optimization, try Build --debug.
@@ -24,7 +24,7 @@ if test -z "$TL_INSTALL_DEST"; then
   TL_INSTALL_DEST=$H/inst
 fi
 
-# allow override of make program.
+# allow override of the make program.
 : ${TL_MAKE=make}
 
 # make flags
@@ -100,7 +100,7 @@ cd $TL_WORKDIR || exit 1
   #
   set -vx  # show the configure and make commands in the log.
 
-  eval $TL_BUILD_ENV time $TL_CONFIGURE \
+  eval $TL_BUILD_ENV $TL_CONFIGURE \
         --prefix=$TL_INSTALL_DEST \
         --datadir=$TL_INSTALL_DEST \
         $TL_CONF_BANNER \
@@ -110,7 +110,7 @@ cd $TL_WORKDIR || exit 1
         $TL_CONF_XDVI_TOOLKIT \
         $TL_CONFIGURE_ARGS \
         "$@" \
-  && eval $TL_BUILD_ENV time $TL_MAKE $TL_MAKE_FLAGS $TL_TARGET
+  && eval $TL_BUILD_ENV $TL_MAKE $TL_MAKE_FLAGS $TL_TARGET
   
   # Too arcane to try to propagate the exit status through a pipeline.
   # Just use a temp file.

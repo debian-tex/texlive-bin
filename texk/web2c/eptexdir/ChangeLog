@@ -1,3 +1,25 @@
+2013-03-04  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* am/eptex.am: Better rule for eptex_version.h.
+
+2013-03-01  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* eptex.ech: e-TeX Version 2.6.
+	* eptrip/etrip.tex, eptrip/etrip.log: Version 2.6 [2013-03-01].
+	* eptrip/eptrip.diffs: Adapt, also to fixed delcode bug.
+
+2013-01-15  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* am/eptex.am, eptrip.test: Enable parallel-tests.
+
+2012-12-16  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* am/eptex.am (eptex_version.h): Enable silent rules.
+
+2012-12-01  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* fam256.ch: fix a delcode bug.
+
 2012-09-04  Peter Breitenlohner  <peb@mppmu.mpg.de>
 
 	* eptexextra.h: Set AUTHOR to "Peter Breitenlohner" and
@@ -131,8 +153,8 @@
 	from Hironori Kitagawa <h_kitagawa2001@yahoo.co.jp>.
 
 	* eptex.ech: Update pTeX_version_string.
-	Redefine box_dir and set_box_dir from pTeX as well as box_lrstat
-	and set_box_lrstat from e-TeX to avoid interference.
+	Redefine box_dir and set_box_dir from pTeX as well as box_lr and
+	set_box_lr from e-TeX to avoid interference.
 
 	* pdfsavepos.ch (new): Implement \pdfsavepos primitive.
 	* am/eptex.am (eptex_ch_srcs): Add pdfsavepos.ch.

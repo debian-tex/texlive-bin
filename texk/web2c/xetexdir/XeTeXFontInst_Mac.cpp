@@ -1,9 +1,11 @@
 /****************************************************************************\
  Part of the XeTeX typesetting system
- copyright (c) 1994-2008 by SIL International
- copyright (c) 2009 by Jonathan Kew
+ Copyright (c) 1994-2008 by SIL International
+ Copyright (c) 2009 by Jonathan Kew
+ Copyright (c) 2012, 2013 by Jiang Jiang
+ Copyright (c) 2012, 2013 by Khaled Hosny
 
- Written by Jonathan Kew
+ SIL Author(s): Jonathan Kew
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
@@ -41,92 +43,53 @@ authorization from the copyright holders.
 #include "XeTeXFontInst_Mac.h"
 #include "XeTeX_ext.h"
 
-XeTeXFontInst_Mac::XeTeXFontInst_Mac(ATSFontRef atsFont, float pointSize, LEErrorCode &status)
-    : XeTeXFontInst(pointSize, status)
-    , fFontRef(atsFont)
-    , fStyle(0)
+XeTeXFontInst_Mac::XeTeXFontInst_Mac(CTFontDescriptorRef descriptor, float pointSize, int &status)
+    : XeTeXFontInst(NULL, 0, pointSize, status)
+    , fDescriptor(descriptor)
+    , fFontRef(0)
 {
-    if (LE_FAILURE(status)) {
-        return;
-    }
-
 	initialize(status);
 }
 
 XeTeXFontInst_Mac::~XeTeXFontInst_Mac()
 {
-	if (fStyle != 0)
-		ATSUDisposeStyle(fStyle);
+	if (fDescriptor != 0)
+		CFRelease(fDescriptor);
+	if (fFontRef != 0)
+		CFRelease(fFontRef);
 }
 
-void XeTeXFontInst_Mac::initialize(LEErrorCode &status)
+void
+XeTeXFontInst_Mac::initialize(int &status)
 {
-    if (fFontRef == 0) {
-        status = LE_FONT_FILE_NOT_FOUND_ERROR;
+    if (fDescriptor == 0) {
+        status = 1;
         return;
     }
 
-	XeTeXFontInst::initialize(status);
+	if (status != 0)
+		fDescriptor = 0;
 
-	if (status != LE_NO_ERROR)
-		fFontRef = 0;
+	// Create a copy of original font descriptor with font cascading (fallback) disabled
+	CFArrayRef emptyCascadeList = CFArrayCreate(NULL, NULL, 0, &kCFTypeArrayCallBacks);
+	const void* values[] = { emptyCascadeList };
+	static const void* attributeKeys[] = { kCTFontCascadeListAttribute };
+	CFDictionaryRef attributes = CFDictionaryCreate(NULL, attributeKeys, values, 1,
+		&kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+	CFRelease(emptyCascadeList);
 
-	if (ATSUCreateStyle(&fStyle) == noErr) {
-		ATSUFontID	font = FMGetFontFromATSFontRef(fFontRef);
-		Fixed		size = X2Fix(fPointSize * 72.0 / 72.27); /* convert TeX to Quartz points */
-		ATSStyleRenderingOptions	options = kATSStyleNoHinting;
-		ATSUAttributeTag		tags[3] = { kATSUFontTag, kATSUSizeTag, kATSUStyleRenderingOptionsTag };
-		ByteCount				valueSizes[3] = { sizeof(ATSUFontID), sizeof(Fixed), sizeof(ATSStyleRenderingOptions) };
-		ATSUAttributeValuePtr	values[3] = { &font, &size, &options };
-		ATSUSetAttributes(fStyle, 3, tags, valueSizes, values);
+	fDescriptor = CTFontDescriptorCreateCopyWithAttributes(fDescriptor, attributes);
+	CFRelease(attributes);
+	fFontRef = CTFontCreateWithFontDescriptor(fDescriptor, fPointSize * 72.0 / 72.27, NULL);
+	if (fFontRef) {
+		char *pathname;
+		int index;
+		pathname = getFileNameFromCTFont(fFontRef, &index);
+
+		XeTeXFontInst::initialize(pathname, index, status);
+	} else {
+		status = 1;
+		CFRelease(fDescriptor);
+		fDescriptor = 0;
 	}
-	else {
-		status = LE_FONT_FILE_NOT_FOUND_ERROR;
-		fFontRef = 0;
-	}
-	
-    return;
-}
-
-const void *XeTeXFontInst_Mac::readTable(LETag tag, le_uint32 *length) const
-{
-	OSStatus status = ATSFontGetTable(fFontRef, tag, 0, 0, 0, (ByteCount*)length);
-	if (status != noErr) {
-		*length = 0;
-		return NULL;
-	}
-	void*	table = LE_NEW_ARRAY(char, *length);
-	if (table != NULL) {
-		status = ATSFontGetTable(fFontRef, tag, 0, *length, table, (ByteCount*)length);
-		if (status != noErr) {
-			*length = 0;
-			LE_DELETE_ARRAY(table);
-			return NULL;
-		}
-	}
-
-    return table;
-}
-
-void XeTeXFontInst_Mac::getGlyphBounds(LEGlyphID gid, GlyphBBox* bbox)
-{
-	GetGlyphBBox_AAT(fStyle, gid, bbox);
-}
-
-LEGlyphID
-XeTeXFontInst_Mac::mapGlyphToIndex(const char* glyphName) const
-{
-	LEGlyphID rval = XeTeXFontInst::mapGlyphToIndex(glyphName);
-	if (rval)
-		return rval;
-	return GetGlyphIDFromCGFont(fFontRef, glyphName);
-}
-
-const char*
-XeTeXFontInst_Mac::getGlyphName(LEGlyphID gid, int& nameLen)
-{
-	const char* rval = XeTeXFontInst::getGlyphName(gid, nameLen);
-	if (rval)
-		return rval;
-	return GetGlyphNameFromCGFont(fFontRef, gid, &nameLen);
 }

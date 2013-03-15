@@ -11,7 +11,7 @@ Vcs-Browser: http://anonscm.debian.org/gitweb/?p=debian-tex/texlive-bin.git
 
 Package: texlive-binaries
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, texlive-common (>= 2012.20121120), tex-common (>= 3), ed, perl, dpkg (>= 1.15.4) | install-info
+Depends: ${shlibs:Depends}, ${misc:Depends}, texlive-common (>= 2012.20130315), tex-common (>= 3), ed, perl, dpkg (>= 1.15.4) | install-info
 Recommends: texlive-base, luatex, python, ruby, wish
 Replaces: texlive-metapost (<< 2010), texlive-base (<< 2010), ptex-bin, mendexk, jmpost
 Conflicts: mendexk, makejvf, jmpost

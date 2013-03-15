@@ -1,9 +1,10 @@
-texlive-bin (2012.20121124-2) UNRELEASED; urgency=low
+texlive-bin (2012.20130315-1) experimental; urgency=low
 
-  * UNRELEASED
+  * import new upstream
   * add Vcs-fields (Closes: #695054)
+  * bump texlive-common dependency to 2012.20130315
 
- -- Norbert Preining <preining@debian.org>  Tue, 04 Dec 2012 07:21:17 +0900
+ -- Norbert Preining <preining@debian.org>  Fri, 15 Mar 2013 15:55:52 +0900
 
 texlive-bin (2012.20121124-1) experimental; urgency=low
 

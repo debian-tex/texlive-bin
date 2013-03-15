@@ -1,9 +1,9 @@
 /****************************************************************************\
  Part of the XeTeX typesetting system
- copyright (c) 1994-2008 by SIL International
- copyright (c) 2009, 2011 by Jonathan Kew
+ Copyright (c) 1994-2008 by SIL International
+ Copyright (c) 2009, 2011 by Jonathan Kew
 
- Written by Jonathan Kew
+ SIL Author(s): Jonathan Kew
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
@@ -44,177 +44,86 @@ authorization from the copyright holders.
 #define __XeTeXFontInst_H
 
 #include <stdio.h>
-
-#include "layout/LETypes.h"
-#include "layout/LEFontInstance.h"
-
-#include "FontTableCache.h"
-
-#include "sfnt.h"
-#include "cmaps.h"
+#include <ft2build.h>
+#include FT_FREETYPE_H
+#include FT_TRUETYPE_TABLES_H
 
 #include "XeTeXFontMgr.h"
 #include "XeTeX_ext.h"
 
-extern "C" {
-	void *xmalloc(size_t);	// from kpathsea
-};
+#define MATH_TAG HB_TAG('M','A','T','H')
 
-// Abstract superclass that XeTeXOTLayoutEngine uses;
 // create specific subclasses for each supported platform
 
-class XeTeXFontInst : public LEFontInstance, protected FontTableCache
+class XeTeXFontInst
 {
-friend class XeTeXGrFont;
-
 protected:
-    float    fPointSize;
-
-    le_int32 fUnitsPerEM;
-    float fAscent;
-    float fDescent;
-    float fLeading;
-
-    float fDeviceScaleX;
-    float fDeviceScaleY;
-
+	unsigned short fUnitsPerEM;
+	float fPointSize;
+	float fAscent;
+	float fDescent;
+	float fCapHeight;
 	float fXHeight;
 	float fItalicAngle;
 
-    CMAPMapper *fCMAPMapper;
-
-    const HMTXTable *fMetricsTable;
-    le_uint16 fNumLongMetrics;
-    le_uint16 fNumGlyphs;
-	bool fNumGlyphsInited;
-	
 	bool fVertical; // false = horizontal, true = vertical
 
 	char *fFilename; // actually holds [filename:index], as used in xetex
 
-	int fFirstCharCode;
-	int fLastCharCode;
-
-    virtual const void *readTable(LETag tag, le_uint32 *length) const = 0;
-    void deleteTable(const void *table) const;
-    void getMetrics();
-
-    CMAPMapper *findUnicodeMapper();
-
-    const void *readFontTable(LETag tableTag) const;
-    const void *readFontTable(LETag tableTag, le_uint32& len) const;
+	FT_Face ftFace;
+	hb_font_t* hbFont;
+	const char *fMath;
 
 public:
-    XeTeXFontInst(float pointSize, LEErrorCode &status);
+	XeTeXFontInst(float pointSize, int &status);
+	XeTeXFontInst(const char* filename, int index, float pointSize, int &status);
 
-    virtual ~XeTeXFontInst();
+	virtual ~XeTeXFontInst();
 
-	virtual void initialize(LEErrorCode &status);
+	void initialize(const char* pathname, int index, int &status);
 
-    virtual const void *getFontTable(LETag tableTag) const;
-    virtual const void *getFontTable(LETag tableTag, le_uint32* length) const;
+	const void *getFontTable(OTTag tableTag) const;
+	const void *getFontTable(FT_Sfnt_Tag tableTag) const;
+	const char *getMathTable();
 
-	virtual const char *getFilename() const
+	const char *getFilename() const { return fFilename; }
+	hb_font_t *getHbFont() const { return hbFont; }
+	void setLayoutDirVertical(bool vertical);
+	bool getLayoutDirVertical() const { return fVertical; };
+
+	float getPointSize() const { return fPointSize; };
+	float getAscent() const { return fAscent; }
+	float getDescent() const { return fDescent; }
+	float getCapHeight() const { return fCapHeight; }
+	float getXHeight() const { return fXHeight; }
+	float getItalicAngle() const { return fItalicAngle; }
+
+	GlyphID mapCharToGlyph(UChar32 ch) const;
+	GlyphID mapGlyphToIndex(const char* glyphName) const;
+
+	uint16_t getNumGlyphs() const;
+
+	void getGlyphBounds(GlyphID glyph, GlyphBBox* bbox);
+
+	float getGlyphWidth(GlyphID glyph);
+	void getGlyphHeightDepth(GlyphID glyph, float *ht, float* dp);
+	void getGlyphSidebearings(GlyphID glyph, float* lsb, float* rsb);
+	float getGlyphItalCorr(GlyphID glyph);
+
+	const char* getGlyphName(GlyphID gid, int& nameLen);
+	
+	UChar32 getFirstCharCode();
+	UChar32 getLastCharCode();
+
+	float unitsToPoints(float units) const
 	{
-		return fFilename;
+		return (units * fPointSize) / (float) fUnitsPerEM;
 	}
 
-	virtual void setLayoutDirVertical(bool vertical);
-
-	virtual bool getLayoutDirVertical() const
+	float pointsToUnits(float points) const
 	{
-		return fVertical;
-	};
-
-    virtual le_int32 getUnitsPerEM() const
-    {
-        return fUnitsPerEM;
-    };
-
-    virtual le_int32 getAscent() const
-    {
-        return (le_int32)fAscent;
-    }
-
-    virtual le_int32 getDescent() const
-    {
-        return (le_int32)fDescent;
-    }
-
-    virtual le_int32 getLeading() const
-    {
-        return (le_int32)fLeading;
-    }
-
-    virtual float getExactAscent() const
-    {
-        return fAscent;
-    }
-
-    virtual float getExactDescent() const
-    {
-        return fDescent;
-    }
-
-    virtual float getExactLeading() const
-    {
-        return fLeading;
-    }
-
-    virtual LEGlyphID mapCharToGlyph(LEUnicode32 ch) const
-    {
-        return fCMAPMapper->unicodeToGlyph(ch);
-    }
-    
-    virtual LEGlyphID mapGlyphToIndex(const char* glyphName) const;
-
-	virtual le_uint16 getNumGlyphs() const;
-
-    virtual void getGlyphAdvance(LEGlyphID glyph, LEPoint &advance) const;
-
-    virtual le_bool getGlyphPoint(LEGlyphID glyph, le_int32 pointNumber, LEPoint &point) const;
-
-	virtual void getGlyphBounds(LEGlyphID glyph, GlyphBBox *bbox) = 0; /* must be implemented by subclass */
-
-	float getGlyphWidth(LEGlyphID glyph);	
-	void getGlyphHeightDepth(LEGlyphID glyph, float *ht, float* dp);	
-	void getGlyphSidebearings(LEGlyphID glyph, float* lsb, float* rsb);
-	float getGlyphItalCorr(LEGlyphID glyph);
-
-	virtual const char* getGlyphName(LEGlyphID gid, int& nameLen);
-	
-	virtual LEUnicode32 getFirstCharCode();
-	virtual LEUnicode32 getLastCharCode();
-
-    float getXPixelsPerEm() const
-    {
-        return fPointSize;
-    };
-
-    float getYPixelsPerEm() const
-    {
-        return fPointSize;
-    };
-
-    float getScaleFactorX() const
-    {
-        return 1.0;
-    }
-
-    float getScaleFactorY() const
-    {
-        return 1.0;
-    }
-
-    float getXHeight() const
-    {
-        return fXHeight;
-    }
-
-    float getItalicAngle() const
-    {
-        return fItalicAngle;
-    }
+		return (points * (float) fUnitsPerEM) / fPointSize;
+	}
 };
 
 #endif

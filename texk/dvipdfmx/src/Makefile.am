@@ -1,8 +1,9 @@
 ## Makefile.am for the TeX Live subdirectory texk/dvipdfmx/src/
 ##
-## Copyright (C) 2009, 2011 Peter Breitenlohner <tex-live@tug.org>
+## Copyright (C) 2009-2013 Peter Breitenlohner <tex-live@tug.org>
 ## You may freely use, modify and/or distribute this file.
 ##
+AM_CPPFLAGS = $(KPATHSEA_INCLUDES) $(LIBPNG_INCLUDES) $(ZLIB_INCLUDES)
 AM_CFLAGS = $(WARNING_CFLAGS)
 
 bin_PROGRAMS = dvipdfmx
@@ -37,15 +38,12 @@ dvipdfmx_SOURCES = \
 	type0.h t1_char.h t1_load.h type1.h type1c.h \
 	unicode.h vf.h xbb.h
 
-dvipdfmx_CPPFLAGS = $(KPATHSEA_INCLUDES) $(LIBPNG_INCLUDES) $(ZLIB_INCLUDES)
-
 dvipdfmx_DEPENDENCIES = $(ZLIB_DEPEND) $(LIBPNG_DEPEND) $(KPATHSEA_DEPEND)
 
 dvipdfmx_LDADD = $(KPATHSEA_LIBS) $(LIBPNG_LIBS) $(ZLIB_LIBS)
 
-call_dvipdfmx_SOURCES = $(srcdir)/../../texlive/w32_wrapper/callexe.c
-
 call_dvipdfmx_CPPFLAGS = -DEXEPROG=\"dvipdfmx.exe\"
+nodist_call_dvipdfmx_SOURCES = ../callexe.c
 
 bin_links = \
 	dvipdfmx$(EXEEXT):dvipdfm \

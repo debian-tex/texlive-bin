@@ -1,3 +1,31 @@
+2013-03-04  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* am/ptex.am: Better rule for ptex_version.h.
+
+2013-02-15  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	Avoid spurious failures of parallel tests.
+	* am/ptex.am, nissya.test, pbibtex.test, pdvitype.test,
+	ppltotf.test, ptftopl.test, sample.test, yokotate.test:
+	Change directory for temporary files from tests to ptests.
+	* pbibtex-longline-test.pl: Use plongline.aux as input together
+	with longline.bib from source tree.
+
+	* pbibtex-openout-test.pl: Fix the input file location.
+
+2013-01-15  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* am/ptex.am, pbibtex-mem.test, ptrip.test:
+	Enable parallel-tests.
+
+2013-01-04  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* ptex-base.ch: \xkanjiskip around math_node etc.
+
+2012-12-16  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* am/ptex.am (ptex_version.h): Enable silent rules.
+
 2012-11-11  Peter Breitenlohner  <peb@mppmu.mpg.de>
 
 	* ptex-base.ch: Remove native buffer printing code.

@@ -1,17 +1,20 @@
-$Id: README 28200 2012-11-07 08:25:28Z peter $
+$Id: README 29353 2013-03-12 10:54:16Z peter $
 Public domain.  Originally created by Karl Berry, 2005.
 
 Libraries we compile for TeX Live.
 
-All libraries except obsdcompat use the original source tree with all
-modifications maintained as patches and use a proxy build system, either
+All libraries use the original source tree with all modifications
+maintained as patches and use a proxy build system, either
 bypassing or using the original one.
 
 See also comments in ../texk/README.
 
+cairo 1.12.8 - checked 28nov12
+  http://cairographics.org/releases/
+
 freetype 1.5 - ?
 
-freetype2 2.4.9 - checked 9mar12
+freetype2 2.4.11 - checked 31dec12
   http://savannah.nongnu.org/download/freetype/
 
 gd 2.0.35 - unchecked 10may12, libgd still down
@@ -19,20 +22,23 @@ gd 2.0.35 - unchecked 10may12, libgd still down
   http://www.boutell.com/gd/
   https://bitbucket.org/pierrejoye/gd-libgd/overview
 
-graphite 2.4 - checked 15may12
-  the directory silgraphite/engine/ from
-  http://scripts.sil.org/svn-public/graphite/graphite/trunk
-  (svn r1333 2012-05-14 14:47:16 UTC, omitting changes in test/).
+graphite2 1.2.1 - checked 7mar13
+  http://sourceforge.net/projects/silgraphite/files/graphite2/
 
-icu 50.1 (50_1) - checked 7nov12
+harfbuzz 0.9.13 - checked 27feb19
+  http://www.freedesktop.org/software/harfbuzz/release/
+
+icu 51.1 (51_rc) - checked 7mar13
   http://download.icu-project.org/files/icu4c/
-  with modifications required for xetex, also used by bibtexu
 
-libpng 1.5.13 - checked 28sep12
+libpng 1.6.0 - checked 16feb13
   http://www.libpng.org/ - used by many
   http://www.libpng.org/pub/png/pngcode.html
 
-poppler 0.21.0 - checked 15oct12
+pixman 0.28.0 - checked 28nov12
+  http://cairographics.org/releases/
+
+poppler 0.22.2 - checked 12mar13
   http://poppler.freedesktop.org/ - used by luatex and xetex
 
 t1lib 5.1.2 - checked 10may12

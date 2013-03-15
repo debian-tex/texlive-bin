@@ -1,6 +1,6 @@
 ## Makefile.am for the TeX Live subdirectory texk/xdvik/
 ##
-## Copyright (C) 2009-2012 Peter Breitenlohner <tex-live@tug.org>
+## Copyright (C) 2009-2013 Peter Breitenlohner <tex-live@tug.org>
 ## You may freely use, modify and/or distribute this file.
 ##
 ACLOCAL_AMFLAGS = -I ../../m4 -I m4
@@ -183,7 +183,7 @@ LDADD = libxdvi.a $(common_ldadd)
 # When cross-compiling, EXEEXT for the build and host systems may differ.
 # Thus we depend on the auxiliary file squeeze/stamp-squeeze.
 psheader.c: psheader.txt squeeze/stamp-squeeze
-	squeeze/squeeze $(srcdir)/psheader.txt $@
+	$(AM_V_GEN)squeeze/squeeze $(srcdir)/psheader.txt $@
 
 squeeze/stamp-squeeze:
 	cd squeeze && $(MAKE) $(AM_MAKEFLAGS) stamp-squeeze
@@ -194,18 +194,18 @@ CLEANFILES = psheader.c
 nodist_man1_MANS = xdvi.1
 
 xdvi.1: xdvi.1.in sedscript
-	sed -f sedscript <$(srcdir)/xdvi.1.in >$@
+	$(AM_V_GEN)sed -f sedscript <$(srcdir)/xdvi.1.in >$@
 
 sedscript: mksedscript CHANGES Makefile c-auto.h
-	$(SHELL) $(srcdir)/mksedscript $(srcdir) $(DEFS) $(PS_DEF) >$@
+	$(AM_V_GEN)$(SHELL) $(srcdir)/mksedscript $(srcdir) $(DEFS) $(PS_DEF) >$@
 
 EXTRA_DIST += mksedscript xdvi.1.in
 CLEANFILES += sedscript xdvi.1
 
-xdvidir = $(datarootdir)/texmf/xdvi
+xdvidir = $(datarootdir)/texmf-dist/xdvi
 dist_xdvi_DATA = texmf/XDvi
 
-pixmapdir = $(datarootdir)/texmf/xdvi/pixmap
+pixmapdir = $(datarootdir)/texmf-dist/xdvi/pixmap
 dist_pixmap_DATA = pixmaps/toolbar.xpm pixmaps/toolbar2.xpm
 
 dist_noinst_DATA = texmf/xdvi.cfg

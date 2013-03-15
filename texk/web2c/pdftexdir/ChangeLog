@@ -1,3 +1,44 @@
+2013-03-06  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* pdftex.web: Typos.
+
+2013-03-04  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* am/pdftex.am: Better rules for {pdf,e}tex_version.h.
+
+2013-02-28  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* pdftex.web: Adapt to e-TeX 2.5.
+
+2013-02-23  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* etex_version.h: New file extracted from pdftex.web.
+	* am/pdftex.am, pdftexextra.h: Adjust.
+
+2013-01-28  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* utils.c: Include <w2c/config.h> first for large file support.
+
+2013-01-24  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* wprob.test: Avoid spurious failure of parallel-tests.
+	* am/pdftex.am: Renamed wprob.{tex,log} => pwprob.{tex,log}.
+
+2013-01-10  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* macnames.c, pdftex-common.h, pdftoepdf.cc, ttf2afm.c,
+	writet1.c: Change 'const char notdef[]' -> 'char notdef[]' and
+	remove casts (const char *) -> (char *).
+
+	* mapfile.c (dummy_fm_entry): Delare const_fm_entry as non-const
+	and remove the cast.
+
+	* utils.c (writestreamlength): Cast length for printing.
+
+2012-12-16  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* am/pdftex.am (pdftex_version.h): Enable silent rules.
+
 2012-11-05  Peter Breitenlohner  <peb@mppmu.mpg.de>
 
 	* pdftex.web: Change program name into PDFTEX (not ETEX).

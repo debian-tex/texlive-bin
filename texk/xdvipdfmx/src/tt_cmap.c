@@ -43,7 +43,6 @@
 
 #include "tt_aux.h"
 #include "tt_gsub.h"
-#include "tt_post.h"
 
 #include "unicode.h"
 #include "agl.h"
@@ -456,13 +455,13 @@ tt_cmap_read (sfnt *sfont, USHORT platform, USHORT encoding)
 {
   tt_cmap *cmap = NULL;
   ULONG    offset, length = 0;
-  USHORT   version, p_id, e_id;
+  USHORT   p_id, e_id;
   USHORT   i, n_subtabs;
 
   ASSERT(sfont);
 
   offset    = sfnt_locate_table(sfont, "cmap");
-  version   = sfnt_get_ushort(sfont);
+  (void)      sfnt_get_ushort(sfont);
   n_subtabs = sfnt_get_ushort(sfont);
 
   for (i = 0; i < n_subtabs; i++) {
@@ -848,7 +847,7 @@ handle_CIDFont (sfnt *sfont,
 static USHORT
 handle_subst_glyphs (CMap *cmap,
 		     CMap *cmap_add, const char *used_glyphs,
-		     struct tt_post_table *post)
+		     sfnt *sfont)
 {
   USHORT count;
   USHORT i, gid;
@@ -856,7 +855,8 @@ handle_subst_glyphs (CMap *cmap,
   for (count = 0, i = 0; i < 8192; i++) {
     int   j;
     long  len, inbytesleft, outbytesleft;
-    unsigned char *inbuf, *outbuf;
+    const unsigned char *inbuf;
+    unsigned char *outbuf;
 
     if (used_glyphs[i] == 0)
       continue;
@@ -867,41 +867,49 @@ handle_subst_glyphs (CMap *cmap,
       if (!is_used_char2(used_glyphs, gid))
 	continue;
 
-      if (!cmap_add && post) {
-        /* JK: try to look up Unicode values from the glyph name...
-           requires access to 'post' table */
+      if (!cmap_add) {
+#if XETEX
+        if (FT_HAS_GLYPH_NAMES(sfont->ft_face)) {
+          /* JK: try to look up Unicode values from the glyph name... */
 #define MAX_UNICODES	16
-        long unicodes[MAX_UNICODES];
-        int  unicode_count = -1;
-        int  k;
-        if (gid < post->numberOfGlyphs) {
-          unicode_count = agl_get_unicodes(post->glyphNamePtr[gid], unicodes, MAX_UNICODES);
-        }
-        if (unicode_count == -1)
-	  MESG("No Unicode mapping available: GID=%u, name=%s", gid,
-	        gid < post->numberOfGlyphs ? post->glyphNamePtr[gid] : "(none)");
-	else {
-	  /* the Unicode characters go into wbuf[2] and following, in UTF16BE */
-	  /* we rely on WBUF_SIZE being more than adequate for MAX_UNICODES  */
-	  unsigned char* p = wbuf + 2;
-	  len = 0;
-	  for (k = 0; k < unicode_count; ++k) {
-	    len += UC_sput_UTF16BE(unicodes[k], &p, wbuf+WBUF_SIZE);
-	  }
-	  wbuf[0] = (gid >> 8) & 0xff;
-	  wbuf[1] =  gid & 0xff;
-	  CMap_add_bfchar(cmap, wbuf, 2, wbuf + 2, len);
+#define MAX_NAME	256
+          static char name[MAX_NAME] = "(none)";
+          long unicodes[MAX_UNICODES];
+          int  unicode_count = -1;
+	  FT_Error err = FT_Get_Glyph_Name(sfont->ft_face, gid, name, MAX_NAME);
+          if (!err) {
+            unicode_count = agl_get_unicodes(name, unicodes, MAX_UNICODES);
+          }
+#undef MAX_UNICODES
+#undef MAX_NAME
+          if (unicode_count == -1) {
+            MESG("No Unicode mapping available: GID=%u, name=%s\n", gid, name);
+          } else {
+            /* the Unicode characters go into wbuf[2] and following, in UTF16BE */
+            /* we rely on WBUF_SIZE being more than adequate for MAX_UNICODES  */
+            unsigned char* p = wbuf + 2;
+            int  k;
+            len = 0;
+            for (k = 0; k < unicode_count; ++k) {
+              len += UC_sput_UTF16BE(unicodes[k], &p, wbuf+WBUF_SIZE);
+            }
+            wbuf[0] = (gid >> 8) & 0xff;
+            wbuf[1] =  gid & 0xff;
+            CMap_add_bfchar(cmap, wbuf, 2, wbuf + 2, len);
+          }
 	}
-      }
-      else {
+#else
+	WARN("No Unicode mapping available: GID=%u", gid);
+#endif
+      } else {
 	wbuf[0] = (gid >> 8) & 0xff;
 	wbuf[1] =  gid & 0xff;
 	inbuf        = wbuf;
 	inbytesleft  = 2;
-	outbuf       = inbuf + 2;
+	outbuf       = wbuf + 2;
 	outbytesleft = WBUF_SIZE - 2;
 	CMap_decode(cmap_add,
-		    (const unsigned char **) &inbuf , &inbytesleft,
+		    &inbuf , &inbytesleft,
 		    &outbuf, &outbytesleft);
 	if (inbytesleft != 0) {
 	  WARN("CMap conversion failed...");
@@ -933,7 +941,7 @@ static pdf_obj *
 create_ToUnicode_cmap4 (struct cmap4 *map,
 			const char *cmap_name, CMap *cmap_add,
 			const char *used_glyphs,
-			struct tt_post_table *post)
+			sfnt *sfont)
 {
   pdf_obj  *stream = NULL;
   CMap     *cmap;
@@ -987,7 +995,7 @@ create_ToUnicode_cmap4 (struct cmap4 *map,
     }
   }
 
-  count += handle_subst_glyphs(cmap, cmap_add, used_glyphs_copy, post);
+  count += handle_subst_glyphs(cmap, cmap_add, used_glyphs_copy, sfont);
 
   if (count < 1)
     stream = NULL;
@@ -1004,7 +1012,7 @@ static pdf_obj *
 create_ToUnicode_cmap12 (struct cmap12 *map,
 			 const char *cmap_name, CMap *cmap_add,
 			 const char *used_glyphs,
-			 struct tt_post_table *post)
+			 sfnt *sfont)
 {
   pdf_obj  *stream = NULL;
   CMap     *cmap;
@@ -1042,7 +1050,7 @@ create_ToUnicode_cmap12 (struct cmap12 *map,
     }
   }
 
-  count += handle_subst_glyphs(cmap, cmap_add, used_glyphs_copy, post);
+  count += handle_subst_glyphs(cmap, cmap_add, used_glyphs_copy, sfont);
 
   if (count < 1)
     stream = NULL;
@@ -1079,15 +1087,26 @@ otf_create_ToUnicode_stream (const char *font_name,
   CMap       *cmap_add;
   int         cmap_add_id;
   tt_cmap    *ttcmap;
+  char       *normalized_font_name;
   char       *cmap_name;
   FILE       *fp = NULL;
   sfnt       *sfont;
   long        offset = 0;
-  struct tt_post_table *ttpost = NULL;
   int         i;
 
+  /* replace slash in map name with dash to make the output cmap name valid,
+   * happens when XeTeX embeds full font path
+   * https://sourceforge.net/p/xetex/bugs/52/
+   */
+  normalized_font_name = NEW(strlen(font_name)+1, char);
+  strcpy(normalized_font_name, font_name);
+  for (i = 0; i < strlen(font_name); ++i) {
+    if (normalized_font_name[i] == '/')
+		normalized_font_name[i] = '-';
+  }
+
   cmap_name = NEW(strlen(font_name)+strlen("-UTF16")+5, char);
-  sprintf(cmap_name, "%s,%03d-UTF16", font_name, ttc_index);
+  sprintf(cmap_name, "%s,%03d-UTF16", normalized_font_name, ttc_index);
 
   res_id = pdf_findresource("CMap", cmap_name);
   if (res_id >= 0) {
@@ -1144,8 +1163,6 @@ otf_create_ToUnicode_stream (const char *font_name,
     cmap_add = CMap_cache_get(cmap_add_id);
   }
 
-  ttpost = tt_read_post_table(sfont);
-
   CMap_set_silent(1); /* many warnings without this... */
   for (i = 0; i < sizeof(cmap_plat_encs) / sizeof(cmap_plat_enc_rec); ++i) {
     ttcmap = tt_cmap_read(sfont, cmap_plat_encs[i].platform, cmap_plat_encs[i].encoding);
@@ -1153,12 +1170,12 @@ otf_create_ToUnicode_stream (const char *font_name,
       continue;
     if (ttcmap->format == 4) {
       cmap_obj = create_ToUnicode_cmap4(ttcmap->map,
-					cmap_name, cmap_add, used_glyphs, ttpost);
+					cmap_name, cmap_add, used_glyphs, sfont);
       break;
     }
     if (ttcmap->format == 12) {
       cmap_obj = create_ToUnicode_cmap12(ttcmap->map,
-				       cmap_name, cmap_add, used_glyphs, ttpost);
+				       cmap_name, cmap_add, used_glyphs, sfont);
       break;
     }
   }
@@ -1166,9 +1183,6 @@ otf_create_ToUnicode_stream (const char *font_name,
     WARN("Unable to read OpenType/TrueType Unicode cmap table.");
   tt_cmap_release(ttcmap);
   CMap_set_silent(0);
-
-  if (ttpost != NULL)
-    tt_release_post_table(ttpost);
 
   if (cmap_obj) {
     res_id   = pdf_defineresource("CMap", cmap_name,
@@ -1863,7 +1877,7 @@ fprintf(stderr, "otf_load_Unicode_CMap(%s, %d)\n", map_name, ttc_index);
       load_gsub(opt_conf, gsub_list, sfont);
     }
 
-    ht_init_table(&unencoded);
+    ht_init_table(&unencoded, hval_free);
 
     handle_gsub(conf, ttcmap, gsub_list, &unencoded);
     if (opt_tag) {
@@ -1893,7 +1907,7 @@ fprintf(stderr, "otf_load_Unicode_CMap(%s, %d)\n", map_name, ttc_index);
     }
     create_cmaps(cmap, tounicode, &unencoded, GIDToCIDMap);
 
-    ht_clear_table(&unencoded, hval_free);
+    ht_clear_table(&unencoded);
     RELEASE(conf_name);
   }
 

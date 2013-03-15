@@ -1,9 +1,10 @@
 /****************************************************************************\
  Part of the XeTeX typesetting system
- copyright (c) 1994-2008 by SIL International
- copyright (c) 2009 by Jonathan Kew
+ Copyright (c) 1994-2008 by SIL International
+ Copyright (c) 2009 by Jonathan Kew
+ Copyright (c) 2012, 2013 by Khaled Hosny
 
- Written by Jonathan Kew
+ SIL Author(s): Jonathan Kew
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
@@ -33,10 +34,6 @@ authorization from the copyright holders.
 #ifndef XETEX_LAYOUT_INTERFACE_H
 #define XETEX_LAYOUT_INTERFACE_H 1
 
-#ifdef XETEX_MAC
-#include <Carbon/Carbon.h>
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -45,6 +42,18 @@ typedef struct XeTeXLayoutEngine_rec* XeTeXLayoutEngine;
 #ifdef __cplusplus
 };
 #endif
+
+#include <ft2build.h>
+#include FT_FREETYPE_H
+#include FT_TRUETYPE_TABLES_H
+
+#include <hb.h>
+#include <hb-ot.h>
+#include <hb-icu.h>
+
+#include <graphite2/Font.h>
+#include <graphite2/Segment.h>
+#include <hb-graphite2.h>
 
 #include "XeTeX_ext.h"
 #include "XeTeXFontMgr.h"
@@ -55,17 +64,12 @@ extern "C" {
 
 extern char	gPrefEngine;
 
-int getCachedGlyphBBox(UInt16 fontID, UInt16 glyphID, GlyphBBox* bbox);
-void cacheGlyphBBox(UInt16 fontID, UInt16 glyphID, const GlyphBBox* bbox);
+int getCachedGlyphBBox(uint16_t fontID, uint16_t glyphID, GlyphBBox* bbox);
+void cacheGlyphBBox(uint16_t fontID, uint16_t glyphID, const GlyphBBox* bbox);
 
 void terminatefontmanager();
 
-#ifdef XETEX_MAC
-XeTeXFont createFont(ATSFontRef atsFont, Fixed pointSize);
-#else
-// appropriate functions for other platforms
 XeTeXFont createFont(PlatformFontRef fontRef, Fixed pointSize);
-#endif
 XeTeXFont createFontFromFile(const char* filename, int index, Fixed pointSize);
 
 void setFontLayoutDir(XeTeXFont font, int vertical);
@@ -73,6 +77,7 @@ void setFontLayoutDir(XeTeXFont font, int vertical);
 PlatformFontRef findFontByName(const char* name, char* var, double size);
 
 char getReqEngine();
+void setReqEngine(char reqEngine);
 const char* getFullName(PlatformFontRef fontRef);
 
 const char* getFontFilename(XeTeXLayoutEngine engine);
@@ -82,21 +87,22 @@ double getDesignSize(XeTeXFont font);
 
 void deleteFont(XeTeXFont font);
 
-void* getFontTablePtr(XeTeXFont font, UInt32 tableTag);
+void* getFontTablePtr(XeTeXFont font, uint32_t tableTag);
+void* getFontTable(XeTeXFont font, FT_Sfnt_Tag tableTag);
 
 Fixed getSlant(XeTeXFont font);
 
-UInt32 countScripts(XeTeXFont font);
-UInt32 getIndScript(XeTeXFont font, UInt32 index);
-UInt32 countScriptLanguages(XeTeXFont font, UInt32 script);
-UInt32 getIndScriptLanguage(XeTeXFont font, UInt32 script, UInt32 index);
-UInt32 countFeatures(XeTeXFont font, UInt32 script, UInt32 language);
-UInt32 getIndFeature(XeTeXFont font, UInt32 script, UInt32 language, UInt32 index);
-float getGlyphWidth(XeTeXFont font, UInt32 gid);
-UInt32 countGlyphs(XeTeXFont font);
+uint32_t countScripts(XeTeXFont font);
+uint32_t getIndScript(XeTeXFont font, uint32_t index);
+uint32_t countScriptLanguages(XeTeXFont font, uint32_t script);
+uint32_t getIndScriptLanguage(XeTeXFont font, uint32_t script, uint32_t index);
+uint32_t countFeatures(XeTeXFont font, uint32_t script, uint32_t language);
+uint32_t getIndFeature(XeTeXFont font, uint32_t script, uint32_t language, uint32_t index);
+float getGlyphWidth(XeTeXFont font, uint32_t gid);
+uint32_t countGlyphs(XeTeXFont font);
 
-XeTeXLayoutEngine createLayoutEngine(PlatformFontRef fontRef, XeTeXFont font, UInt32 scriptTag, UInt32 languageTag,
-						UInt32* addFeatures, SInt32* addParams, UInt32* removeFeatures, UInt32 rgbValue,
+XeTeXLayoutEngine createLayoutEngine(PlatformFontRef fontRef, XeTeXFont font, char* script, char* language,
+						hb_feature_t* features, int nFeatures, char **shapers, uint32_t rgbValue,
 						float extend, float slant, float embolden);
 
 void deleteLayoutEngine(XeTeXLayoutEngine engine);
@@ -108,78 +114,59 @@ float getExtendFactor(XeTeXLayoutEngine engine);
 float getSlantFactor(XeTeXLayoutEngine engine);
 float getEmboldenFactor(XeTeXLayoutEngine engine);
 
-SInt32 layoutChars(XeTeXLayoutEngine engine, UInt16* chars, SInt32 offset, SInt32 count, SInt32 max,
-						char rightToLeft, float x, float y, SInt32* status);
+int layoutChars(XeTeXLayoutEngine engine, uint16_t* chars, int32_t offset, int32_t count, int32_t max,
+						bool rightToLeft);
 
-void getGlyphs(XeTeXLayoutEngine engine, UInt32* glyphs, SInt32* status);
-
-void getGlyphPositions(XeTeXLayoutEngine engine, float* positions, SInt32* status);
-
-void getGlyphPosition(XeTeXLayoutEngine engine, SInt32 index, float* x, float* y, SInt32* status);
-
-UInt32 getScriptTag(XeTeXLayoutEngine engine);
-
-UInt32 getLanguageTag(XeTeXLayoutEngine engine);
+void getGlyphs(XeTeXLayoutEngine engine, uint32_t* glyphs);
+void getGlyphAdvances(XeTeXLayoutEngine engine, float *advances);
+void getGlyphPositions(XeTeXLayoutEngine engine, float* positions);
 
 float getPointSize(XeTeXLayoutEngine engine);
 
 void getAscentAndDescent(XeTeXLayoutEngine engine, float* ascent, float* descent);
-
-UInt32* getAddedFeatures(XeTeXLayoutEngine engine);
-
-UInt32* getRemovedFeatures(XeTeXLayoutEngine engine);
+void getCapAndXHeight(XeTeXLayoutEngine engine, float* capheight, float* xheight);
 
 int getDefaultDirection(XeTeXLayoutEngine engine);
 
-UInt32 getRgbValue(XeTeXLayoutEngine engine);
+uint32_t getRgbValue(XeTeXLayoutEngine engine);
 
-void getGlyphBounds(XeTeXLayoutEngine engine, UInt32 glyphID, GlyphBBox* bbox);
+void getGlyphBounds(XeTeXLayoutEngine engine, uint32_t glyphID, GlyphBBox* bbox);
 
-float getGlyphWidthFromEngine(XeTeXLayoutEngine engine, UInt32 glyphID);
+float getGlyphWidthFromEngine(XeTeXLayoutEngine engine, uint32_t glyphID);
 
-void getGlyphHeightDepth(XeTeXLayoutEngine engine, UInt32 glyphID, float* height, float* depth);
+void getGlyphHeightDepth(XeTeXLayoutEngine engine, uint32_t glyphID, float* height, float* depth);
 
-void getGlyphSidebearings(XeTeXLayoutEngine engine, UInt32 glyphID, float* lsb, float* rsb);
+void getGlyphSidebearings(XeTeXLayoutEngine engine, uint32_t glyphID, float* lsb, float* rsb);
 
-float getGlyphItalCorr(XeTeXLayoutEngine engine, UInt32 glyphID);
+float getGlyphItalCorr(XeTeXLayoutEngine engine, uint32_t glyphID);
 
-UInt32 mapCharToGlyph(XeTeXLayoutEngine engine, UInt32 charCode);
+uint32_t mapCharToGlyph(XeTeXLayoutEngine engine, uint32_t charCode);
 
 int	mapGlyphToIndex(XeTeXLayoutEngine engine, const char* glyphName);
 
-int	findGlyphInPostTable(const char* p, int tableSize, const char* glyphName);
-
-const char* getGlyphName(XeTeXFont font, UInt16 gid, int* len);
+const char* getGlyphName(XeTeXFont font, uint16_t gid, int* len);
 
 int getFontCharRange(XeTeXLayoutEngine engine, int reqFirst);
 
 /* graphite interface functions... */
-XeTeXLayoutEngine createGraphiteEngine(PlatformFontRef fontRef, XeTeXFont font,
-										const char* name,
-										UInt32 rgbValue, int rtl, UInt32 languageTag,
-										float extend, float slant, float embolden,
-										int nFeatures, const int* featureIDs, const int* featureValues);
-int makeGraphiteSegment(XeTeXLayoutEngine engine, const UniChar* txtPtr, int txtLen);
-void getGraphiteGlyphInfo(XeTeXLayoutEngine engine, int index, UInt16* glyphID, float* x, float* y);
-float graphiteSegmentWidth(XeTeXLayoutEngine engine);
-void initGraphiteBreaking(XeTeXLayoutEngine engine, const UniChar* txtPtr, int txtLen);
-int findNextGraphiteBreak(int iOffset, int iBrkVal);
+bool initGraphiteBreaking(XeTeXLayoutEngine engine, const uint16_t* txtPtr, int txtLen);
+int findNextGraphiteBreak(void);
 
-int usingOpenType(XeTeXLayoutEngine engine);
-int usingGraphite(XeTeXLayoutEngine engine);
-int isOpenTypeMathFont(XeTeXLayoutEngine engine);
+bool usingOpenType(XeTeXLayoutEngine engine);
+bool usingGraphite(XeTeXLayoutEngine engine);
+bool isOpenTypeMathFont(XeTeXLayoutEngine engine);
 
-int findGraphiteFeature(XeTeXLayoutEngine engine, const char* s, const char* e, int* f, int* v);
+bool findGraphiteFeature(XeTeXLayoutEngine engine, const char* s, const char* e, hb_tag_t* f, int* v);
 
-UInt32 countGraphiteFeatures(XeTeXLayoutEngine engine);
-UInt32 getGraphiteFeatureCode(XeTeXLayoutEngine engine, UInt32 index);
-UInt32 countGraphiteFeatureSettings(XeTeXLayoutEngine engine, UInt32 feature);
-UInt32 getGraphiteFeatureSettingCode(XeTeXLayoutEngine engine, UInt32 feature, UInt32 index);
-UInt32 getGraphiteFeatureDefaultSetting(XeTeXLayoutEngine engine, UInt32 feature);
-void getGraphiteFeatureLabel(XeTeXLayoutEngine engine, UInt32 feature, unsigned short* buf);
-void getGraphiteFeatureSettingLabel(XeTeXLayoutEngine engine, UInt32 feature, UInt32 setting, unsigned short* buf);
+uint32_t countGraphiteFeatures(XeTeXLayoutEngine engine);
+uint32_t getGraphiteFeatureCode(XeTeXLayoutEngine engine, uint32_t index);
+uint32_t countGraphiteFeatureSettings(XeTeXLayoutEngine engine, uint32_t feature);
+uint32_t getGraphiteFeatureSettingCode(XeTeXLayoutEngine engine, uint32_t feature, uint32_t index);
+uint32_t getGraphiteFeatureDefaultSetting(XeTeXLayoutEngine engine, uint32_t feature);
+char* getGraphiteFeatureLabel(XeTeXLayoutEngine engine, uint32_t feature);
+char* getGraphiteFeatureSettingLabel(XeTeXLayoutEngine engine, uint32_t feature, uint32_t setting);
 long findGraphiteFeatureNamed(XeTeXLayoutEngine engine, const char* name, int namelength);
-long findGraphiteFeatureSettingNamed(XeTeXLayoutEngine engine, UInt32 feature, const char* name, int namelength);
+long findGraphiteFeatureSettingNamed(XeTeXLayoutEngine engine, uint32_t feature, const char* name, int namelength);
 
 #ifdef __cplusplus
 };

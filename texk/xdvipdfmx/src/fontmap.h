@@ -40,9 +40,6 @@
 #ifdef XETEX
 #include "ft2build.h"
 #include FT_FREETYPE_H
-
-/* globals initialized by fontmap.c when it opens freetype */
-extern FT_Int ft_major, ft_minor, ft_patch;
 #endif
 
 /* Options */
@@ -63,7 +60,6 @@ typedef struct fontmap_opt {
   int    stemv;       /* StemV value especially for CJK fonts */
 #ifdef XETEX
   FT_Face ft_face;
-  unsigned short *glyph_widths;
 #endif
 } fontmap_opt;
 
@@ -107,7 +103,6 @@ extern int          is_pdfm_mapline           (const char  *mline);
 
 #ifdef XETEX
 extern int          pdf_load_native_font      (const char *ps_name,
-                                               const char *fam_name, const char *sty_name,
                                                int layout_dir, int extend, int slant, int embolden);
 #endif
 

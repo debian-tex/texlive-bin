@@ -452,13 +452,13 @@ tt_cmap_read (sfnt *sfont, USHORT platform, USHORT encoding)
 {
   tt_cmap *cmap = NULL;
   ULONG    offset, length = 0;
-  USHORT   version, p_id, e_id;
+  USHORT   p_id, e_id;
   USHORT   i, n_subtabs;
 
   ASSERT(sfont);
 
   offset    = sfnt_locate_table(sfont, "cmap");
-  version   = sfnt_get_ushort(sfont);
+  (void)      sfnt_get_ushort(sfont);
   n_subtabs = sfnt_get_ushort(sfont);
 
   for (i = 0; i < n_subtabs; i++) {
@@ -848,7 +848,8 @@ handle_subst_glyphs (CMap *cmap,
   for (count = 0, i = 0; i < 8192; i++) {
     int   j;
     long  len, inbytesleft, outbytesleft;
-    unsigned char *inbuf, *outbuf;
+    const unsigned char *inbuf;
+    unsigned char *outbuf;
 
     if (used_glyphs[i] == 0)
       continue;
@@ -866,10 +867,10 @@ handle_subst_glyphs (CMap *cmap,
 	wbuf[1] =  gid & 0xff;
 	inbuf        = wbuf;
 	inbytesleft  = 2;
-	outbuf       = inbuf + 2;
+	outbuf       = wbuf + 2;
 	outbytesleft = WBUF_SIZE - 2;
 	CMap_decode(cmap_add,
-		    (const unsigned char **) &inbuf , &inbytesleft,
+		    &inbuf , &inbytesleft,
 		    &outbuf, &outbytesleft);
 	if (inbytesleft != 0) {
 	  WARN("CMap conversion failed...");
@@ -1028,14 +1029,27 @@ otf_create_ToUnicode_stream (const char *font_name,
   CMap       *cmap_add;
   int         cmap_add_id;
   tt_cmap    *ttcmap;
+  char       *normalized_font_name;
   char       *cmap_name;
   FILE       *fp = NULL;
   sfnt       *sfont;
   long        offset = 0;
+  int         i;
 
+
+  /* replace slash in map name with dash to make the output cmap name valid,
+   * happens when XeTeX embeds full font path
+   * https://sourceforge.net/p/xetex/bugs/52/
+   */
+  normalized_font_name = NEW(strlen(font_name)+1, char);
+  strcpy(normalized_font_name, font_name);
+  for (i = 0; i < strlen(font_name); ++i) {
+    if (normalized_font_name[i] == '/')
+		normalized_font_name[i] = '-';
+  }
 
   cmap_name = NEW(strlen(font_name)+strlen("-UTF16")+5, char);
-  sprintf(cmap_name, "%s,%03d-UTF16", font_name, ttc_index);
+  sprintf(cmap_name, "%s,%03d-UTF16", normalized_font_name, ttc_index);
 
   res_id = pdf_findresource("CMap", cmap_name);
   if (res_id >= 0) {

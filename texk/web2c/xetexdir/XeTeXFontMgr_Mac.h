@@ -1,9 +1,10 @@
 /****************************************************************************\
  Part of the XeTeX typesetting system
- copyright (c) 1994-2008 by SIL International
- copyright (c) 2009 by Jonathan Kew
+ Copyright (c) 1994-2008 by SIL International
+ Copyright (c) 2009 by Jonathan Kew
+ Copyright (c) 2012, 2013 by Jiang Jiang
 
- Written by Jonathan Kew
+ SIL Author(s): Jonathan Kew
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
@@ -53,16 +54,20 @@ protected:
 
 	virtual void					searchForHostPlatformFonts(const std::string& name);
 	
-	virtual NameCollection*			readNames(ATSUFontID fontID);
+	virtual NameCollection*			readNames(CTFontDescriptorRef fontRef);
 
 	virtual std::string				getPlatformFontDesc(PlatformFontRef font) const;
 
 private:
 	void		addFontsToCaches(CFArrayRef fonts);
 
-	void		addFamilyToCaches(ATSFontFamilyRef familyRef);
+	void		addFamilyToCaches(CTFontDescriptorRef familyRef);
 
-	void		addFontAndSiblingsToCaches(ATSFontRef fontRef);
+	void		addFontAndSiblingsToCaches(CTFontDescriptorRef fontRef);
+
+	void		appendNameToList(CTFontRef font,
+								 std::list<std::string>* nameList,
+								 CFStringRef nameKey);
 };
 
 #endif	/* __XETEX_FONT_MGR_MAC_H */

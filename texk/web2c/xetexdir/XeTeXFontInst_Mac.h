@@ -1,9 +1,10 @@
 /****************************************************************************\
  Part of the XeTeX typesetting system
- copyright (c) 1994-2008 by SIL International
- copyright (c) 2009 by Jonathan Kew
+ Copyright (c) 1994-2008 by SIL International
+ Copyright (c) 2009 by Jonathan Kew
+ Copyright (c) 2012, 2013 by Jiang Jiang
 
- Written by Jonathan Kew
+ SIL Author(s): Jonathan Kew
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
@@ -48,22 +49,15 @@ authorization from the copyright holders.
 class XeTeXFontInst_Mac : public XeTeXFontInst
 {
 protected:
-    const void *readTable(LETag tag, le_uint32 *length) const;
-
-	ATSFontRef	fFontRef;
-	ATSUStyle	fStyle;
+	CTFontDescriptorRef fDescriptor;
+	CTFontRef			fFontRef;
 
 public:
-    			XeTeXFontInst_Mac(ATSFontRef atsFont, float pointSize, LEErrorCode &status);
+				 XeTeXFontInst_Mac(CTFontDescriptorRef descriptor, float pointSize, int &status);
 
-    virtual 	~XeTeXFontInst_Mac();
+	virtual		~XeTeXFontInst_Mac();
 
-	virtual void initialize(LEErrorCode &status);
-	
-	virtual void	getGlyphBounds(LEGlyphID gid, GlyphBBox* bbox);
-
-	virtual LEGlyphID	mapGlyphToIndex(const char* glyphName) const;
-	virtual const char* getGlyphName(LEGlyphID gid, int& nameLen);
+	virtual void initialize(int &status);
 };
 
 #endif

@@ -149,7 +149,7 @@ spc_handler_pdfm__init (struct spc_env *spe, struct spc_arg *ap, void *dp)
   sd->annot_dict   = NULL;
   sd->lowest_level = 255;
   sd->resourcemap  = NEW(1, struct ht_table);
-  ht_init_table(sd->resourcemap);
+  ht_init_table(sd->resourcemap, hval_free);
 
 #ifdef  ENABLE_TOUNICODE
   sd->cd.taintkeys = pdf_new_array();
@@ -174,7 +174,7 @@ spc_handler_pdfm__clean (struct spc_env *spe, struct spc_arg *ap, void *dp)
   sd->lowest_level = 255;
   sd->annot_dict   = NULL;
   if (sd->resourcemap) {
-    ht_clear_table(sd->resourcemap, hval_free);
+    ht_clear_table(sd->resourcemap);
     RELEASE(sd->resourcemap);
   }
   sd->resourcemap = NULL;
@@ -403,7 +403,7 @@ reencodestring (CMap *cmap, pdf_obj *instring)
 #define WBUF_SIZE 4096
   unsigned char  wbuf[WBUF_SIZE];
   unsigned char *obufcur;
-  unsigned char *inbufcur;
+  const unsigned char *inbufcur;
   long inbufleft, obufleft;
 
   if (!cmap || !instring)
@@ -418,7 +418,7 @@ reencodestring (CMap *cmap, pdf_obj *instring)
   obufleft = WBUF_SIZE - 2;
 
   CMap_decode(cmap,
-	      (const unsigned char **)&inbufcur, &inbufleft,
+	      &inbufcur, &inbufleft,
 	      &obufcur, &obufleft);
 
   if (inbufleft > 0) {

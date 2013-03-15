@@ -60,12 +60,8 @@
 #include "dvi.h"
 
 #ifdef XETEX
-#include "pdfcolor.h"
 #include "pdfximage.h"
-#include "pdfdev.h"
-#include "ft2build.h"
-#include FT_FREETYPE_H
-#include FT_TRUETYPE_TABLES_H
+#include FT_ADVANCES_H
 #endif
 
 #define DVI_STACK_DEPTH_MAX  256u
@@ -127,7 +123,6 @@ static struct loaded_font
 #ifdef XETEX
   unsigned long rgba_color;
   FT_Face ft_face;
-  unsigned short *glyph_widths;
   int   layout_dir;
   float extend;
   float slant;
@@ -154,7 +149,7 @@ static struct font_def
   int    font_id;   /* index of _loaded_ font in loaded_fonts array */
   int    used;
 #ifdef XETEX
-  char  *fam_name, *sty_name; /* only used for native fonts in XeTeX */
+  int    native; /* boolean */
   unsigned long rgba_color;   /* only used for native fonts in XeTeX */
   int    layout_dir; /* 1 = vertical, 0 = horizontal */
   int    extend;
@@ -164,8 +159,6 @@ static struct font_def
 } *def_fonts = NULL;
 
 #ifdef XETEX
-#define XDV_FLAG_FONTTYPE_ATSUI 0x0001
-#define XDV_FLAG_FONTTYPE_ICU   0x0002
 #define XDV_FLAG_VERTICAL       0x0100
 #define XDV_FLAG_COLORED        0x0200
 #define XDV_FLAG_FEATURES       0x0400
@@ -584,14 +577,14 @@ static void
 read_font_record (SIGNED_QUAD tex_id)
 {
   UNSIGNED_BYTE dir_length, name_length;
-  UNSIGNED_QUAD checksum, point_size, design_size;
+  UNSIGNED_QUAD point_size, design_size;
   char         *directory, *font_name;
 
   if (num_def_fonts >= max_def_fonts) {
     max_def_fonts += TEX_FONTS_ALLOC_SIZE;
     def_fonts = RENEW (def_fonts, max_def_fonts, struct font_def);
   }
-  checksum    = get_unsigned_quad(dvi_file);
+                get_unsigned_quad(dvi_file);
   point_size  = get_unsigned_quad(dvi_file);
   design_size = get_unsigned_quad(dvi_file);
   dir_length  = get_unsigned_byte(dvi_file);
@@ -615,8 +608,7 @@ read_font_record (SIGNED_QUAD tex_id)
   def_fonts[num_def_fonts].design_size = design_size;
   def_fonts[num_def_fonts].used        = 0;
 #ifdef XETEX
-  def_fonts[num_def_fonts].fam_name    = NULL;
-  def_fonts[num_def_fonts].sty_name    = NULL;
+  def_fonts[num_def_fonts].native      = 0;
   def_fonts[num_def_fonts].rgba_color  = 0xffffffff;
   def_fonts[num_def_fonts].layout_dir  = 0;
   def_fonts[num_def_fonts].extend      = 0x00010000; /* 1.0 */
@@ -634,8 +626,8 @@ read_native_font_record (SIGNED_QUAD tex_id)
 {
   UNSIGNED_PAIR flags;
   UNSIGNED_QUAD point_size;
-  char         *font_name, *fam_name, *sty_name;
-  int           plen, flen, slen;
+  char         *font_name;
+  int           plen, flen, slen, i;
 
   if (num_def_fonts >= max_def_fonts) {
     max_def_fonts += TEX_FONTS_ALLOC_SIZE;
@@ -644,63 +636,55 @@ read_native_font_record (SIGNED_QUAD tex_id)
   point_size  = get_unsigned_quad(dvi_file);
   flags       = get_unsigned_pair(dvi_file);
 
-  if ((flags & XDV_FLAG_FONTTYPE_ICU) || (flags & XDV_FLAG_FONTTYPE_ATSUI)) {
-    plen = (int) get_unsigned_byte(dvi_file); /* PS name length */
-    flen = (int) get_unsigned_byte(dvi_file); /* family name length */
-    slen = (int) get_unsigned_byte(dvi_file); /* style  name length */
-    font_name = NEW(plen + 1, char);
-    if (fread(font_name, 1, plen, dvi_file) != plen) {
-      ERROR(invalid_signature);
-    }
-    font_name[plen] = '\0';
-    fam_name = NEW(flen + 1, char);
-    if (fread(fam_name, 1, flen, dvi_file) != flen) {
-      ERROR(invalid_signature);
-    }
-    fam_name[flen] = '\0';
-    sty_name = NEW(slen + 1, char);
-    if (fread(sty_name, 1, slen, dvi_file) != slen) {
-      ERROR(invalid_signature);
-    }
-    sty_name[slen] = '\0';
-    def_fonts[num_def_fonts].tex_id      = tex_id;
-    def_fonts[num_def_fonts].font_name   = font_name;
-    def_fonts[num_def_fonts].fam_name    = fam_name;
-    def_fonts[num_def_fonts].sty_name    = sty_name;
-    def_fonts[num_def_fonts].point_size  = point_size;
-    def_fonts[num_def_fonts].design_size = 655360; /* hard-code as 10pt for now, not used anyway */
-    def_fonts[num_def_fonts].used        = 0;
-    if (flags & XDV_FLAG_VERTICAL)
-      def_fonts[num_def_fonts].layout_dir = 1;
-    else
-      def_fonts[num_def_fonts].layout_dir = 0;
-    if (flags & XDV_FLAG_COLORED) {
-      def_fonts[num_def_fonts].rgba_color  = get_unsigned_quad(dvi_file);
-    } else {
-      def_fonts[num_def_fonts].rgba_color  = 0xffffffff;
-    }
-    if (flags & XDV_FLAG_VARIATIONS) {
-      int v, nvars = get_unsigned_pair(dvi_file);
-      for (v = 0; v < nvars * 2; ++v)
-        (void)get_unsigned_quad(dvi_file); /* skip axis and value for each variation setting */
-      WARN("Variation axes are not supported; ignoring variation settings for font %s.\n", font_name);
-    }
-    if (flags & XDV_FLAG_EXTEND)
-      def_fonts[num_def_fonts].extend = get_signed_quad(dvi_file);
-    else
-      def_fonts[num_def_fonts].extend = 0x00010000;
-    if (flags & XDV_FLAG_SLANT)
-      def_fonts[num_def_fonts].slant = get_signed_quad(dvi_file);
-    else
-      def_fonts[num_def_fonts].slant = 0;
-    if (flags & XDV_FLAG_EMBOLDEN)
-      def_fonts[num_def_fonts].embolden = get_signed_quad(dvi_file);
-    else
-      def_fonts[num_def_fonts].embolden = 0;
-    num_def_fonts++;
-  } else {
-    ERROR("Unknown native_font flags.");
+  plen = (int) get_unsigned_byte(dvi_file); /* PS name length */
+  flen = (int) get_unsigned_byte(dvi_file); /* family name length */
+  slen = (int) get_unsigned_byte(dvi_file); /* style  name length */
+  font_name = NEW(plen + 1, char);
+  if (fread(font_name, 1, plen, dvi_file) != plen) {
+    ERROR(invalid_signature);
   }
+  font_name[plen] = '\0';
+
+  /* ignore family and style names */
+  for (i = 0; i < flen + slen; ++i)
+     get_unsigned_byte(dvi_file);
+
+  def_fonts[num_def_fonts].tex_id      = tex_id;
+  def_fonts[num_def_fonts].font_name   = font_name;
+  def_fonts[num_def_fonts].point_size  = point_size;
+  def_fonts[num_def_fonts].design_size = 655360; /* hard-code as 10pt for now, not used anyway */
+  def_fonts[num_def_fonts].used        = 0;
+  def_fonts[num_def_fonts].native      = 1;
+
+  def_fonts[num_def_fonts].layout_dir  = 0;
+  def_fonts[num_def_fonts].rgba_color  = 0xffffffff;
+  def_fonts[num_def_fonts].extend      = 0x00010000;
+  def_fonts[num_def_fonts].slant       = 0;
+  def_fonts[num_def_fonts].embolden    = 0;
+
+  if (flags & XDV_FLAG_VERTICAL)
+    def_fonts[num_def_fonts].layout_dir = 1;
+
+  if (flags & XDV_FLAG_COLORED)
+    def_fonts[num_def_fonts].rgba_color  = get_unsigned_quad(dvi_file);
+
+  if (flags & XDV_FLAG_EXTEND)
+    def_fonts[num_def_fonts].extend = get_signed_quad(dvi_file);
+
+  if (flags & XDV_FLAG_SLANT)
+    def_fonts[num_def_fonts].slant = get_signed_quad(dvi_file);
+
+  if (flags & XDV_FLAG_EMBOLDEN)
+    def_fonts[num_def_fonts].embolden = get_signed_quad(dvi_file);
+
+  if (flags & XDV_FLAG_VARIATIONS) {
+    int v, nvars = get_unsigned_pair(dvi_file);
+    for (v = 0; v < nvars * 2; ++v)
+      (void)get_unsigned_quad(dvi_file); /* skip axis and value for each variation setting */
+    WARN("Variation axes are not supported; ignoring variation settings for font %s.\n", font_name);
+  }
+
+  num_def_fonts++;
 
   return;
 }
@@ -1042,16 +1026,15 @@ dvi_locate_font (const char *tfm_name, spt_t ptsize)
 
 #ifdef XETEX
 static int
-dvi_locate_native_font (const char *ps_name, const char *fam_name,
-                        const char *sty_name, spt_t ptsize, int layout_dir, int extend, int slant, int embolden)
+dvi_locate_native_font (const char *ps_name,
+                        spt_t ptsize, int layout_dir, int extend, int slant, int embolden)
 {
   int           cur_id = -1;
   fontmap_rec  *mrec;
-  int           i;
   char         *fontmap_key = malloc(strlen(ps_name) + 40); // CHECK this is enough
 
   if (verbose)
-    MESG("<%s(%s:%s)@%.2fpt", ps_name, fam_name, sty_name, ptsize * dvi2pts);
+    MESG("<%s@%.2fpt", ps_name, ptsize * dvi2pts);
 
   need_more_fonts(1);
 
@@ -1060,9 +1043,8 @@ dvi_locate_native_font (const char *ps_name, const char *fam_name,
   sprintf(fontmap_key, "%s/%c/%d/%d/%d", ps_name, layout_dir == 0 ? 'H' : 'V', extend, slant, embolden);
   mrec = pdf_lookup_fontmap_record(fontmap_key);
   if (mrec == NULL) {
-    if (pdf_load_native_font(ps_name, fam_name, sty_name, layout_dir, extend, slant, embolden) == -1) {
-    ERROR("Cannot proceed without the \"native\" font: %s (%s %s)...",
-          ps_name, fam_name, sty_name);
+    if (pdf_load_native_font(ps_name, layout_dir, extend, slant, embolden) == -1) {
+      ERROR("Cannot proceed without the \"native\" font: %s", ps_name);
     }
     mrec = pdf_lookup_fontmap_record(fontmap_key);
     /* FIXME: would be more efficient if pdf_load_native_font returned the mrec ptr (or NULL for error)
@@ -1074,14 +1056,6 @@ dvi_locate_native_font (const char *ps_name, const char *fam_name,
   free(fontmap_key);
 
   loaded_fonts[cur_id].ft_face = mrec->opt.ft_face;
-  if (mrec->opt.glyph_widths == NULL) {
-    /* this is the first loaded_font that refers to this fontmap record,
-       so allocate the glyph_width cache and save it in the fontmap */
-    mrec->opt.glyph_widths = NEW(mrec->opt.ft_face->num_glyphs, unsigned short);
-    for (i = 0; i < mrec->opt.ft_face->num_glyphs; ++i)
-      mrec->opt.glyph_widths[i] = 0xffff;
-  }
-  loaded_fonts[cur_id].glyph_widths = mrec->opt.glyph_widths;
   loaded_fonts[cur_id].layout_dir = layout_dir;
   loaded_fonts[cur_id].extend = mrec->opt.extend;
   loaded_fonts[cur_id].slant = mrec->opt.slant;
@@ -1716,10 +1690,8 @@ do_fnt (SIGNED_QUAD tex_id)
     int  font_id;
 
 #ifdef XETEX
-    if (def_fonts[i].fam_name) {
+    if (def_fonts[i].native) {
       font_id = dvi_locate_native_font(def_fonts[i].font_name,
-                                       def_fonts[i].fam_name,
-                                       def_fonts[i].sty_name,
                                        def_fonts[i].point_size,
                                        def_fonts[i].layout_dir,
                                        def_fonts[i].extend,
@@ -1886,29 +1858,24 @@ do_native_font_def (int scanning)
     SIGNED_QUAD tex_id = get_signed_quad(dvi_file);
     if (linear) {
       read_native_font_record(tex_id);
-    }
-    else {
+    } else {
       UNSIGNED_PAIR flags;
       int name_length, nvars, i;
 
       get_unsigned_quad(dvi_file); /* skip point size */
       flags = get_unsigned_pair(dvi_file);
-      if ((flags & XDV_FLAG_FONTTYPE_ICU) || (flags & XDV_FLAG_FONTTYPE_ATSUI)) {
-        name_length = (int) get_unsigned_byte(dvi_file);
-        name_length += (int) get_unsigned_byte(dvi_file);
-        name_length += (int) get_unsigned_byte(dvi_file);
-        for (i = 0; i < name_length; ++i)
-          get_unsigned_byte(dvi_file);
-        if (flags & XDV_FLAG_COLORED) {
-          get_unsigned_quad(dvi_file);
-        }
-        if (flags & XDV_FLAG_VARIATIONS) {
-          nvars = get_unsigned_pair(dvi_file);
-          for (i = 0; i < nvars * 2; ++i)
-            get_unsigned_quad(dvi_file); /* skip axis and value for each variation setting */
-        }
-      } else {
-        ERROR(invalid_signature);
+      name_length = (int) get_unsigned_byte(dvi_file);
+      name_length += (int) get_unsigned_byte(dvi_file);
+      name_length += (int) get_unsigned_byte(dvi_file);
+      for (i = 0; i < name_length; ++i)
+        get_unsigned_byte(dvi_file);
+      if (flags & XDV_FLAG_COLORED) {
+        get_unsigned_quad(dvi_file);
+      }
+      if (flags & XDV_FLAG_VARIATIONS) {
+        nvars = get_unsigned_pair(dvi_file);
+        for (i = 0; i < nvars * 2; ++i)
+          get_unsigned_quad(dvi_file); /* skip axis and value for each variation setting */
       }
     }
     --dvi_page_buf_index; /* don't buffer the opcode */
@@ -1940,46 +1907,28 @@ do_glyph_array (int yLocsPresent)
 
   if (font->rgba_color != 0xffffffff) {
     pdf_color color;
-//    pdf_color_push();
     pdf_color_rgbcolor(&color,
       (double)((unsigned char)(font->rgba_color >> 24) & 0xff) / 255,
       (double)((unsigned char)(font->rgba_color >> 16) & 0xff) / 255,
       (double)((unsigned char)(font->rgba_color >>  8) & 0xff) / 255);
     pdf_color_push(&color, &color);
-//    pdf_dev_setcolor(&color, 0); /* stroke color */
-//    pdf_dev_setcolor(&color, 1); /* fill color */
   }
+
   for (i = 0; i < slen; i++) {
     glyph_id = get_buffered_unsigned_pair(); /* freetype glyph index */
     if (glyph_id < font->ft_face->num_glyphs) {
-      if (font->glyph_widths[glyph_id] == 0xffff) {
-        if (FT_IS_SFNT(font->ft_face)
-          && ((ft_major < 2) || ((ft_major == 2) && (ft_minor < 2)))) {
-          /* prior to version 2.2.0,
-             CFF driver of freetype does not set vertical metrics correctly,
-             so we'll read the metrics directly */
-          TT_HoriHeader  *dir_hea; /* vhea structure is identical */
-          dir_hea = FT_Get_Sfnt_Table(font->ft_face, (font->layout_dir == 0)
-                                                      ? ft_sfnt_hhea
-                                                      : ft_sfnt_vhea);
-          if (dir_hea) {
-            FT_UShort *metrics = (FT_UShort*) dir_hea->long_metrics;
-            /* each metrics record is two shorts, advance and sidebearing */
-            if (glyph_id < dir_hea->number_Of_HMetrics)
-              font->glyph_widths[glyph_id] = metrics[glyph_id * 2];
-            else
-              font->glyph_widths[glyph_id] = metrics[2 * (dir_hea->number_Of_HMetrics - 1)];
-          } else
-            font->glyph_widths[glyph_id] = 0;
-        }
-        else {
-          FT_Load_Glyph(font->ft_face, glyph_id, FT_LOAD_NO_SCALE | FT_LOAD_IGNORE_GLOBAL_ADVANCE_WIDTH);
-          font->glyph_widths[glyph_id] = (font->layout_dir == 0)
-                                          ? font->ft_face->glyph->metrics.horiAdvance
-                                          : font->ft_face->glyph->metrics.vertAdvance;
-        }
-      }
-      glyph_width = (double)font->size * (double)font->glyph_widths[glyph_id] / (double)font->ft_face->units_per_EM;
+      FT_Error error;
+      FT_Fixed advance;
+      int flags = FT_LOAD_NO_SCALE;
+
+      if (font->layout_dir == 1)
+        flags |= FT_LOAD_VERTICAL_LAYOUT;
+
+      error = FT_Get_Advance(font->ft_face, glyph_id, flags, &advance);
+      if (error)
+        advance = 0;
+
+      glyph_width = (double)font->size * (double)advance / (double)font->ft_face->units_per_EM;
       glyph_width = glyph_width * font->extend;
       if (compute_boxes && link_annot && marked_depth >= tagged_depth) {
         pdf_rect rect;
@@ -1989,11 +1938,13 @@ do_glyph_array (int yLocsPresent)
         pdf_doc_expand_box(&rect);
       }
     }
+
     wbuf[0] = glyph_id >> 8;
     wbuf[1] = glyph_id & 0xff;
     pdf_dev_set_string(dvi_state.h + xloc[i], -dvi_state.v - yloc[i], wbuf, 2,
                        glyph_width, font->font_id, -1);
   }
+
   if (font->rgba_color != 0xffffffff) {
     pdf_color_pop();
   }
@@ -2013,7 +1964,6 @@ static void
 do_pic_file(void)
   /* parameters for XDV_PIC_FILE opcode: pdf_box[1] t[4][6] p[2] len[2] path[l] */
 {
-  UNSIGNED_BYTE  pdf_box;
   int            page_no;
   UNSIGNED_PAIR  len;
   char          *path;
@@ -2023,7 +1973,7 @@ do_pic_file(void)
 
   transform_info_clear(&ti);
 
-  pdf_box = get_buffered_unsigned_byte();
+  /* pdf_box = */ get_buffered_unsigned_byte();
 
   ti.matrix.a = get_buffered_signed_quad() / 65536.0; /* convert 16.16 Fixed to floating-point */
   ti.matrix.b = get_buffered_signed_quad() / 65536.0;
@@ -2350,14 +2300,6 @@ dvi_close (void)
       if (def_fonts[i].font_name)
         RELEASE(def_fonts[i].font_name);
       def_fonts[i].font_name = NULL;
-#ifdef XETEX
-      if (def_fonts[i].fam_name)
-        RELEASE(def_fonts[i].fam_name);
-      def_fonts[i].fam_name = NULL;
-      if (def_fonts[i].sty_name)
-        RELEASE(def_fonts[i].sty_name);
-      def_fonts[i].sty_name = NULL;
-#endif
     }
     RELEASE(def_fonts);
   }
@@ -2502,7 +2444,7 @@ scan_special (double *wd, double *ht, double *xo, double *yo, char *lm,
 {
   char  *q;
   const char *p =  buf, *endptr;
-  int    ns_pdf = 0, ns_xtx = 0, error = 0;
+  int    ns_pdf = 0, error = 0;
   double tmp;
 
   endptr = p + size;
@@ -2525,7 +2467,7 @@ scan_special (double *wd, double *ht, double *xo, double *yo, char *lm,
       p++;
       skip_white(&p, endptr);
       RELEASE(q);
-      q = parse_c_ident(&p, endptr); ns_xtx = 1;
+      q = parse_c_ident(&p, endptr);
     }
   }
   skip_white(&p, endptr);

@@ -1,9 +1,9 @@
 /****************************************************************************\
  Part of the XeTeX typesetting system
- copyright (c) 1994-2008 by SIL International
- copyright (c) 2009, 2011 by Jonathan Kew
+ Copyright (c) 1994-2008 by SIL International
+ Copyright (c) 2009, 2011 by Jonathan Kew
 
- Written by Jonathan Kew
+ SIL Author(s): Jonathan Kew
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
@@ -31,12 +31,6 @@ authorization from the copyright holders.
 \****************************************************************************/
 
 #include "pdfimage.h"
-
-#include <dirent.h>
-#include <poppler-config.h>
-#include <goo/GooString.h>
-#include <goo/gmem.h>
-#include <goo/gfile.h>
 
 #include "PDFDoc.h"
 #include "Catalog.h"

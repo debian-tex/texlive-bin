@@ -1,9 +1,9 @@
 /****************************************************************************\
  Part of the XeTeX typesetting system
- copyright (c) 1994-2008 by SIL International
- copyright (c) 2009 by Jonathan Kew
+ Copyright (c) 1994-2008 by SIL International
+ Copyright (c) 2009 by Jonathan Kew
 
- Written by Jonathan Kew
+ SIL Author(s): Jonathan Kew
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
@@ -33,10 +33,10 @@ authorization from the copyright holders.
 #ifndef __XeTeXswap_H
 #define __XeTeXswap_H
 
-#include "unicode/platform.h"	// ICU's platform.h defines U_IS_BIG_ENDIAN for us
+#include <unicode/platform.h>	// ICU's platform.h defines U_IS_BIG_ENDIAN for us
 
-static inline UInt16
-SWAP16(const UInt16 p)
+static inline uint16_t
+SWAP16(const uint16_t p)
 {
 #if U_IS_BIG_ENDIAN
 	return p;
@@ -45,8 +45,8 @@ SWAP16(const UInt16 p)
 #endif
 }
 
-static inline UInt32
-SWAP32(const UInt32 p)
+static inline uint32_t
+SWAP32(const uint32_t p)
 {
 #if U_IS_BIG_ENDIAN
 	return p;
@@ -56,28 +56,28 @@ SWAP32(const UInt32 p)
 }
 
 #ifdef __cplusplus
-static inline UInt16
-SWAP(UInt16 p)
+static inline uint16_t
+SWAP(uint16_t p)
 {
 	return SWAP16(p);
 }
 
-static inline UInt32
-SWAP(UInt32 p)
+static inline uint32_t
+SWAP(uint32_t p)
 {
 	return SWAP32(p);
 }
 
-static inline SInt16
-SWAP(SInt16 p)
+static inline int16_t
+SWAP(int16_t p)
 {
-	return (SInt16)SWAP16((UInt16)p);
+	return (int16_t)SWAP16((uint16_t)p);
 }
 
-static inline SInt32
-SWAP(SInt32 p)
+static inline int32_t
+SWAP(int32_t p)
 {
-	return (SInt32)SWAP32((UInt32)p);
+	return (int32_t)SWAP32((uint32_t)p);
 }
 #endif
 

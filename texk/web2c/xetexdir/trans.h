@@ -1,9 +1,9 @@
 /****************************************************************************\
  Part of the XeTeX typesetting system
- copyright (c) 1994-2008 by SIL International
- copyright (c) 2009 by Jonathan Kew
+ Copyright (c) 1994-2008 by SIL International
+ Copyright (c) 2009 by Jonathan Kew
 
- Written by Jonathan Kew
+ SIL Author(s): Jonathan Kew
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
@@ -33,15 +33,11 @@ authorization from the copyright holders.
 #ifndef _TRANS_H_
 #define _TRANS_H_
 
-#ifdef XETEX_MAC
-
-#include <Carbon/Carbon.h>
-
-typedef CGAffineTransform	transform;
-
-#else
-
 #include <math.h>
+/* apparently M_PI isn't defined by <math.h> under VC++ */
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 typedef struct {
 	double	a;
@@ -51,8 +47,6 @@ typedef struct {
 	double	x;
 	double	y;
 } transform;
-
-#endif
 
 typedef struct {
 	float	x;
@@ -76,13 +70,6 @@ typedef struct {
 #define bField(t)				(t).b
 #define cField(t)				(t).c
 #define dField(t)				(t).d
-#ifdef XETEX_MAC /* transform fields have different names */
-#define txField(t)				(t).tx
-#define tyField(t)				(t).ty
-#else
-#define txField(t)				(t).x
-#define tyField(t)				(t).y
-#endif
 #define xField(t)				(t).x
 #define yField(t)				(t).y
 

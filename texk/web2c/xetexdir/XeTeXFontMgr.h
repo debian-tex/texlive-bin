@@ -1,9 +1,10 @@
 /****************************************************************************\
  Part of the XeTeX typesetting system
- copyright (c) 1994-2008 by SIL International
- copyright (c) 2009 by Jonathan Kew
+ Copyright (c) 1994-2008 by SIL International
+ Copyright (c) 2009 by Jonathan Kew
+ Copyright (c) 2012, 2013 by Jiang Jiang
 
- Written by Jonathan Kew
+ SIL Author(s): Jonathan Kew
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
@@ -34,8 +35,8 @@ authorization from the copyright holders.
 #define __XETEX_FONT_MANAGER_H
 
 #ifdef XETEX_MAC
-#include <Carbon/Carbon.h>
-typedef ATSFontRef	PlatformFontRef;
+#include <ApplicationServices/ApplicationServices.h>
+typedef CTFontDescriptorRef PlatformFontRef;
 #else
 #include <fontconfig/fontconfig.h>
 #include <ft2build.h>
@@ -64,14 +65,14 @@ public:
 
 	PlatformFontRef					findFont(const char* name, char* variant, double ptSize);
 		// 1st arg is name as specified by user (C string, UTF-8)
-		// 2nd is /B/I/AAT/ICU[/USP]/S=## qualifiers
+		// 2nd is /B/I/AAT/OT/ICU/GR/S=## qualifiers
 		// 1. try name given as "full name"
 		// 2. if there's a hyphen, split and try "family-style"
 		// 3. try as PostScript name
 		// 4. try name as family with "Regular/Plain/Normal" style
 		// apply style qualifiers and optical sizing if present
 
-		// SIDE EFFECT: sets sReqEngine to 'A' or 'I' [or 'U'] if appropriate,
+		// SIDE EFFECT: sets sReqEngine to 'A' or 'O' or 'G' if appropriate,
 		//   else clears it to 0
 
 		// SIDE EFFECT: updates TeX variables /nameoffile/ and /namelength/,
@@ -89,9 +90,11 @@ public:
 
 	double							getDesignSize(XeTeXFont font);
 
-	char							getReqEngine() const;
+	char							getReqEngine() const { return sReqEngine; };
 		// return the requested rendering technology for the most recent findFont
 		// or 0 if no specific technology was requested
+
+	void							setReqEngine(char reqEngine) const { sReqEngine = reqEngine; };
 
 protected:
 	static XeTeXFontMgr*			sFontManager;
@@ -111,11 +114,11 @@ protected:
 	class Family;
 
 	struct OpSizeRec {
-		unsigned short	designSize;
-		unsigned short	subFamilyID;
-		unsigned short	nameCode;
-		unsigned short	minSize;
-		unsigned short	maxSize;
+		unsigned int	designSize;
+		unsigned int	subFamilyID;
+		unsigned int	nameCode;
+		unsigned int	minSize;
+		unsigned int	maxSize;
 	};
 
 	class Font {
@@ -137,9 +140,9 @@ protected:
 			Family*			parent;
 			PlatformFontRef	fontRef;
 			OpSizeRec		opSizeInfo;
-			UInt16			weight;
-			UInt16			width;
-			SInt16			slant;
+			uint16_t		weight;
+			uint16_t		width;
+			int16_t			slant;
 			bool			isReg;
 			bool			isBold;
 			bool			isItalic;
@@ -160,12 +163,12 @@ protected:
 												}
 
 			std::map<std::string,Font*>*	styles;
-			UInt16							minWeight;
-			UInt16							maxWeight;
-			UInt16							minWidth;
-			UInt16							maxWidth;
-			SInt16							minSlant;
-			SInt16							maxSlant;
+			uint16_t						minWeight;
+			uint16_t						maxWeight;
+			uint16_t						minWidth;
+			uint16_t						maxWidth;
+			int16_t							minSlant;
+			int16_t							maxSlant;
 	};
 
 	class NameCollection {
@@ -189,16 +192,12 @@ protected:
 	void			prependToList(std::list<std::string>* list, const char* str);
 	void			addToMaps(PlatformFontRef platformFont, const NameCollection* names);
 
-	const OpSizeRec* getOpSizePtr(XeTeXFont font);
+	const OpSizeRec* getOpSize(XeTeXFont font);
 
 	virtual void	getOpSizeRecAndStyleFlags(Font* theFont);
 	virtual void	searchForHostPlatformFonts(const std::string& name) = 0;
 	
-#ifdef XETEX_MAC
-	virtual NameCollection*		readNames(ATSUFontID fontID) = 0;
-#else
 	virtual NameCollection*		readNames(PlatformFontRef fontRef) = 0;
-#endif
 
 	void	die(const char*s, int i) const;	/* for fatal internal errors! */
 };

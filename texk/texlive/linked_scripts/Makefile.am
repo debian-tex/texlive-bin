@@ -1,6 +1,6 @@
 ## Makefile.am for the TeX Live subdirectory texk/texlive/linked_scripts/
 ##
-## Copyright (C) 2009-2012 Peter Breitenlohner <tex-live@tug.org>
+## Copyright (C) 2009-2013 Peter Breitenlohner <tex-live@tug.org>
 ## You may freely use, modify and/or distribute this file.
 ##
 ## TeX Live's extra scripts.
@@ -50,32 +50,23 @@ installdirs-local:
 ## Some /bin/sh scripts are listed as `other' or `context'
 ## scripts because they are correctly handled by the wrapper binaries.
 ## 
-texmf_scriptsdir = $(datarootdir)/texmf/scripts
-texmf_shell_scripts = \
-	tetex/fmtutil.sh \
-	tetex/texconfig.sh \
-	tetex/texconfig-dialog.sh \
-	tetex/texconfig-sys.sh \
-	tetex/texlinks.sh
+texmf_scriptsdir = $(datarootdir)/texmf-dist/scripts
 texmf_other_scripts = \
-	tetex/fmtutil-sys.sh \
 	texlive/rungs.tlu \
 	texlive/tlmgr.pl
-texmf_context_scripts =
-nobase_dist_texmf_scripts_SCRIPTS = \
-	$(texmf_shell_scripts) \
-	$(texmf_other_scripts) \
-	$(texmf_context_scripts)
+nobase_dist_texmf_scripts_SCRIPTS = $(texmf_other_scripts)
 
 texmf_dist_scriptsdir = $(datarootdir)/texmf-dist/scripts
 texmf_dist_shell_scripts = \
 	adhocfilelist/adhocfilelist.sh \
 	bibexport/bibexport.sh \
+	dtxgen/dtxgen \
 	installfont/installfont-tl \
 	latexfileversion/latexfileversion \
 	listbib/listbib \
 	listings-ext/listings-ext.sh \
-	lua2dox/lua2dox_lua \
+	ltxfileinfo/ltxfileinfo \
+	lua2dox/lua2dox_filter \
 	pdfjam/pdf180 \
 	pdfjam/pdf270 \
 	pdfjam/pdf90 \
@@ -90,23 +81,13 @@ texmf_dist_shell_scripts = \
 	pdfjam/pdfpun \
 	pst-pdf/ps4pdf \
 	simpdftex/simpdftex \
-	tetex/allcm.sh \
-	tetex/allneeded.sh \
-	tetex/dvi2fax.sh \
-	tetex/dvired.sh \
-	tetex/fontinst.sh \
-	tetex/kpsetool.sh \
-	tetex/kpsewhere.sh \
-	tetex/ps2frag.sh \
-	tetex/pslatex.sh \
-	tetex/rubibtex.sh \
-	tetex/rumakeindex.sh \
 	typeoutfileinfo/typeoutfileinfo.sh
 texmf_dist_other_scripts = \
 	a2ping/a2ping.pl \
 	accfonts/mkt1font \
 	accfonts/vpl2ovp \
 	accfonts/vpl2vpl \
+	arara/arara.sh \
 	authorindex/authorindex \
 	bundledoc/arlatex \
 	bundledoc/bundledoc \
@@ -119,7 +100,7 @@ texmf_dist_other_scripts = \
 	dosepsbin/dosepsbin.pl \
 	dviasm/dviasm.py \
 	ebong/ebong.py \
-	epspdf/epspdf.rb \
+	epspdf/epspdf.tlu \
 	epspdf/epspdftk.tcl \
 	epstopdf/epstopdf.pl \
 	exceltex/exceltex \
@@ -130,6 +111,7 @@ texmf_dist_other_scripts = \
 	fontools/ot2kpx \
 	fragmaster/fragmaster.pl \
 	glossaries/makeglossaries \
+	jfontmaps/kanji-fontmap-creator.pl \
 	jfontmaps/updmap-setup-kanji.pl \
 	jfontmaps/updmap-setup-kanji-sys.sh \
 	latex2man/latex2man \
@@ -152,18 +134,17 @@ texmf_dist_other_scripts = \
 	pdfcrop/pdfcrop.pl \
 	pedigree-perl/pedigree.pl \
 	perltex/perltex.pl \
+	pfarrei/pfarrei.tlu \
+	pfarrei/a5toa4.tlu \
 	pkfix/pkfix.pl \
 	pkfix-helper/pkfix-helper \
 	pmx/pmx2pdf.lua \
-	pst2pdf/pst2pdf \
+	pst2pdf/pst2pdf.pl \
+	ptex2pdf/ptex2pdf.lua \
 	purifyeps/purifyeps \
 	splitindex/perl/splitindex.pl \
 	sty2dtx/sty2dtx.pl \
 	svn-multi/svn-multi.pl \
-	tetex/e2pall.pl \
-	tetex/texdoctk.pl \
-	tetex/updmap.pl \
-	tetex/updmap-sys.sh \
 	texdoc/texdoc.tlu \
 	texcount/texcount.pl \
 	texdef/texdef.pl \
@@ -188,61 +169,12 @@ nobase_dist_texmf_dist_scripts_SCRIPTS = \
 bin_links = \
 	epstopdf:repstopdf \
 	pdfcrop:rpdfcrop
-if !WIN32
-bin_links += \
-	allcm:allec \
-	fmtutil:mktexfmt \
-	kpsetool:kpsexpand \
-	kpsetool:kpsepath \
-	lua2dox_lua:lua2dox_filter
-endif !WIN32
 
 ## Manpages
 dist_man_MANS = \
 	context/context.1 \
 	context/mptopdf.1 \
-	tetex/allcm.1 \
-	tetex/allec.1 \
-	tetex/allneeded.1 \
-	tetex/dvi2fax.1 \
-	tetex/dvired.1 \
-	tetex/e2pall.1 \
-	tetex/fmtutil.1 \
-	tetex/fmtutil.cnf.5 \
-	tetex/fontinst.1 \
-	tetex/kpsetool.1 \
-	tetex/kpsewhere.1 \
-	tetex/ps2frag.1 \
-	tetex/pslatex.1 \
-	tetex/rubibtex.1 \
-	tetex/rumakeindex.1 \
-	tetex/texconfig.1 \
-	tetex/texdoctk.1 \
-	tetex/texlinks.1 \
-	tetex/updmap.1 \
-	tetex/updmap.cfg.5 \
 	thumbpdf/thumbpdf.1
-
-man1_links = \
-	fmtutil:fmtutil-sys \
-	kpsetool:kpsexpand \
-	kpsetool:kpsepath \
-	fmtutil:mktexfmt \
-	texconfig:texconfig-sys \
-	updmap:updmap-sys
-
-include $(top_srcdir)/../am/man1_links.am
-
-## Old ../../tetex/ChangeLog
-EXTRA_DIST += tetex/ChangeLog
-
-## Support files
-texconfigdir = $(datarootdir)/texmf/texconfig
-dist_texconfig_SCRIPTS = tetex/tcfmgr
-dist_texconfig_DATA = tetex/tcfmgr.map
-
-web2cdir = $(datarootdir)/texmf/web2c
-dist_web2c_DATA = tetex/fmtutil.cnf
 
 # The idea is to install the scripts themselves in texmf*/scripts, and
 # have bin/arch/foo be a symlink to, say,
@@ -268,7 +200,7 @@ EXTRA_DIST += ../../../build-aux/relpath
 relpath = $(SHELL) $(top_srcdir)/../../build-aux/relpath
 runscript = $(top_srcdir)/w32_wrapper/runscript.exe
 ctxscript = $(top_srcdir)/w32_wrapper/context/mtxrun.exe
-install-data-hook: installdirs-local install-man1-links
+install-data-hook: installdirs-local
 if WIN32
 	@for s in $(texmf_other_scripts) $(texmf_dist_other_scripts); do \
 	  t=`basename $$s | sed 's,\.[^/]*$$,,' | tr '[A-Z]' '[a-z]'`; \
@@ -295,13 +227,7 @@ else !WIN32
 	  exit 1; \
 	fi; \
 	cd $(DESTDIR)$(bindir) && \
-	  for s in $(nobase_dist_texmf_scripts_SCRIPTS); do \
-	    target=`basename $$s | sed 's,\.[^/]*$$,,' | tr '[A-Z]' '[a-z]'`; \
-	    rm -f $$target; \
-	    echo "creating link '$$target' -> '$$REL/texmf/scripts/$$s'"; \
-	    $(LN_S) $$REL/texmf/scripts/$$s $$target || exit 1; \
-	  done && \
-	  for s in $(nobase_dist_texmf_dist_scripts_SCRIPTS); do \
+	  for s in $(nobase_dist_texmf_scripts_SCRIPTS) $(nobase_dist_texmf_dist_scripts_SCRIPTS); do \
 	    target=`basename $$s | tr '[A-Z]' '[a-z]'`; \
 	    echo "$$s" | grep listings-ext.sh >/dev/null \
 	    || target=`echo $$target | sed 's,\.[^/]*$$,,'`; \
@@ -318,12 +244,12 @@ else !WIN32
 	  done && \
 ## man dir link for those mans which can use it, but don't overwrite a
 ## real file, e.g., /usr/bin/man.
-	  if test -d "$$REL/texmf/doc/man" \
+	  if test -d "$$REL/texmf-dist/doc/man" \
 	     && test -z "$(TL_INSTALL_OMIT_MAN_LINK)" \
 	     && (test -h man || test ! -e man); then \
-	    echo "creating link 'man' -> '$$REL/texmf/doc/man'"; \
+	    echo "creating link 'man' -> '$$REL/texmf-dist/doc/man'"; \
 	    rm -f man; \
-	    (ln -s "$$REL/texmf/doc/man" man || :); \
+	    (ln -s "$$REL/texmf-dist/doc/man" man || :); \
 	  else :; fi
 endif !WIN32
 
@@ -336,7 +262,7 @@ if WIN32
 WINEXT = $(EXEEXT)
 endif WIN32
 
-uninstall-hook: uninstall-man1-links
+uninstall-hook:
 	@for s in $(nobase_dist_texmf_scripts_SCRIPTS) $(nobase_dist_texmf_dist_scripts_SCRIPTS); do \
 	  target=`basename $$s | tr '[A-Z]' '[a-z]'`; \
 	  echo "$$s" | grep listings-ext.sh >/dev/null \
@@ -353,16 +279,6 @@ if !WIN32
 	else :; fi
 endif !WIN32
 
-## Generate the updmap man page using help2man plus a bit of
-## handwritten material.  But don't actually update updmap.1,
-## we don't want to require help2man for an install.  Leave that to be
-## done by hand.
-.PHONY: xupdmap.1
-xupdmap.1: tetex/updmap.help2man tetex/updmap.pl
-	help2man --include=$< --source="TeX Live" --no-info \
-	  $(srcdir)/tetex/updmap.pl >/tmp/$@
-EXTRA_DIST += tetex/updmap.help2man
-
 ## 
 ## This target is invoked by check-wrapper-consistency (run from cron).
 .PHONY: echo-shell-scripts
@@ -370,20 +286,3 @@ shell_scripts = $(texmf_shell_scripts) $(texmf_dist_shell_scripts)
 shell_scripts += $(texmf_dist_context_scripts)
 echo-shell-scripts:
 	@echo $(shell_scripts)
-
-## 
-## This target is invoked by the top-level make,
-.PHONY: run-texlinks
-## to create the per-format engine symlinks in $(bindir),
-## after everything else is installed.  We explicitly specify the
-## fmtutil.cnf file to use for the sake of distro builds.
-## We pass along the executable extension for the sake of cygwin, so we
-## don't create dangling symlinks there (even though they work).
-run_texlinks = $(DESTDIR)$(bindir)/texlinks -v \
-	-f $(DESTDIR)$(web2cdir)/fmtutil.cnf \
-	-e "$(EXEEXT)" $(DESTDIR)$(bindir)
-run-texlinks:
-if !WIN32
-	PATH="$(DESTDIR)$(bindir):$(PATH)"; export PATH; $(run_texlinks)
-endif !WIN32
-

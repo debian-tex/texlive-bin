@@ -69,6 +69,7 @@ override_dh_auto_configure:
 	--disable-tex4htk			\
 	--disable-pmx				\
 	--disable-m-tx				\
+	--disable-texdoctk			\
 	--enable-ipc				
 
 override_dh_auto_install:

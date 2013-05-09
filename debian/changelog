@@ -1,3 +1,10 @@
+texlive-bin (2013.20130509.30343-1) UNRELEASED; urgency=low
+
+  * preliminary trial build
+  * disable pmpost, no build support at the moment
+
+ -- Norbert Preining <preining@debian.org>  Thu, 09 May 2013 20:36:44 +0900
+
 texlive-bin (2012.20130315.29398-1) experimental; urgency=low
 
   * import new upstream, add svn rev number as last version component

@@ -143,6 +143,7 @@ DoAATLayout(void* p, int justify)
 			CTRunRef run = CFArrayGetValueAtIndex(glyphRuns, i);
 			CFIndex count = CTRunGetGlyphCount(run);
 			CFDictionaryRef runAttributes = CTRunGetAttributes(run);
+			CFBooleanRef vertical = CFDictionaryGetValue(runAttributes, kCTVerticalFormsAttributeName);
 			// TODO(jjgod): Avoid unnecessary allocation with CTRunGetFoosPtr().
 			CGGlyph* glyphs = (CGGlyph*) xmalloc(count * sizeof(CGGlyph));
 			CGPoint* positions = (CGPoint*) xmalloc(count * sizeof(CGPoint));
@@ -158,14 +159,25 @@ DoAATLayout(void* p, int justify)
 				// of the resulting run is not the same font we asked for, use
 				// the glyph at index 0 (usually .notdef) instead or we will be
 				// showing garbage or even invalid glyphs
-				if (fontFromAttributes(attributes) != fontFromAttributes(runAttributes))
+				char *ps_name1 = getNameFromCTFont(fontFromAttributes(attributes), kCTFontPostScriptNameKey);
+				char *ps_name2 = getNameFromCTFont(fontFromAttributes(runAttributes), kCTFontPostScriptNameKey);
+				if (strcmp(ps_name1, ps_name2) != 0)
 					glyphIDs[totalGlyphCount] = 0;
 				else
 					glyphIDs[totalGlyphCount] = glyphs[j];
-				locations[totalGlyphCount].x = FixedPStoTeXPoints(positions[j].x);
-				// XXX trasformation matrix changes y positions!
-				//locations[totalGlyphCount].y = FixedPStoTeXPoints(positions[j].y);
-				locations[totalGlyphCount].y = 0;
+
+				// Swap X and Y when doing vertical layout
+				if (vertical == kCFBooleanTrue) {
+					locations[totalGlyphCount].x = FixedPStoTeXPoints(-positions[j].y);
+					// XXX trasformation matrix changes y positions!
+					//locations[totalGlyphCount].y = FixedPStoTeXPoints(-positions[j].x);
+					locations[totalGlyphCount].y = 0;
+				} else {
+					locations[totalGlyphCount].x = FixedPStoTeXPoints(positions[j].x);
+					// XXX trasformation matrix changes y positions!
+					//locations[totalGlyphCount].y = FixedPStoTeXPoints(positions[j].y);
+					locations[totalGlyphCount].y = 0;
+				}
 				glyphAdvances[totalGlyphCount] = advances[j].width;
 				totalGlyphCount++;
 			}
@@ -428,7 +440,7 @@ getFileNameFromCTFont(CTFontRef ctFontRef, int *index)
 				}
 			}
 
-			error = FT_New_Face(gFreeTypeLibrary, pathname, 0, &face);
+			error = FT_New_Face(gFreeTypeLibrary, (char *) pathname, 0, &face);
 			if (!error) {
 				if (face->num_faces > 1) {
 					int num_faces = face->num_faces;
@@ -437,7 +449,7 @@ getFileNameFromCTFont(CTFontRef ctFontRef, int *index)
 					*index = -1;
 					FT_Done_Face (face);
 					for (i = 0; i < num_faces; i++) {
-						error = FT_New_Face (gFreeTypeLibrary, pathname, i, &face);
+						error = FT_New_Face (gFreeTypeLibrary, (char *) pathname, i, &face);
 						if (!error) {
 							const char *ps_name2 = FT_Get_Postscript_Name(face);
 							if (strcmp(ps_name1, ps_name2) == 0) {
@@ -451,7 +463,7 @@ getFileNameFromCTFont(CTFontRef ctFontRef, int *index)
 			}
 
 			if (*index != -1)
-				ret = strdup(pathname);
+				ret = strdup((char *) pathname);
 		}
 		CFRelease(url);
 	}
@@ -490,7 +502,7 @@ findDictionaryInArray(CFArrayRef array, const void* nameKey, const char* name, i
 	if (array) {
 		CFStringRef itemName;
 		CFIndex i;
-		itemName = CFStringCreateWithBytes(NULL, name, nameLength,
+		itemName = CFStringCreateWithBytes(NULL, (UInt8 *) name, nameLength,
 										   kCFStringEncodingUTF8, false);
 		for (i = 0; i < CFArrayGetCount(array); i++) {
 			CFDictionaryRef item = CFArrayGetValueAtIndex(array, i);
@@ -537,6 +549,8 @@ loadAATfont(CTFontDescriptorRef descriptor, integer scaled_size, const char* cp1
 	CGFloat ctSize;
 	CFMutableDictionaryRef stringAttributes, attributes;
 	CGAffineTransform matrix;
+	CFMutableArrayRef cascadeList;
+	CTFontDescriptorRef lastResort;
 	double  tracking	= 0.0;
 	float   extend		= 1.0;
 	float   slant		= 0.0;
@@ -771,9 +785,8 @@ loadAATfont(CTFontDescriptorRef descriptor, integer scaled_size, const char* cp1
 
 	// Disable Core Text font fallback (cascading) with only the last resort font
 	// in the cascade list.
-	CFMutableArrayRef cascadeList = CFArrayCreateMutable(NULL, 1, &kCFTypeArrayCallBacks);
 	cascadeList = CFArrayCreateMutable(NULL, 1, &kCFTypeArrayCallBacks);
-	CTFontDescriptorRef lastResort = CTFontDescriptorCreateWithNameAndSize(CFSTR("LastResort"), 0);
+	lastResort = CTFontDescriptorCreateWithNameAndSize(CFSTR("LastResort"), 0);
 	CFArrayAppendValue(cascadeList, lastResort);
 	CFRelease(lastResort);
 	CFDictionaryAddValue(attributes, kCTFontCascadeListAttribute, cascadeList);
@@ -882,12 +895,14 @@ find_pic_file(char** path, realrect* bounds, int pdfBoxType, int page)
 					CFNumberRef DPIWidth	= CFDictionaryGetValue(properties, kCGImagePropertyDPIWidth);
 					CFNumberRef DPIHeight   = CFDictionaryGetValue(properties, kCGImagePropertyDPIHeight);
 
-					if (imageWidth && imageHeight && DPIWidth && DPIHeight) {
+					if (imageWidth && imageHeight) {
 						int w = 0, h = 0, hRes = 72, vRes = 72;
 						CFNumberGetValue(imageWidth,  kCFNumberIntType, &w);
 						CFNumberGetValue(imageHeight, kCFNumberIntType, &h);
-						CFNumberGetValue(DPIWidth,    kCFNumberIntType, &hRes);
-						CFNumberGetValue(DPIHeight,   kCFNumberIntType, &vRes);
+						if (DPIWidth)
+							CFNumberGetValue(DPIWidth,    kCFNumberIntType, &hRes);
+						if (DPIHeight)
+							CFNumberGetValue(DPIHeight,   kCFNumberIntType, &vRes);
 
 						bounds->x = 0;
 						bounds->y = 0;

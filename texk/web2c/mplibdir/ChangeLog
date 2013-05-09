@@ -1,3 +1,25 @@
+2013-04-23 Taco Hoekwater  <taco@luatex.org>
+
+	* svgout.w: fix a problem with colors in SVG output mode.
+	* mp.w: bump version to 1.802
+
+2013-04-05 Taco Hoekwater  <taco@luatex.org>
+
+	Import metapost 1.801 (released version)
+
+2013-03-26  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* mpost.w: First arg of kpse_set_program_name() must be argv[0],
+	otherwise the assertion in kpathsea/progname.c:316 may fail.
+
+2013-03-25  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	Update MetaPost 1.800 from LuaTeX repository (r4612).
+
+2013-03-21  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	Import MetaPost 1.800 from LuaTeX repository (r4604).
+
 2013-01-29  Peter Breitenlohner  <peb@mppmu.mpg.de>
 
 	* am/mplib.am: Allow subdir-objects.

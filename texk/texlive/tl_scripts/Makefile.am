@@ -23,7 +23,7 @@ DISTCLEANFILES = scripts-list
 EXTRA_DIST = scripts.lst
 
 # These first variable definitions are what scripts_links.am requires.
-perl_scripts = updmap e2pall
+perl_scripts = e2pall
 shell_scripts = fmtutil-sys updmap-sys
 sh_scripts = \
 	allcm \
@@ -105,9 +105,10 @@ dist_web2c_DATA = fmtutil.cnf
 ## we don't want to require help2man for an install.  Leave that to be
 ## done by hand.
 .PHONY: xupdmap.1
-xupdmap.1: updmap.help2man updmap.pl
+updmap_dir = $(top_srcdir)/linked_scripts/texlive
+xupdmap.1: updmap.help2man $(updmap_dir)/updmap.pl
 	help2man --include=$< --source="TeX Live" --no-info \
-	  $(srcdir)/updmap.pl >/tmp/$@
+	  $(updmap_dir)/updmap.pl >/tmp/$@
 EXTRA_DIST += updmap.help2man
 
 

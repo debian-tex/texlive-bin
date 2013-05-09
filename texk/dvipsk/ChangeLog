@@ -1,3 +1,33 @@
+2013-04-07  Karl Berry  <karl@tug.org>
+
+	* resident.c (getdefaults) <m>: if <= 0, set to INT_MAX.
+	Bug report from Stepan Orevkov and Bruno Delprat, as part
+	of their Mayan TeX system (info on which:
+	http://tug.org/TUGboat/tb33-3/tb105delprat.pdf).
+	
+        It seems there is a bug related to Dvips' section splitting and
+        partial font downloading/font reuse, such that only the
+        characters from the first section are available through the
+        entire output.  I wasn't up for dealing with that; as a
+        workaround, the above maximizes Dvips' memory available, so no
+        splitting is done.
+         
+2013-04-05  Karl Berry  <karl@tug.org>
+
+	* configure.ac,
+	* dvips.texi,
+	* dvips.h,
+	* afm2tfm.2c: 5.993 to prepare for TL'13 pretest.
+
+2013-03-19  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* same-name.test: New test with oname == iname.
+	* Makefile.am: Add the new test.
+
+2013-03-18  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* dvips.c: Check if oname != iname.
+
 2013-02-08  Peter Breitenlohner  <peb@mppmu.mpg.de>
 
 	* Makefile.am (prologdir): Change texmf => texmf-dist.
@@ -30,6 +60,10 @@
 2012-08-10  Peter Breitenlohner  <peb@mppmu.mpg.de>
 
 	* ptexmac.h: Drop unused definition of M_PI & Co.
+
+2012-07-01  Karl Berry <karl@freefriends.org>
+
+	* Release of 5.992 for TeX Live 2012.
 
 2012-04-01  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
 

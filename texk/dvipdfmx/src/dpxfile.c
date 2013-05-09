@@ -26,6 +26,12 @@
 #include "config.h"
 #endif
 
+#ifdef _MSC_VER
+#include <kpathsea/dirent.h>
+#endif
+
+#include <time.h>
+
 #include "system.h"
 #include "error.h"
 #include "mem.h"
@@ -34,6 +40,8 @@
 #include "mfileio.h"
 
 #include "dpxfile.h"
+#include "dpxcrypt.h"
+#define MAX_KEY_LEN 16
 
 #include <kpathsea/lib.h>
 #include <string.h>
@@ -53,6 +61,7 @@
 #endif
 
 static int verbose = 0;
+int keep_cache = 0;
 
 void
 dpx_file_set_verbose (void)
@@ -717,11 +726,37 @@ dpx_find_dfont_file (const char *filename)
   return fqpn;
 }
  
+static const char *
+dpx_get_tmpdir (void)
+{
+#  ifdef WIN32
+#  define __TMPDIR     "."
+#  else /* WIN32 */
+#  define __TMPDIR     "/tmp"
+#endif /* WIN32 */
+    const char *_tmpd;
+
+#  ifdef  HAVE_GETENV
+    _tmpd = getenv("TMPDIR");
+#  ifdef WIN32
+    if (!_tmpd)
+      _tmpd = getenv("TMP");
+    if (!_tmpd)
+      _tmpd = getenv("TEMP");
+#  endif /* WIN32 */
+    if (!_tmpd)
+      _tmpd = __TMPDIR;
+#  else /* HAVE_GETENV */
+    _tmpd = __TMPDIR;
+#  endif /* HAVE_GETENV */
+    return _tmpd;
+}
 
 #ifdef  HAVE_MKSTEMP
 #  include <stdlib.h>
 #endif
 
+#ifdef XETEX
 char *
 dpx_create_temp_file (void)
 {
@@ -733,18 +768,11 @@ dpx_create_temp_file (void)
     miktex_create_temp_file_name(tmp); /* FIXME_FIXME */
   }
 #elif defined(HAVE_MKSTEMP)
-#  define __TMPDIR     "/tmp"
 #  define TEMPLATE     "/dvipdfmx.XXXXXX"
   {
     const char *_tmpd;
     int   _fd = -1;
-#  ifdef  HAVE_GETENV
-    _tmpd = getenv("TMPDIR");
-    if (!_tmpd)
-      _tmpd = __TMPDIR;
-#  else
-    _tmpd = __TMPDIR;
-#  endif /* HAVE_GETENV */
+    _tmpd = dpx_get_tmpdir();
     tmp = NEW(strlen(_tmpd) + strlen(TEMPLATE) + 1, char);
     strcpy(tmp, _tmpd);
     strcat(tmp, TEMPLATE);
@@ -760,24 +788,128 @@ dpx_create_temp_file (void)
       tmp = NULL;
     }
   }
-#else /* use tmpnam */
+#else /* use _tempnam or tmpnam */
   {
+#  ifdef WIN32
+    const char *_tmpd;
+    char *p;
+    _tmpd = dpx_get_tmpdir();
+    tmp = _tempnam (_tmpd, "dvipdfmx.");
+    for (p = tmp; *p; p++) {
+      if (IS_KANJI (p))
+        p++;
+      else if (*p == '\\')
+        *p = '/';
+    }
+#  else /* WIN32 */
     char *_tmpa = NEW(L_tmpnam + 1, char);
     tmp = tmpnam(_tmpa);
     if (!tmp)
       RELEASE(_tmpa);
+#  endif /* WIN32 */
   }
 #endif /* MIKTEX */
 
   return  tmp;
 }
+#endif /* XETEX */
+
+char *
+dpx_create_fix_temp_file (const char *filename)
+{
+#define PREFIX "dvipdfmx."
+  static const char *dir = NULL;
+  static char *cwd = NULL;
+  char *ret, *s;
+  int i;
+  MD5_CONTEXT state;
+  unsigned char digest[MAX_KEY_LEN];
+#ifdef WIN32
+  char *p;
+#endif
+
+  if (!dir) {
+      dir = dpx_get_tmpdir();
+      cwd = xgetcwd();
+  }
+
+  MD5_init(&state);
+  MD5_write(&state, (unsigned char *)cwd,      strlen(cwd));
+  MD5_write(&state, (unsigned const char *)filename, strlen(filename));
+  MD5_final(digest, &state);
+
+  ret = NEW(strlen(dir)+1+strlen(PREFIX)+MAX_KEY_LEN*2 + 1, char);
+  sprintf(ret, "%s/%s", dir, PREFIX);
+  s = ret + strlen(ret);
+  for (i=0; i<MAX_KEY_LEN; i++) {
+      sprintf(s, "%02x", digest[i]);
+      s += 2;
+  }
+#ifdef WIN32
+  for (p = ret; *p; p++) {
+    if (IS_KANJI (p))
+      p++;
+    else if (*p == '\\')
+      *p = '/';
+  }
+#endif
+  /* printf("dpx_create_fix_temp_file: %s\n", ret); */
+  return ret;
+}
+
+static int
+dpx_clear_cache_filter (const struct dirent *ent) {
+    int plen = strlen(PREFIX);
+    if (strlen(ent->d_name) != plen + MAX_KEY_LEN * 2) return 0;
+#ifdef WIN32
+    return strncasecmp(ent->d_name, PREFIX, plen) == 0;
+#else
+    return strncmp(ent->d_name, PREFIX, plen) == 0;
+#endif
+}
 
 void
-dpx_delete_temp_file (char *tmp)
+dpx_delete_old_cache (int life)
+{
+  const char *dir;
+  char *pathname;
+  DIR *dp;
+  struct dirent *de;
+  time_t limit;
+
+  if (life == -2) {
+      keep_cache = -1;
+      return;
+  }
+
+  dir = dpx_get_tmpdir();
+  pathname = NEW(strlen(dir)+1+strlen(PREFIX)+MAX_KEY_LEN*2 + 1, char);
+  limit = time(NULL) - life * 60 * 60;
+
+  if (life >= 0) keep_cache = 1;
+  if ((dp = opendir(dir)) != NULL) {
+      while((de = readdir(dp)) != NULL) {
+          if (dpx_clear_cache_filter(de)) {
+              struct stat sb;
+              sprintf(pathname, "%s/%s", dir, de->d_name);
+              stat(pathname, &sb);
+              if (sb.st_mtime < limit) {
+                  remove(pathname);
+                  /* printf("remove: %s\n", pathname); */
+              }
+          }
+      }
+      closedir(dp);
+  }
+  RELEASE(pathname);
+}
+
+void
+dpx_delete_temp_file (char *tmp, int force)
 {
   if (!tmp)
     return;
-  remove (tmp);
+  if (force || keep_cache != 1) remove (tmp);
   RELEASE(tmp);
 
   return;

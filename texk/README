@@ -1,4 +1,4 @@
-$Id: README 29269 2013-03-02 12:19:42Z peter $
+$Id: README 29858 2013-04-11 08:47:44Z peter $
 Copyright 2006-2012 TeX Users Group.
 You may freely use, modify and/or distribute this file.
 
@@ -22,10 +22,10 @@ Anyone -- please research and update any of this information.
 afm2pl - maintained here
   http://tex.aanhet.net/afm2pl/
 
-bibtex8 - ?
-
-bibtexu - ?
-  http://omega.enstb.org/yannis/bibtexu/
+bibtex-x - maintained here, contains
+  bibtex8
+  bibtexu
+    http://omega.enstb.org/yannis/bibtexu/
 
 chktex 1.7.1 - checked 27sep12
   http://mirror.ctan.org/support/chktex/
@@ -59,8 +59,8 @@ dvipos - ?
 
 dvipsk - maintained here, by us
 
-dvisvgm - checked 2mar13
-  http://downloads.sourceforge.net/dvisvgm/dvisvgm-1.2.tar.gz
+dvisvgm - checked 11apr13
+  http://downloads.sourceforge.net/dvisvgm/dvisvgm-1.2.1.tar.gz
 
 gsftopk - from Paul Vojta's xdvi?
 
@@ -69,9 +69,9 @@ kpathsea - maintained here, by us
 lacheck - checked 25apr11
   http://mirror.ctan.org/support/lacheck/lacheck-1.26.tar.gz
 
-lcdf-typetools 2.97 - checked 26oct12
+lcdf-typetools 2.98 - checked 11apr13
   http://www.lcdf.org/type/
-  http://www.lcdf.org/type/lcdf-typetools-2.97.tar.gz
+  http://www.lcdf.org/type/lcdf-typetools-2.98.tar.gz
 
 makeindexk - maintained here, by us
 
@@ -102,7 +102,7 @@ web2c - maintained here, by us - core web2c, plain tex, etc.
 
 xdv2pdf - maintained here, by Khaled Hosny, Jonathan Kew
 
-xdvik 22.85 - checked 10may12
+xdvik 22.86 - checked 7apr13
   http://sourceforge.net/projects/xdvi/files/xdvik/
 
 xdvipdfmx - maintainered here, by Khaled Hosny, Jonathan Kew

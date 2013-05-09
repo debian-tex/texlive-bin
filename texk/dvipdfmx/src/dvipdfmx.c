@@ -2,7 +2,7 @@
     
     This is DVIPDFMx, an eXtended version of DVIPDFM by Mark A. Wicks.
 
-    Copyright (C) 2009-2012 by Jin-Hwan Cho, Matthias Franz, and Shunsaku Hirata,
+    Copyright (C) 2009-2013 by Jin-Hwan Cho, Matthias Franz, and Shunsaku Hirata,
     the dvipdfmx project team.
     
     Copyright (C) 1998, 1999 by Mark A. Wicks <mwicks@kettering.edu>
@@ -86,6 +86,12 @@ static int    really_quiet  = 0;
  */
 static int pdfdecimaldigits = 2;
 
+/* Image cache life in hours */
+/*  0 means erase all old images and leave new images */
+/* -1 means erase all old images and also erase new images */
+/* -2 means ignore image cache (default) */
+static int image_cache_life = -2;
+
 /* Encryption */
 static int do_encryption    = 0;
 static unsigned key_bits    = 40;
@@ -141,7 +147,7 @@ show_version (void)
   fprintf(stdout, "\nThis is %s-%s by the DVIPDFMx project team,\n", PACKAGE, VERSION);
   fprintf(stdout, "modified for TeX Live,\n");
   fprintf(stdout, "an extended version of dvipdfm-0.13.2c developed by Mark A. Wicks.\n");
-  fprintf(stdout, "\nCopyright (C) 2002-2012 by the DVIPDFMx project team\n");
+  fprintf(stdout, "\nCopyright (C) 2002-2013 by the DVIPDFMx project team\n");
   fprintf(stdout, "\nThis is free software; you can redistribute it and/or modify\n");
   fprintf(stdout, "it under the terms of the GNU General Public License as published by\n");
   fprintf(stdout, "the Free Software Foundation; either version 2 of the License, or\n");
@@ -181,6 +187,10 @@ show_usage (void)
   fprintf(stdout, "\t\tAnd negative values replace old values.\n");
   fprintf(stdout, "-D template\tPS->PDF conversion command line template [none]\n");
   fprintf(stdout, "-E \t\tEnable DVIPDFM emulation mode\n");
+  fprintf(stdout, "-I number\tImage cache life in hours [-2]\n");
+  fprintf(stdout, "         \t 0: erase all old images and leave new images\n");
+  fprintf(stdout, "         \t-1: erase all old images and also erase new images\n");
+  fprintf(stdout, "         \t-2: ignore image cache\n");
   fprintf(stdout, "-K number\tEncryption key length [40]\n");
   fprintf(stdout, "-O number\tSet maximum depth of open bookmark items [0]\n");
   fprintf(stdout, "-P number\tSet permission flags for PDF encryption [0x003C]\n");
@@ -529,6 +539,11 @@ do_args (int argc, char *argv[])
           POP_ARG();
         }
         break;
+      case 'I':
+        CHECK_ARG(1, "image cache life in hours");
+        image_cache_life = atoi(argv[1]);
+        POP_ARG();
+        break;
       case 'S':
         do_encryption = 1;
         break;
@@ -600,7 +615,7 @@ do_args (int argc, char *argv[])
   } else if (argc > 0) {
     /*
      * The only legitimate way to have argc == 0 here is
-     * is do_args was called from config file.  In that case, there is
+     * do_args was called from config file.  In that case, there is
      * no dvi file name.  Check for that case .
      */
     if (!mp_mode && STRN_CMP(".dvi", argv[0] + strlen(argv[0]) - 4, 4)) {
@@ -898,6 +913,7 @@ main (int argc, char *argv[])
   kpse_set_program_enabled(kpse_pk_format, true, kpse_src_texmf_cnf);
 #endif
   pdf_font_set_dpi(font_dpi);
+  dpx_delete_old_cache(image_cache_life);
 
   if (!dvi_filename) {
     WARN("No dvi filename specified.");

@@ -139,6 +139,9 @@
 /* Define if PermStrings are available. */
 #undef HAVE_PERMSTRING
 
+/* Define to include precondition checking assertions. */
+#undef HAVE_PRECONDITION_CHECKING
+
 /* Define to 1 if you have the `putenv' function. */
 #undef HAVE_PUTENV
 

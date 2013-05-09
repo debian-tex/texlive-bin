@@ -647,7 +647,7 @@ main(int argc, char **argv)
       } else if (strcmp (argv[1], "--version") == 0) {
         puts (BANNER);
         puts (kpathsea_version_string);
-        puts ("Copyright 2012 Radical Eye Software.\n\
+        puts ("Copyright 2013 Radical Eye Software.\n\
 There is NO warranty.  You may redistribute this software\n\
 under the terms of the GNU General Public License\n\
 and the Dvips copyright.\n\
@@ -1265,6 +1265,20 @@ default:
 #endif
    } /* dd(D_PATHS) */
 #endif /* DEBUG */
+
+/*
+ *   Check if oname != iname
+ */
+   if (iname && *iname && oname && *oname) {
+#ifdef DOSISH
+      if (strcasecmp (iname, oname) == 0) {
+#else
+      if (strcmp (iname, oname) == 0) {
+#endif
+         fprintf (stderr, "! Output name should be different from input name.\n");
+         exit (20);
+      }
+   }
 /*
  *   Now we try to open the dvi file.
  */

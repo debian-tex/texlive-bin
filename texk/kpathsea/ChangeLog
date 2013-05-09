@@ -1,3 +1,44 @@
+2013-04-15  Karl Berry  <karl@tug.org>
+
+	* texmf.cnf (TEXINPUTS.lamed): there is no lamed directory and
+	never has been, as far as I can tell, so don't look in it.
+
+	* texmf.cnf (TEXMFCACHE): new variable for lualatex font cache;
+	same value as ConTeXt MkIV's variable of the same name in
+	texmfcnf.lua.
+
+2013-04-10  Karl Berry  <karl@tug.org>
+
+	* texmf.cnf (TEXMFCNF): still look in texmf/ subdirs after all;
+	needed for non-TL ConTeXt and likely others.  Report from
+	Mojca/Hans.
+
+2013-04-05  Karl Berry  <karl@tug.org>
+
+	* other files: 2013 in copyright year list.
+
+	* kpsewhich.c,
+	* NEWS,
+	* version.ac: 6.1.1 and 2013 to prepare for TL'13 pretest.
+
+	* texmf.cnf (TEXMFCNF): likewise prepare to use texmf-dist instead
+	of texmf.  From Akira.
+
+2013-04-03  Karl Berry  <karl@tug.org>
+
+	* texmf.cnf (TEXMFMAIN): make it the same as $TEXMFDIST,
+	and do not use it.  That is, as of TL 2013, everything will be in
+	texmf-dist, not split between texmf and texmf-dist.  See the
+	thread including
+	http://tug.org/mailman/htdig/tex-live/2013-January/032888.html.
+	
+	Also change 2012 to 2013.
+
+2013-03-26  Karl Berry  <karl@tug.org>
+
+	* tex-make.c (kpathsea_make_tex): specify fn name in warnings
+	about invalid fontnames.
+
 2013-03-14  Karl Berry  <karl@tug.org>
 
 	* texmf.cnf (save_size): increase to 100000 (from 50000),

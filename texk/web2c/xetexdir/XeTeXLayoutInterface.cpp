@@ -46,8 +46,8 @@ struct XeTeXLayoutEngine_rec
 {
 	XeTeXFontInst*	font;
 	PlatformFontRef	fontRef;
-	char*			script;
-	char*			language;
+	hb_tag_t		script;
+	hb_tag_t		language;
 	hb_feature_t*	features;
 	char**			ShaperList;	// the requested shapers
 	char*			shaper;		// the actually used shaper
@@ -192,12 +192,6 @@ getFontTablePtr(XeTeXFont font, uint32_t tableTag)
 	return const_cast<void*>(((XeTeXFontInst*)font)->getFontTable(tableTag));
 }
 
-void*
-getFontTable(XeTeXFont font, FT_Sfnt_Tag tableTag)
-{
-	return const_cast<void*>(((XeTeXFontInst*)font)->getFontTable(tableTag));
-}
-
 Fixed
 getSlant(XeTeXFont font)
 {
@@ -205,145 +199,171 @@ getSlant(XeTeXFont font)
 	return D2Fix(tan(-italAngle * M_PI / 180.0));
 }
 
-static uint32_t
-getLargerScriptListTable(XeTeXFont font, hb_tag_t** scriptList, hb_tag_t* tableTag)
+static unsigned int
+getLargerScriptListTable(XeTeXFont font, hb_tag_t** scriptList)
 {
+	unsigned int rval = 0;
+
 	hb_face_t* face = hb_font_get_face(((XeTeXFontInst*)font)->getHbFont());
 
 	hb_tag_t* scriptListSub = NULL;
 	hb_tag_t* scriptListPos = NULL;
 
-	uint32_t scriptCountSub = hb_ot_layout_table_get_script_tags(face, HB_OT_TAG_GSUB, 0, NULL, NULL);
+	unsigned int scriptCountSub = hb_ot_layout_table_get_script_tags(face, HB_OT_TAG_GSUB, 0, NULL, NULL);
 	scriptListSub = (hb_tag_t*) xmalloc(scriptCountSub * sizeof(hb_tag_t*));
 	hb_ot_layout_table_get_script_tags(face, HB_OT_TAG_GSUB, 0, &scriptCountSub, scriptListSub);
 
-	uint32_t scriptCountPos = hb_ot_layout_table_get_script_tags(face, HB_OT_TAG_GPOS, 0, NULL, NULL);
+	unsigned int scriptCountPos = hb_ot_layout_table_get_script_tags(face, HB_OT_TAG_GPOS, 0, NULL, NULL);
 	scriptListPos = (hb_tag_t*) xmalloc(scriptCountPos * sizeof(hb_tag_t*));
 	hb_ot_layout_table_get_script_tags(face, HB_OT_TAG_GSUB, 0, &scriptCountPos, scriptListPos);
 
 	if (scriptCountSub > scriptCountPos) {
 		if (scriptList != NULL)
 			*scriptList = scriptListSub;
-		if (tableTag != NULL)
-			*tableTag = HB_OT_TAG_GSUB;
-		return scriptCountSub;
+		rval = scriptCountSub;
 	} else {
 		if (scriptList != NULL)
 			*scriptList = scriptListPos;
-		if (tableTag != NULL)
-			*tableTag = HB_OT_TAG_GPOS;
-		return scriptCountPos;
+		rval = scriptCountPos;
 	}
+
+	return rval;
 }
 
-uint32_t
+unsigned int
 countScripts(XeTeXFont font)
 {
-	return getLargerScriptListTable(font, NULL, NULL);
+	return getLargerScriptListTable(font, NULL);
 }
 
-uint32_t
-getIndScript(XeTeXFont font, uint32_t index)
+hb_tag_t
+getIndScript(XeTeXFont font, unsigned int index)
 {
+	hb_tag_t rval = 0;
+
 	hb_tag_t* scriptList;
 
-	uint32_t scriptCount = getLargerScriptListTable(font, &scriptList, NULL);
-	if (scriptList == NULL)
-		return 0;
-
-	if (index < scriptCount)
-		return scriptList[index];
-
-	return 0;
-}
-
-uint32_t
-countScriptLanguages(XeTeXFont font, uint32_t script)
-{
-	hb_face_t* face = hb_font_get_face(((XeTeXFontInst*)font)->getHbFont());
-	hb_tag_t* scriptList;
-	hb_tag_t tableTag;
-
-	uint32_t scriptCount = getLargerScriptListTable(font, &scriptList, &tableTag);
-	if (scriptList == NULL)
-		return 0;
-
-	for (int i = 0; i < scriptCount; i++) {
-		if (scriptList[i] == script) {
-			return hb_ot_layout_script_get_language_tags (face, tableTag, i, 0, NULL, NULL);
-		}
+	unsigned int scriptCount = getLargerScriptListTable(font, &scriptList);
+	if (scriptList != NULL) {
+		if (index < scriptCount)
+			rval = scriptList[index];
 	}
-	return 0;
+
+	return rval;
 }
 
-uint32_t
-getIndScriptLanguage(XeTeXFont font, uint32_t script, uint32_t index)
+unsigned int
+countLanguages(XeTeXFont font, hb_tag_t script)
 {
+	unsigned int rval = 0;
+
 	hb_face_t* face = hb_font_get_face(((XeTeXFontInst*)font)->getHbFont());
 	hb_tag_t* scriptList;
-	hb_tag_t tableTag;
 
-	uint32_t scriptCount = getLargerScriptListTable(font, &scriptList, &tableTag);
-	if (scriptList == NULL)
-		return 0;
-
-	for (int i = 0; i < scriptCount; i++) {
-		if (scriptList[i] == script) {
-			uint32_t langCount = hb_ot_layout_script_get_language_tags(face, tableTag, i, 0, NULL, NULL);
-			hb_tag_t* langList = (hb_tag_t*) xmalloc(langCount * sizeof(hb_tag_t*));
-			hb_ot_layout_script_get_language_tags(face, tableTag, i, 0, &langCount, langList);
-
-			if (index < langCount)
-				return langList[index];
-
-			return 0;
-		}
-	}
-	return 0;
-}
-
-uint32_t
-countFeatures(XeTeXFont font, uint32_t script, uint32_t language)
-{
-	hb_face_t* face = hb_font_get_face(((XeTeXFontInst*)font)->getHbFont());
-	uint32_t total = 0;
-
-	for (int i = 0; i < 2; ++i) {
-		uint32_t scriptIndex, langIndex = 0;
-		hb_tag_t tableTag = i == 0 ? HB_OT_TAG_GSUB : HB_OT_TAG_GPOS;
-		if (hb_ot_layout_table_find_script(face, tableTag, script, &scriptIndex)) {
-			if (hb_ot_layout_script_find_language(face, tableTag, scriptIndex, language, &langIndex) || language == 0) {
-				total += hb_ot_layout_language_get_feature_tags(face, tableTag, scriptIndex, langIndex, 0, NULL, NULL);
+	unsigned int scriptCount = getLargerScriptListTable(font, &scriptList);
+	if (scriptList != NULL) {
+		for (int i = 0; i < scriptCount; i++) {
+			if (scriptList[i] == script) {
+				rval += hb_ot_layout_script_get_language_tags (face, HB_OT_TAG_GSUB, i, 0, NULL, NULL);
+				rval += hb_ot_layout_script_get_language_tags (face, HB_OT_TAG_GPOS, i, 0, NULL, NULL);
+				break;
 			}
 		}
 	}
 
-	return total;
+	return rval;
 }
 
-uint32_t
-getIndFeature(XeTeXFont font, uint32_t script, uint32_t language, uint32_t index)
+hb_tag_t
+getIndLanguage(XeTeXFont font, hb_tag_t script, unsigned int index)
 {
+	hb_tag_t rval = 0;
+
+	hb_face_t* face = hb_font_get_face(((XeTeXFontInst*)font)->getHbFont());
+	hb_tag_t* scriptList;
+
+	unsigned int scriptCount = getLargerScriptListTable(font, &scriptList);
+	if (scriptList != NULL) {
+		for (int i = 0; i < scriptCount; i++) {
+			if (scriptList[i] == script) {
+				unsigned int langCount;
+				hb_tag_t* langList;
+
+				langCount = hb_ot_layout_script_get_language_tags(face, HB_OT_TAG_GSUB, i, 0, NULL, NULL);
+				langList = (hb_tag_t*) xcalloc(langCount, sizeof(hb_tag_t*));
+				hb_ot_layout_script_get_language_tags(face, HB_OT_TAG_GSUB, i, 0, &langCount, langList);
+
+				if (index < langCount) {
+					rval = langList[index];
+					break;
+				}
+
+				free(langList);
+
+				langCount = hb_ot_layout_script_get_language_tags(face, HB_OT_TAG_GPOS, i, 0, NULL, NULL);
+				langList = (hb_tag_t*) xcalloc(langCount, sizeof(hb_tag_t*));
+				hb_ot_layout_script_get_language_tags(face, HB_OT_TAG_GPOS, i, 0, &langCount, langList);
+
+				if (index < langCount) {
+					rval = langList[index];
+					break;
+				}
+
+				free(langList);
+			}
+		}
+	}
+
+	return rval;
+}
+
+unsigned int
+countFeatures(XeTeXFont font, hb_tag_t script, hb_tag_t language)
+{
+	unsigned int rval = 0;
+
 	hb_face_t* face = hb_font_get_face(((XeTeXFontInst*)font)->getHbFont());
 
 	for (int i = 0; i < 2; ++i) {
-		uint32_t scriptIndex, langIndex = 0;
+		unsigned int scriptIndex, langIndex = 0;
 		hb_tag_t tableTag = i == 0 ? HB_OT_TAG_GSUB : HB_OT_TAG_GPOS;
 		if (hb_ot_layout_table_find_script(face, tableTag, script, &scriptIndex)) {
 			if (hb_ot_layout_script_find_language(face, tableTag, scriptIndex, language, &langIndex) || language == 0) {
-				uint32_t featCount = hb_ot_layout_language_get_feature_tags(face, tableTag, scriptIndex, langIndex, 0, NULL, NULL);
+				rval += hb_ot_layout_language_get_feature_tags(face, tableTag, scriptIndex, langIndex, 0, NULL, NULL);
+			}
+		}
+	}
+
+	return rval;
+}
+
+hb_tag_t
+getIndFeature(XeTeXFont font, hb_tag_t script, hb_tag_t language, unsigned int index)
+{
+	hb_tag_t rval = 0;
+
+	hb_face_t* face = hb_font_get_face(((XeTeXFontInst*)font)->getHbFont());
+
+	for (int i = 0; i < 2; ++i) {
+		unsigned int scriptIndex, langIndex = 0;
+		hb_tag_t tableTag = i == 0 ? HB_OT_TAG_GSUB : HB_OT_TAG_GPOS;
+		if (hb_ot_layout_table_find_script(face, tableTag, script, &scriptIndex)) {
+			if (hb_ot_layout_script_find_language(face, tableTag, scriptIndex, language, &langIndex) || language == 0) {
+				unsigned int featCount = hb_ot_layout_language_get_feature_tags(face, tableTag, scriptIndex, langIndex, 0, NULL, NULL);
 				hb_tag_t* featList = (hb_tag_t*) xmalloc(featCount * sizeof(hb_tag_t*));
 				hb_ot_layout_language_get_feature_tags(face, tableTag, scriptIndex, langIndex, 0, &featCount, featList);
 
-				if (index < featCount)
-					return featList[index];
+				if (index < featCount) {
+					rval = featList[index];
+					break;
+				}
 
 				index -= featCount;
 			}
 		}
 	}
 
-	return 0;
+	return rval;
 }
 
 uint32_t
@@ -417,13 +437,8 @@ getGraphiteFeatureDefaultSetting(XeTeXLayoutEngine engine, uint32_t featureID)
 	gr_face* grFace = hb_graphite2_face_get_gr_face(hbFace);
 
 	if (grFace != NULL) {
-		hb_tag_t lang = HB_TAG_NONE;
-
-		if (engine->language != NULL)
-			lang = hb_tag_from_string(engine->language, -1);
-
 		const gr_feature_ref* feature = gr_face_find_fref(grFace, featureID);
-		gr_feature_val *featureValues = gr_face_featureval_for_lang (grFace, lang);
+		gr_feature_val *featureValues = gr_face_featureval_for_lang (grFace, engine->language);
 
 		rval = gr_fref_feature_value(feature, featureValues);
 	}
@@ -570,7 +585,7 @@ getGlyphWidth(XeTeXFont font, uint32_t gid)
 	return ((XeTeXFontInst*)font)->getGlyphWidth(gid);
 }
 
-uint32_t
+unsigned int
 countGlyphs(XeTeXFont font)
 {
 	return ((XeTeXFontInst*)font)->getNumGlyphs();
@@ -601,7 +616,7 @@ getEmboldenFactor(XeTeXLayoutEngine engine)
 }
 
 XeTeXLayoutEngine
-createLayoutEngine(PlatformFontRef fontRef, XeTeXFont font, char* script, char* language,
+createLayoutEngine(PlatformFontRef fontRef, XeTeXFont font, hb_tag_t script, hb_tag_t language,
 					hb_feature_t* features, int nFeatures, char **shapers, uint32_t rgbValue,
 					float extend, float slant, float embolden)
 {
@@ -648,11 +663,8 @@ layoutChars(XeTeXLayoutEngine engine, uint16_t chars[], int32_t offset, int32_t 
 	else if (rightToLeft)
 		direction = HB_DIRECTION_RTL;
 
-	if (engine->script != NULL)
-		script = hb_script_from_string(engine->script, -1);
-
-	if (engine->language != NULL)
-		language = hb_language_from_string(engine->language, -1);
+	script = hb_ot_tag_to_script (engine->script);
+	language = hb_ot_tag_to_language (engine->language);
 
 	hb_buffer_reset(engine->hbBuffer);
 	hb_buffer_add_utf16(engine->hbBuffer, chars, max, offset, count);
@@ -696,7 +708,7 @@ layoutChars(XeTeXLayoutEngine engine, uint16_t chars[], int32_t offset, int32_t 
 	printf ("shaper: %s\n", engine->shaper);
 
 	hb_buffer_serialize_flags_t flags = HB_BUFFER_SERIALIZE_FLAGS_DEFAULT;
-	hb_buffer_serialize_format_t format = HB_BUFFER_SERIALIZE_FORMAT_TEXT;
+	hb_buffer_serialize_format_t format = HB_BUFFER_SERIALIZE_FORMAT_JSON;
 
 	hb_buffer_serialize_glyphs (engine->hbBuffer, 0, glyphCount, buf, sizeof(buf), &consumed, hbFont, format, flags);
 	if (consumed)
@@ -724,9 +736,9 @@ getGlyphAdvances(XeTeXLayoutEngine engine, float advances[])
 
 	for (int i = 0; i < glyphCount; i++) {
 		if (engine->font->getLayoutDirVertical())
-			advances[i] = hbPositions[i].y_advance / 64.0;
+			advances[i] = engine->font->unitsToPoints(hbPositions[i].y_advance);
 		else
-			advances[i] = hbPositions[i].x_advance / 64.0;
+			advances[i] = engine->font->unitsToPoints(hbPositions[i].x_advance);
 	}
 }
 
@@ -740,26 +752,23 @@ getGlyphPositions(XeTeXLayoutEngine engine, float positions[])
    	float x = 0, y = 0;
 
 	if (engine->font->getLayoutDirVertical()) {
-		/* XXX I'm not sure about the code below, but it seems to math the
-		 * behaviour of old code */
-		x += hbPositions[0].y_offset / 64.0; /* hack to compensate offset of 1st glyph */
 		for (i = 0; i < glyphCount; i++) {
-			positions[2*i]   = -(x - (hbPositions[i].y_offset / 64.0)); /* negative is forwards */
-			positions[2*i+1] =  hbPositions[i].x_advance / 64.0;
-			x += hbPositions[i].y_advance / 64.0;
+			positions[2*i]   = - engine->font->unitsToPoints(x + hbPositions[i].y_offset); /* negative is forwards */
+			positions[2*i+1] =   engine->font->unitsToPoints(y - hbPositions[i].x_offset);
+			x += hbPositions[i].y_advance;
+			y += hbPositions[i].x_advance;
 		}
-		x -= hbPositions[glyphCount-1].y_offset / 64.0;
-		positions[2*i]   = -x;
-		positions[2*i+1] =  y;
+		positions[2*i]   = - engine->font->unitsToPoints(x);
+		positions[2*i+1] =   engine->font->unitsToPoints(y);
 	} else {
 		for (i = 0; i < glyphCount; i++) {
-			positions[2*i]   =   x + hbPositions[i].x_offset / 64.0;
-			positions[2*i+1] = -(y + hbPositions[i].y_offset / 64.0); /* negative is upwards */
-			x += hbPositions[i].x_advance / 64.0;
-			y += hbPositions[i].y_advance / 64.0;
+			positions[2*i]   =   engine->font->unitsToPoints(x + hbPositions[i].x_offset);
+			positions[2*i+1] = - engine->font->unitsToPoints(y + hbPositions[i].y_offset); /* negative is upwards */
+			x += hbPositions[i].x_advance;
+			y += hbPositions[i].y_advance;
 		}
-		positions[2*i]   =  x;
-		positions[2*i+1] = -y;
+		positions[2*i]   =   engine->font->unitsToPoints(x);
+		positions[2*i+1] = - engine->font->unitsToPoints(y);
 	}
 
 	if (engine->extend != 1.0 || engine->slant != 0.0)
@@ -885,15 +894,7 @@ initGraphiteBreaking(XeTeXLayoutEngine engine, const uint16_t* txtPtr, int txtLe
 			grPrevSlot = NULL;
 		}
 
-		hb_tag_t script = HB_TAG_NONE, lang = HB_TAG_NONE;
-
-		if (engine->script != NULL)
-			script = hb_tag_from_string(engine->script, -1);
-
-		if (engine->language != NULL)
-			lang = hb_tag_from_string(engine->language, -1);
-
-		gr_feature_val *grFeatureValues = gr_face_featureval_for_lang (grFace, lang);
+		gr_feature_val *grFeatureValues = gr_face_featureval_for_lang (grFace, engine->language);
 
 		int nFeatures = engine->nFeatures;
 		hb_feature_t *features =  engine->features;
@@ -904,7 +905,7 @@ initGraphiteBreaking(XeTeXLayoutEngine engine, const uint16_t* txtPtr, int txtLe
 			features++;
 		}
 
-		grSegment = gr_make_seg(grFont, grFace, script, grFeatureValues, gr_utf16, txtPtr, txtLen, 0);
+		grSegment = gr_make_seg(grFont, grFace, engine->script, grFeatureValues, gr_utf16, txtPtr, txtLen, 0);
 		grPrevSlot = gr_seg_first_slot(grSegment);
 		grTextLen = txtLen;
 

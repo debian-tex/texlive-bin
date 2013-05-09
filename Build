@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: Build 28856 2013-01-17 23:56:50Z karl $
+# $Id: Build 29505 2013-03-25 23:46:26Z karl $
 # Public domain.  Originally written many years ago by Sebastian Rahtz.
 # To build again, try Build --no-clean.
 # To build without optimization, try Build --debug.
@@ -34,14 +34,10 @@ fi
 : ${MAKE=${TL_MAKE}}
 export MAKE
 
-# and then also set GNUMAKE to that, for the sake of freetype2/configure.
-: ${GNUMAKE=${TL_MAKE}}
-export GNUMAKE
-
 if test "x$1" = x--no-clean; then
   shift
 else
-  test -f Makefile && $TL_MAKE clean 
+  test -f Makefile && $MAKE clean 
   rm -rf $TL_WORKDIR $TL_INSTALL_DEST
 fi
 

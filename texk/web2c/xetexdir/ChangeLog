@@ -1,3 +1,15 @@
+2013-03-27  Khaled Hosny  <khaledhosny@eglug.org>
+
+	XeTeX 0.9999.2
+
+2013-03-25  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* am/xetex.am (EXTRA_DIST): Add NEWS and image/README.
+
+2013-03-22  Khaled Hosny  <khaledhosny@eglug.org>
+
+	XeTeX 0.9999.1
+
 2013-03-12  Khaled Hosny  <khaledhosny@eglug.org>
 
 	* xetex.web: Fix \XeTeXrevision.

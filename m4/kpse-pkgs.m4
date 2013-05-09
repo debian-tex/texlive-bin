@@ -97,8 +97,7 @@ AC_DEFUN([KPSE_TEXK_PKGS],
 [m4_define([kpse_texk_pkgs], [
 web2c
 afm2pl
-bibtex8
-bibtexu
+bibtex-x
 chktex
 cjkutils
 detex

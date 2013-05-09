@@ -1,3 +1,53 @@
+2013-04-30  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* src/dpxfile.c, src/pdfximage.c, src/dvipdfmx.c, data/dvipdfmx.cfg:
+	Add a compatible mode with the old behavior per Karl, where
+	image cache is ignored.
+
+2013-04-30  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* dvipdfmx.test: New shell script for a simple test.
+	* Makefile.am: Adapted.
+
+2013-04-30  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* src/dvipdfmx.c: Default is not to cache image files.
+	Must not cast command line value to 'unsigned'.
+	* data/dvipdfmx.cfg (I): Now -1 is the program default.
+
+2013-04-30  Karl Berry  <karl@tug.org>
+
+	* data/dvipdfmx.cfg (D): back to using -dEPSCrop instead of
+	-sPAPERSIZE=a0, in conjunction with changes to dvipdfmx.def
+	and xetex.def.
+	(I): set to -1 for the safest default.
+
+2013-04-05  Karl Berry  <karl@tug.org>
+
+	* configure.ac: version 20130405 for TL'13.
+
+2013-03-26  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* src/dpxfile.[ch]: Synch with ../xdvipdfmx.
+
+2013-03-26  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* src/dvi.c: Correct my mistake to delete RELEASE(q).
+
+2013-03-25  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	Patch from Tsuchimura Nobuyuki <tutimura@nn.iij4u.or.jp> to
+	speed up inclusion of eps figures.
+	* data/dvipdfmx.cfg, src/dpxfile.[ch], src/dvi.c,
+	src/dvicodes.h, src/dvipdfmx.c, src/pdfximage.c, src/vf.c:
+	Applied with small modifications to avoid compiler warnings,
+	adapted for WIN32 by Akira Kakuto.
+
+2013-03-24  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* src/dpxfile.c: Change dpx_create_temp_file() because tmpnam()
+	sometimes fails on Windows.
+
 2013-02-25  Peter Breitenlohner  <peb@mppmu.mpg.de>
 
 	* src/dpxutil.[ch]: Reduce diffs with xdvipdfmx.

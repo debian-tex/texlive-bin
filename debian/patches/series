@@ -3,6 +3,8 @@ debian-builtin-searchpath
 debian-no-linked-scripts
 60_unneeded_linking
 61_path_max.diff
-pmpost-20121106-tl12
-pmpost-svg-20120119-tl11.diff
+pmpost1801-2010509
+pmpost-texlive-integration
+#pmpost-20121106-tl12
+#??? still necessary??? pmpost-svg-20120119-tl11.diff
 #xdvi-upupstream-fixes

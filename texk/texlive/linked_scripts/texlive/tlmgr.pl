@@ -1,12 +1,12 @@
 #!/usr/bin/env perl
-# $Id: tlmgr.pl 29313 2013-03-08 13:24:40Z preining $
+# $Id: tlmgr.pl 30121 2013-04-26 06:51:26Z preining $
 #
 # Copyright 2008-2013 Norbert Preining
 # This file is licensed under the GNU General Public License version 2
 # or any later version.
 
-my $svnrev = '$Revision: 29313 $';
-my $datrev = '$Date: 2013-03-08 14:24:40 +0100 (Fri, 08 Mar 2013) $';
+my $svnrev = '$Revision: 30121 $';
+my $datrev = '$Date: 2013-04-26 08:51:26 +0200 (Fri, 26 Apr 2013) $';
 my $tlmgrrevision;
 my $prg;
 if ($svnrev =~ m/: ([0-9]+) /) {
@@ -41,7 +41,7 @@ BEGIN {
     $Master = __FILE__;
     $Master =~ s!\\!/!g;
     $Master =~ s![^/]*$!../../..!
-      unless ($Master =~ s!/texmf/scripts/texlive/tlmgr\.pl$!!i);
+      unless ($Master =~ s!/texmf-dist/scripts/texlive/tlmgr\.pl$!!i);
     $bindir = "$Master/bin/win32";
     $kpsewhichname = "kpsewhich.exe";
     # path already set by wrapper batchfile
@@ -69,7 +69,7 @@ BEGIN {
   #
   # make Perl find our packages first:
   unshift (@INC, "$Master/tlpkg");
-  unshift (@INC, "$Master/texmf/scripts/texlive");
+  unshift (@INC, "$Master/texmf-dist/scripts/texlive");
 }
 
 use Cwd qw/abs_path/;
@@ -128,12 +128,14 @@ sub main {
     "debug-translation" => 1,
     "location|repository|repo" => "=s",
     "machine-readable" => 1,
+    "no-execute-actions" => 1,
     "package-logfile" => "=s",
     "persistent-downloads" => "!",
-    "no-execute-actions" => 1,
-    "pin-file" => "=s",
     "pause" => 1,
+    "pin-file" => "=s",
     "print-platform|print-arch" => 1,
+    "usermode|user-mode" => 1,
+    "usertree|user-tree" => "=s",
     "version" => 1,
     "help" => 1,
     "h|?" => 1);
@@ -293,11 +295,11 @@ sub main {
         # because stupid Debian/Ubuntu ships a stub that does nothing
         # which is very very bad idea
         # try to check for that, too
-        my $ret = system("perldoc -V > /dev/null 2>&1");
+        my $ret = system("perldoc -V >/dev/null 2>&1");
         if ($ret == 0) {
-          debug("Working perldoc found, using it.\n");
+          debug("working perldoc found, using it\n");
         } else {
-          tlwarn("Your perldoc seems to be non functional!\n");
+          tlwarn("$prg: perldoc seems to be non-functional, not using it.\n");
           @noperldoc = ("-noperldoc", "1");
         }
       }
@@ -387,13 +389,30 @@ for the full story.\n";
     pod2usage(-msg => $msg, -exitstatus => 1, -verbose => 1, @noperldoc);
   }
 
+  #
+  # the main tree we will be working on
+  $::maintree = $Master;
+  if ($opts{"usermode"}) {
+    # we could also try to detect that we don't have write permissions
+    # and switch to user mode automatically
+    if (defined($opts{"usertree"})) {
+      $::maintree = $opts{"usertree"};
+    } else {
+      chomp($::maintree = `kpsewhich -var-value TEXMFHOME`);
+    }
+  }
+
   # besides doing normal logging if -logfile is specified, we try to log
   # package related actions (install, remove, update) to
   # the package-log file TEXMFSYSVAR/web2c/tlmgr.log
   $packagelogged = 0;  # how many msgs we logged
   chomp (my $texmfsysvar = `kpsewhich -var-value=TEXMFSYSVAR`);
   $packagelogfile = $opts{"package-logfile"};
-  $packagelogfile ||= "$texmfsysvar/web2c/tlmgr.log";
+  if ($opts{"usermode"}) {
+    $packagelogfile ||= "$::maintree/web2c/tlmgr.log";
+  } else {
+    $packagelogfile ||= "$texmfsysvar/web2c/tlmgr.log";
+  }
   #
   # Try to open the packagelog file, but do NOT die when that does not work
   if (!open(PACKAGELOG, ">>$packagelogfile")) {
@@ -462,7 +481,7 @@ sub give_version {
   #
   # add the list of revisions
   if ($::opt_verbosity > 0) {
-    $::version_string .= "Revision of modules:";
+    $::version_string .= "Revisions of TeXLive:: modules:";
     $::version_string .= "\nTLConfig: " . TeXLive::TLConfig->module_revision();
     $::version_string .= "\nTLUtils:  " . TeXLive::TLUtils->module_revision();
     $::version_string .= "\nTLPOBJ:   " . TeXLive::TLPOBJ->module_revision();
@@ -575,6 +594,9 @@ sub execute_action {
   } elsif ($action =~ m/^info$/i) {
     action_info(@ARGV);
     finish(0);
+  } elsif ($action =~ m/^init-usertree$/i) {
+    action_init_usertree();
+    finish(0);
   } elsif ($action =~ m/^remove$/i) {
     action_remove();
   } elsif ($action =~ /^paper$/) {
@@ -591,7 +613,7 @@ sub execute_action {
 
   # close the special log file
   if ($packagelogfile && !$::gui_mode) {
-    info("tlmgr: package log updated at $packagelogfile\n") if $packagelogged;
+    info("$prg: package log updated: $packagelogfile\n") if $packagelogged;
     close(PACKAGELOG);
   }
 
@@ -644,6 +666,8 @@ sub handle_execute_actions
 {
   my $errors = 0;
 
+  my $sysmode = ($opts{"usermode"} ? "" : "-sys");
+
   if ($::files_changed) {
     $errors += do_cmd_and_check("mktexlsr");
     if (defined($localtlpdb->get_package('context'))) {
@@ -671,7 +695,7 @@ sub handle_execute_actions
       my $dest = "$TEXMFDIST/web2c/updmap.cfg";
       TeXLive::TLUtils::create_updmap($localtlpdb, $dest);
     }
-    $errors += do_cmd_and_check("updmap-sys") if $updmap_run_needed;
+    $errors += do_cmd_and_check("updmap$sysmode") if $updmap_run_needed;
   }
 
   # format relevant things
@@ -769,7 +793,7 @@ sub handle_execute_actions
       # first regenerate all formats --byengine 
       for my $e (keys %updated_engines) {
         log ("updating formats based on $e\n");
-        $errors += do_cmd_and_check("fmtutil-sys --no-error-if-no-format --byengine $e");
+        $errors += do_cmd_and_check("fmtutil$sysmode --no-error-if-no-format --byengine $e");
       }
       # now rebuild all other formats
       for my $f (keys %do_enable) {
@@ -777,7 +801,7 @@ sub handle_execute_actions
         # ignore disabled formats
         next if !$::execute_actions{'enable'}{'formats'}{$f}{'mode'};
         log ("(re)creating format dump $f\n");
-        $errors += do_cmd_and_check("fmtutil-sys --byfmt $f");
+        $errors += do_cmd_and_check("fmtutil$sysmode --byfmt $f");
         $done_formats{$f} = 1;
       }
     }
@@ -797,7 +821,7 @@ sub handle_execute_actions
         }
         if ($localtlpdb->option("create_formats")
             && !$::regenerate_all_formats) {
-          $errors += do_cmd_and_check("fmtutil-sys --byhyphen $lang");
+          $errors += do_cmd_and_check("fmtutil$sysmode --byhyphen $lang");
         }
       }
     }
@@ -806,7 +830,7 @@ sub handle_execute_actions
   #
   if ($::regenerate_all_formats) {
     info("Regenerating all formats, this may take some time ...");
-    $errors += do_cmd_and_check("fmtutil-sys --all");
+    $errors += do_cmd_and_check("fmtutil$sysmode --all");
     info("done\n");
     $::regenerate_all_formats = 0;
   }
@@ -879,7 +903,8 @@ sub action_remove {
   #   user that it is still needed
   #
   # remove all .ARCH dependencies, too, unless $opts{"no-depends-at-all"}
-  @packs = $localtlpdb->expand_dependencies("-only-arch", $localtlpdb, @packs) unless $opts{"no-depends-at-all"};
+  @packs = $localtlpdb->expand_dependencies("-only-arch", $localtlpdb, @packs)
+    unless $opts{"no-depends-at-all"}; 
   # remove deps unless $opts{"no-depends"}
   @packs = $localtlpdb->expand_dependencies("-no-collections", $localtlpdb, @packs) unless $opts{"no-depends"};
   my %allpacks;
@@ -920,7 +945,7 @@ sub action_remove {
       # into %already_removed.
       if ($tlp->category eq "Collection") {
         my $foo = 0;
-        info ("remove $pkg\n");
+        info ("$prg: removing $pkg\n");
         if (!$opts{"dry-run"}) {
           $foo = $localtlpdb->remove_package($pkg);
           logpackage("remove: $pkg");
@@ -935,13 +960,13 @@ sub action_remove {
         # be removed at the second state. Note that if a package has
         # already been removed due to a removal of a collection
         # it will be marked as such in %already_removed and not tried again
-        push @more_removal, $pkg;
+        push (@more_removal, $pkg);
       }
     }
   }
   foreach my $pkg (sort @more_removal) {
     if (!defined($already_removed{$pkg})) {
-      info ("remove $pkg\n");
+      info ("$prg: removing package $pkg\n");
       if (!$opts{"dry-run"}) {
         if ($localtlpdb->remove_package($pkg)) {
           # removal was successful
@@ -958,7 +983,7 @@ sub action_remove {
     $localtlpdb->save;
     my @foo = sort keys %already_removed;
     if (@foo) {
-      info("tlmgr: actually removed these packages: @foo\n");
+      info("tlmgr: ultimately removed these packages: @foo\n");
     } else {
       info("tlmgr: no packages removed.\n");
     }
@@ -974,8 +999,13 @@ sub action_remove {
 #
 sub action_paper {
   init_local_db();
-  chomp(my $texmfsysconfig = `kpsewhich -var-value=TEXMFSYSCONFIG`);
-  $ENV{"TEXMFCONFIG"} = $texmfsysconfig;
+  my $texmfconfig;
+  if ($opts{"usermode"}) {
+    chomp($texmfconfig = `kpsewhich -var-value=TEXMFCONFIG`);
+  } else {
+    chomp($texmfconfig = `kpsewhich -var-value=TEXMFSYSCONFIG`);
+  }
+  $ENV{"TEXMFCONFIG"} = $texmfconfig;
 
   my $action = shift @ARGV;
   if ($action =~ m/^paper$/i) {  # generic paper
@@ -987,7 +1017,7 @@ sub action_paper {
              "as in: tlmgr pdftex paper --list\n");
 
     } elsif (!defined($newpaper)) {  # tlmgr paper => show all current sizes.
-      TeXLive::TLPaper::paper_all($texmfsysconfig,undef);
+      TeXLive::TLPaper::paper_all($texmfconfig,undef);
 
     } elsif ($newpaper !~ /^(a4|letter)$/) {  # tlmgr paper junk => complain.
       $newpaper = "the empty string" if !defined($newpaper);
@@ -995,7 +1025,7 @@ sub action_paper {
 
     } else { # tlmgr paper {a4|letter} => do it.
       return if !check_on_writable();
-      TeXLive::TLPaper::paper_all($texmfsysconfig,$newpaper);
+      TeXLive::TLPaper::paper_all($texmfconfig,$newpaper);
     }
 
   } else {  # program-specific paper
@@ -1012,7 +1042,7 @@ sub action_paper {
       return if !check_on_writable();
     }
     unshift(@ARGV, "--list") if $opts{"list"};
-    TeXLive::TLPaper::do_paper($prog,$texmfsysconfig,@ARGV);
+    TeXLive::TLPaper::do_paper($prog,$texmfconfig,@ARGV);
   }
 }
 
@@ -1020,6 +1050,10 @@ sub action_paper {
 #  PATH
 #
 sub action_path {
+  if ($opts{"usermode"}) {
+    tlwarn("action `path' not supported in usermode!\n");
+    exit 1;
+  }
   my $what = shift @ARGV;
   if (!defined($what) || ($what !~ m/^(add|remove)$/i)) {
     $what = "" if ! $what;
@@ -1184,7 +1218,7 @@ sub action_info {
       }
       if (defined($tag)) {
         if (!$remotetlpdb->is_virtual) {
-          tlwarn("tlmgr: specifying implicite tags is not allowed for non-virtual databases!\n");
+          tlwarn("tlmgr: specifying implicit tags is not allowed for non-virtual databases!\n");
           next;
         } else {
           if (!$remotetlpdb->is_repository($tag)) {
@@ -1276,6 +1310,7 @@ sub action_info {
     print "longdesc:    ", $tlp->longdesc, "\n" if ($tlp->longdesc);
     print "installed:   ", ($installed ? "Yes" : "No"), "\n";
     print "revision:    ", $tlp->revision, "\n" if ($installed);
+    print "relocatable: ", ($tlp->relocated ? "Yes" : "No"), "\n";
     print "cat-version: ", $tlp->cataloguedata->{'version'}, "\n"
       if $tlp->cataloguedata->{'version'};
     print "cat-date:    ", $tlp->cataloguedata->{'date'}, "\n"
@@ -1378,7 +1413,7 @@ sub load_taxonomy_datafile {
   init_local_db();
   my $taxonomy;
   my $fpath = $localtlpdb->root
-              . "/texmf/scripts/texlive/var/texcatalogue.keywords";
+              . "/texmf-dist/scripts/texlive/var/texcatalogue.keywords";
   if (! -r $fpath) {
     tlwarn("tlmgr: taxonomy file $fpath not readable: $!\n");
     return;
@@ -2039,7 +2074,7 @@ sub write_w32_updater {
     temp\\tar.exe -xmf temp\\%%I
     if errorlevel 1 goto :rollback
   )
-  tlpkg\\tlperl\\bin\\perl.exe .\\texmf\\scripts\\texlive\\tlmgr.pl _include_tlpobj @upd_tlpobj
+  tlpkg\\tlperl\\bin\\perl.exe .\\texmf-dist\\scripts\\texlive\\tlmgr.pl _include_tlpobj @upd_tlpobj
   if errorlevel 1 goto :rollback
   >>$pkg_log echo [%date% %time%] self update: @upd_info
   >con echo self update: @upd_info
@@ -2057,7 +2092,7 @@ sub write_w32_updater {
     temp\\tar.exe -xmf temp\\%%I
     if errorlevel 1 goto :panic
   )
-  tlpkg\\tlperl\\bin\\perl.exe .\\texmf\\scripts\\texlive\\tlmgr.pl _include_tlpobj @rst_tlpobj
+  tlpkg\\tlperl\\bin\\perl.exe .\\texmf-dist\\scripts\\texlive\\tlmgr.pl _include_tlpobj @rst_tlpobj
   if errorlevel 1 goto :panic
   >>$pkg_log echo [%date% %time%] self restore: @rst_info
   >con echo self restore: @rst_info
@@ -2256,7 +2291,7 @@ sub machine_line {
     $ret = 1;
     shift;
   }
-  my ($pkg, $flag, $lrev, $rrev, $size, $runtime, $esttot, $tag) = @_;
+  my ($pkg, $flag, $lrev, $rrev, $size, $runtime, $esttot, $tag, $lcv, $rcv) = @_;
   $lrev ||= "-";
   $rrev ||= "-";
   $flag ||= "?";
@@ -2264,7 +2299,9 @@ sub machine_line {
   $runtime ||= "-";
   $esttot ||= "-";
   $tag ||= "-";
-  my $str = join("\t", $pkg, $flag, $lrev, $rrev, $size, $runtime, $esttot, $tag);
+  $lcv ||= "-";
+  $rcv ||= "-";
+  my $str = join("\t", $pkg, $flag, $lrev, $rrev, $size, $runtime, $esttot, $tag, $lcv, $rcv);
   $str .= "\n";
   return($str) if $ret;
   print $str;
@@ -2317,7 +2354,10 @@ sub action_update {
 
   # check for updates to tlmgr and die unless either --force or --list or --self
   # is given
-  my @critical = check_for_critical_updates($localtlpdb, $remotetlpdb);
+  my @critical;
+  if (!$opts{"usermode"}) {
+    @critical = check_for_critical_updates($localtlpdb, $remotetlpdb);
+  }
   my $dry_run_cont = $opts{"dry-run"} && ($opts{"dry-run"} < 0);
   if ( !$dry_run_cont  && !$opts{"self"} && @critical) {
     critical_updates_warning();
@@ -2512,7 +2552,8 @@ sub action_update {
         if ($::machinereadable) {
           # TODO should we add a revision number
           push @addlines,
-            machine_line("-ret", $pkg, $FLAG_FORCIBLE_REMOVED, "-", "-", "-");
+            # $pkg, $flag, $lrev, $rrev, $size, $runtime, $esttot, $tag, $lcv, $rcv
+            machine_line("-ret", $pkg, $FLAG_FORCIBLE_REMOVED);
         } else {
           info("skipping forcibly removed package $pkg\n");
         }
@@ -2542,6 +2583,7 @@ sub action_update {
       next;
     }
     my $rev = $tlp->revision;
+    my $lctanvers = $tlp->cataloguedata->{'version'};
     my $mediatlp;
     my $maxtag;
     if ($remotetlpdb->is_virtual) {
@@ -2554,19 +2596,24 @@ sub action_update {
       debug("$pkg cannot be found in $location\n");
       next;
     }
+    my $rctanvers = $mediatlp->cataloguedata->{'version'};
     my $mediarev = $mediatlp->revision;
     my $mediarevstr = $mediarev;
     my @addargs = ();
     if ($remotetlpdb->is_virtual) {
       push @addargs, $maxtag;
       $mediarevstr .= "\@$maxtag";
+    } else {
+      push @addargs, undef;
     }
+    push @addargs, $lctanvers, $rctanvers;
     if ($rev < $mediarev) {
       $updated{$pkg} = 0; # will be changed to one on successful update
     } elsif ($rev > $mediarev) {
       if ($::machinereadable) {
+        # $pkg, $flag, $lrev, $rrev, $size, $runtime, $esttot, $tag, $lcv, $rcv
         push @addlines,
-          machine_line("-ret", $pkg, $FLAG_REVERSED_UPDATE, $rev, $mediarev, "-", @addargs);
+          machine_line("-ret", $pkg, $FLAG_REVERSED_UPDATE, $rev, $mediarev, "-", "-", "-", @addargs);
       } else {
         if ($opts{"list"}) {
           # not issueing anything if we keep a package
@@ -2700,9 +2747,11 @@ sub action_update {
         next;
       }
       my $rev = $pkg->revision;
+      my $lctanvers = $pkg->cataloguedata->{'version'};
       if ($opts{"list"}) {
         if ($::machinereadable) {
-          machine_line($p, $FLAG_REMOVE, $rev, "-", "-", "-");
+          # $pkg, $flag, $lrev, $rrev, $size, $runtime, $esttot, $tag, $lcv, $rcv
+          machine_line($p, $FLAG_REMOVE, $rev, "-", "-", "-", "-", "-", $lctanvers);
         } else {
           upd_info($p, -1, $rev, "<absent>", "autorm");
         }
@@ -2714,7 +2763,8 @@ sub action_update {
         # we have to check in addition that
         # - $opts{"dry-run"} is not set
         if ($::machinereadable) {
-          machine_line($p, $FLAG_REMOVE, $rev, "-", "-", "-");
+          # $pkg, $flag, $lrev, $rrev, $size, $runtime, $esttot, $tag, $lcv, $rcv
+          machine_line($p, $FLAG_REMOVE, $rev, "-", "-", "-", "-", "-", $lctanvers);
         } else {
           info("[" . sprintf ('%*2$s', $currnr, $totalnrdigits) .
             "/$totalnr] auto-remove: $p ... ");
@@ -2827,6 +2877,7 @@ sub action_update {
       my $unwind_package;
       my $remove_unwind_container = 0;
       my $rev = $tlp->revision;
+      my $lctanvers = $tlp->cataloguedata->{'version'};
       my $mediatlp;
       my $maxtag;
       if ($remotetlpdb->is_virtual) {
@@ -2839,16 +2890,21 @@ sub action_update {
         debug("$pkg cannot be found in $location\n");
         next;
       }
+      my $rctanvers = $mediatlp->cataloguedata->{'version'};
       my $mediarev = $mediatlp->revision;
       my $mediarevstr = $mediarev;
       my @addargs = ();
       if ($remotetlpdb->is_virtual) {
         push @addargs, $maxtag;
         $mediarevstr .= "\@$maxtag";
+      } else {
+        push @addargs, undef;
       }
+      push @addargs, $lctanvers, $rctanvers;
       $nrupdated++;
       if ($opts{"list"}) {
         if ($::machinereadable) {
+          # $pkg, $flag, $lrev, $rrev, $size, $runtime, $esttot, $tag, $lcv, $rcv
           machine_line($pkg, $FLAG_UPDATE, $rev, $mediarev, $sizes{$pkg}, "-", "-", @addargs);
         } else {
           my $kb = int($sizes{$pkg} / 1024) + 1;
@@ -3134,7 +3190,7 @@ sub action_update {
             }
           }
           if ($bad_file) {
-            tlwarn("The file $k has disappeared from the critical" .
+            tlwarn("$prg: The file $k has disappeared from the critical" .
                    "package $pkg but is still present in @found_pkgs\n");
           } else {
             push @infra_files_to_be_removed, $k;
@@ -3177,14 +3233,14 @@ sub action_update {
 
   # infra update and tlmgr restart on w32 is done by the updater batch script
   if (win32() && !$opts{"list"} && @critical) {
-    info("Preparing TeX Live infrastructure update...\n");
+    info("$prg: Preparing TeX Live infrastructure update...\n");
     for my $f (@infra_files_to_be_removed) {
       debug("file scheduled for removal $f\n");
     }
     my $ret = write_w32_updater($restart_tlmgr, 
                                 \@infra_files_to_be_removed, @critical);
     if ($ret) {
-      tlwarn ("Aborting infrastructure update.\n");
+      tlwarn ("$prg: Aborting infrastructure update.\n");
       $restart_tlmgr = 0 if ($opts{"dry-run"});
     }
   }
@@ -3217,6 +3273,7 @@ sub action_update {
         && $remotetlpdb->media ne "virtual"
         && !$opts{"dry-run"}
         && !$opts{"repository"}
+        && !$ENV{"TEXLIVE_INSTALL_ENV_NOCHECK"}
        ) {
       tlwarn(<<END_DISK_WARN);
 tlmgr: Your installation is set up to look on the disk for updates.
@@ -3259,7 +3316,7 @@ END_DISK_WARN
 #     not (that is the --reinstall)
 #
 # TLPDB->install_package does ONLY INSTALL ONE PACKAGE, no deps whatsoever
-# anymore!  That has all to be done by hand.
+# anymore!  That has all to be done by the caller.
 #
 sub action_install {
   init_local_db(1);
@@ -3269,16 +3326,18 @@ sub action_install {
   init_tlmedia_or_die();
 
   # check for updates to tlmgr itself, and die unless --force is given
-  if (check_for_critical_updates( $localtlpdb, $remotetlpdb)) {
-    critical_updates_warning();
-    if ($opts{"force"}) {
-      tlwarn("Continuing due to --force\n");
-    } else {
-      if ($::gui_mode) {
-        # return here and don't do any updates
-        return;
+  if (!$opts{"usermode"}) {
+    if (check_for_critical_updates( $localtlpdb, $remotetlpdb)) {
+      critical_updates_warning();
+      if ($opts{"force"}) {
+        tlwarn("Continuing due to --force\n");
       } else {
-        die "tlmgr: Not continuing, please see warning above!\n";
+        if ($::gui_mode) {
+          # return here and don't do any updates
+          return;
+        } else {
+          die "tlmgr: Not continuing, please see warning above!\n";
+        }
       }
     }
   }
@@ -3297,7 +3356,7 @@ sub action_install {
   @packs = $remotetlpdb->expand_dependencies("-only-arch", $localtlpdb, @ARGV) unless $opts{"no-depends-at-all"};
   # now expand all others unless $opts{"no-depends"}
   # if $opts{"reinstall"} do not collection->collection dependencies
-  if ($opts{"reinstall"}) {
+  if ($opts{"reinstall"} || $opts{"usermode"}) {
     @packs = $remotetlpdb->expand_dependencies("-no-collections", $localtlpdb, @packs) unless $opts{"no-depends"};
   } else {
     @packs = $remotetlpdb->expand_dependencies($localtlpdb, @packs) unless $opts{"no-depends"};
@@ -3378,7 +3437,19 @@ sub action_install {
   foreach my $pkg (@todo) {
     my $flag = $FLAG_INSTALL;
     my $re = "";
+    my $tlp = $remotetlpdb->get_package($pkg);
+    my $rctanvers = $tlp->cataloguedata->{'version'};
+    if (!defined($tlp)) {
+      info("Unknown package $pkg\n");
+      next;
+    }
+    if (!$tlp->relocated && $opts{"usermode"}) {
+      info("Package $pkg is not relocatable, cannot install it in user mode!\n");
+      next;
+    }
+    my $lctanvers;
     if (defined($localtlpdb->get_package($pkg))) {
+      my $lctanvers = $localtlpdb->get_package($pkg)->cataloguedata->{'version'};
       if ($opts{"reinstall"}) {
         $re = "re";
         $flag = $FLAG_REINSTALL;
@@ -3402,6 +3473,7 @@ sub action_install {
         $tagstr = " \@" . $maxtag;
       }
     }
+    push @addargs, $lctanvers, $rctanvers;
     if ($::machinereadable) {
       machine_line($pkg, $flag, "-", $revs{$pkg}, $sizes{$pkg}, $estrem, $esttot, @addargs);
     } else {
@@ -3508,8 +3580,8 @@ sub show_list_of_packages {
 # easier for people to use
 # tlmgr pinning show
 # tlmgr pinning check
-# tlmgr pinning add <repo> <pkgglob> [<pkgglob>, ...]
-# tlmgr pinning remove <repo> <pkgglob> [<pkgglob>, ...]
+# tlmgr pinning add <repo> <pkgglob> [<pkgglob> ...]
+# tlmgr pinning remove <repo> <pkgglob> [<pkgglob> ...]
 # tlmgr pinning remove <repo> --all
 sub action_pinning {
   my $what = shift @ARGV;
@@ -3517,64 +3589,91 @@ sub action_pinning {
   init_local_db();
   init_tlmedia_or_die();
   if (!$remotetlpdb->is_virtual) {
-    tlwarn("tlmgr: not a virtual database, no pinning actions supported!\n");
+    tlwarn("$prg: only one repository configured, "
+           . "pinning actions not supported.\n");
     return;
   }
   my $pinref = $remotetlpdb->virtual_pindata();
   my $pf = $remotetlpdb->virtual_pinning();
-  my @pins = @$pinref;
+
   if ($what =~ m/^show$/i) {
-    print "Defined pinning data:\n";
-    for my $p (@pins) {
-      print "  ", $p->{'repo'}, ":", $p->{'glob'}, "\n";
+    my @pins = @$pinref;
+    if (!@pins) {
+      tlwarn("$prg: no pinning data present.\n");
+      return 0;
     }
+    info("$prg: this pinning data is defined:\n");
+    for my $p (@pins) {
+      info("  ", $p->{'repo'}, ":", $p->{'glob'}, "\n");
+    }
+    return 1;
+
   } elsif ($what =~ m/^check$/i) {
-    tlwarn("Not implemented by now, sorry!\n");
+    tlwarn("$prg: not implemented yet, sorry!\n");
     return 0;
+
   } elsif ($what =~ m/^add$/i) {
     # we need at least two more arguments
-    if ($#ARGV < 1) {
-      tlwarn("missing arguments to pinning add\n");
+    if (@ARGV < 2) {
+      tlwarn("$prg: need at least two arguments to pinning add\n");
       return;
     }
     my $repo = shift @ARGV;
+    my @new = ();
     my @ov = $pf->value($repo);
-    push @ov, @ARGV;
+    for my $n (@ARGV) {
+      if (member($n, @ov)) {
+        info("$prg: already pinned to $repo: $n\n");
+      } else {
+        push (@ov, $n);
+        push (@new, $n);
+      }
+    }
     $pf->value($repo, @ov);
     $remotetlpdb->virtual_update_pins();
     $pf->save;
-    info("Added/Updated pinning data for $repo\n");
+    info("$prg: new pinning data for $repo: @new\n") if @new;
     return 1;
+
   } elsif ($what =~ m/^remove$/i) {
     my $repo = shift @ARGV;
     if (!defined($repo)) {
-      tlwarn("missing arguments to pinning add\n");
-      return;
+      tlwarn("$prg: missing repository argument to pinning remove\n");
+      return 0;
     }
-    my $pf = $remotetlpdb->virtual_pinning();
     if ($opts{'all'}) {
-      if ($#ARGV >= 0) {
-        tlwarn("no additional argument allowed when --all is given\n");
-        return;
+      if (@ARGV) {
+        tlwarn("$prg: additional argument(s) not allowed with --all: @ARGV\n");
+        return 0;
       }
       $pf->delete_key($repo);
       $remotetlpdb->virtual_update_pins();
       $pf->save;
-      return;
+      info("$prg: all pinning data removed for repository $repo\n");
+      return 1;
     }
     # complicated case, we want to remove only one setting
     my @ov = $pf->value($repo);
     my @nv;
     for my $pf (@ov) {
-      push @nv, $pf if (!member($pf, @ARGV));
+      push (@nv, $pf) if (!member($pf, @ARGV));
     }
-    $pf->value($repo, @nv);
+    if ($#ov == $#nv) {
+      info("$prg: no changes in pinning data for $repo\n");
+      return 1;
+    }
+    if (@nv) {
+      $pf->value($repo, @nv);
+    } else {
+      $pf->delete_key($repo);
+    }
     $remotetlpdb->virtual_update_pins();
     $pf->save;
-    info("Removed pinning data for $repo\n");
+    info("$prg: removed pinning data for repository $repo: @ARGV\n");
     return 1;
+
   } else {
-    tlwarn("Unknown argument to pinning action: $what\n");
+    tlwarn("$prg: unknown argument for pinning action: $what\n");
     return 0;
   }
   # $pin{'repo'} = $repo;
@@ -3670,7 +3769,7 @@ sub action_repository {
         }
         my ($tlpdb, $errormsg) = setup_one_remotetlpdb($loc);
         if (!defined($tlpdb)) {
-          tlwarn("cannot locate get TLPDB from $loc\n\n");
+          tlwarn("cannot get TLPDB from location $loc\n\n");
         } else {
           print "Packages at $loc:\n";
           my %pkgs = merge_sub_packages($tlpdb->list_packages);
@@ -3780,7 +3879,7 @@ sub action_repository {
     return;
   }
   # we are still here, unknown command to repository
-  tlwarn("$prg: unknown directive to tlmgr repository: $what\n");
+  tlwarn("$prg: unknown subaction for tlmgr repository: $what\n");
   return;
 }
 
@@ -3838,7 +3937,7 @@ sub action_option {
                 $localtlpdb->option($o) . "\n");
         }
       } else {
-        tlwarn ("option $o not supported\n");
+        tlwarn ("$prg: option $o not supported\n");
       }
     }
   } elsif ($what =~ m/^showall$/i) {
@@ -3872,13 +3971,13 @@ sub action_option {
             if ($val =~ m/^ctan$/i) {
               $val = "$TeXLive::TLConfig::TeXLiveURL";
             }
-            info("tlmgr: setting default package repository to $val\n");
+            info("$prg: setting default package repository to $val\n");
             $localtlpdb->option($opt, $val);
           } elsif ($what eq $TLPDBOptions{"backupdir"}->[2]) {
-            info("tlmgr: setting option $what to $val.\n");
+            info("$prg: setting option $what to $val.\n");
             if (! -d $val) {
-              info("tlmgr: the directory $val does not exists, it has to be created\n");
-              info("tlmgr: before backups can be done automatically.\n");
+              info("$prg: the directory $val does not exists, it has to be created\n");
+              info("$prg: before backups can be done automatically.\n");
             }
             $localtlpdb->option($opt, $val);
           } elsif ($what eq $TLPDBOptions{"w32_multi_user"}->[2]) {
@@ -3891,7 +3990,7 @@ sub action_option {
               } else {
                 if ($val) {
                   # non admin and tries to set to true, warn
-                  tlwarn("tlmgr: non-admin user cannot set $TLPDBOptions{'w32_multi_user'}->[2] option to true\n");
+                  tlwarn("$prg: non-admin user cannot set $TLPDBOptions{'w32_multi_user'}->[2] option to true\n");
                 } else {
                   $do_it = 1;
                 }
@@ -3901,10 +4000,10 @@ sub action_option {
             }
             if ($do_it) {
               if ($val) {
-                info("tlmgr: setting option $what to 1.\n");
+                info("$prg: setting option $what to 1.\n");
                 $localtlpdb->option($opt, 1);
               } else {
-                info("tlmgr: setting option $what to 0.\n");
+                info("$prg: setting option $what to 0.\n");
                 $localtlpdb->option($opt, 0);
               }
             }
@@ -3912,17 +4011,17 @@ sub action_option {
             # default case, switch for different types
             if ($TLPDBOptions{$opt}->[0] eq "b") {
               if ($val) {
-                info("tlmgr: setting option $what to 1.\n");
+                info("$prg: setting option $what to 1.\n");
                 $localtlpdb->option($opt, 1);
               } else {
-                info("tlmgr: setting option $what to 0.\n");
+                info("$prg: setting option $what to 0.\n");
                 $localtlpdb->option($opt, 0);
               }
             } elsif ($TLPDBOptions{$opt}->[0] eq "p") {
-              info("tlmgr: setting option $what to $val.\n");
+              info("$prg: setting option $what to $val.\n");
               $localtlpdb->option($opt, $val);
             } elsif ($TLPDBOptions{$opt}->[0] eq "u") {
-              info("tlmgr: setting option $what to $val.\n");
+              info("$prg: setting option $what to $val.\n");
               $localtlpdb->option($opt, $val);
             } elsif ($TLPDBOptions{$opt}->[0] =~ m/^n(:((-)?\d+)?..((-)?\d+)?)?$/) {
               my $isgood = 1;
@@ -3947,7 +4046,7 @@ sub action_option {
                 }
               }
               if ($isgood) {
-                info("tlmgr: setting option $what to $n.\n");
+                info("$prg: setting option $what to $n.\n");
                 $localtlpdb->option($opt, $n);
               }
             } else {
@@ -3958,11 +4057,11 @@ sub action_option {
           # now also save the TLPOBJ of 00texlive.installation
           my $tlpo = $localtlpdb->get_package("00texlive.installation");
           if ($tlpo) {
-            if (open(TOFD, ">$Master/tlpkg/tlpobj/00texlive.installation.tlpobj")) {
+            if (open(TOFD, ">$::maintree/tlpkg/tlpobj/00texlive.installation.tlpobj")) {
               $tlpo->writeout(\*TOFD);
               close(TOFD);
             } else {
-              tlwarn("Cannot save 00texlive.installation to $Master/tlpkg/tlpobj/00texlive.installation.tlpobj\n");
+              tlwarn("Cannot save 00texlive.installation to $::maintree/tlpkg/tlpobj/00texlive.installation.tlpobj\n");
             }
           }
         } else {
@@ -3978,7 +4077,7 @@ sub action_option {
       }
     }
     if (!$found) {
-      tlwarn("tlmgr: option $what not supported!\n");
+      tlwarn("$prg: option $what not supported!\n");
     }
   }
   return;
@@ -3994,6 +4093,10 @@ sub action_platform {
   if ($^O=~/^MSWin(32|64)$/i) {
     warn("action `platform' not supported on Windows\n");
     return();
+  }
+  if ($opts{"usermode"}) {
+    tlwarn("action `platform' not supported in usermode\n");
+    exit 1;
   }
   my $what = shift @ARGV;
   init_local_db(1);
@@ -4146,6 +4249,10 @@ sub action_platform {
 #  GENERATE
 #
 sub action_generate {
+  if ($opts{"usermode"}) {
+    tlwarn("action `generate' not supported in usermode!\n");
+    exit 1;
+  }
   my $what = shift @ARGV;
   init_local_db();
 
@@ -4348,7 +4455,6 @@ sub action_uninstall {
   system("rm", "-rf", "$Master/texmf-dist");
   system("rm", "-rf", "$Master/texmf-doc");
   system("rm", "-rf", "$Master/texmf-var");
-  system("rm", "-rf", "$Master/texmf");
   system("rm", "-rf", "$Master/tlpkg");
   system("rm", "-rf", "$Master/bin");
   system("rm", "-rf", "$Master/readme-html.dir");
@@ -4558,21 +4664,16 @@ sub check_files {
   my $arch = $localtlpdb->platform();
   return $ret if $arch eq "win32";
 
-  # check that all files in the trees are covered.
-  #
+  # check that all files in the trees are covered, along with
+  # 00texlive.image, q.v.  The ones here are not included in the
+  # archival source/ tarball;
   my @IgnorePatterns = qw!
-    support/ source/ setuptl/
-    texmf-dist/ls-R$ texmf-doc/ls-R$ texmf/ls-R$
-    tlpkg/tlpsrc tlpkg/bin tlpkg/lib/ tlpkg/libexec tlpkg/tests/ tlpkg/etc
-    tlpkg/texlive.tlpdb
-    tlpkg/tlpobj
-    texmf-var/
-    texmf-config/
-    texmf.cnf
-    install-tl.log
-    tlpkg/texlive.profile
-    tlpkg/installer
-    tlpkg/backups/
+    source/
+    texmf-dist/ls-R$ texmf-doc/ls-R$
+    tlpkg/archive tlpkg/backups tlpkg/installer
+    tlpkg/texlive.tlpdb tlpkg/tlpobj tlpkg/texlive.profile
+    texmf-var/ texmf-config/
+    texmf.cnf install-tl.log
   !;
   my %tltreefiles = %{$tltree->{'_allfiles'}};
   my @tlpdbfiles = keys %filetopacks;
@@ -4662,10 +4763,12 @@ sub check_runfiles {
             |libertine\.sty
             |m-tex4ht\.tex
             |metatex\.tex
+            |.*-noEmbed\.map
             |ps2mfbas\.mf
             |pstricks\.con
             |sample\.bib
             |tex4ht\.env
+            |test\.mf
             |texutil\.rb
             |tlmgrgui\.pl
            )$/x;
@@ -4743,7 +4846,7 @@ sub check_executes {
         foreach my $k (keys %mapfn) {
           my @bla = @{$mapfn{$k}};
           if ($#bla > 0) {
-            tlwarn ("map file $mf occurs multiple times (in pkg @bla)!\n");
+            tlwarn ("map file $mf occurs multiple times (in pkgs: @bla)!\n");
           }
         }
       } else {
@@ -4757,7 +4860,7 @@ sub check_executes {
     }
   }
   if (keys %badmaps) {
-    print "mentioned map file not occuring in any package:\n";
+    tlwarn("$prg: mentioned map file not present in any package:\n");
     foreach my $mf (keys %badmaps) {
       print "\t$mf (execute in @{$badmaps{$mf}})\n";
     }
@@ -5031,6 +5134,37 @@ sub action_postaction {
   }
 }
 
+#  INIT USER TREE
+# sets up the user tree for tlmgr in user mode
+sub action_init_usertree {
+  init_local_db();
+  my $tlpdb = TeXLive::TLPDB->new;
+  my $usertree;
+  if ($opts{"usertree"}) {
+    $usertree = $opts{"usertree"};
+  } else {
+    chomp($usertree = `kpsewhich -var-value TEXMFHOME`);
+  }
+  if (-r "$usertree/$InfraLocation/$DatabaseName") {
+    tldie("$prg: user mode database already set up in\n$prg:   $usertree/$InfraLocation/$DatabaseName\n$prg: not overwriting it.\n");
+  }
+  $tlpdb->root($usertree);
+  # copy values from main installation over
+  my $maininsttlp = $localtlpdb->get_package("00texlive.installation");
+  my $inst = $maininsttlp->copy;
+  $tlpdb->add_tlpobj($inst);
+  # remove all available architectures
+  $tlpdb->setting( "available_architectures", "");
+  # specify that we are in user mode
+  $tlpdb->setting( "usertree", 1 );
+  $tlpdb->save;
+  #
+  # we need to create web2c dir for TLMedia to succeed setting up
+  # and for tlmgr.log file
+  mkdir ("$usertree/web2c");
+  mkdir ("$usertree/tlpkg/tlpobj");
+}
+
 #  CONF
 # tries to mimic texconfig conf but can also set values for both tlmgr
 # and texmf conf files.
@@ -5088,7 +5222,7 @@ sub action_conf {
       $cf->save;
     }
   } else {
-    warn "tlmgr: unknown conf arg: $arg (try tlmgr or texmf)\n";
+    warn "$prg: unknown conf arg: $arg (try tlmgr or texmf)\n";
   }
 }
 
@@ -5154,8 +5288,8 @@ sub init_local_db {
   # to make sure that the settings in the local tlpdb do not overwrite
   # stuff changed via the GUI
   return if defined $localtlpdb;
-  $localtlpdb = TeXLive::TLPDB->new ( root => $Master );
-  die("cannot setup TLPDB in $Master") unless (defined($localtlpdb));
+  $localtlpdb = TeXLive::TLPDB->new ( root => $::maintree );
+  die("cannot setup TLPDB in $::maintree") unless (defined($localtlpdb));
   # setup the programs, for w32 we need the shipped wget/xz etc, so we
   # pass the location of these files to setup_programs.
   if (!setup_programs("$Master/tlpkg/installer", $localtlpdb->platform)) {
@@ -5200,7 +5334,7 @@ sub init_local_db {
 sub init_tlmedia_or_die {
   my ($ret, $err) = init_tlmedia();
   if (!$ret) {
-    tldie("$prg: $err");
+    tldie("$prg: $err\n");
   }
 }
 
@@ -5255,24 +5389,20 @@ sub init_tlmedia
   }
 
   # now check/setup pinning
-  # TODO for now no default pinning file!
   if (!$opts{"pin-file"}) {
     # check for pinning file in TEXMFLOCAL/tlpkg/pinning.txt
     chomp (my $TEXMFLOCAL = `kpsewhich -var-value=TEXMFLOCAL`);
     debug("trying to load pinning file $TEXMFLOCAL/tlpkg/pinning.txt\n");
-    if (-r "$TEXMFLOCAL/tlpkg/pinning.txt") {
-      $opts{"pin-file"} = "$TEXMFLOCAL/tlpkg/pinning.txt";
-    }
+    # since we use TLConfFile it does not matter if the file
+    # is not existing, it will be treated properly in TLConfFile
+    $opts{"pin-file"} = "$TEXMFLOCAL/tlpkg/pinning.txt";
   }
-  if ($opts{"pin-file"} && -r $opts{"pin-file"}) {
-    # $pinfile is global var
-    $pinfile = TeXLive::TLConfFile->new($opts{"pin-file"}, "#", ":", 'multiple');
-    $remotetlpdb->virtual_pinning($pinfile);
-  }
+  $pinfile = TeXLive::TLConfFile->new($opts{"pin-file"}, "#", ":", 'multiple');
+  $remotetlpdb->virtual_pinning($pinfile);
   # this "location-url" line should not be changed since GUI programs
   # depend on it:
   print "location-url\t$locstr\n" if $::machinereadable;
-  info("tlmgr: package repositories:\n");
+  info("$prg: package repositories:\n");
   info("\tmain = " . $repos{'main'} . "\n");
   for my $t (@tags) {
     if ($t ne 'main') {
@@ -5316,7 +5446,7 @@ sub _init_tlmedia
   # this "location-url" line should not be changed since GUI programs
   # depend on it:
   print "location-url\t$location\n" if $::machinereadable;
-  info("tlmgr: package repository $location\n");
+  info("$prg: package repository $location\n");
   return 1;
 }
 
@@ -5409,15 +5539,16 @@ END_NO_INTERNET
   #   release/2010-foobar
   my $texlive_release = $remotetlpdb->config_release;
   my $texlive_minrelease = $remotetlpdb->config_minrelease;
+  my $rroot = $remotetlpdb->root;
   if (!defined($texlive_release)) {
-    return(undef, "The installation repository does not specify a "
+    return(undef, "The installation repository ($rroot) does not specify a "
           . "release year for which it was prepared, goodbye.");
   }
   # still here, so we have $texlive_release defined
   my $texlive_release_year = $texlive_release;
   $texlive_release_year =~ s/^(....).*$/$1/;
   if ($texlive_release_year !~ m/^[1-9][0-9][0-9][0-9]$/) {
-    return(undef, "The installation repository does not specify a "
+    return(undef, "The installation repository ($rroot) does not specify a "
           . "valid release year, goodbye: $texlive_release");
   }
   # so $texlive_release_year is numeric, good
@@ -5426,13 +5557,14 @@ END_NO_INTERNET
     my $texlive_minrelease_year = $texlive_minrelease;
     $texlive_minrelease_year =~ s/^(....).*$/$1/;
     if ($texlive_minrelease_year !~ m/^[1-9][0-9][0-9][0-9]$/) {
-      return(undef, "The installation repository does not specify a "
+      return(undef, "The installation repository ($rroot) does not specify a "
             . "valid minimal release year, goodbye: $texlive_minrelease");
     }
     # ok, all numeric and fine, check for range
     if ($TeXLive::TLConfig::ReleaseYear < $texlive_minrelease_year
         || $TeXLive::TLConfig::ReleaseYear > $texlive_release_year) {
       return (undef, "The TeX Live versions supported by the repository
+$rroot
   ($texlive_minrelease_year--$texlive_release_year)
 do not include the version of the local installation
   ($TeXLive::TLConfig::ReleaseYear).");
@@ -5441,10 +5573,10 @@ do not include the version of the local installation
     # $texlive_minrelease not defined, so only one year is valid
     if ($texlive_release_year != $TeXLive::TLConfig::ReleaseYear) {
       return(undef, "The TeX Live versions of the local installation
-and the repository being accessed are not compatible:
+and the repository are not compatible:
       local: $TeXLive::TLConfig::ReleaseYear
- repository: $texlive_release_year
-(Perhaps you need to use a different CTAN mirror?).");
+ repository: $texlive_release_year ($rroot)
+(Perhaps you need to use a different CTAN mirror? Just a guess.)");
     }
   }
 
@@ -5488,15 +5620,14 @@ FROZEN
 
 
 # finish handles the -pause option (wait for input from stdin),
-# and then exits unless  the global $::gui_mode is set, in which case we
+# and then exits unless the global $::gui_mode is set, in which case we
 # merely return.
 #
-sub finish
-{
+sub finish {
   my ($ret) = @_;
 
   if ($ret > 0) {
-    print "tlmgr: exiting unsuccessfully (status $ret).\n";
+    print "$prg: exiting unsuccessfully (status $ret).\n";
   }
 
   if ($opts{"pause"}) {
@@ -5505,25 +5636,20 @@ sub finish
   }
 
   if ($::gui_mode) {
-    return($ret);
+    return $ret;
   } else {
     exit($ret);
   }
 }
 
-#
-# config file handling
-# config files are located in TEXMFCONFIG/tlmgr/config thus specific
-# for each user
+
+# tlmgr config file handling.  These config files are located in
+# TEXMFCONFIG/tlmgr/config, thus specific for each user.
 #
 # format:
 #  key=value
 #
-# allowed keys at the moment
-#   gui-expertmode = 0|1
-#
-sub load_config_file
-{
+sub load_config_file {
   #
   # first set default values
   # the default for gui-expertmode is 1 since that is what we
@@ -5536,9 +5662,12 @@ sub load_config_file
   chomp (my $TEXMFCONFIG = `kpsewhich -var-value=TEXMFCONFIG`);
   my $fn = "$TEXMFCONFIG/tlmgr/config";
   $tlmgr_config_file = TeXLive::TLConfFile->new($fn, "#", "=");
+
+  # switched names for this one after initial release.
   if ($tlmgr_config_file->key_present("gui_expertmode")) {
     $tlmgr_config_file->rename_key("gui_expertmode", "gui-expertmode");
   }
+
   for my $key ($tlmgr_config_file->keys) {
     my $val = $tlmgr_config_file->value($key);
     if ($key eq "gui-expertmode") {
@@ -5547,32 +5676,35 @@ sub load_config_file
       } elsif ($val eq "1") {
         $config{"gui-expertmode"} = 1;
       } else {
-        tlwarn("Unknown value >$val< for gui-expertmode in $fn\n");
+        tlwarn("$fn: Unknown value for gui-expertmode: $val\n");
       }
+
     } elsif ($key eq "persistent-downloads") {
       if (($val eq "0") || ($val eq "1")) {
         $config{'persistent-downloads'} = $val;
       } else {
-        tlwarn("Unknown value $val for persistent-downloads in $fn\n");
+        tlwarn("$fn: Unknown value for persistent-downloads: $val\n");
       }
+
     } elsif ($key eq "gui-lang") {
       $config{'gui-lang'} = $val;
+
     } elsif ($key eq "auto-remove") {
       if ($val eq "0") {
         $config{"auto-remove"} = 0;
       } elsif ($val eq "1") {
         $config{"auto-remove"} = 1;
       } else {
-        tlwarn("Unknown value >$val< for auto-remove in $fn\n");
+        tlwarn("$fn: Unknown value for auto-remove: $val\n");
       }
+
     } else {
-      tlwarn("Unknown key $key in $fn\n");
+      tlwarn("$fn: Unknown tlmgr configuration variable: $key\n");
     }
   }
 }
 
-sub write_config_file
-{
+sub write_config_file {
   if (!defined($tlmgr_config_file)) {
     chomp (my $TEXMFCONFIG = `kpsewhich -var-value=TEXMFCONFIG`);
     my $dn = "$TEXMFCONFIG/tlmgr";
@@ -5727,6 +5859,7 @@ sub packagecmp {
 }
 
 sub check_on_writable {
+  return 1 if $opts{"usermode"};
   if (!TeXLive::TLUtils::dir_writable("$Master/tlpkg")) {
     tlwarn("You don't have permission to change the installation in any way,\n");
     tlwarn("specifically, the directory $Master/tlpkg/ is not writable.\n");
@@ -5826,7 +5959,7 @@ C<install-tl> has more details about this
 
 C<--repository> changes the repository location only for the current
 run; to make a permanent change, use C<option repository> (see the
-L<option> action).
+L</option> action).
 
 For backward compatibility and convenience, C<--location> and C<--repo>
 are accepted as aliases for this option.
@@ -5834,14 +5967,14 @@ are accepted as aliases for this option.
 
 =item B<--gui> [I<action>]
 
-C<tlmgr> has a graphical interface as well as the command-line
+C<tlmgr> has a graphical interface as well as the command line
 interface.  You can give this option, C<--gui>, together with an action
 to be brought directly into the respective screen of the GUI.  For
 example, running
 
   tlmgr --gui update
 
-starts you directly at the update screen.  Without any action, the
+starts you directly at the update screen.  If no action is given, the
 GUI will be started at the main screen.
 
 =for comment Keep language list in sync with install-tl.
@@ -5858,11 +5991,23 @@ Polish (pl), Brazilian Portuguese (pt_BR), Russian (ru), Slovak (sk),
 Slovenian (sl), Serbian (sr), Vietnamese (vi), simplified Chinese
 (zh_CN), and traditional Chinese (zh_TW).
 
+=item B<--debug-translation>
+
+In GUI mode, this switch tells C<tlmgr> to report any untranslated (or
+missing) messages to standard error.  This can help translators to see
+what remains to be done.
+
 =item B<--machine-readable>
 
 Instead of the normal output intended for human consumption, write (to
 standard output) a fixed format more suitable for machine parsing.  See
 the L</"MACHINE-READABLE OUTPUT"> section below.
+
+=item B<--no-execute-actions>
+
+Suppress the execution of the execute actions as defined in the tlpsrc
+files.  Documented only for completeness, as this is only useful in
+debugging.
 
 =item B<--package-logfile> I<file>
 
@@ -5881,36 +6026,39 @@ Windows to avoid disappearing command windows.
 =item B<--no-persistent-downloads>
 
 For network-based installations, this option (on by default) makes
-C<tlmgr> try to set up a persistent connection (using the L<Net::LWP>
-Perl module).  The idea is to open and reuse only one connection per
-session between your computer and the server, instead of initiating a
-new download for each package.
+C<tlmgr> try to set up a persistent connection (using the C<LWP> Perl
+module).  The idea is to open and reuse only one connection per session
+between your computer and the server, instead of initiating a new
+download for each package.
 
 If this is not possible, C<tlmgr> will fall back to using C<wget>.  To
 disable these persistent connections, use C<--no-persistent-downloads>.
 
-=item B<--no-execute-actions>
+=item B<--pin-file>
 
-Suppress the execution of the execute actions as defined in the tlpsrc
-files.  Documented only for completeness, as this is only useful in
-debugging.
+Change the pinning file location from C<TEXMFLOCAL/tlpkg/pinning.txt>
+(see L</Pinning> below).  Documented only for completeness, as this is
+only useful in debugging.
 
-=item B<--debug-translation>
+=item B<--usermode>
 
-In GUI mode, this switch makes C<tlmgr> report any missing, or more
-likely untranslated, messages to standard error.  This can help
-translators to see what remains to be done.
+Activates user mode for this run of C<tlmgr>; see L<USER MODE> below.
+
+=item B<--usertree> I<dir>
+
+Uses I<dir> for the tree in user mode; see L<USER MODE> below.
 
 =back
 
 The standard options for TeX Live programs are also accepted:
 C<--help/-h/-?>, C<--version>, C<-q> (no informational messages), C<-v>
 (debugging messages, can be repeated).  For the details about these, see
-the L<TeXLive::TLUtils> documentation.
+the C<TeXLive::TLUtils> documentation.
 
 The C<--version> option shows version information about the TeX Live
-release and about the C<tlmgr> script itself.  If C<-v> is given as
-well, revision number for the used TeX Live Perl modules are shown, too.
+release and about the C<tlmgr> script itself.  If C<-v> is also given,
+revision number for the loaded TeX Live Perl modules are shown, too.
+
 
 =head1 ACTIONS
 
@@ -6260,6 +6408,13 @@ L</"TAXONOMIES"> below for details.
 =back
 
 
+=head2 init-usertree
+
+Sets up a texmf tree for so-called user mode management, either the
+default user tree (C<TEXMFHOME>), or one specified on the command line
+with C<--usertree>.  See L<USER MODE> below.
+
+
 =head2 install [I<option>]... I<pkg>...
 
 Install each I<pkg> given on the command line. By default this installs
@@ -6448,7 +6603,7 @@ those extra settings at present.
 
 On Unix, merely adds or removes symlinks for binaries, man pages, and
 info pages in the system directories specified by the respective options
-(see the L<option> description above).  Does not change any
+(see the L</option> description above).  Does not change any
 initialization files, either system or personal.
 
 On Windows, the registry part where the binary directory is added or
@@ -6474,30 +6629,27 @@ is issued that the caller does not have enough privileges.
 
 =head2 pinning 
 
-The pinning action manages the pinning file, see L<Pinning> for details.
+The C<pinning> action manages the pinning file, see L</Pinning> below.
 
 =over 4
 
-=item B<pinning show>
+=item C<pinning show>
 
 Shows the current pinning data.
 
-=item B<pinning check>
+=item C<pinning add> I<repo> I<pkgglob>...
 
-Not implemented at the moment.
+Pins the packages matching the I<pkgglob>(s) to the repository
+I<repo>.
 
-=item B<pinning add I<repo> I<pgkglob> [I<pkgglob>]>
+=item C<pinning remove> I<repo> I<pkgglob>...
 
-Pins the packages specified by I<pkgglob> to the repo I<repo>.
+Any packages recorded in the pinning file matching the <pkgglob>s for
+the given repository I<repo> are removed.
 
-=item B<pinning remove I<repo> I<pgkglob> [I<pkgglob>]>
+=item C<pinning remove I<repo> --all>
 
-If there is a the very package glob <pkgglob> recorded in the pinning file 
-for the given repo I<repo>, it is removed.
-
-=item B<pinning remove I<repo> --all>
-
-Remove all pinning data for repo I<repo>.
+Remove all pinning data for repository I<repo>.
 
 =back
 
@@ -6796,7 +6948,7 @@ has also been removed from the respective collection), C<tlmgr> will
 remove the package in the local installation.  This is called
 ``auto-remove'' and is announced as such when using the option
 C<--list>.  This auto-removal can be suppressed using the option
-C<--no-auto-remove>.
+C<--no-auto-remove> (not recommended, see option description).
 
 Analogously, if a package has been added to a collection on the server
 that is also installed locally, it will be added to the local
@@ -6870,10 +7022,12 @@ supported in these circumstances.
 
 =item B<--no-auto-remove> [I<pkg>]...
 
-Under normal circumstances C<tlmgr> tries to remove packages which have
-disappeared on the server, as described above under C<--all>.  This
-option prevents any such removals, either for all packages (with
-C<--all>), or the given I<pkg> names.
+By default, C<tlmgr> tries to remove packages which have disappeared on
+the server, as described above under C<--all>.  This option prevents
+such removals, either for all packages (with C<--all>), or for just the
+given I<pkg> names.  This can lead to an inconsistent TeX installation,
+since packages are not infrequently renamed or replaced by their
+authors.  Therefore this is not recommend.
 
 =item B<--no-auto-install> [I<pkg>]...
 
@@ -6954,6 +7108,95 @@ If the package on the server is older than the package already installed
 downgrade.  Also, packages for uninstalled platforms are not installed.
 
 
+  
+=head1 USER MODE
+
+B<WARNING:> This is new work in TL 2013.  Expect breakage, and the need
+to reinstall your user tree.
+
+C<tlmgr> provides a restricted way, called ``user mode'', to manage
+arbitrary texmf trees in the same way as the main installation.  For
+example, this allows people without write permissions on the
+installation location to update/install packages into a tree of their
+own.
+
+C<tlmgr> is switched into user mode with the command line option
+C<--usermode>.  It does not switch automatically, nor is there any
+configuration file setting for it.  Thus, this option has to be
+explicitly given every time user mode is to be activated.
+
+This mode of C<tlmgr> works on a user tree, by default the value of the
+C<TEXMFHOME> variable.  This can be overridden with the command line
+option C<--usertree>.  In the following when we speak of the user tree
+we mean either C<TEXMFHOME> or the one given on the command line.
+
+Not all actions are allowed in user mode; C<tlmgr> will warn you and not
+carry out any problematic actions.  Currently not supported (and
+probably will never be) is the C<platform> action.  The C<gui> action is
+currently not supported, but may be in a future release.
+
+Some C<tlmgr> actions don't need any write permissions and thus work the
+same in user mode and normal mode.  Currently these are: C<check>,
+C<help>, C<list>, C<print-platform>, C<search>, C<show>, C<version>.
+
+On the other hand, most of the actions dealing with package management
+do need write permissions, and thus behave differently in user mode, as
+described below: C<install>, C<update>, C<remove>, C<option>, C<paper>,
+C<generate>, C<backup>, C<restore>, C<uninstall>, C<symlinks>.
+
+Before using C<tlmgr> in user mode, you have to set up the user tree
+with the C<init-usertree> action.  This creates I<usertree>C</web2c> and
+I<usertree>C</tlpkg/tlpobj>, and a minimal
+I<usertree>C</tlpkg/texlive.tlpdb>.  At that point, you can tell
+C<tlmgr> to do the (supported) actions by adding the C<--usermode>
+command line option.
+
+In user mode the file I<usertree>C</tlpkg/texlive.tlpdb> contains only
+the packages that have been installed into the user tree using C<tlmgr>,
+plus additional options from the ``virtual'' package
+C<00texlive.installation> (similar to the main installation's
+C<texlive.tlpdb>).
+
+All actions on packages in user mode can only be carried out on packages
+that are known as C<relocatable>.  This excludes all packages containing
+executables and a few other core packages.  Of the 2500 or so packages
+currently in TeX Live the vast majority are relocatable and can be
+installed into a user tree.
+
+Description of changes of actions in user mode:
+
+=head3 install
+
+In user mode, the C<install> action checks that the package and all
+dependencies are all either relocated or already installed in the system
+installation.  If this is the case, it unpacks all containers to be
+installed into the user tree (to repeat, that's either C<TEXMFHOME> or
+the value of C<--usertree>) and add the respective packages to the user
+tree's C<texlive.tlpdb> (creating it if need be).
+
+Currently installing a collection in user mode installs all dependent
+packages, but in contrast to normal mode, does I<not> install dependent
+collections.  For example, in normal mode C<tlmgr install
+collection-context> would install C<collection-basic> and other
+collections, while in user mode, I<only> the packages mentioned in
+C<collection-context> are installed.
+
+=head2 backup, restore, remove, update
+
+In user mode, these actions check that all packages to be acted on are
+installed in the user tree before proceeding; otherwise, they behave
+just as in normal mode.
+ 
+=head2 generate, option, paper
+
+In user mode, these actions operate only on the user tree's
+configuration files and/or C<texlive.tlpdb>.
+creates configuration files in user tree
+
+B<WARNING> repeated: this is still has to be considered experimental!
+Please report bugs to C<tex-live@tug.org> as usual
+
+
 =head1 TLMGR CONFIGURATION FILE
 
 A small subset of the command line options can be set in a config file
@@ -6967,15 +7210,14 @@ other lines must look like
 
   key = value
 
-where the allowed keys are 
-C<gui-expertmode> (values 0 or 1), 
-C<persistent-downloads> (values 0 or 1), C<auto-remove> (values 0 or 1),
-and C<gui-lang> (values like the command line arguments).  
-C<persistent-downloads>, C<gui-lang>, and C<auto-remove> correspond to the 
-respective command line options of the same name.  
-C<gui-expertmode> switches between the full
-GUI and a simplified GUI with only the important and mostly used
-settings.
+where the allowed keys are C<gui-expertmode> (value 0 or 1),
+C<persistent-downloads> (value 0 or 1), C<auto-remove> (value 0 or 1),
+and C<gui-lang> (value like in the command line option).
+
+C<persistent-downloads>, C<gui-lang>, and C<auto-remove> correspond to
+the respective command line options of the same name.  C<gui-expertmode>
+switches between the full GUI and a simplified GUI with only the
+important and mostly used settings.
 
 
 =head1 TAXONOMIES
@@ -6992,21 +7234,21 @@ options:
 
 =over 4
 
-=item B<--keyword>
+=item C<--keyword>
 
 The keywords, as specified at L<http://az.ctan.org/keyword>.
 
-=item B<--functionality>
+=item C<--functionality>
 
 The ``by-topic'' categorization created by J\"urgen Fenn, as specified
 at L<http://az.ctan.org/characterization/by-function>.
 
-=item B<--characterization>
+=item C<--characterization>
 
 Both the primary and secondary functionalities, as specified at
 L<http://az.ctan.org/characterization/choose_dimen>.
 
-=item B<--taxonomy>
+=item C<--taxonomy>
 
 Operate on all the taxonomies.
 
@@ -7026,58 +7268,44 @@ Examples:
 
 =head1 MULTIPLE REPOSITORIES
 
-The main TeX Live repository includes a vast array of packages.
+The main TeX Live repository contains a vast array of packages.
 Nevertheless, additional local repositories can be useful to provide
 locally-installed resources, such as proprietary fonts and house styles.
 Also, alternative package repositories distribute packages that cannot
-or should not be included in TeX Live, due to being under rapid
-development or for other reasons.
+or should not be included in TeX Live, for whatever reason.
 
-The simplest and most reliable method is simply to temporarily set the
-installation source to any repository (with the C<-repository> command
-line option or C<option repository>), and perform your operations.  When
-you are using multiple repositories over a sustained time, however, this
-is inconvenient.  Thus, it's possible to tell C<tlmgr> about additional
-repositories you want to use.  The basic command is C<tlmgr repository
-add>.  The rest of this section explains further.
+The simplest and most reliable method is to temporarily set the
+installation source to any repository (with the C<-repository> or
+C<option repository> command line options), and perform your operations.
+
+When you are using multiple repositories over a sustained time, however,
+explicitly switching between them becomes inconvenient.  Thus, it's
+possible to tell C<tlmgr> about additional repositories you want to use.
+The basic command is C<tlmgr repository add>.  The rest of this section
+explains further.
 
 When using multiple repositories, one of them has to be set as the main
-repository, which distributes most of the installed packages.  If you
+repository, which distributes most of the installed packages.  When you
 switch from a single repository installation to a multiple repository
-installation, the previously set repository will be set as the main
+installation, the previous sole repository will be set as the main
 repository.
 
 By default, even if multiple repositories are configured, packages are
-I<only> installed from the main repository.  Thus, simply adding a
-second repository does not actually enable installation of anything from
-there.  You also have to specify which packages should be taken from a
-different repository by specifying so-called ``pinning'' rules,
-described next.
+I<still> I<only> installed from the main repository.  Thus, simply
+adding a second repository does not actually enable installation of
+anything from there.  You also have to specify which packages should be
+taken from the new repository, by specifying so-called ``pinning''
+rules, described next.
 
 =head2 Pinning
-
-Pinning a package is done by editing (creating) this file:
-
-  TEXMFLOCAL/tlpkg/pinning.txt
-
-with lines of the form:
-
-  repo:pkg[,pkg]
-
-In this line, the I<repo> is either a full url or repository tag that
-was added to the repository list.  Each I<pkg> is a shell-style glob for
-package identifiers.
 
 When a package C<foo> is pinned to a repository, a package C<foo> in any
 other repository, even if it has a higher revision number, will not be
 considered an installable candidate.
 
-By default, everything is pinned to the main repository, 
-as if the last line of C<pinning.txt> was
-
-  main:*
-
-=head2 Multiple repository example with tlcontrib
+As mentioned above, by default everything is pinned to the main
+repository.  Let's now go through an example of setting up a second
+repository and enabling updates of a package from it.
 
 First, check that we have support for multiple repositories, and have
 only one enabled (as is the case by default):
@@ -7086,8 +7314,9 @@ only one enabled (as is the case by default):
  List of repositories (with tags if set):
    /var/www/norbert/tlnet
 
-Let's add the C<tlcontrib> repository (L<http://tlcontrib.metatex.org>,
-maintained by Taco Hoekwater et al.), with the tag C<tlcontrib>:
+Ok.  Let's add the C<tlcontrib> repository (this is a real
+repository, hosted at L<http://tlcontrib.metatex.org>, maintained by
+Taco Hoekwater et al.), with the tag C<tlcontrib>:
 
  $ tlmgr repository add http://tlcontrib.metatex.org/2012 tlcontrib
 
@@ -7095,37 +7324,40 @@ Check the repository list again:
 
  $ tlmgr repository list
  List of repositories (with tags if set):
-    http://tlcontrib.metatex.org/2011 (tlcontrib)
+    http://tlcontrib.metatex.org/2012 (tlcontrib)
     /var/www/norbert/tlnet (main)
 
-Specify a pinning entry to get the package C<microtype> from C<tlcontrib>:
+Now we specify a pinning entry to get the package C<context> from
+C<tlcontrib>:
 
- $ tlocal=`kpsewhich -var-value TEXMFLOCAL`
- $ echo "tlcontrib:microtype" > $tlocal/tlpkg/pinning.txt
+ $ tlmgr pinning add tlcontrib context
 
-Check that we can find C<microtype>:
+Check that we can find C<context>:
 
- $ tlmgr show microtype
- tlmgr: using pinning file .../tlpkg/pinning.txt
+ $ tlmgr show context
  tlmgr: package repositories:
  ...
- package:     microtype
- category:    Package
+ package:     context
+ repository:  tlcontrib/26867
  ...
 
-- install C<microtype>:
+- install C<context>:
 
- $ tlmgr install microtype
- tlmgr: using pinning file .../tlpkg/pinning.txt
+ $ tlmgr install context
  tlmgr: package repositories:
  ...
- [1/1,  ??:??/??:??] install: microtype @tlcontrib [39k]
+ [1/1,  ??:??/??:??] install: context @tlcontrib [
 
-In the output here you can see that the C<microtype> package is
-installed from the C<tlcontrib> repository (C<@tlcontrib>).  (By the
-way, hopefully the new version of microtype that is in tlcontrib as of
-this writing will be released on CTAN soon, but meanwhile, it serves as
-an example.)
+In the output here you can see that the C<context> package has been
+installed from the C<tlcontrib> repository (C<@tlcontrib>).
+
+Finally, C<tlmgr pinning> also supports removing certain or all packages
+from a given repository:
+
+  $ tlmgr pinning remove tlcontrib context  # remove just context
+  $ tlmgr pinning remove tlcontrib --all    # take nothing from tlcontrib
+
+A summary of the C<tlmgr pinning> actions is given above.
 
 
 =head1 GUI FOR TLMGR
@@ -7281,14 +7513,14 @@ The following entries can be found in the menu bar:
 
 =over 4
 
-=item B<tlmgr> menu
+=item C<tlmgr> menu
 
 The items here load various repositories: the default as specified in
 the TeX Live database, the default network repository, the repository
 specified on the command line (if any), and an arbitrarily
 manually-entered one.  Also has the so-necessary C<quit> operation.
 
-=item B<Options menu>
+=item C<Options menu>
 
 Provides access to several groups of options: C<Paper> (configuration of
 default paper sizes), C<Platforms> (only on Unix, configuration of the
@@ -7307,7 +7539,7 @@ automatic removal of packages deleted from the server.  Playing with the
 choices of what is or isn't installed may lead to an inconsistent TeX Live
 installation; e.g., when a package is renamed.
 
-=item B<Actions menu>
+=item C<Actions menu>
 
 Provides access to several actions: update the filename database (aka
 C<ls-R>, C<mktexlsr>, C<texhash>), rebuild all formats (C<fmtutil-sys
@@ -7318,7 +7550,7 @@ Windows).
 The final action is to remove the entire TeX Live installation (also not
 on Windows).
 
-=item B<Help menu>
+=item C<Help menu>
 
 Provides access to the TeX Live manual (also on the web at
 L<http://tug.org/texlive/doc.html>) and the usual ``About'' box.
@@ -7337,10 +7569,10 @@ information it needs by reading stdout.
 Currently this option only applies to the 
 L<update|/"update [I<option>]... [I<pkg>]...">, the
 L<install|"install [I<option>]... I<pkg>...">, and the
-L<option|"option"> actions.  
+L</option> actions.  
 
 
-=head2 update and install actions
+=head3 update, install
 
 The output format is as follows:
 
@@ -7462,7 +7694,7 @@ The estimated total time.
 
 =back
 
-=head2 option action
+=head3 option
 
 The output format is as follows:
 

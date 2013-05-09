@@ -1,4 +1,4 @@
-% This is a change file for pTeX 3.3
+% This is a change file for pTeX 3.4
 % By Sadayuki Tanaka and ASCII MEDIA WORKS.
 %
 % Thanks for :
@@ -48,12 +48,13 @@
 % (15/04/2011) PB  pTeX p3.2 Add \ifdbox and \ifddir
 % (2011-08-18) PB  Bug fix by Hironori Kitagawa.
 % (2012-05-11) PB  pTeX p3.3
+% (2013-04-09) PB  pTeX p3.4 (TL 2013)
 %
 @x [1.2] l.200 - pTeX:
 @d banner==TeX_banner
 @d banner_k==TeX_banner_k
 @y
-@d pTeX_version_string=='-p3.3' {current p\TeX\ version}
+@d pTeX_version_string=='-p3.4' {current p\TeX\ version}
 @#
 @d pTeX_banner=='This is pTeX, Version 3.1415926',pTeX_version_string
 @d pTeX_banner_k==pTeX_banner
@@ -6476,7 +6477,7 @@ if type(last_char)=math_node then
     insert_skip:=after_schar else insert_skip:=no_skip;
   end
 else if font_dir[font(last_char)]<>dir_default then
-  begin insert_skip:=after_wchar;
+  begin insert_skip:=after_wchar; KANJI(cx):=info(link(last_char));
   if is_char_node(link(p))and(font_dir[font(link(p))]<>dir_default) then
     begin @<Append KANJI-KANJI spacing@>; p:=link(p);
     end;

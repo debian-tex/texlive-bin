@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
 dnl
-dnl   Copyright (C) 2012 Peter Breitenlohner <tex-live@tug.org>
+dnl   Copyright (C) 2012, 2013 Peter Breitenlohner <tex-live@tug.org>
 dnl
 dnl   This file is free software; the copyright holder
 dnl   gives unlimited permission to copy and/or distribute it,
@@ -53,6 +53,10 @@ dnl add all these to config.h.in but do not define them in config.h
             [Whether the tool chain supports __attribute__((constructor))])
 fi
 
+AC_SEARCH_LIBS([sqrtf], [m], [],
+               [AC_DEFINE([sqrtf], [sqrt],
+                          [Define to sqrt if you do not have the `sqrtf' function.])])
+
 dnl PIXMAN_LINK_WITH_ENV(env-setup, program, true-action, false-action)
 dnl
 dnl Compiles and links the given program in the environment setup by env-setup
@@ -88,6 +92,11 @@ AC_DEFUN([PIXMAN_LINK_WITH_ENV],[dnl
 	LDFLAGS="$save_LDFLAGS"
 	LIBS="$save_LIBS"
 ])
+
+dnl Define SIZE_MAX if necessary, e.g., for Solaris 9.
+AC_CHECK_DECL([SIZE_MAX], ,
+              [AC_DEFINE([SIZE_MAX], [((size_t)-1)],
+                         [Define to `((size_t)-1)' if <stdint.h> does not define it.])])
 
 dnl Find a -Werror for catching warnings.
 WERROR=

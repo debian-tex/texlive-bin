@@ -34,6 +34,12 @@ AC_PROG_CXXCPP
 CC="$CC $WARNING_CFLAGS"
 CXX="$CXX $WARNING_CXXFLAGS"
 
+AC_ARG_ENABLE([precondition-checking],
+  [AS_HELP_STRING([--enable-precondition-checking], [include precondition checking assertions])],
+  [if test "$enableval" = yes; then
+    AC_DEFINE([HAVE_PRECONDITION_CHECKING], [1], [Define to include precondition checking assertions.])
+  fi])
+
 AC_CXX_TEMPLATE_OBJS
 
 KPSE_CXX_HACK

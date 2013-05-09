@@ -1,3 +1,43 @@
+2013-04-16  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* lua/luainit.w: Handle '--luac' and '--luaconly' (from Akira).
+
+2013-04-16  Elie Roux  <elie.roux@telecom-bretagne.eu>
+
+	* font/tfmofm.w: check for .ofm as well as .tfm.
+	* tex/mainbody.w: check for !ini_version before initialize().
+
+2013-04-16  Karl Berry  <karl@tug.org>
+
+	* lua/luainit.w (parse_options): GPLv2+, not just GPLv2 (after
+	discussion with Taco).
+
+2013-04-14  Karl Berry  <karl@tug.org>
+
+	* lua/luainit.w: 2013
+
+2013-04-08  Taco Hoekwater  <taco@luatex.org>
+
+	* luasocket/src/smtp.lua: uncomment require 'coroutine'
+	* luasocket/src/smtp_lua.c: regenerated
+
+2013-04-05  Taco Hoekwater  <taco@luatex.org>
+
+	Import luatex beta 0.76.0 (released version)
+
+2013-04-04  Karl Berry  <karl@tug.org>
+
+	* lua52/liolib.c: #include <unistd.h>.  Needed on FreeBSD
+	per Nikola Lecic, tlbuild 1 Apr 2013 02:10:08.
+
+2013-03-21  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	Import LuaTeX beta-0.75.0 from LuaTeX repository (r4604).
+
+2013-03-20  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* am/luafontforge.am (EXTRA_DIST): Drop unused files.
+
 2013-03-12  Peter Breitenlohner  <peb@mppmu.mpg.de>
 
 	* lua52/*, am/liblua52.am (new): Add lua-5.2.1 for 0.75.0.

@@ -5,4 +5,4 @@ debian-no-linked-scripts
 61_path_max.diff
 pmpost-20121106-tl12
 pmpost-svg-20120119-tl11.diff
-xdvi-upupstream-fixes
+#xdvi-upupstream-fixes

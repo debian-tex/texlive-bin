@@ -1,16 +1,15 @@
 ---
- texk/texlive/Makefile.am |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ texk/texlive/Makefile.am |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 --- texlive-bin.orig/texk/texlive/Makefile.am
 +++ texlive-bin/texk/texlive/Makefile.am
-@@ -5,7 +5,8 @@
+@@ -5,7 +5,7 @@
  ##
  ACLOCAL_AMFLAGS = -I ../../m4
  
--SUBDIRS = tl_scripts context linked_scripts
-+#SUBDIRS = tl_scripts context linked_scripts
-+SUBDIRS = 
+-SUBDIRS = tl_scripts linked_scripts
++#SUBDIRS = tl_scripts linked_scripts
  
  ## Windows wrapper sources.
  ##

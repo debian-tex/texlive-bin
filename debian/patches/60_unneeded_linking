@@ -25,5 +25,5 @@
 +xdvi_x_libs = $(x_ldflags) $(x_tool_libs) $(x_xmu_lib) -lXt
 +xdvi_x_libs += $(x_xpm_libs) -lX11 $(x_extra_libs)
  
- common_ldadd = $(KPATHSEA_LIBS) $(T1LIB_LIBS) $(xdvi_x_libs)
+ common_ldadd = $(KPATHSEA_LIBS) $(FREETYPE2_LIBS) $(xdvi_x_libs)
  

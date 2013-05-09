@@ -3,10 +3,8 @@
  texk/web2c/pmplibdir/psvgout.ch   |   66 ++++++++++++++++++++++++++++++++++++++
  2 files changed, 68 insertions(+), 2 deletions(-)
 
-Index: texlive-bin-2011.20120427/texk/web2c/pmplibdir/am/pmpost.am
-===================================================================
---- texlive-bin-2011.20120427.orig/texk/web2c/pmplibdir/am/pmpost.am	2012-04-27 11:37:53.850649466 +0900
-+++ texlive-bin-2011.20120427/texk/web2c/pmplibdir/am/pmpost.am	2012-04-27 11:39:09.086958336 +0900
+--- texlive-bin.orig/texk/web2c/pmplibdir/am/pmpost.am
++++ texlive-bin/texk/web2c/pmplibdir/am/pmpost.am
 @@ -55,10 +55,10 @@
  	@$(pmp_ctangle_sh) pmpxout pdvitomp.ch
  
@@ -20,10 +18,8 @@ Index: texlive-bin-2011.20120427/texk/web2c/pmplibdir/am/pmpost.am
  $(pmpmath_c_h): pmpmath-tangle
  	@$(pmp_ctangle_sh) pmpmath
  pmpmath-tangle: ctangle$(EXEEXT) mplibdir/mpmath.w tangle-sh
-Index: texlive-bin-2011.20120427/texk/web2c/pmplibdir/psvgout.ch
-===================================================================
---- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ texlive-bin-2011.20120427/texk/web2c/pmplibdir/psvgout.ch	2012-04-27 11:39:09.086958336 +0900
+--- /dev/null
++++ texlive-bin/texk/web2c/pmplibdir/psvgout.ch
 @@ -0,0 +1,66 @@
 +@x
 +#include <stdio.h>

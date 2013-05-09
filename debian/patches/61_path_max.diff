@@ -1,5 +1,9 @@
---- a/texk/ptexenc/ptexenc.c
-+++ b/texk/ptexenc/ptexenc.c
+---
+ texk/ptexenc/ptexenc.c |    1 +
+ 1 file changed, 1 insertion(+)
+
+--- texlive-bin.orig/texk/ptexenc/ptexenc.c
++++ texlive-bin/texk/ptexenc/ptexenc.c
 @@ -7,6 +7,7 @@
  #include <kpathsea/variable.h>
  #include <kpathsea/readable.h>

@@ -1,9 +1,9 @@
-texlive-bin (2013.20130509.30343-1) UNRELEASED; urgency=low
+texlive-bin (2013.20130512.30417-1) unstable; urgency=low
 
   * preliminary trial build
   * disable pmpost, no build support at the moment
 
- -- Norbert Preining <preining@debian.org>  Sat, 11 May 2013 23:29:42 +0900
+ -- Norbert Preining <preining@debian.org>  Sun, 12 May 2013 22:16:37 +0900
 
 texlive-bin (2012.20130315.29398-1) experimental; urgency=low
 

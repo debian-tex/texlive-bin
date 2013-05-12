@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: tcfmgr 27343 2012-08-08 14:43:05Z peter $
+# $Id$
 
 # invoke the right shell:
 

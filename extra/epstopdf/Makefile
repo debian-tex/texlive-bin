@@ -1,4 +1,4 @@
-# $Id: Makefile 26570 2012-05-22 16:14:37Z karl $
+# $Id$
 # This file is public domain.  (Originally written by Karl Berry, 2009.)
 
 e2p = ./epstopdf.pl #--debug

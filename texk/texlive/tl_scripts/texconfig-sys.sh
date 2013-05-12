@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: texconfig-sys.sh 29349 2013-03-12 00:01:41Z karl $
+# $Id$
 
 # texconfig-sys: Thomas Esser, public domain.
 

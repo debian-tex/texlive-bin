@@ -1,4 +1,4 @@
-/*   $Id: dvips.h 29676 2013-04-05 21:26:54Z karl $
+/*   $Id$
  *   Copyright 1986-2013 Tomas Rokicki.
  *   This is dvips, a freely redistributable PostScript driver
  *   for dvi files. You may freely use, modify and/or distribute this

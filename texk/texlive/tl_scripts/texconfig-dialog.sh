@@ -21,7 +21,7 @@ export PATH
 test -n "${ZSH_VERSION+set}" && alias -g '${1+"$@"}'='"$@"'
 
 # the version string
-version='$Id: texconfig-dialog.sh 29349 2013-03-12 00:01:41Z karl $'
+version='$Id$'
 
 : ${PAGER=more}
 progname=texconfig-dialog

@@ -7,7 +7,7 @@
 # Originally written by Thomas Esser.
 # Public domain.
 
-version='$Id$'
+version='$Id: mktexmf 26569 2012-05-22 16:05:18Z karl $'
 progname=`echo $0 | sed 's%.*/%%'`
 usage="Usage: $progname FONT.
 

@@ -1,5 +1,5 @@
 #! /bin/sh
-# $Id$
+# $Id: reautoconf 15977 2009-11-10 10:34:20Z peter $
 # This "reautoconf" script found at the root of the TeX Live source tree 
 # runs aclocal and autoconf (from PATH) in all relevant directories.
 #

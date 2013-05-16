@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-# $Id$
+# $Id: quotecmd-test.pl 21216 2011-01-29 00:32:02Z karl $
 # Public domain.  Originally written 2010, Karl Berry.
 # Check that dvips quotes external command arguments.
 

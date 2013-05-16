@@ -1,4 +1,4 @@
-# $Id$
+# $Id: Makefile 30418 2013-05-12 17:54:12Z karl $
 # This file is public domain.  (Originally written by Karl Berry, 2009.)
 
 e2p = ./epstopdf.pl #--debug
@@ -92,6 +92,7 @@ check1:
 dist: epstopdf.tar.gz epstopdf.html
 epstopdf.tar.gz: README epstopdf.pl epstopdf.1 repstopdf.1 epstopdf.man1.pdf
 	tar czf epstopdf.tar.gz $^
+	# upload .tar.gz to ctan.org/upload, move .html to ~www/epstopdf.
 
 groff = groff
 groff_opts = -man -t
@@ -102,5 +103,3 @@ epstopdf.man1.pdf: epstopdf.1
 	$(groff) $(pdfopts) $< | $(pspdf) - $@
 epstopdf.html: epstopdf.1
 	$(groff) $(htmlopts) $< >$@
-
-# upload .tar.gz to ctan.org/upload, move .html to ~www/epstopdf.

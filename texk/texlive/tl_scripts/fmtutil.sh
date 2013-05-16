@@ -59,7 +59,7 @@ test -n "${ZSH_VERSION+set}" && alias -g '${1+"$@"}'='"$@"'
 
 progname=fmtutil
 argv0=$0
-version='$Id$'
+version='$Id: fmtutil.sh 30365 2013-05-10 06:53:44Z peter $'
 
 cnf=fmtutil.cnf   # name of the config file
 export PATH

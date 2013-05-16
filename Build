@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id$
+# $Id: Build 29505 2013-03-25 23:46:26Z karl $
 # Public domain.  Originally written many years ago by Sebastian Rahtz.
 # To build again, try Build --no-clean.
 # To build without optimization, try Build --debug.

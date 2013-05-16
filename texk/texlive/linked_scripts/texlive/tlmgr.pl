@@ -1,12 +1,12 @@
 #!/usr/bin/env perl
-# $Id: tlmgr.pl 30121 2013-04-26 06:51:26Z preining $
+# $Id: tlmgr.pl 30404 2013-05-11 21:54:20Z karl $
 #
 # Copyright 2008-2013 Norbert Preining
 # This file is licensed under the GNU General Public License version 2
 # or any later version.
 
-my $svnrev = '$Revision: 30121 $';
-my $datrev = '$Date: 2013-04-26 08:51:26 +0200 (Fri, 26 Apr 2013) $';
+my $svnrev = '$Revision: 30404 $';
+my $datrev = '$Date: 2013-05-11 23:54:20 +0200 (Sat, 11 May 2013) $';
 my $tlmgrrevision;
 my $prg;
 if ($svnrev =~ m/: ([0-9]+) /) {
@@ -821,7 +821,7 @@ sub handle_execute_actions
         }
         if ($localtlpdb->option("create_formats")
             && !$::regenerate_all_formats) {
-          $errors += do_cmd_and_check("fmtutil$sysmode --byhyphen $lang");
+          $errors += do_cmd_and_check("fmtutil$sysmode --byhyphen \"$lang\"");
         }
       }
     }
@@ -4292,7 +4292,7 @@ sub action_generate {
       debug("$prg: writing language.dat.lua data to $dest\n");
       TeXLive::TLUtils::create_language_lua($localtlpdb, $dest, $localcfg);
       if ($opts{"rebuild-sys"}) {
-        do_cmd_and_check("fmtutil-sys --byhyphen $dest");
+        do_cmd_and_check("fmtutil-sys --byhyphen \"$dest\"");
       } else {
         info("To make the newly-generated language.dat take effect,"
              . " run fmtutil-sys --byhyphen $dest.\n"); 
@@ -4307,7 +4307,7 @@ sub action_generate {
       debug ("$prg: writing language.dat data to $dest\n");
       TeXLive::TLUtils::create_language_dat($localtlpdb, $dest, $localcfg);
       if ($opts{"rebuild-sys"}) {
-        do_cmd_and_check("fmtutil-sys --byhyphen $dest");
+        do_cmd_and_check("fmtutil-sys --byhyphen \"$dest\"");
       } else {
         info("To make the newly-generated language.dat take effect,"
              . " run fmtutil-sys --byhyphen $dest.\n"); 
@@ -4322,7 +4322,7 @@ sub action_generate {
       debug("$prg: writing language.def data to $dest\n");
       TeXLive::TLUtils::create_language_def($localtlpdb, $dest, $localcfg);
       if ($opts{"rebuild-sys"}) {
-        do_cmd_and_check("fmtutil-sys --byhyphen $dest");
+        do_cmd_and_check("fmtutil-sys --byhyphen \"$dest\"");
       } else {
         info("To make the newly-generated language.def take effect,"
              . " run fmtutil-sys --byhyphen $dest.\n");
@@ -4711,7 +4711,7 @@ sub check_runfiles {
   my $Master = $localtlpdb->root;
   # build a list of all runtime files associated to 'normal' packages
   #
-  (my $non_normal = `ls $Master/bin`) =~ s/\n/\$|/g; # binaries
+  (my $non_normal = `ls "$Master/bin"`) =~ s/\n/\$|/g; # binaries
   $non_normal .= '^0+texlive|^bin-|^collection-|^scheme-|^texlive-|^texworks';
   my @runtime_files = ();
   #

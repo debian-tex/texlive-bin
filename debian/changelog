@@ -1,8 +1,10 @@
-texlive-bin (2013.20130516.30500-2) unstable; urgency=low
+texlive-bin (2013.20130521.30601-1) unstable; urgency=low
 
   * break against old TeX Live and update search path (Closes: #709025)
+  * reenable in-tree libgd usage: after the libtiff4 vs libtiff5 chaos
+    has been fixed (in libgd?) it will be disabled again
 
- -- Norbert Preining <preining@debian.org>  Mon, 20 May 2013 23:26:22 +0900
+ -- Norbert Preining <preining@debian.org>  Tue, 21 May 2013 11:14:15 +0900
 
 texlive-bin (2013.20130516.30500-1) unstable; urgency=low
 

@@ -1,3 +1,12 @@
+texlive-bin (2013.20130521.30601-2) UNRELEASED; urgency=low
+
+  * NEW UPSTREAM SOURCE NEEDED
+  * remove libgd and t1lib copies by removing the need to configure
+    these libraries at all (Closes: #709145, #709146)
+    Thanks Ondřej Surý <ondrej@debian.org> for providing the patch.
+
+ -- Norbert Preining <preining@debian.org>  Tue, 21 May 2013 23:29:17 +0900
+
 texlive-bin (2013.20130521.30601-1) unstable; urgency=low
 
   * break against old TeX Live and update search path (Closes: #709025)

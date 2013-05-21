@@ -8,3 +8,4 @@ debian-no-linked-scripts
 #pmpost-20121106-tl12
 #??? still necessary??? pmpost-svg-20120119-tl11.diff
 #xdvi-upupstream-fixes
+disable-t1lib-gd-dvipng

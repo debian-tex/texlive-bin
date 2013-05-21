@@ -33,6 +33,11 @@ endif
 override_dh_autoreconf:
 	dh_autoreconf --as-needed
 
+# temporary use contained libgd until the clear up the
+# chaos
+	#--with-system-gd			\
+# foo
+
 override_dh_auto_configure:
 	dh_auto_configure -- --prefix=/usr 	\
 	--datarootdir=/usr/share/texlive	\
@@ -44,7 +49,6 @@ override_dh_auto_configure:
 	--with-system-zlib			\
 	--with-system-libpng			\
 	--with-system-zzlib			\
-	--with-system-gd			\
 	--with-system-freetype2			\
 	--with-system-xpdf			\
 	--with-system-poppler			\

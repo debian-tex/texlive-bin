@@ -56,6 +56,7 @@ override_dh_auto_configure:
 	--with-system-libgs			\
 	--with-system-cairo 			\
 	--with-system-pixman			\
+	--with-system-zziplib			\
 	--with-freetype2-include=/usr/include/freetype2 \
 	--with-x				\
 	--with-mf-x-toolkit			\

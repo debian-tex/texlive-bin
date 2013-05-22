@@ -1,36 +1,24 @@
 
 
-debversion=$(dpkg-parsechangelog  | grep ^Version: | awk '{print$2}')
-origversion=$(echo $debversion | sed -e 's/-.*//')
+svnroot=/src/TeX/texlive-svn/Build
+baseyear=2013
 
-(
-  cd ..
-  tar -cJf texlive-bin_${origversion}.orig.tar.xz \
-  	--exclude=texlive-bin/.git		\
-	--exclude=texlive-bin/debian		\
-	texlive-bin
-)
+svni=$(cd $svnroot ; svn info | grep ^Revision | awk '{print$2}')
+verstr=texlive-bin-$baseyear.`date +%Y%m%d`.$svni
+pkgstr=texlive-bin_$baseyear.`date +%Y%m%d`.$svni
 
-
-
-exit 0
-
-### OLD HERE
-
-verstr=texlive-bin-2012.`date +%Y%m%d`
-pkgstr=texlive-bin_2012.`date +%Y%m%d`
 if [ -r $verstr ] ; then
   echo "already existing: $verstr, exit!"
   exit 1
 fi
 echo "copying"
-cp -a /src/TeX/texlive-svn/Build/source $verstr
+cp -a $svnroot/source $verstr
 rm -rf $verstr/inst
 rm -rf $verstr/Work
 rm -rf $verstr/utils/biber/bin
 #
 # remove system libraries
-for i in freetype2 gd graphite libpng poppler xpdf zlib ; do
+for i in cairo freetype freetype2 gd graphite2 icu libpng pixman poppler t1lib xpdf zlib zziplib ; do
   rm -rf $verstr/libs/$i
 done
 find $verstr -name \.svn -exec rm -rf '{}' \;

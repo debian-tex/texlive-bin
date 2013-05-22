@@ -1,4 +1,4 @@
-$Id: README 29858 2013-04-11 08:47:44Z peter $
+$Id: README 30608 2013-05-21 13:53:17Z peter $
 Copyright 2006-2012 TeX Users Group.
 You may freely use, modify and/or distribute this file.
 
@@ -59,8 +59,8 @@ dvipos - ?
 
 dvipsk - maintained here, by us
 
-dvisvgm - checked 11apr13
-  http://downloads.sourceforge.net/dvisvgm/dvisvgm-1.2.1.tar.gz
+dvisvgm - checked 21may13
+  http://downloads.sourceforge.net/dvisvgm/dvisvgm-1.2.2.tar.gz
 
 gsftopk - from Paul Vojta's xdvi?
 

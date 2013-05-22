@@ -1,4 +1,4 @@
-texlive-bin (2013.20130523.NNNNN-1) UNRELEASED_CHANGE_NNNNN; urgency=low
+texlive-bin (2013.20130523.N-1) UNRELEASED; urgency=low
 
   * update pmpost patch to fix png/svg output, thanks to Akira Kakuto
     (Closes: #709273)

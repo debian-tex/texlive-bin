@@ -1,8 +1,9 @@
 texlive-bin (2013.20130522.30620-2) UNRELEASED; urgency=low
 
   * update pmpost patch to fix png/svg output, thanks to Akira Kakuto
+    (Closes: #709273)
 
- -- Norbert Preining <preining@debian.org>  Wed, 22 May 2013 14:47:34 +0900
+ -- Norbert Preining <preining@debian.org>  Wed, 22 May 2013 16:27:34 +0900
 
 texlive-bin (2013.20130522.30620-1) unstable; urgency=low
 

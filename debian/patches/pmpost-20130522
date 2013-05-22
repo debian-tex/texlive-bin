@@ -5,7 +5,7 @@
  texk/web2c/pmpostdir/Makefile        |  107 +++++++
  texk/web2c/pmpostdir/am/pmpost.am    |  118 ++++++++
  texk/web2c/pmpostdir/jfm.ch          |  104 +++++++
- texk/web2c/pmpostdir/jmp.ch          |  340 ++++++++++++++++++++++++
+ texk/web2c/pmpostdir/jmp.ch          |  342 ++++++++++++++++++++++++
  texk/web2c/pmpostdir/jmppsw.ch       |   74 +++++
  texk/web2c/pmpostdir/mp.ch           |   20 +
  texk/web2c/pmpostdir/mpmathdouble.ch |   76 +++++
@@ -14,10 +14,10 @@
  texk/web2c/pmpostdir/pdvitomp.ch     |  492 +++++++++++++++++++++++++++++++++++
  texk/web2c/pmpostdir/psout.ch        |   42 ++
  texk/web2c/pmpostdir/svgout.ch       |   59 ++++
- 15 files changed, 1743 insertions(+)
+ 15 files changed, 1745 insertions(+)
 
---- texlive-bin.git.orig/texk/kpathsea/texmf.cnf
-+++ texlive-bin.git/texk/kpathsea/texmf.cnf
+--- texlive-bin.orig/texk/kpathsea/texmf.cnf
++++ texlive-bin/texk/kpathsea/texmf.cnf
 @@ -624,6 +624,7 @@
  % Used by makempx to run TeX.  We use "etex" because MetaPost is
  % expecting DVI, and not "tex" because we want first line parsing.
@@ -26,8 +26,8 @@
  
  % These variables specify the external program called for the
  % interactive `e' option.  %d is replaced by the line number and %s by
---- texlive-bin.git.orig/texk/web2c/Makefile.am
-+++ texlive-bin.git/texk/web2c/Makefile.am
+--- texlive-bin.orig/texk/web2c/Makefile.am
++++ texlive-bin/texk/web2c/Makefile.am
 @@ -177,6 +177,9 @@
  ## MetaPost
  include $(srcdir)/mplibdir/am/mplib.am
@@ -38,8 +38,8 @@
  ## libmplib, used by MetaPost and luaTeX
  include $(srcdir)/mplibdir/am/libmplib.am
  
---- texlive-bin.git.orig/texk/web2c/ac/web2c.ac
-+++ texlive-bin.git/texk/web2c/ac/web2c.ac
+--- texlive-bin.orig/texk/web2c/ac/web2c.ac
++++ texlive-bin/texk/web2c/ac/web2c.ac
 @@ -41,6 +41,7 @@
  [[pdftex], [yes], [yes], [pdfTeX],  [xpdf libpng]],
  [[luatex], [yes], [],    [luaTeX],  [poppler cairo libpng zziplib]],
@@ -49,7 +49,7 @@
  ])[]dnl
  m4_foreach([Kpse_Prog], [kpse_tex_progs],
 --- /dev/null
-+++ texlive-bin.git/texk/web2c/pmpostdir/Makefile
++++ texlive-bin/texk/web2c/pmpostdir/Makefile
 @@ -0,0 +1,107 @@
 +#
 +# Makefile for W32
@@ -159,7 +159,7 @@
 +	cp -p pmpost.exe c:/usr/local/bin/
 +	cp -p pmpost.exe c:/usr/work/edrive/wk/dist/PTEX/bin/
 --- /dev/null
-+++ texlive-bin.git/texk/web2c/pmpostdir/am/pmpost.am
++++ texlive-bin/texk/web2c/pmpostdir/am/pmpost.am
 @@ -0,0 +1,118 @@
 +## texk/web2c/pmpostdir/am/pmpost.am: Makefile fragment for pMetaPost.
 +
@@ -280,7 +280,7 @@
 +
 +DISTCLEANFILES += $(nodist_pmpost_SOURCES)
 --- /dev/null
-+++ texlive-bin.git/texk/web2c/pmpostdir/jfm.ch
++++ texlive-bin/texk/web2c/pmpostdir/jfm.ch
 @@ -0,0 +1,104 @@
 +@x
 +#include <w2c/config.h>
@@ -387,8 +387,8 @@
 +}
 +@z
 --- /dev/null
-+++ texlive-bin.git/texk/web2c/pmpostdir/jmp.ch
-@@ -0,0 +1,340 @@
++++ texlive-bin/texk/web2c/pmpostdir/jmp.ch
+@@ -0,0 +1,342 @@
 +% jMetaPost change file for MetaPost
 +%
 +% written by Michio Matsuyama <fwhw5892@mb.infoweb.ne.jp>
@@ -702,11 +702,13 @@
 +@y
 +  if ( ((*(mp_text_p (p)->str + k) < bc) || (*(mp_text_p (p)->str + k) > ec)) && (mp->font_id[f]==0) ) {
 +    mp_lost_warning (mp, f, *(mp_text_p (p)->str + k));
-+  } else if (mp->font_id[f]!=0) {
-+    cc=char_mp_info(f,mp_lookup_ctype(mp, f,fromBUFF(mp_text_p(p)->str,limit,k)));
-+    k++;
 +  } else {
-+    cc = char_mp_info (f, *(mp_text_p (p)->str + k));
++    if (mp->font_id[f]!=0) {
++      cc=char_mp_info(f,mp_lookup_ctype(mp, f,fromBUFF(mp_text_p(p)->str,limit,k)));
++      k++;
++    } else {
++      cc = char_mp_info (f, *(mp_text_p (p)->str + k));
++    }
 +@z
 +
 +@x
@@ -730,7 +732,7 @@
 +@* Debugging.
 +@z
 --- /dev/null
-+++ texlive-bin.git/texk/web2c/pmpostdir/jmppsw.ch
++++ texlive-bin/texk/web2c/pmpostdir/jmppsw.ch
 @@ -0,0 +1,74 @@
 +%
 +%
@@ -807,7 +809,7 @@
 +        mp_ps_name_out(mp, mp->font_name[gr_font_n(p)],false);
 +@z
 --- /dev/null
-+++ texlive-bin.git/texk/web2c/pmpostdir/mp.ch
++++ texlive-bin/texk/web2c/pmpostdir/mp.ch
 @@ -0,0 +1,20 @@
 +@x
 +  /* open the terminal for output */
@@ -830,7 +832,7 @@
 +#endif
 +@z
 --- /dev/null
-+++ texlive-bin.git/texk/web2c/pmpostdir/mpmathdouble.ch
++++ texlive-bin/texk/web2c/pmpostdir/mpmathdouble.ch
 @@ -0,0 +1,76 @@
 +@x
 +#define _ISOC99_SOURCE /* to get the round() prototype */
@@ -909,7 +911,7 @@
 +#endif
 +@z
 --- /dev/null
-+++ texlive-bin.git/texk/web2c/pmpostdir/mpost.ch
++++ texlive-bin/texk/web2c/pmpostdir/mpost.ch
 @@ -0,0 +1,298 @@
 +@x
 +#include <kpathsea/kpathsea.h>
@@ -1210,7 +1212,7 @@
 +  if(putenv(xstrdup("engine=pmpost")))
 +@z
 --- /dev/null
-+++ texlive-bin.git/texk/web2c/pmpostdir/mpxout.ch
++++ texlive-bin/texk/web2c/pmpostdir/mpxout.ch
 @@ -0,0 +1,8 @@
 +@x
 +#include <process.h>
@@ -1221,7 +1223,7 @@
 +typedef int integer;
 +@z
 --- /dev/null
-+++ texlive-bin.git/texk/web2c/pmpostdir/pdvitomp.ch
++++ texlive-bin/texk/web2c/pmpostdir/pdvitomp.ch
 @@ -0,0 +1,492 @@
 +@x
 +#include "pmpxout.h"
@@ -1716,7 +1718,7 @@
 +}
 +@z
 --- /dev/null
-+++ texlive-bin.git/texk/web2c/pmpostdir/psout.ch
++++ texlive-bin/texk/web2c/pmpostdir/psout.ch
 @@ -0,0 +1,42 @@
 +@x
 +integer ps_offset;
@@ -1761,7 +1763,7 @@
 +  }
 +@z
 --- /dev/null
-+++ texlive-bin.git/texk/web2c/pmpostdir/svgout.ch
++++ texlive-bin/texk/web2c/pmpostdir/svgout.ch
 @@ -0,0 +1,59 @@
 +@x 
 +@<Character |k| is not allowed in SVG output@>=

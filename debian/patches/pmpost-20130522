@@ -702,11 +702,11 @@
 +@y
 +  if ( ((*(mp_text_p (p)->str + k) < bc) || (*(mp_text_p (p)->str + k) > ec)) && (mp->font_id[f]==0) ) {
 +    mp_lost_warning (mp, f, *(mp_text_p (p)->str + k));
-+  } else if (mp->font_id[f]==0) {
-+    cc = char_mp_info (f, *(mp_text_p (p)->str + k));
-+  } else {
++  } else if (mp->font_id[f]!=0) {
 +    cc=char_mp_info(f,mp_lookup_ctype(mp, f,fromBUFF(mp_text_p(p)->str,limit,k)));
 +    k++;
++  } else {
++    cc = char_mp_info (f, *(mp_text_p (p)->str + k));
 +@z
 +
 +@x

@@ -1,3 +1,9 @@
+texlive-bin (2013.20130522.30620-2) UNRELEASED; urgency=low
+
+  * update pmpost patch to fix png/svg output, thanks to Akira Kakuto
+
+ -- Norbert Preining <preining@debian.org>  Wed, 22 May 2013 14:47:34 +0900
+
 texlive-bin (2013.20130522.30620-1) unstable; urgency=low
 
   * remove libgd and t1lib copies by removing the need to configure
@@ -5,7 +11,8 @@ texlive-bin (2013.20130522.30620-1) unstable; urgency=low
     Thanks Ondřej Surý <ondrej@debian.org> for providing the patch.
   * build with system zzlib and ice, remove embedded copies
   * remove copies of cairo, pixman which are already unused
-  * re-include pmpost building, thanks to Hironori Kitagawa
+  * re-include pmpost building, thanks to Akira Kakuto and
+    Hironori Kitagawa
 
  -- Norbert Preining <preining@debian.org>  Wed, 22 May 2013 10:07:27 +0900
 

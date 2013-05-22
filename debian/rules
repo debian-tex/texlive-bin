@@ -73,6 +73,8 @@ override_dh_auto_configure:
 	--disable-pmx				\
 	--disable-m-tx				\
 	--disable-texdoctk			\
+	--disable-ttf2pk			\
+	--enable--ttf2pk2			\
 	--enable-ipc				
 
 override_dh_auto_install:

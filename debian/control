@@ -3,7 +3,7 @@ Section: tex
 Priority: optional
 Maintainer: Debian TeX Maintainers <debian-tex-maint@lists.debian.org>
 Uploaders: Norbert Preining <preining@debian.org>, Frank Küster <frank@kuesterei.ch>
-Build-Depends: debhelper (>= 7.0.50~), sharutils, ed, libncurses5-dev | libncurses-dev, libxaw7-dev, libpng-dev, zlib1g-dev | libz-dev, flex, bison, libpoppler-private-dev (>= 0.12.4), libfontconfig1-dev, dh-autoreconf, time, libgraphite2-dev, libgs-dev, libcairo2-dev (>= 1.12), libpixman-1-dev (>= 0.18), libzzip-dev (>= 0.12)
+Build-Depends: debhelper (>= 7.0.50~), sharutils, ed, libncurses5-dev | libncurses-dev, libxaw7-dev, libpng-dev, zlib1g-dev | libz-dev, flex, bison, libpoppler-private-dev (>= 0.12.4), libfontconfig1-dev, dh-autoreconf, time, libgraphite2-dev, libgs-dev, libcairo2-dev (>= 1.12), libpixman-1-dev (>= 0.18), libzzip-dev (>= 0.12), libicu-dev
 Standards-Version: 3.9.3
 Homepage: http://www.tug.org/texlive/
 Vcs-Git: git://anonscm.debian.org/debian-tex/texlive-bin.git

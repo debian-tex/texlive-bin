@@ -1,12 +1,12 @@
-texlive-bin (2013.20130522.30601-1) UNRELEASED; urgency=low
+texlive-bin (2013.20130522.30620-1) UNRELEASED; urgency=low
 
   * remove libgd and t1lib copies by removing the need to configure
     these libraries at all (Closes: #709145, #709146)
     Thanks Ondřej Surý <ondrej@debian.org> for providing the patch.
-  * remove cairo, zzlib, pixman lib's source code, already used
-    from system copies
+  * build with system zzlib and ice, remove embedded copies
+  * remove copies of cairo, pixman which are already unused
 
- -- Norbert Preining <preining@debian.org>  Wed, 22 May 2013 01:01:10 +0900
+ -- Norbert Preining <preining@debian.org>  Wed, 22 May 2013 09:50:33 +0900
 
 texlive-bin (2013.20130521.30601-1) unstable; urgency=low
 

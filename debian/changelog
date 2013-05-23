@@ -1,3 +1,10 @@
+texlive-bin (2013.NNNNNNNN.30626-2) UNRELEASED; urgency=low
+
+  * remove embedded copy of libharfbuzz, and build with system-harfbuzz
+    NEEDS NEW UPSTREAM FOR REMOVING THE COPY!
+
+ -- Norbert Preining <preining@debian.org>  Thu, 23 May 2013 22:06:45 +0900
+
 texlive-bin (2013.20130523.30626-1) unstable; urgency=low
 
   * update pmpost patch to fix png/svg output, thanks to Akira Kakuto

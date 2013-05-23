@@ -5,8 +5,9 @@ texlive-bin (2013.20130523.30626-1) unstable; urgency=low
   * disable ttf2pk and enable ttf2pk2, this allows us to get rid
     of unsupported libfreetype(1), thanks again to Ondřej Surý.
   * new upstream: remove biber binaries (Closes: #709274)
+  * fix postinst so that formats are again rebuild
 
- -- Norbert Preining <preining@debian.org>  Thu, 23 May 2013 09:01:51 +0900
+ -- Norbert Preining <preining@debian.org>  Thu, 23 May 2013 09:41:21 +0900
 
 texlive-bin (2013.20130522.30620-1) unstable; urgency=low
 

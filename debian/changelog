@@ -10,7 +10,7 @@ texlive-bin (2013.20130528.30744-1) unstable; urgency=low
     - dvips does not crash on input == output (Closes: #703212)
   * upstream fix to luatex libio
 
- -- Norbert Preining <preining@debian.org>  Tue, 28 May 2013 09:39:38 +0900
+ -- Norbert Preining <preining@debian.org>  Tue, 28 May 2013 14:00:57 +0900
 
 texlive-bin (2013.20130523.30626-1) unstable; urgency=low
 

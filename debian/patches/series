@@ -5,3 +5,4 @@ debian-no-linked-scripts
 61_path_max.diff
 disable-t1lib-gd-dvipng-freetype
 pmpost-20130522
+fix-manpages

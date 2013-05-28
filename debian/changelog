@@ -1,9 +1,16 @@
-texlive-bin (2013.NNNNNNNN.30626-2) UNRELEASED; urgency=low
+texlive-bin (2013.20130528.30744-1) unstable; urgency=low
 
   * remove embedded copy of libharfbuzz, and build with system-harfbuzz
-    NEEDS NEW UPSTREAM FOR REMOVING THE COPY!
+  * remove dependency on ed, seems not needed anymore (Closes: #546938)
+  * fix encoding of mendex man page (new b-d on recode) (Closes: #702202)
+  * fix strange output in tex.1 (Closes: #663157)
+  * upstream fixes (already in earlier TL2013 versions)
+    - xdvi now without libt1 (Closes: #668415)
+    - xdvi reacts on horizontal scroll events (Closes: #235757, #131338)
+    - dvips does not crash on input == output (Closes: #703212)
+  * upstream fix to luatex libio
 
- -- Norbert Preining <preining@debian.org>  Thu, 23 May 2013 22:06:45 +0900
+ -- Norbert Preining <preining@debian.org>  Tue, 28 May 2013 09:39:38 +0900
 
 texlive-bin (2013.20130523.30626-1) unstable; urgency=low
 

@@ -1,4 +1,4 @@
-$Id: README 30608 2013-05-21 13:53:17Z peter $
+$Id: README 30772 2013-05-28 18:07:34Z karl $
 Copyright 2006-2012 TeX Users Group.
 You may freely use, modify and/or distribute this file.
 
@@ -72,6 +72,9 @@ lacheck - checked 25apr11
 lcdf-typetools 2.98 - checked 11apr13
   http://www.lcdf.org/type/
   http://www.lcdf.org/type/lcdf-typetools-2.98.tar.gz
+
+luatex - update texmf-dist/doc/luatex/base from
+  https://foundry.supelec.fr/svn/luatex/trunk/manual
 
 makeindexk - maintained here, by us
 

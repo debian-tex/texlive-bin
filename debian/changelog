@@ -1,7 +1,5 @@
-texlive-bin (2013.20130528.30744-1) UNRELEASED; urgency=low
+texlive-bin (2013.20130529.30792-1) unstable; urgency=low
 
-  * remove embedded copy of libharfbuzz, and build with system-harfbuzz
-    STILL BROKEN SINCE libharfbuzz-dev does not ship all headers, bummer
   * remove dependency on ed, seems not needed anymore (Closes: #546938)
   * fix encoding of mendex man page (new b-d on recode) (Closes: #702202)
   * fix strange output in tex.1 (Closes: #663157)
@@ -11,7 +9,7 @@ texlive-bin (2013.20130528.30744-1) UNRELEASED; urgency=low
     - dvips does not crash on input == output (Closes: #703212)
   * upstream fix to luatex libio
 
- -- Norbert Preining <preining@debian.org>  Wed, 29 May 2013 10:02:20 +0900
+ -- Norbert Preining <preining@debian.org>  Wed, 29 May 2013 10:05:32 +0900
 
 texlive-bin (2013.20130523.30626-1) unstable; urgency=low
 

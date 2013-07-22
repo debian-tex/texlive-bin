@@ -1,3 +1,12 @@
+texlive-bin (2013.20130722.31261-1) unstable; urgency=low
+
+  * allow for different origin in make-orig-tar
+  * Imported Upstream version 2013.20130722.31261
+    - fix for crash of luatex on x32 archs in certain cases
+    - update metapost to 1.803
+
+ -- Norbert Preining <preining@debian.org>  Mon, 22 Jul 2013 11:37:23 +0900
+
 texlive-bin (2013.20130529.30792-1) unstable; urgency=low
 
   * remove dependency on ed, seems not needed anymore (Closes: #546938)

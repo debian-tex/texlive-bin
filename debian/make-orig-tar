@@ -1,6 +1,9 @@
 
-
-svnroot=/src/TeX/texlive-svn/Build
+if [ -n "$1" ] ; then
+  svnroot="$1"
+else
+  svnroot=/src/TeX/texlive-svn/Build/source
+fi
 baseyear=2013
 
 svni=$(cd $svnroot ; svn info | grep ^Revision | awk '{print$2}')
@@ -12,7 +15,7 @@ if [ -r $verstr ] ; then
   exit 1
 fi
 echo "copying"
-cp -a $svnroot/source $verstr
+cp -a $svnroot $verstr
 rm -rf $verstr/inst
 rm -rf $verstr/Work
 rm -rf $verstr/utils/biber/bin

@@ -1,4 +1,4 @@
-$Id: README 29693 2013-04-06 11:02:44Z peter $
+$Id: README 30927 2013-06-25 11:39:10Z peter $
 Public domain.  Originally created by Karl Berry, 2005.
 
 Libraries we compile for TeX Live.
@@ -31,7 +31,8 @@ harfbuzz 0.9.15 - checked 5apr13
 icu 51.1 (51_r1) - checked 21mar13
   http://download.icu-project.org/files/icu4c/
 
-libpng 1.6.1 - checked 5apr13
+libpng 1.6.2 - checked 3jun13
+       1.5.16 - downgraded 7jun13
   http://www.libpng.org/ - used by many
   http://www.libpng.org/pub/png/pngcode.html
 

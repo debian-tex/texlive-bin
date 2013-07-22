@@ -404,15 +404,15 @@
 +%
 +
 +@x
-+@d default_banner "This is MetaPost, Version 1.802" /* printed when \MP\ starts */
++@d default_banner "This is MetaPost, Version 1.803" /* printed when \MP\ starts */
 +@y
-+@d default_banner "This is pMetaPost, Version 1.802-0.04" /* printed when \MP\ starts */
++@d default_banner "This is pMetaPost, Version 1.803-0.04" /* printed when \MP\ starts */
 +@z
 +
 +@x
-+#define metapost_version "1.802"
++#define metapost_version "1.803"
 +@y
-+#define metapost_version "1.802-0.04"
++#define metapost_version "1.803-0.04"
 +@z
 +
 +@x

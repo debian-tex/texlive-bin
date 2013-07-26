@@ -7,7 +7,6 @@
  texk/web2c/pmpostdir/jfm.ch          |  104 +++++++
  texk/web2c/pmpostdir/jmp.ch          |  342 ++++++++++++++++++++++++
  texk/web2c/pmpostdir/jmppsw.ch       |   74 +++++
- texk/web2c/pmpostdir/mp.ch           |   20 +
  texk/web2c/pmpostdir/mpmathdouble.ch |   76 +++++
  texk/web2c/pmpostdir/mpost.ch        |  298 +++++++++++++++++++++
  texk/web2c/pmpostdir/mpxout.ch       |    8 
@@ -222,9 +221,9 @@
 +	@$(pmp_ctangle_sh) pmp.w pmp-tot.ch
 +pmp-tangle: ctangle$(EXEEXT) mplibdir/mp.w pmp-tot.ch tangle-sh
 +	@$(pmp_ctangle_sh) pmp.w pmp-tot.ch
-+pmp-tot.ch: ctie$(EXEEXT) mplibdir/mp.w pmpostdir/mp.ch pmpostdir/jmp.ch
++pmp-tot.ch: ctie$(EXEEXT) mplibdir/mp.w pmpostdir/jmp.ch
 +	cat $(srcdir)/mplibdir/mp.w | $(pmp_sed) > pmp.w
-+	$(ctie) -c pmp-tot.ch pmp.w pmpostdir/mp.ch pmpostdir/jmp.ch
++	$(ctie) -c pmp-tot.ch pmp.w pmpostdir/jmp.ch
 +
 +$(pmpmath_c_h): pmpmath-tangle
 +	@$(pmp_ctangle_sh) pmpmath
@@ -807,29 +806,6 @@
 +        else
 +           mp_ps_string_out(mp, gr_text_p(p),gr_text_l(p));
 +        mp_ps_name_out(mp, mp->font_name[gr_font_n(p)],false);
-+@z
---- /dev/null
-+++ texlive-bin/texk/web2c/pmpostdir/mp.ch
-@@ -0,0 +1,20 @@
-+@x
-+  /* open the terminal for output */
-+  t_open_out();
-+#if DEBUG
-+  setlinebuf(stdout);
-+  setlinebuf(mp->term_out);
-+#endif
-+@y
-+  /* open the terminal for output */
-+  t_open_out();
-+#if DEBUG
-+#ifdef WIN32
-+  setvbuf(stdout, (char *) NULL, _IONBF, 0);
-+  setvbuf(mp->term_out, (char *) NULL, _IONBF, 0);
-+#else
-+  setlinebuf(stdout);
-+  setlinebuf(mp->term_out);
-+#endif
-+#endif
 +@z
 --- /dev/null
 +++ texlive-bin/texk/web2c/pmpostdir/mpmathdouble.ch

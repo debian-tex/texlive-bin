@@ -7,7 +7,7 @@ texlive-bin (2013.20130722.31261-1) unstable; urgency=low
   * adapt pmpost patches to 1.803
   * bump standards version, no changes necessary
 
- -- Norbert Preining <preining@debian.org>  Mon, 22 Jul 2013 13:04:05 +0900
+ -- Norbert Preining <preining@debian.org>  Fri, 26 Jul 2013 12:56:16 +0900
 
 texlive-bin (2013.20130529.30792-1) unstable; urgency=low
 

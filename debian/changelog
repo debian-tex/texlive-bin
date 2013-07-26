@@ -4,10 +4,10 @@ texlive-bin (2013.20130722.31261-1) unstable; urgency=low
   * Imported Upstream version 2013.20130722.31261
     - fix for crash of luatex on x32 archs in certain cases
     - update metapost to 1.803
-  * adapt pmpost patches to 1.803
+  * ship new pmpost patch for 1.803
   * bump standards version, no changes necessary
 
- -- Norbert Preining <preining@debian.org>  Fri, 26 Jul 2013 12:56:16 +0900
+ -- Norbert Preining <preining@debian.org>  Fri, 26 Jul 2013 14:39:43 +0900
 
 texlive-bin (2013.20130529.30792-1) unstable; urgency=low
 

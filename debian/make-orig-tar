@@ -6,7 +6,7 @@ else
 fi
 baseyear=2013
 
-svni=$(cd $svnroot ; svn info | grep ^Revision | awk '{print$2}')
+svni=$(cd $svnroot ; svn info | grep "^Last Changed Rev" | awk '{print$4}')
 verstr=texlive-bin-$baseyear.`date +%Y%m%d`.$svni
 pkgstr=texlive-bin_$baseyear.`date +%Y%m%d`.$svni
 
@@ -20,10 +20,8 @@ rm -rf $verstr/inst
 rm -rf $verstr/Work
 rm -rf $verstr/utils/biber/bin
 #
-# remove system libraries, keep only teckit and harfbuzz
-# harfbuzz is needed as harfbuzz is not linked against graphite2
-# so xetex building breaks with system harfbuzz libs
-for i in cairo freetype freetype2 gd graphite2 icu libpng pixman poppler t1lib xpdf zlib zziplib ; do
+# remove system libraries, keep only teckit
+for i in harfbuzz cairo freetype freetype2 gd graphite2 icu libpng pixman poppler t1lib xpdf zlib zziplib ; do
   rm -rf $verstr/libs/$i
 done
 find $verstr -name \.svn -exec rm -rf '{}' \;

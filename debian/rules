@@ -48,6 +48,7 @@ override_dh_auto_configure:
 	--with-system-xpdf			\
 	--with-system-poppler			\
 	--with-system-graphite2			\
+	--with-system-harfbuzz 			\
 	--with-system-libgs			\
 	--with-system-cairo 			\
 	--with-system-pixman			\

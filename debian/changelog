@@ -1,3 +1,14 @@
+texlive-bin (2013.20130729.30973-1) unstable; urgency=low
+
+  * update make-orig-tar to use last-changed-rev svn number for
+    the last number in the version string
+  * switch to system harfbuzz library (Closes: #717962)
+    - remove halfbuzz library from source
+    - add build dependency on libharfbuzz-dev >= 0.9.18-3
+    - adjust debian/rules to build with system-harfbuzz
+
+ -- Norbert Preining <preining@debian.org>  Mon, 29 Jul 2013 11:29:57 +0900
+
 texlive-bin (2013.20130722.31261-1) unstable; urgency=low
 
   * allow for different origin in make-orig-tar

@@ -6,8 +6,10 @@ texlive-bin (2013.20130729.30972-1) unstable; urgency=low
     - remove halfbuzz library from source
     - add build dependency on libharfbuzz-dev >= 0.9.18-3
     - adjust debian/rules to build with system-harfbuzz
+  * add texinfo to build-deps, somehow timestamps can get screwed
+    which means that info files will be rebuild (Closes: #718251)
 
- -- Norbert Preining <preining@debian.org>  Mon, 29 Jul 2013 13:59:16 +0900
+ -- Norbert Preining <preining@debian.org>  Tue, 30 Jul 2013 14:00:37 +0900
 
 texlive-bin (2013.20130722.31261-1) unstable; urgency=low
 

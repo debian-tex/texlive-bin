@@ -1,9 +1,10 @@
 ---
+ texk/web2c/man/mf.man  |   26 +++++++++++++-------------
  texk/web2c/man/tex.man |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ 2 files changed, 15 insertions(+), 15 deletions(-)
 
---- texlive-bin.git.orig/texk/web2c/man/tex.man
-+++ texlive-bin.git/texk/web2c/man/tex.man
+--- texlive-bin.orig/texk/web2c/man/tex.man
++++ texlive-bin/texk/web2c/man/tex.man
 @@ -6,8 +6,8 @@
  .if n .ds TX TeX
  .if n .ds MF Metafont
@@ -15,3 +16,114 @@
  .\" the same but obliqued
  .\" BX definition must follow TX so BX can use TX
  .if t .ds BX \fRB\s-2IB\s0\fP\*(TX
+--- texlive-bin.orig/texk/web2c/man/mf.man
++++ texlive-bin/texk/web2c/man/mf.man
+@@ -3,7 +3,7 @@
+ .\"=====================================================================
+ .if n .ds MF Metafont
+ .if t .ds MF M\s-2ETAFONT\s0
+-.if t .ds TX \fRT\\h'-0.1667m'\\v'0.20v'E\\v'-0.20v'\\h'-0.125m'X\fP
++.if t .ds TX \fRT\h'-0.1667m'\v'0.20v'E\v'-0.20v'\h'-0.125m'X\fP
+ .if n .ds TX TeX
+ .ie t .ds OX \fIT\v'+0.25m'E\v'-0.25m'X\fP for troff
+ .el .ds OX TeX for nroff
+@@ -12,7 +12,7 @@
+ .if t .ds BX \fRB\s-2IB\s0\fP\*(TX
+ .if n .ds BX BibTeX
+ .\" LX definition must follow TX so LX can use TX
+-.if t .ds LX \fRL\\h'-0.36m'\\v'-0.15v'\s-2A\s0\\h'-0.15m'\\v'0.15v'\fP\*(TX
++.if t .ds LX \fRL\h'-0.36m'\v'-0.15v'\s-2A\s0\h'-0.15m'\v'0.15v'\fP\*(TX
+ .if n .ds LX LaTeX
+ .if n .ds WB Web
+ .if t .ds WB W\s-2EB\s0
+@@ -56,7 +56,7 @@
+ it will use the
+ .I plain
+ base.  When called under any other name, \*(MF will use that name as
+-the name of the base to use.   For example, when called as
++the name of the base to use.  For example, when called as
+ .B mf
+ the
+ .I mf
+@@ -92,7 +92,7 @@
+ .IR mode .
+ (Or you can just say
+ .I mf
+-and give the other stuff on the next line, without quotes.) Other
++and give the other stuff on the next line, without quotes.)  Other
+ control sequences, such as
+ .I batchmode
+ (for silent operation) can also appear.
+@@ -117,7 +117,7 @@
+ the name of an actual device or, most commonly, the name
+ .I localfont
+ (see below) must
+-be substituted. If the mode is not specified or is not valid for your
++be substituted.  If the mode is not specified or is not valid for your
+ site, \*(MF will default to
+ .I proof
+ mode which produces
+@@ -167,7 +167,7 @@
+ can be
+ studied in an appendix to the
+ .IR "\*(MF\^book" ;
+-they were developed by Donald E. Knuth, and this file should never be
++they were developed by Donald E.\& Knuth, and this file should never be
+ altered except when it is officially upgraded.
+ Each
+ .I mode_def
+@@ -370,14 +370,14 @@
+ Search path for
+ .I input
+ and
+-.I openin
++.I opening
+ files.
+ .TP
+ .B MFEDIT
+ Command template for switching to editor.
+ .TP
+ .B MFTERM
+-Determines the online graphics display. If MFTERM is not set,
++Determines the online graphics display.  If MFTERM is not set,
+ and DISPLAY is set, the Metafont window support for X is used.
+ (DISPLAY must be set to a valid X server specification, as usual.)
+ If neither MFTERM nor DISPLAY is set, TERM is used to guess the window
+@@ -436,24 +436,24 @@
+ .\"=====================================================================
+ .SH BUGS
+ On January 4, 1986 the ``final'' bug in \*(MF was discovered
+-and removed. If an error still lurks in the code, Donald E. Knuth promises to
++and removed.  If an error still lurks in the code, Donald E.\& Knuth promises to
+ pay a finder's fee which doubles every year to the first person who finds
+ it.  Happy hunting.
+ .\"=====================================================================
+ .SH "SUGGESTED READING"
+-Donald E. Knuth,
++Donald E.\& Knuth,
+ .I "The \*(MF\^book"
+ (Volume C of
+ .IR "Computers and Typesetting" ),
+ Addison-Wesley, 1986, ISBN 0-201-13445-4.
+ .br
+-Donald E. Knuth,
++Donald E.\& Knuth,
+ .I "\*(MF:\^ The Program"
+ (Volume D of
+ .IR "Computers and Typesetting" ),
+ Addison-Wesley, 1986, ISBN 0-201-13438-1.
+ .br
+-Donald E. Knuth,
++Donald E.\& Knuth,
+ .I Computer Modern Typefaces
+ (Volume E of
+ .IR "Computers and Typesetting" ),
+@@ -478,7 +478,7 @@
+ .BR tftopl (1).
+ .\"=====================================================================
+ .SH AUTHORS
+-\*(MF was designed by Donald E. Knuth, who implemented it
++\*(MF was designed by Donald E.\& Knuth, who implemented it
+ using his \*(WB system for Pascal programs.  It was originally
+ ported to Unix by Paul Richards at the University of Illinois at
+ Urbana-Champaign.  This page was mostly written by Pierre MacKay.

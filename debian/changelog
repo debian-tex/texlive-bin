@@ -1,3 +1,9 @@
+texlive-bin (2013.20130729.30972-2) UNRELEASED; urgency=low
+
+  * some fixes to mf man page (Closes: #662846)
+
+ -- Norbert Preining <preining@debian.org>  Sat, 07 Sep 2013 11:13:54 +0900
+
 texlive-bin (2013.20130729.30972-1) unstable; urgency=low
 
   * update make-orig-tar to use last-changed-rev svn number for

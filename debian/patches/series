@@ -6,3 +6,4 @@ debian-no-linked-scripts
 disable-t1lib-gd-dvipng-freetype
 pmpost-mp1.803-20130726
 fix-manpages
+mendex-bugfix

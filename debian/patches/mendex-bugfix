@@ -1,12 +1,16 @@
 fix a bug in mendex when range ops and macros are used (Closes: #534641)
 ---
- texk/mendexk/ChangeLog |    5 +++++
- texk/mendexk/fwrite.c  |    3 +--
- 2 files changed, 6 insertions(+), 2 deletions(-)
+ texk/mendexk/ChangeLog |    9 +++++++++
+ texk/mendexk/fwrite.c  |    5 ++---
+ 2 files changed, 11 insertions(+), 3 deletions(-)
 
 --- texlive-bin.orig/texk/mendexk/ChangeLog
 +++ texlive-bin/texk/mendexk/ChangeLog
-@@ -1,3 +1,8 @@
+@@ -1,3 +1,12 @@
++2013-09-08  Norbert Preining  <preining@logic.at>
++
++	* fwrite.c: properly parenthesis TAIL macro
++
 +2013-09-07  Norbert Preining  <preining@logic.at>
 +
 +	* fwrite.c: fix missing output when range operators are
@@ -17,6 +21,15 @@ fix a bug in mendex when range ops and macros are used (Closes: #534641)
  	* Makefile.am: Avoid use of deprecated INCLUDES.
 --- texlive-bin.orig/texk/mendexk/fwrite.c
 +++ texlive-bin/texk/mendexk/fwrite.c
+@@ -15,7 +15,7 @@
+ static void linecheck(char *lbuff, char *tmpbuff);
+ static void crcheck(char *lbuff, FILE *fp);
+ 
+-#define TAIL(x) (x+strlen(x))
++#define TAIL(x) ((x)+strlen(x))
+ 
+ /* if we don't have vsnprintf() */
+ /* #define vsnprintf(buff,len,format,argptr) vsprintf(buff,format,argptr) */
 @@ -384,8 +384,7 @@
  						ind.p[j].enc++;
  					}

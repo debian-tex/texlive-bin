@@ -3,8 +3,9 @@ texlive-bin (2013.20130729.30972-2) UNRELEASED; urgency=low
   * fix some bugs in man pages: mf, xdvi, synctex.5 
     (Closes: #662846, #664961, #667981)
   * fix a bug in mendex when range ops and macros are used (Closes: #534641)
+  * reinstatiate xdvi perl wrapper (Closes: #631271, #583188)
 
- -- Norbert Preining <preining@debian.org>  Sun, 08 Sep 2013 12:19:36 +0900
+ -- Norbert Preining <preining@debian.org>  Sun, 08 Sep 2013 22:40:59 +0900
 
 texlive-bin (2013.20130729.30972-1) unstable; urgency=low
 

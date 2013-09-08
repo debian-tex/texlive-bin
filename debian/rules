@@ -83,6 +83,10 @@ override_dh_auto_install:
 
 override_dh_install:
 	dh_install --sourcedir=$(CURDIR)/debian/tmp
+	# replace xdvi wrapper shell script with perl variant to
+	# allow for opening of gz etc files
+	rm debian/texlive-binaries/usr/bin/xdvi
+	install -m 0755 debian/xdvi-pl debian/texlive-binaries/usr/bin/xdvi
 	# remove texlive directories, they should not be shipped here
 	rm -rf debian/texlive-binaries/usr/share/texlive
 	# remove wrongly added info/dir.gz

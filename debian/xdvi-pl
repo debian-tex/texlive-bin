@@ -1,0 +1,98 @@
+#! /usr/bin/perl -w
+
+# This is the xdvi wrapper script for Debian, based on Thomas Esser's
+# teTeX version 0.2.
+# Debian version: Copyright Julian Gilbey, 2002.  Lots of modifications
+# by Chung-chieh Shan <ken@digitas.harvard.edu>.
+# Also by TSUCHIYA Masatoshi <tsuchiya@pine.kuee.kyoto-u.ac.jp>.
+# Original version: Copyright Thomas Esser, 1998.
+# Permission to distribute this software is given under the terms of
+# the GNU general public license version 2 or later.
+
+# Thomas writes:
+# This script sets some environment variables to make sure that xdvi's
+# resource file in $XDVIINPUTS/xdvi is read by xdvi.bin.
+# Special care was taken to make this work for old R3, too. Therefore,
+# we need to modify XAPPLRESDIR. If you are running R4 or later, you
+# can set XUSERFILESEARCHPATH for user specific application default
+# files. You cannot use XAPPLRESDIR for user specific application default
+# files.
+
+# Julian writes: 
+# This has been rewritten in Perl so that we can mangle the arguments
+# to handled gzipped dvi files, which not have errors if there are
+# spaces in some arguments. XAPPLRESDIR is no longer modified.
+
+# Stephen Gildea writes:
+# Debian distributes X11R6, therefore this script should not clobber
+# XAPPLRESDIR, which is for user customizations.
+
+use strict;
+use FileHandle;
+use File::Basename;
+use File::Spec;
+use File::Temp qw/ tempfile /;
+
+my @NAMEOPT;
+if (@ARGV == 1 and ($ARGV[0] eq '-help' or $ARGV[0] eq '-version')) {
+    @NAMEOPT=();
+} else {
+    @NAMEOPT=qw(-name xdvi);
+}
+
+$ENV{'XDVIINPUTS'} .= ":\$TEXMF/{xdvi,web2c}";
+
+my ($xdviappfile, $xdviappdir, $xdviapppath);
+$xdviappfile=`kpsewhich -progname=xdvi --format='other text files' XDvi`;
+if ("$xdviappfile" ne '') {
+    $xdviappdir=dirname($xdviappfile);
+    $xdviapppath="$xdviappdir/%N";
+
+    if (exists $ENV{'XFILESEARCHPATH'}) {
+	$ENV{'XFILESEARCHPATH'} = "$xdviapppath:$ENV{'XFILESEARCHPATH'}";
+    } else {
+	$ENV{'XFILESEARCHPATH'} = "$xdviapppath:%D";
+    }
+}
+
+my $status;
+if (@ARGV) {
+    my $filename = pop @ARGV;
+
+    if ($filename =~ /\.(gz|Z|bz2)$/) {
+	my @command = $1 eq 'bz2' ? qw(bzip2 -d -c) : qw(gzip -d -c);
+
+	require Fcntl;
+	my $fh = tempfile( UNLINK => 1 )
+	    or die "xdvi: cannot create temporary file: $!\n";
+	fcntl $fh, Fcntl::F_SETFD(), 0
+	    or die "xdvi: disabling close-on-exec for temporary file: $!\n";
+
+	if (my $child = fork) {
+	    1 while wait != $child;
+	    if ($? & 255) {
+		die "xdvi: $command[0] terminated abnormally: $?\n";
+	    } elsif ($?) {
+		my $code = $? >> 8;
+		die "xdvi: $command[0] terminated with exit code $code\n";
+	    }
+	} elsif (defined $child) {
+	    STDOUT->fdopen( $fh, "w" );
+	    exec @command, $filename;
+	} else {
+	    die "xdvi: fork: $!\n";
+	}
+	$status = system('xdvi.bin', @NAMEOPT, @ARGV, '/dev/fd/'.fileno($fh));
+    } else {
+	$status = system('xdvi.bin', @NAMEOPT, @ARGV, $filename);
+    }
+} else {
+    $status = system('xdvi.bin', @NAMEOPT);
+}
+
+if ($status & 255) {
+    die "xdvi: xdvi.bin terminated abnormally: $?\n";
+} else {
+    my $code = $? >> 8;
+    exit $code;
+}

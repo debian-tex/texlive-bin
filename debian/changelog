@@ -1,4 +1,4 @@
-texlive-bin (2013.20130729.30972-2) UNRELEASED; urgency=low
+texlive-bin (2013.20130729.30972-2) unstable; urgency=low
 
   * fix some bugs in man pages: mf, xdvi, synctex.5 
     (Closes: #662846, #664961, #667981)
@@ -8,7 +8,7 @@ texlive-bin (2013.20130729.30972-2) UNRELEASED; urgency=low
     luatex (svn 31126, 31313, 31358), dvipdfmx (svn 31303), pdftex (svn 31313),
     dvips (svn 31350, 31547)
 
- -- Norbert Preining <preining@debian.org>  Mon, 09 Sep 2013 13:05:12 +0900
+ -- Norbert Preining <preining@debian.org>  Mon, 09 Sep 2013 13:11:42 +0900
 
 texlive-bin (2013.20130729.30972-1) unstable; urgency=low
 

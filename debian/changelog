@@ -7,8 +7,10 @@ texlive-bin (2013.20130729.30972-2) unstable; urgency=low
   * pull several bug fixes from upstream svn, in particular fixes for
     luatex (svn 31126, 31313, 31358), dvipdfmx (svn 31303), pdftex (svn 31313),
     dvips (svn 31350, 31547)
+  * explicitely write out versioned dependencies on automake, autoconf, 
+    libtool, and m4, to make sure we get successful builds
 
- -- Norbert Preining <preining@debian.org>  Mon, 09 Sep 2013 13:53:24 +0900
+ -- Norbert Preining <preining@debian.org>  Mon, 09 Sep 2013 15:18:50 +0900
 
 texlive-bin (2013.20130729.30972-1) unstable; urgency=low
 

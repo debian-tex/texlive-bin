@@ -3,10 +3,11 @@
 
 export SHELL=/bin/bash
 export CONFIG_SHELL=/bin/sh
-#
-# since we are reautoconf-ing with old version of auto*, we need
-# to make sure that the 1.12.3+ variables AM_V_P are defined
-export AM_V_P=false
+
+# In case one wants to build with old automake (<< 1.13.1), the following
+# variable has to be set. By default the debian/control requires high
+# enough versions of automake and friends
+#export AM_V_P=false
 
 DEB_HOST_ARCH     ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
 

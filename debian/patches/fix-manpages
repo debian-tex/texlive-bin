@@ -1,9 +1,11 @@
 ---
+ texk/detex/detex-2.8/detex.man       |    2 
+ texk/mendexk/mendex.1                |    2 
  texk/web2c/man/mf.man                |   26 +++++-----
  texk/web2c/man/tex.man               |    4 -
  texk/web2c/synctexdir/man5/synctex.5 |    6 +-
  texk/xdvik/xdvi.1.in                 |   88 +++++++++++++++++------------------
- 4 files changed, 62 insertions(+), 62 deletions(-)
+ 6 files changed, 64 insertions(+), 64 deletions(-)
 
 --- texlive-bin.orig/texk/web2c/man/tex.man
 +++ texlive-bin/texk/web2c/man/tex.man
@@ -516,3 +518,21 @@
  .\"nroff -man synctex.5 | col -b > synctex.5.txt
  .\"To convert it to Postscript (for printing or further conversion to pdf) use:
  .\"groff -man -Tps synctex.5 > synctex.5.ps
+--- texlive-bin.orig/texk/mendexk/mendex.1
++++ texlive-bin/texk/mendexk/mendex.1
+@@ -1,6 +1,6 @@
+ .if t .ds TX "T\h'-.15m'\v'.2v'E\v'-.2v'\h'-.12m'X
+ .if t .ds LX L\v'-.22m'a\v'.22m'T\h'-.1667m'\v'.22m'E\h'-.125m'\v'-.22m'X
+-.TH MENDEX L
++.TH MENDEX 1
+ .SH 名称
+ mendex \- 索引整形ツール
+ .SH 使用法
+--- texlive-bin.orig/texk/detex/detex-2.8/detex.man
++++ texlive-bin/texk/detex/detex-2.8/detex.man
+@@ -1,4 +1,4 @@
+-.TH DETEX 1L "12 August 1993" "Purdue University"
++.TH DETEX 1 "12 August 1993" "Purdue University"
+ .SH NAME
+ detex \- a filter to strip \fITeX\fP commands from a .tex file.
+ .SH SYNOPSIS

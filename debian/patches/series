@@ -8,3 +8,9 @@ pmpost-mp1.803-20130726
 fix-manpages
 mendex-bugfix
 mendex-snprintf
+upstream-svn31126-luatex
+upstream-svn31303-dvipdfmx
+upstream-svn31313-pdftex-luatex
+upstream-svn31547-dvips
+upstream-svn31350-dvips
+upstream-svn31358-luatex

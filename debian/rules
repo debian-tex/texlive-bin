@@ -35,6 +35,10 @@ override_dh_autoreconf:
 	dh_autoreconf --as-needed
 
 override_dh_auto_configure:
+	# we have to make sure that the mendex test case that is added
+	# by a patch is executable
+	chmod 0755 texk/mendexk/tests/mendex.test
+	# run out configure script
 	dh_auto_configure -- --prefix=/usr 	\
 	--datarootdir=/usr/share/texlive	\
 	--disable-native-texlive-build		\

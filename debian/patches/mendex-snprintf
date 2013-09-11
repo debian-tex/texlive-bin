@@ -1,18 +1,18 @@
 ---
- texk/mendexk/ChangeLog |    1 
- texk/mendexk/fwrite.c  |  103 +++++++++++++++++++++++++------------------------
- 2 files changed, 54 insertions(+), 50 deletions(-)
+ texk/mendexk/ChangeLog |    4 +
+ texk/mendexk/fwrite.c  |  105 +++++++++++++++++++++++++------------------------
+ 2 files changed, 58 insertions(+), 51 deletions(-)
 
 --- texlive-bin.orig/texk/mendexk/ChangeLog
 +++ texlive-bin/texk/mendexk/ChangeLog
-@@ -1,6 +1,7 @@
- 2013-09-08  Norbert Preining  <preining@logic.at>
- 
- 	* fwrite.c: properly parenthesis TAIL macro
+@@ -1,3 +1,7 @@
++2013-09-11  Norbert Preining  <preining@logic.at>
++
 +	* fwrite.c: replace sprintf with snprintf
++
+ 2013-09-10  Peter Breitenlohner  <peb@mppmu.mpg.de>
  
- 2013-09-07  Norbert Preining  <preining@logic.at>
- 
+ 	* fwrite.c: Bug fix as suggested by Akira, Karl, and Norbert.
 --- texlive-bin.orig/texk/mendexk/fwrite.c
 +++ texlive-bin/texk/mendexk/fwrite.c
 @@ -10,12 +10,15 @@
@@ -265,7 +265,7 @@
  			warn_printf(efp, "%s\n", errbuff);
  			ind.p[i].enc++;
  		}
-@@ -379,19 +382,19 @@
+@@ -379,20 +382,20 @@
  					}
  					else if (j!=i && ind.p[j].enc[0]==range_open) {
  						sprintf(errbuff,"Warning: Unmatched range opening operator \'%c\',",range_open);
@@ -275,8 +275,10 @@
  						ind.p[j].enc++;
  					}
  					if (strlen(ind.p[j].enc)>0) {
--						sprintf(tmpbuff,"%s%s%s%s%s%s",encap_prefix,ind.p[j].enc,encap_infix,ind.p[j].page,encap_suffix,delim_n);
-+						snprintf(tmpbuff, BUFFERLEN, "%s%s%s%s%s%s",encap_prefix,ind.p[j].enc,encap_infix,ind.p[j].page,encap_suffix,delim_n);
+-						sprintf(tmpbuff,"%s%s%s",encap_prefix,ind.p[j].enc,encap_infix);
+-						sprintf(TAIL(tmpbuff),"%s%s%s",ind.p[j].page,encap_suffix,delim_n);
++						snprintf(tmpbuff, BUFFERLEN, "%s%s%s",encap_prefix,ind.p[j].enc,encap_infix);
++						snprintf(TAIL_LEN(tmpbuff),"%s%s%s",ind.p[j].page,encap_suffix,delim_n);
  						linecheck(lbuff,tmpbuff);
  					}
  				}
@@ -288,7 +290,7 @@
  					warn_printf(efp, "%s\n", errbuff);
  			}
  			i=j-1;
-@@ -423,12 +426,12 @@
+@@ -424,12 +427,12 @@
  static void linecheck(char *lbuff, char *tmpbuff)
  {
  	if (line_length+strlen(tmpbuff)>line_max) {

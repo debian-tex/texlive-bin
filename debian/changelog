@@ -1,3 +1,9 @@
+texlive-bin (2013.20130729.30972-3) UNRELEASED; urgency=low
+
+  * add another upstream bugfix for mp
+
+ -- Norbert Preining <preining@debian.org>  Tue, 24 Sep 2013 18:46:40 +0900
+
 texlive-bin (2013.20130729.30972-2) unstable; urgency=low
 
   * fix some bugs in man pages: mf, xdvi, synctex.5, mendex, detex

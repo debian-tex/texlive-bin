@@ -1,8 +1,9 @@
 texlive-bin (2013.20130729.30972-3) UNRELEASED; urgency=low
 
   * add another upstream bugfix for mp
+  * fix missing epoch for build-dep on automake (Closes: #726513)
 
- -- Norbert Preining <preining@debian.org>  Tue, 24 Sep 2013 18:46:40 +0900
+ -- Norbert Preining <preining@debian.org>  Wed, 16 Oct 2013 22:56:39 +0900
 
 texlive-bin (2013.20130729.30972-2) unstable; urgency=low
 

@@ -2,8 +2,13 @@ texlive-bin (2013.20130729.30972-3) UNRELEASED; urgency=low
 
   * add another upstream bugfix for mp
   * fix missing epoch for build-dep on automake (Closes: #726513)
+  * pull several bug fixes from upstream svn, in particular for
+    luatex (svn 32159, 32353, 32361, 32367), pdftex (svn 32428 for
+    PDF/A-1b verification), mendex (svn 32155, 32156), seetex (svn
+    32175, 32191), omegaware (svn 32351, 32369, 32388), and 
+    (x)dvipdfmx (svn 32268)
 
- -- Norbert Preining <preining@debian.org>  Wed, 16 Oct 2013 22:56:39 +0900
+ -- Norbert Preining <preining@debian.org>  Wed, 18 Dec 2013 15:27:39 +0900
 
 texlive-bin (2013.20130729.30972-2) unstable; urgency=low
 

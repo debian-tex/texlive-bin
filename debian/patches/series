@@ -15,3 +15,16 @@ upstream-svn31358-luatex
 upstream-svn31621-mendex
 mendex-snprintf
 upstream-svn31735-metapost
+upstream-svn32155-mendex
+upstream-svn32156-mendex
+upstream-svn32159-luatex-italcorr
+upstream-svn32175-seetex
+upstream-svn32191-seetex
+upstream-svn32268-dvipdfmx-ai
+upstream-svn32351-omegaware
+upstream-svn32353-luatex-pdfimages
+upstream-svn32361-luatex-large-files
+upstream-svn32367-luatex
+upstream-svn32369-omegaware
+upstream-svn32388-omegaware
+upstream-svn32428-pdfab-fix

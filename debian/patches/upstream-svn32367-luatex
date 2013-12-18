@@ -1,0 +1,48 @@
+---
+ texk/web2c/luatexdir/ChangeLog      |    5 +++++
+ texk/web2c/luatexdir/font/writet3.w |    2 +-
+ texk/web2c/luatexdir/pdf/pdfpage.w  |    4 ++--
+ 3 files changed, 8 insertions(+), 3 deletions(-)
+
+--- texlive-bin.orig/texk/web2c/luatexdir/font/writet3.w
++++ texlive-bin/texk/web2c/luatexdir/font/writet3.w
+@@ -279,7 +279,7 @@
+             get_pk_font_scale(f, pdf->decimal_digits, pdf->pk_scale_factor);
+         pdf_add_name(pdf, "FontMatrix");
+         pdf_begin_array(pdf);
+-        setpdffloat(pf, pk_font_scale, 5);
++        setpdffloat(pf, (int64_t) pk_font_scale, 5);
+         print_pdffloat(pdf, pf);
+         pdf_puts(pdf, " 0 0 ");
+         print_pdffloat(pdf, pf);
+--- texlive-bin.orig/texk/web2c/luatexdir/pdf/pdfpage.w
++++ texlive-bin/texk/web2c/luatexdir/pdf/pdfpage.w
+@@ -127,7 +127,7 @@
+             new.h =
+                 i32round((pos.h * p->k1 - (double) p->pdf_tj_pos.h.m) * p->k2);
+             new.v = i32round(pos.v * p->k1);
+-            p->tj_delta.m = -i32round((double)
++            p->tj_delta.m = -i64round((double)
+                                     ((new.h - p->cw.m) / ten_pow[p->cw.e -
+                                                                  p->tj_delta.
+                                                                  e]));
+@@ -140,7 +140,7 @@
+             new.v =
+                 i32round(((double) p->pdf_tj_pos.v.m - pos.v * p->k1) * p->k2);
+             p->tm[4].m = new.h - p->pdf_bt_pos.h.m;     /* p->tm[5] is meaningless */
+-            p->tj_delta.m = -i32round((double)
++            p->tj_delta.m = -i64round((double)
+                                     ((new.v - p->cw.m) / ten_pow[p->cw.e -
+                                                                  p->tj_delta.
+                                                                  e]));
+--- texlive-bin.orig/texk/web2c/luatexdir/ChangeLog
++++ texlive-bin/texk/web2c/luatexdir/ChangeLog
+@@ -1,3 +1,8 @@
++2013-12-08  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
++
++	* font/writet3.w: More cast arg2 of setpdffloat to int64_t.
++	* pdf/pdfpage.w: Fix i32round() => i64round().
++
+ 2013-08-07  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+ 
+ 	* lua/liolibext.c: Large files in lua.

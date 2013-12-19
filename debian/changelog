@@ -5,8 +5,9 @@ texlive-bin (2014.20131219.32443-1) UNRELEASED; urgency=low
   * Imported Upstream version 2014.20131219.32443
   * update patches for 2014, remove several outdated
   * build luatex again, we drop the independent package
+  * bump standards version, no changes necessary
 
- -- Norbert Preining <preining@debian.org>  Thu, 19 Dec 2013 15:00:10 +0900
+ -- Norbert Preining <preining@debian.org>  Thu, 19 Dec 2013 15:41:32 +0900
 
 texlive-bin (2013.20130729.30972-2) unstable; urgency=low
 

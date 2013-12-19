@@ -69,7 +69,6 @@ override_dh_auto_configure:
 	--disable-musixflx			\
 	--disable-ps2eps			\
 	--disable-psutils			\
-	--disable-luatex			\
 	--disable-t1utils			\
 	--disable-cjkutils			\
 	--disable-chktex			\

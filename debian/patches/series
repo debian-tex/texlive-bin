@@ -4,6 +4,7 @@ debian-no-linked-scripts
 60_unneeded_linking
 61_path_max.diff
 disable-t1lib-gd-dvipng-freetype
-pmpost-mp1.803-20130726
+pmpost-mp1.803-20131219
+#pmpost-mp1.803-20130726
 fix-manpages
 mendex-snprintf

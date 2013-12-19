@@ -6,12 +6,4 @@ debian-no-linked-scripts
 disable-t1lib-gd-dvipng-freetype
 pmpost-mp1.803-20130726
 fix-manpages
-upstream-svn31126-luatex
-upstream-svn31303-dvipdfmx
-upstream-svn31313-pdftex-luatex
-upstream-svn31547-dvips
-upstream-svn31350-dvips
-upstream-svn31358-luatex
-upstream-svn31621-mendex
 mendex-snprintf
-upstream-svn31735-metapost

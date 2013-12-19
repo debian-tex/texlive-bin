@@ -10,9 +10,9 @@
 +
 +	* fwrite.c: replace sprintf with snprintf
 +
- 2013-09-10  Peter Breitenlohner  <peb@mppmu.mpg.de>
+ 2013-11-16  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
  
- 	* fwrite.c: Bug fix as suggested by Akira, Karl, and Norbert.
+ 	* fread.c: Allow lines with only a line ending in mfgets(),
 --- texlive-bin.orig/texk/mendexk/fwrite.c
 +++ texlive-bin/texk/mendexk/fwrite.c
 @@ -10,12 +10,15 @@

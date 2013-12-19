@@ -1,73 +1,85 @@
-disable any reference to t1lib, (lib)gd, dvipng
+disable any reference to (lib)gd, dvipng
 thanks to Ondřej Surý <ondrej@debian.org>
 
-this patch allows removing of embedded copies of libgd and t1lib
+this patch allows removing of embedded copies of libgd
 completely. Before it was necessary to keep them only for the
 configure step.
 
 Thanks Ondřej!
 ---
- aclocal.m4                |    3 ---
- libs/aclocal.m4           |    3 ---
- m4/kpse-freetype-flags.m4 |   29 -----------------------------
- m4/kpse-gd-flags.m4       |   31 -------------------------------
- m4/kpse-pkgs.m4           |    6 ------
- m4/kpse-t1lib-flags.m4    |   29 -----------------------------
- texk/aclocal.m4           |    1 -
- utils/aclocal.m4          |    3 ---
- 8 files changed, 105 deletions(-)
+ aclocal.m4          |    1 -
+ libs/aclocal.m4     |    1 -
+ m4/kpse-gd-flags.m4 |   31 -------------------------------
+ m4/kpse-pkgs.m4     |    3 ---
+ texk/aclocal.m4     |    1 -
+ utils/aclocal.m4    |    1 -
+ 6 files changed, 38 deletions(-)
 
 --- texlive-bin.orig/aclocal.m4
 +++ texlive-bin/aclocal.m4
-@@ -1038,9 +1038,7 @@
- m4_include([m4/kpse-cairo-flags.m4])
+@@ -1187,7 +1187,6 @@
  m4_include([m4/kpse-common.m4])
  m4_include([m4/kpse-cxx-hack.m4])
--m4_include([m4/kpse-freetype-flags.m4])
  m4_include([m4/kpse-freetype2-flags.m4])
 -m4_include([m4/kpse-gd-flags.m4])
  m4_include([m4/kpse-graphite2-flags.m4])
  m4_include([m4/kpse-harfbuzz-flags.m4])
  m4_include([m4/kpse-icu-flags.m4])
-@@ -1054,7 +1052,6 @@
- m4_include([m4/kpse-poppler-flags.m4])
- m4_include([m4/kpse-ptexenc-flags.m4])
- m4_include([m4/kpse-setup.m4])
--m4_include([m4/kpse-t1lib-flags.m4])
- m4_include([m4/kpse-teckit-flags.m4])
- m4_include([m4/kpse-warnings.m4])
- m4_include([m4/kpse-web2c.m4])
 --- texlive-bin.orig/libs/aclocal.m4
 +++ texlive-bin/libs/aclocal.m4
-@@ -1038,9 +1038,7 @@
- m4_include([../m4/kpse-cairo-flags.m4])
+@@ -1187,7 +1187,6 @@
  m4_include([../m4/kpse-common.m4])
  m4_include([../m4/kpse-cxx-hack.m4])
--m4_include([../m4/kpse-freetype-flags.m4])
  m4_include([../m4/kpse-freetype2-flags.m4])
 -m4_include([../m4/kpse-gd-flags.m4])
  m4_include([../m4/kpse-graphite2-flags.m4])
  m4_include([../m4/kpse-harfbuzz-flags.m4])
  m4_include([../m4/kpse-icu-flags.m4])
-@@ -1054,7 +1052,6 @@
- m4_include([../m4/kpse-poppler-flags.m4])
- m4_include([../m4/kpse-ptexenc-flags.m4])
- m4_include([../m4/kpse-setup.m4])
--m4_include([../m4/kpse-t1lib-flags.m4])
- m4_include([../m4/kpse-teckit-flags.m4])
- m4_include([../m4/kpse-warnings.m4])
- m4_include([../m4/kpse-web2c.m4])
+--- texlive-bin.orig/m4/kpse-pkgs.m4
++++ texlive-bin/m4/kpse-pkgs.m4
+@@ -33,7 +33,6 @@
+ cairo
+ pixman
+ potrace
+-gd
+ freetype2
+ libpng
+ paper
+@@ -57,7 +56,6 @@
+ AC_REQUIRE([KPSE_PAPER_SYSTEM_FLAGS])[]dnl
+ AC_REQUIRE([KPSE_LIBPNG_SYSTEM_FLAGS])[]dnl
+ AC_REQUIRE([KPSE_FREETYPE2_SYSTEM_FLAGS])[]dnl
+-AC_REQUIRE([KPSE_GD_SYSTEM_FLAGS])[]dnl
+ AC_REQUIRE([KPSE_POTRACE_SYSTEM_FLAGS])[]dnl
+ AC_REQUIRE([KPSE_PIXMAN_SYSTEM_FLAGS])[]dnl
+ AC_REQUIRE([KPSE_CAIRO_SYSTEM_FLAGS])[]dnl
+@@ -106,7 +104,6 @@
+ dviljk
+ dvipdf-x
+ dvipdfm-x
+-dvipng
+ dvipos
+ dvipsk
+ dvisvgm
+--- texlive-bin.orig/utils/aclocal.m4
++++ texlive-bin/utils/aclocal.m4
+@@ -1187,7 +1187,6 @@
+ m4_include([../m4/kpse-common.m4])
+ m4_include([../m4/kpse-cxx-hack.m4])
+ m4_include([../m4/kpse-freetype2-flags.m4])
+-m4_include([../m4/kpse-gd-flags.m4])
+ m4_include([../m4/kpse-graphite2-flags.m4])
+ m4_include([../m4/kpse-harfbuzz-flags.m4])
+ m4_include([../m4/kpse-icu-flags.m4])
 --- texlive-bin.orig/m4/kpse-gd-flags.m4
 +++ /dev/null
 @@ -1,31 +0,0 @@
 -# Public macros for the TeX Live (TL) tree.
--# Copyright (C) 2009, 2010 Peter Breitenlohner <tex-live@tug.org>
+-# Copyright (C) 2009-2013 Peter Breitenlohner <tex-live@tug.org>
 -#
 -# This file is free software; the copyright holder
 -# gives unlimited permission to copy and/or distribute it,
 -# with or without modifications, as long as this notice is preserved.
--
--# serial 0
 -
 -# KPSE_GD_FLAGS
 -# -------------
@@ -76,11 +88,13 @@ Thanks Ondřej!
 -#
 -# Set the make variables GD_INCLUDES and GD_LIBS to the CPPFLAGS and
 -# LIBS required for the `-lgd' library in libs/gd/ of the TL tree.
--AC_DEFUN([KPSE_GD_FLAGS],
--[AC_REQUIRE([KPSE_LIBPNG_FLAGS])[]dnl
+-AC_DEFUN([KPSE_GD_FLAGS], [dnl
+-AC_REQUIRE([KPSE_CHECK_WIN32])[]dnl
+-AC_REQUIRE([KPSE_LIBPNG_FLAGS])[]dnl
 -AC_REQUIRE([KPSE_FREETYPE2_FLAGS])[]dnl
 -_KPSE_LIB_FLAGS([gd], [gd], [],
--                [-IBLD/libs/gd/include -DNONDLL], [BLD/libs/gd/libgd.a], [],
+-                [-IBLD/libs/gd/include], [BLD/libs/gd/libgd.a],
+-                [test "x$kpse_cv_have_win32" = xno || GD_INCLUDES="$GD_INCLUDES -DBGDWIN32 -DNONDLL"],
 -                [], [${top_builddir}/../../libs/gd/include/gd.h])[]dnl
 -]) # KPSE_GD_FLAGS
 -
@@ -91,129 +105,13 @@ Thanks Ondřej!
 -# KPSE_GD_SYSTEM_FLAGS
 -# --------------------
 -AC_DEFUN([KPSE_GD_SYSTEM_FLAGS], [_KPSE_LIB_FLAGS_SYSTEM([gd], [gd])])
---- texlive-bin.orig/m4/kpse-pkgs.m4
-+++ texlive-bin/m4/kpse-pkgs.m4
-@@ -33,10 +33,7 @@
- poppler
- cairo
- pixman
--gd
- freetype2
--freetype
--t1lib
- libpng
- zlib
- ])[]dnl
-@@ -56,10 +53,8 @@
- AC_REQUIRE([KPSE_PTEXENC_SYSTEM_FLAGS])[]dnl
- AC_REQUIRE([KPSE_ZLIB_SYSTEM_FLAGS])[]dnl
- AC_REQUIRE([KPSE_LIBPNG_SYSTEM_FLAGS])[]dnl
--AC_REQUIRE([KPSE_T1LIB_SYSTEM_FLAGS])[]dnl
- AC_REQUIRE([KPSE_FREETYPE_SYSTEM_FLAGS])[]dnl
- AC_REQUIRE([KPSE_FREETYPE2_SYSTEM_FLAGS])[]dnl
--AC_REQUIRE([KPSE_GD_SYSTEM_FLAGS])[]dnl
- AC_REQUIRE([KPSE_PIXMAN_SYSTEM_FLAGS])[]dnl
- AC_REQUIRE([KPSE_CAIRO_SYSTEM_FLAGS])[]dnl
- AC_REQUIRE([KPSE_XPDF_SYSTEM_FLAGS])[]dnl
-@@ -107,7 +102,6 @@
- dvidvi
- dviljk
- dvipdfmx
--dvipng
- dvipos
- dvipsk
- dvisvgm
---- texlive-bin.orig/m4/kpse-t1lib-flags.m4
-+++ /dev/null
-@@ -1,29 +0,0 @@
--# Public macros for the TeX Live (TL) tree.
--# Copyright (C) 2009 Peter Breitenlohner <tex-live@tug.org>
--#
--# This file is free software; the copyright holder
--# gives unlimited permission to copy and/or distribute it,
--# with or without modifications, as long as this notice is preserved.
--
--# serial 0
--
--# KPSE_T1LIB_FLAGS
--# ----------------
--# Provide the configure options '--with-system-t1lib' (if in the TL tree),
--# '--with-t1lib-includes', and '--with-t1lib-libdir'.
--#
--# Set the make variables T1LIB_INCLUDES and T1LIB_LIBS to the CPPFLAGS and
--# LIBS required for the `-lt1' library in libs/t1lib/ of the TL tree.
--AC_DEFUN([KPSE_T1LIB_FLAGS],
--[_KPSE_LIB_FLAGS([t1lib], [t1], [],
--                 [-IBLD/libs/t1lib], [BLD/libs/t1lib/libt1.a], [],
--                 [], [${top_builddir}/../../libs/t1lib/t1lib.h])[]dnl
--]) # KPSE_T1LIB_FLAGS
--
--# KPSE_T1LIB_OPTIONS([WITH-SYSTEM])
--# ---------------------------------
--AC_DEFUN([KPSE_T1LIB_OPTIONS], [_KPSE_LIB_OPTIONS([t1lib], [$1])])
--
--# KPSE_T1LIB_SYSTEM_FLAGS
--# -----------------------
--AC_DEFUN([KPSE_T1LIB_SYSTEM_FLAGS], [_KPSE_LIB_FLAGS_SYSTEM([t1lib], [t1])])
---- texlive-bin.orig/utils/aclocal.m4
-+++ texlive-bin/utils/aclocal.m4
-@@ -1038,9 +1038,7 @@
- m4_include([../m4/kpse-cairo-flags.m4])
+--- texlive-bin.orig/texk/aclocal.m4
++++ texlive-bin/texk/aclocal.m4
+@@ -1187,7 +1187,6 @@
  m4_include([../m4/kpse-common.m4])
  m4_include([../m4/kpse-cxx-hack.m4])
--m4_include([../m4/kpse-freetype-flags.m4])
  m4_include([../m4/kpse-freetype2-flags.m4])
 -m4_include([../m4/kpse-gd-flags.m4])
  m4_include([../m4/kpse-graphite2-flags.m4])
  m4_include([../m4/kpse-harfbuzz-flags.m4])
  m4_include([../m4/kpse-icu-flags.m4])
-@@ -1054,7 +1052,6 @@
- m4_include([../m4/kpse-poppler-flags.m4])
- m4_include([../m4/kpse-ptexenc-flags.m4])
- m4_include([../m4/kpse-setup.m4])
--m4_include([../m4/kpse-t1lib-flags.m4])
- m4_include([../m4/kpse-teckit-flags.m4])
- m4_include([../m4/kpse-warnings.m4])
- m4_include([../m4/kpse-web2c.m4])
---- texlive-bin.orig/m4/kpse-freetype-flags.m4
-+++ /dev/null
-@@ -1,29 +0,0 @@
--# Public macros for the TeX Live (TL) tree.
--# Copyright (C) 2009 Peter Breitenlohner <tex-live@tug.org>
--#
--# This file is free software; the copyright holder
--# gives unlimited permission to copy and/or distribute it,
--# with or without modifications, as long as this notice is preserved.
--
--# serial 0
--
--# KPSE_FREETYPE_FLAGS
--# -------------------
--# Provide the configure options '--with-system-freetype' (if in the TL tree),
--# '--with-freetype-includes', and '--with-freetype-libdir'.
--#
--# Set the make variables FREETYPE_INCLUDES and FREETYPE_LIBS to the CPPFLAGS and
--# LIBS required for the `-lttf' library in libs/freetype/ of the TL tree.
--AC_DEFUN([KPSE_FREETYPE_FLAGS],
--[_KPSE_LIB_FLAGS([freetype], [ttf], [],
--                 [-IBLD/libs/freetype/freetype], [BLD/libs/freetype/libttf.a], [],
--                 [], [${top_builddir}/../../libs/freetype/freetype/freetype.h])[]dnl
--]) # KPSE_FREETYPE_FLAGS
--
--# KPSE_FREETYPE_OPTIONS([WITH-SYSTEM])
--# ------------------------------------
--AC_DEFUN([KPSE_FREETYPE_OPTIONS], [_KPSE_LIB_OPTIONS([freetype], [$1])])
--
--# KPSE_FREETYPE_SYSTEM_FLAGS
--# --------------------------
--AC_DEFUN([KPSE_FREETYPE_SYSTEM_FLAGS], [_KPSE_LIB_FLAGS_SYSTEM([freetype], [ttf])])
---- texlive-bin.orig/texk/aclocal.m4
-+++ texlive-bin/texk/aclocal.m4
-@@ -1038,7 +1038,6 @@
- m4_include([../m4/kpse-cairo-flags.m4])
- m4_include([../m4/kpse-common.m4])
- m4_include([../m4/kpse-cxx-hack.m4])
--m4_include([../m4/kpse-freetype-flags.m4])
- m4_include([../m4/kpse-freetype2-flags.m4])
- m4_include([../m4/kpse-gd-flags.m4])
- m4_include([../m4/kpse-graphite2-flags.m4])

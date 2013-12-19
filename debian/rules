@@ -47,7 +47,6 @@ override_dh_auto_configure:
 	--with-banner-add=/Debian		\
 	--enable-shared				\
 	--with-system-zlib			\
-	--with-system-libpng			\
 	--with-system-zzlib			\
 	--with-system-freetype2			\
 	--with-system-xpdf			\

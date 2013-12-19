@@ -1,3 +1,30 @@
+2013-12-18  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* tests/min10.pl, tests/tmin10.pl: Converted to 7-bit ASCII.
+	* yokotate.test: Simplified.
+
+2013-12-17  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* ppltotf.ch: Drop one unused change set (is in ../pltotf.ch).
+	Print DIRECTION value with print_ln() instead of err_print().
+
+2013-11-18  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* ptex-base.ch: Simplify a few change sets.
+
+2013-08-12  TANAKA Takuji <KXD02663@nifty.ne.jp>
+
+	* kanji.h, ptex-base.ch, ptex.defines: Allow file names with 0x5c in
+	(e)pTeX on Windows.
+
+2013-06-18  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* am/ptex.am: Move PTEXENC_RULE to ../Makefile.am.
+
+2013-06-05  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* kanji.h: Avoid redefinition of KANJI.
+
 2013-05-05  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
 
 	* ptex-base.ch: Fix a bug that KANJI info of the last char in \hbox

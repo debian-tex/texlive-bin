@@ -36,14 +36,6 @@ authorization from the copyright holders.
 #define __XETEXEXT_H
 
 #include <unicode/utypes.h>
-#include <w2c/c-auto.h>  /* needed for SIZEOF_LONG and NO_DUMP_SHARE */
-#ifdef __cplusplus
-extern "C" {
-#endif
-#include <w2c/config.h>
-#ifdef __cplusplus
-}
-#endif
 
 #ifndef XETEX_UNICODE_FILE_DEFINED
 typedef struct UFILE* unicodefile;

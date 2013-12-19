@@ -1,12 +1,12 @@
 #!/usr/bin/env perl
-# $Id: tlmgr.pl 30643 2013-05-22 23:55:59Z preining $
+# $Id: tlmgr.pl 31977 2013-10-23 14:04:44Z preining $
 #
 # Copyright 2008-2013 Norbert Preining
 # This file is licensed under the GNU General Public License version 2
 # or any later version.
 
-my $svnrev = '$Revision: 30643 $';
-my $datrev = '$Date: 2013-05-23 01:55:59 +0200 (Thu, 23 May 2013) $';
+my $svnrev = '$Revision: 31977 $';
+my $datrev = '$Date: 2013-10-23 16:04:44 +0200 (Wed, 23 Oct 2013) $';
 my $tlmgrrevision;
 my $prg;
 if ($svnrev =~ m/: ([0-9]+) /) {
@@ -681,7 +681,6 @@ sub handle_execute_actions
   chomp(my $TEXMFLOCAL = `kpsewhich -var-value=TEXMFLOCAL`);
   chomp(my $TEXMFDIST = `kpsewhich -var-value=TEXMFDIST`);
 
-  #
   # maps handling
   {
     my $updmap_run_needed = 0;
@@ -691,8 +690,9 @@ sub handle_execute_actions
     for my $m (keys %{$::execute_actions{'disable'}{'maps'}}) {
       $updmap_run_needed = 1;
     }
+    my $dest = $opts{"usermode"} ? "$::maintree/web2c/updmap.cfg" 
+               : "$TEXMFDIST/web2c/updmap.cfg";
     if ($updmap_run_needed) {
-      my $dest = "$TEXMFDIST/web2c/updmap.cfg";
       TeXLive::TLUtils::create_updmap($localtlpdb, $dest);
     }
     $errors += do_cmd_and_check("updmap$sysmode") if $updmap_run_needed;
@@ -702,7 +702,6 @@ sub handle_execute_actions
   # we first have to check if the config files, that is fmtutil.cnf 
   # or one of the language* files have changed, regenerate them
   # if necessary, and then run the necessary fmtutil calls.
-
   {
     # first check for language* files
     my $regenerate_language = 0;
@@ -2015,6 +2014,9 @@ sub write_w32_updater {
       (undef, undef, $mediatlp, $maxtlpdb) = 
         $remotetlpdb->virtual_candidate($pkg);
       $repo = $maxtlpdb->root . "/$Archive";
+      # update the media type of the used tlpdb
+      # otherwise later on we stumble when preparing the updater
+      $media = $maxtlpdb->media;
     } else {
       $mediatlp = $remotetlpdb->get_package($pkg);
       $repo = $remotetlpdb->root . "/$Archive";
@@ -2811,6 +2813,15 @@ sub action_update {
             "/$totalnr] auto-remove: $p ... ");
         }
         if (!$opts{"dry-run"}) {
+          # older tlmgr forgot to clear the relocated bit when saving a tlpobj
+          # into the local tlpdb, although the paths were rewritten.
+          # We have to clear this bit otherwise the make_container calls below
+          # for creating the backup will create some rubbish!
+          # Same as further down in the update part!
+          if ($pkg->relocated) {
+            debug("tlmgr: warn, relocated bit set for $p, but that is wrong!\n");
+            $pkg->relocated(0);
+          }
           if ($opts{"backup"}) {
             $pkg->make_container("xz", $root,
                                  $opts{"backupdir"}, 
@@ -3362,6 +3373,14 @@ END_DISK_WARN
 sub action_install {
   init_local_db(1);
   return if !check_on_writable();
+
+  #
+  # installation from a .tar.xz
+  if ($opts{"file"}) {
+    return $localtlpdb->install_package_files(@ARGV);
+  }
+
+  # if we are still here, we are installing from some repository
   # initialize the TLPDB from $location
   $opts{"no-depends"} = 1 if $opts{"no-depends-at-all"};
   init_tlmedia_or_die();
@@ -3383,11 +3402,6 @@ sub action_install {
     }
   }
 
-  #
-  # installation from a .tar.xz
-  if ($opts{"file"}) {
-    return $localtlpdb->install_package_files(@ARGV);
-  }
 
   $opts{"no-depends"} = 1 if $opts{"no-depends-at-all"};
   info("install: dry run, no changes will be made\n") if $opts{"dry-run"};
@@ -3993,8 +4007,8 @@ sub action_option {
       }
     }
   } else {
-    if ($what eq "location") {
-      # rewrite location -> repository
+    if ($what eq "location" || $what eq "repo") {
+      # silently rewrite location|repo -> repository
       $what = "repository";
     }
     my $found = 0;
@@ -4335,7 +4349,7 @@ sub action_generate {
       if ($opts{"rebuild-sys"}) {
         do_cmd_and_check("fmtutil-sys --byhyphen \"$dest\"");
       } else {
-        info("To make the newly-generated language.dat take effect,"
+        info("To make the newly-generated language.dat.lua take effect,"
              . " run fmtutil-sys --byhyphen $dest.\n"); 
       }
     }
@@ -4713,8 +4727,8 @@ sub check_files {
     texmf-dist/ls-R$ texmf-doc/ls-R$
     tlpkg/archive tlpkg/backups tlpkg/installer
     tlpkg/texlive.tlpdb tlpkg/tlpobj tlpkg/texlive.profile
-    texmf-var/ texmf-config/
-    texmf.cnf install-tl.log
+    texmf-config/ texmf-var/
+    texmf.cnf texmfcnf.lua install-tl.log
   !;
   my %tltreefiles = %{$tltree->{'_allfiles'}};
   my @tlpdbfiles = keys %filetopacks;
@@ -4750,8 +4764,8 @@ sub check_files {
 # 
 sub check_runfiles {
   my $Master = $localtlpdb->root;
+
   # build a list of all runtime files associated to 'normal' packages
-  #
   (my $non_normal = `ls "$Master/bin"`) =~ s/\n/\$|/g; # binaries
   $non_normal .= '^0+texlive|^bin-|^collection-|^scheme-|^texlive-|^texworks';
   my @runtime_files = ();
@@ -4774,8 +4788,7 @@ sub check_runfiles {
     push @runtime_files, @files;
   }
 
-  # build the duplicates list
-  #
+  # build the duplicates list.
   my @duplicates = (""); # just to use $duplicates[-1] freely
   my $prev = "";
   foreach my $f (sort map { TeXLive::TLUtils::basename($_) } @runtime_files) {
@@ -4786,8 +4799,7 @@ sub check_runfiles {
 
   # @duplicates = ('8r-base.map', 'aer.sty', 'lm-ec.map'); # for debugging
 
-  # check if duplicates are different files
-  #
+  # check if duplicates are different files.
   foreach my $f (@duplicates) {
     # assume tex4ht, xdy, afm stuff is ok, and don't worry about
     # Changes, README et al.  Other per-format versions.
@@ -4795,13 +4807,13 @@ sub check_runfiles {
     next if $f
       =~ /^((czech|slovak)\.sty
             |Changes
+            |Makefile
             |README
             |cid2code\.txt
             |etex\.src
             |kinsoku\.tex
             |language\.dat
             |language\.def
-            |libertine\.sty
             |m-tex4ht\.tex
             |metatex\.tex
             |.*-noEmbed\.map
@@ -5178,7 +5190,8 @@ sub action_postaction {
 #  INIT USER TREE
 # sets up the user tree for tlmgr in user mode
 sub action_init_usertree {
-  init_local_db();
+  # init_local_db but do not die if localtlpdb is not found!
+  init_local_db(2);
   my $tlpdb = TeXLive::TLPDB->new;
   my $usertree;
   if ($opts{"usertree"}) {
@@ -5191,11 +5204,20 @@ sub action_init_usertree {
   }
   $tlpdb->root($usertree);
   # copy values from main installation over
-  my $maininsttlp = $localtlpdb->get_package("00texlive.installation");
-  my $inst = $maininsttlp->copy;
+  my $maininsttlp;
+  my $inst;
+  if (defined($localtlpdb)) {
+    $maininsttlp = $localtlpdb->get_package("00texlive.installation");
+    $inst = $maininsttlp->copy;
+  } else {
+    $inst = TeXLive::TLPOBJ->new;
+    $inst->name("00texlive.installation");
+    $inst->category("TLCore");
+  }
   $tlpdb->add_tlpobj($inst);
   # remove all available architectures
   $tlpdb->setting( "available_architectures", "");
+  $tlpdb->option( "location", $TeXLive::TLConfig::TeXLiveURL);
   # specify that we are in user mode
   $tlpdb->setting( "usertree", 1 );
   $tlpdb->save;
@@ -5318,6 +5340,14 @@ sub texconfig_conf_mimic {
 # Subroutines galore.
 #
 # set global $location variable.
+#
+# argument $should_i_die specifies what is requried
+# to suceed during initialization.
+#
+# undef or false: TLPDB needs to be found and initialized, but
+#                 support programs need not be found
+# 1             : TLPDB initialized and support programs must work
+# 2             : not even TLPDB needs to be found
 # if we cannot read tlpdb, die if arg SHOULD_I_DIE is true.
 #
 # if an argument is given and is true init_local_db will die if
@@ -5325,12 +5355,19 @@ sub texconfig_conf_mimic {
 #
 sub init_local_db {
   my ($should_i_die) = @_;
+  defined($should_i_die) or ($should_i_die = 0);
   # if the localtlpdb is already defined do simply return here already
   # to make sure that the settings in the local tlpdb do not overwrite
   # stuff changed via the GUI
   return if defined $localtlpdb;
   $localtlpdb = TeXLive::TLPDB->new ( root => $::maintree );
-  die("cannot setup TLPDB in $::maintree") unless (defined($localtlpdb));
+  if (!defined($localtlpdb)) {
+    if ($should_i_die == 2) {
+      return undef;
+    } else {
+      die("cannot setup TLPDB in $::maintree");
+    }
+  }
   # setup the programs, for w32 we need the shipped wget/xz etc, so we
   # pass the location of these files to setup_programs.
   if (!setup_programs("$Master/tlpkg/installer", $localtlpdb->platform)) {
@@ -6029,8 +6066,8 @@ language code (based on ISO 639-1).  Currently supported (but not
 necessarily completely translated) are: English (en, default), Czech
 (cs), German (de), French (fr), Italian (it), Japanese (ja), Dutch (nl),
 Polish (pl), Brazilian Portuguese (pt_BR), Russian (ru), Slovak (sk),
-Slovenian (sl), Serbian (sr), Vietnamese (vi), simplified Chinese
-(zh_CN), and traditional Chinese (zh_TW).
+Slovenian (sl), Serbian (sr), Ukrainian (uk), Vietnamese (vi),
+simplified Chinese (zh_CN), and traditional Chinese (zh_TW).
 
 =item B<--debug-translation>
 
@@ -6466,17 +6503,17 @@ all packages on which the given I<pkg>s are dependent, also.  Options:
 =item B<--file>
 
 Instead of fetching a package from the installation repository, use
-the packages files given on the command line. These files need
-to be proper TeX Live package files (with contained tlpobj file).
+the package files given on the command line.  These files must
+be standard TeX Live package files (with contained tlpobj file).
 
 =item B<--reinstall>
 
 Reinstall a package (including dependencies for collections) even if it
-seems to be already installed (i.e, is present in the TLPDB).  This is
+already seems to be installed (i.e, is present in the TLPDB).  This is
 useful to recover from accidental removal of files in the hierarchy.
 
 When re-installing, only dependencies on normal packages are followed
-(not those of category Scheme or Collection).
+(i.e., not those of category Scheme or Collection).
 
 =item B<--no-depends>
 
@@ -6485,12 +6522,12 @@ that all dependencies of this package are fulfilled.)
 
 =item B<--no-depends-at-all>
 
-When you install a package which ships binary files the respective
-binary package will also be installed.  That is, for a package C<foo>,
-the package C<foo.i386-linux> will also be installed on an C<i386-linux>
-system.  This switch suppresses this behavior, and also implies
-C<--no-depends>.  Don't use it unless you are sure of what you are
-doing.
+Normally, when you install a package which ships binary files the
+respective binary package will also be installed.  That is, for a
+package C<foo>, the package C<foo.i386-linux> will also be installed on
+an C<i386-linux> system.  This option suppresses this behavior, and also
+implies C<--no-depends>.  Don't use it unless you are sure of what you
+are doing.
 
 =item B<--dry-run>
 

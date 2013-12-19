@@ -33,8 +33,6 @@ in xdvi.c.
 #ifndef	XDVI_H_
 #define	XDVI_H_
 
-#include "xdvi-config.h"
-
 /* headers used by all modules */
 #include "xdvi-debug.h"
 #include "c-auto.h"
@@ -200,13 +198,6 @@ extern unsigned long time_start, time_end;
 #endif
 
 #include <string.h>
-
-#ifdef	VMS
-#  define index	strchr
-#  define rindex strrchr
-#  define bzero(a, b) (void) memset ((void *) (a), 0, (size_t) (b))
-#  define bcopy(a, b, c)  (void) memmove ((void *) (b), (void *) (a), (size_t) (c))
-#endif
 
 #include <stdio.h>
 #include <setjmp.h>

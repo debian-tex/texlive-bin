@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-# $Id: updmap.pl 30150 2013-04-28 23:33:28Z karl $
+# $Id: updmap.pl 31853 2013-10-07 22:58:25Z karl $
 # updmap - maintain map files for outline fonts.
 # (Maintained in TeX Live:Master/texmf-dist/scripts/texlive.)
 # 
@@ -18,7 +18,6 @@
 # TODO
 # - check all other invocations
 # - after TL2012? Maybe remove support for reading updmap-local.cfg
-#
 
 my $TEXMFROOT;
 
@@ -34,7 +33,7 @@ BEGIN {
 }
 
 
-my $version = '$Id: updmap.pl 30150 2013-04-28 23:33:28Z karl $';
+my $version = '$Id: updmap.pl 31853 2013-10-07 22:58:25Z karl $';
 
 use Getopt::Long qw(:config no_autoabbrev ignore_case_always);
 use strict;
@@ -53,17 +52,24 @@ reset_root_home();
 
 chomp(my $TEXMFDIST = `kpsewhich --var-value=TEXMFDIST`);
 chomp(my $TEXMFVAR = `kpsewhich -var-value=TEXMFVAR`);
+chomp(my $TEXMFSYSVAR = `kpsewhich -var-value=TEXMFSYSVAR`);
 chomp(my $TEXMFCONFIG = `kpsewhich -var-value=TEXMFCONFIG`);
+chomp(my $TEXMFSYSCONFIG = `kpsewhich -var-value=TEXMFSYSCONFIG`);
 chomp(my $TEXMFHOME = `kpsewhich -var-value=TEXMFHOME`);
 
 # make sure that on windows *everything* is in lower case for comparison
 if (win32()) {
   $TEXMFDIST = lc($TEXMFDIST);
   $TEXMFVAR = lc($TEXMFVAR);
+  $TEXMFSYSVAR = lc($TEXMFSYSVAR);
   $TEXMFCONFIG = lc($TEXMFCONFIG);
+  $TEXMFSYSCONFIG = lc($TEXMFSYSCONFIG);
   $TEXMFROOT = lc($TEXMFROOT);
   $TEXMFHOME = lc($TEXMFHOME);
 }
+
+my $texmfconfig = $TEXMFCONFIG;
+my $texmfvar    = $TEXMFVAR;
 
 
 my %opts = ( quiet => 0, nohash => 0, nomkmap => 0 );
@@ -71,6 +77,7 @@ my $alldata;
 my $updLSR;
 
 my @cmdline_options = (
+  "sys",
   "listfiles",
   "cnffile=s@", 
   "copy", 
@@ -155,6 +162,12 @@ sub main {
   if ($opts{'version'}) {
     print version();
     exit (0);
+  }
+
+  if ($opts{'sys'}) {
+    # we are running as updmap-sys, make sure that the right tree is used
+    $texmfconfig = $TEXMFSYSCONFIG;
+    $texmfvar    = $TEXMFSYSVAR;
   }
 
   if ($opts{'dvipdfmoutputdir'} && !defined($opts{'dvipdfmxoutputdir'})) {
@@ -283,7 +296,7 @@ sub main {
     # if none of the two exists, create a file in TEXMFCONFIG and use it
     my $use_top = 0;
     for my $f (@used_files) {
-      if ($f =~ m!(\Q$TEXMFHOME\E|\Q$TEXMFCONFIG\E)/web2c/updmap.cfg!) {
+      if ($f =~ m!(\Q$TEXMFHOME\E|\Q$texmfconfig\E)/web2c/updmap.cfg!) {
         $use_top = 1;
         last;
       }
@@ -292,7 +305,7 @@ sub main {
       ($changes_config_file) = @used_files;
     } else {
       # add the empty config file
-      my $dn = "$TEXMFCONFIG/web2c";
+      my $dn = "$texmfconfig/web2c";
       $changes_config_file = "$dn/updmap.cfg";
     }
   }
@@ -366,9 +379,8 @@ sub main {
         exit 0;
       }
       $changed ||= enable_disable_maps(@missing);
-      print "finished.\n";
-      # the original script did not run any update of the map files here,
-      # should we do that?
+      print "$0 --syncwithtrees finished.\n";
+      print "Now you need to run $prg normally to recreate map files.\n"
     }
     exit 0;
   }
@@ -418,7 +430,7 @@ sub main {
       setupOutputDir("dvips");
       setupOutputDir("pdftex");
       setupOutputDir("dvipdfmx");
-      setupOutputDir("pxdvi");
+      # do pxdvi below, in mkmaps.
       merge_settings_replace_kanji();
       my @missing = read_map_files();
       if (@missing) {
@@ -925,10 +937,10 @@ sub get_cfg {
 sub mkMaps {
   my $logfile;
 
-  $logfile = "$TEXMFVAR/web2c/updmap.log";
+  $logfile = "$texmfvar/web2c/updmap.log";
 
   if (! $opts{'dry-run'}) {
-    mkdirhier("$TEXMFVAR/web2c");
+    mkdirhier("$texmfvar/web2c");
     open LOG, ">$logfile"
         or die "$prg: Can't open log file \"$logfile\": $!";
     print LOG &version();
@@ -957,6 +969,10 @@ sub mkMaps {
   my ($pxdviUse, $pxdviUse_origin) = get_cfg('pxdviUse');
   my ($kanjiEmbed, $kanjiEmbed_origin) = get_cfg('kanjiEmbed');
   my ($kanjiVariant, $kanjiVariant_origin) = get_cfg('kanjiVariant');
+
+  # pxdvi is optional, and off by default.  Don't create the output
+  # directory unless we are going to put something there.
+  setupOutputDir("pxdvi") if $pxdviUse eq "true";
 
   print_and_log ("\n$prg is creating new map files"
          . "\nusing the following configuration:"
@@ -1045,6 +1061,7 @@ sub mkMaps {
   print_and_log (sprintf("         [%3d files]\n\n", scalar @notmixedmaps));
   only_log("\n");
 
+  my $first_time_creation_in_usermode = 0;
   # Create psfonts_t1.map, psfonts_pk.map, ps2pk.map and pdftex.map:
   my $dvipsoutputdir = $opts{'dvipsoutputdir'};
   my $pdftexoutputdir = $opts{'pdftexoutputdir'};
@@ -1062,6 +1079,9 @@ sub mkMaps {
     push @managed_files, "$pxdvioutputdir/xdvi-ptex.map"
       if ($pxdviUse eq "true");
     for my $file (@managed_files) {
+      if (!$opts{'sys'} && ! -r $file) {
+        $first_time_creation_in_usermode = 1;
+      }
       open FILE, ">$file";
       print FILE "% $file:\
 % maintained by updmap[-sys] (multi).\
@@ -1200,25 +1220,49 @@ sub mkMaps {
     }
   }
 
+  sub check_mismatch {
+    my ($mm, $d, $f, $prog) = @_;
+    chomp (my $kpsefound = `kpsewhich --progname=$prog $f`);
+    if (lc("$d/$f") ne lc($kpsefound)) {
+      $mm->{$f} = $kpsefound;
+    }
+  }
+
+  my %mismatch;
   my $d;
   $d = "$dvipsoutputdir";
   print_and_log("  $d:\n");
   foreach my $f ('builtin35.map', 'download35.map', 'psfonts_pk.map',
                  'psfonts_t1.map', 'ps2pk.map', 'psfonts.map') {
     dir ($d, $f, 'psfonts.map');
-    $updLSR->{add}("$d/$f") unless $opts{'dry-run'};
+    if (!$opts{'dry-run'}) {
+      $updLSR->{add}("$d/$f");
+      $updLSR->{exec}();
+      $updLSR->{reset}();
+      check_mismatch(\%mismatch, $d, $f, "dvips");
+    }
   }
   $d = "$pdftexoutputdir";
   print_and_log("  $d:\n");
   foreach my $f ('pdftex_dl14.map', 'pdftex_ndl14.map', 'pdftex.map') {
     dir ($d, $f, 'pdftex.map');
-    $updLSR->{add}("$d/$f") unless $opts{'dry-run'};
+    if (!$opts{'dry-run'}) {
+      $updLSR->{add}("$d/$f");
+      $updLSR->{exec}();
+      $updLSR->{reset}();
+      check_mismatch(\%mismatch, $d, $f, "pdftex");
+    }
   }
   $d="$dvipdfmxoutputdir";
   print_and_log("  $d:\n");
   foreach my $f ('kanjix.map') {
     dir ($d, $f, '');
-    $updLSR->{add}("$d/$f") unless $opts{'dry-run'};
+    if (!$opts{'dry-run'}) {
+      $updLSR->{add}("$d/$f");
+      $updLSR->{exec}();
+      $updLSR->{reset}();
+      check_mismatch(\%mismatch, $d, $f, "dvipdfmx");
+    }
   }
   if ($pxdviUse eq "true") {
     $d="$pxdvioutputdir";
@@ -1226,8 +1270,59 @@ sub mkMaps {
     foreach my $f ('xdvi-ptex.map') {
       dir ($d, $f, '');
       $updLSR->{add}("$d/$f") unless $opts{'dry-run'};
+      if (!$opts{'dry-run'}) {
+        $updLSR->{add}("$d/$f");
+        $updLSR->{exec}();
+        $updLSR->{reset}();
+        check_mismatch(\%mismatch, $d, $f, "xdvi");
+      }
     }
   }
+
+  # all kind of warning messages
+  if ($first_time_creation_in_usermode) {
+    print_and_log("
+WARNING: you are switching to updmap's per-user mappings.
+
+You have run updmap (as opposed to updmap-sys) for the first time; this
+has created configuration files which are local to your personal account.
+
+Any changes in system map files will *not* be automatically reflected in
+your files; furthermore, running updmap-sys will no longer have any
+effect for you.  As a consequence, you have to rerun updmap yourself
+after any change in the system directories; for example, if a new font
+package is added.
+
+If you want to undo this, remove the files mentioned above.
+
+(Run $prg --help for full documentation of updmap.)
+");
+  }
+
+  if (keys %mismatch) {
+    print_and_log("
+WARNING: $prg has found mismatched files!
+
+The following files have been generated as listed above,
+but will not be found because overriding files exist, listed below.
+");
+    #
+    if ($prg eq "updmap-sys") {
+      print_and_log ("
+Perhaps you have run updmap in the past, but are running updmap-sys
+now.  Once you run updmap the first time, you have to keep using it,
+or else remove the personal configuration files it creates (the ones
+listed below).
+");
+    }
+    #
+    for my $f (sort keys %mismatch) {
+      print_and_log (" $f: $mismatch{$f}\n");
+    }
+    #
+    print_and_log("(Run $prg --help for full documentation of updmap.)\n");
+  }
+
   close LOG unless $opts{'dry-run'};
   print "\nTranscript written on \"$logfile\".\n" if !$opts{'quiet'};
 
@@ -1292,7 +1387,7 @@ sub setupOutputDir {
     if ($opts{'outputdir'}) {
       $opts{$driver . "outputdir"} = $opts{'outputdir'};
     } else {
-      $opts{$driver . "outputdir"} = "$TEXMFVAR/fonts/map/$driver/updmap";
+      $opts{$driver . "outputdir"} = "$texmfvar/fonts/map/$driver/updmap";
     }
   }
   my $od = $opts{$driver . "outputdir"};
@@ -2048,9 +2143,8 @@ sub warning {
   print STDERR @_;
 }
 
-#
-# help, version etc etc
-#
+
+# help, version.
 
 sub version {
   my $ret = sprintf "%s (TeX Live, multi) version %s\n", $prg, $version;
@@ -2070,6 +2164,12 @@ Among other things, these map files are used to determine which fonts
 should be used as bitmaps and which as outlines, and to determine which
 font files are included in the PDF or PostScript output.
 
+updmap-sys is intended to affect the system-wide configuration, while
+updmap affects personal configuration files only, overriding the system
+files.  As a consequence, once updmap has been run, even a single time,
+running updmap-sys no longer has any effect.  (updmap-sys issues a
+warning in this situation.)
+
 By default, the TeX filename database (ls-R) is also updated.
 
 Options:
@@ -2085,6 +2185,7 @@ Options:
   --force                   recreate files even if config hasn't changed
   --nomkmap                 do not recreate map files
   --nohash                  do not run texhash
+  --sys                     affect system-wide files (equivalent to updmap-sys)
   -n, --dry-run             only show the configuration, no output
   --quiet, --silent         reduce verbosity
 
@@ -2115,19 +2216,20 @@ KanjiMap entries are added to psfonts_t1.map and kanjix.map.
 
 Explanation of the OPTION names for --showoptions, --showoption, --setoption:
 
-  dvipsPreferOutline    true|false  (default true)
+  dvipsPreferOutline    true,false  (default true)
     Whether dvips uses bitmaps or outlines, when both are available.
-  dvipsDownloadBase35   true|false  (default true)
+  dvipsDownloadBase35   true,false  (default true)
     Whether dvips includes the standard 35 PostScript fonts in its output.
-  pdftexDownloadBase14  true|false   (default true)
+  pdftexDownloadBase14  true,false   (default true)
     Whether pdftex includes the standard 14 PDF fonts in its output.
-  pxdviUse              true|false  (default false)
+  pxdviUse              true,false  (default false)
     Whether maps for pxdvi (Japanese-patched xdvi) are under updmap's control.
   kanjiEmbed            (any string)
   kanjiVariant          (any string)
     See below.
-  LW35                  URWkb|URW|ADOBEkb|ADOBE  (default URWkb)
+  LW35                  URWkb,URW,ADOBEkb,ADOBE  (default URWkb)
     Adapt the font and file names of the standard 35 PostScript fonts.
+
     URWkb    URW fonts with "berry" filenames    (e.g. uhvbo8ac.pfb)
     URW      URW fonts with "vendor" filenames   (e.g. n019064l.pfb)
     ADOBEkb  Adobe fonts with "berry" filenames  (e.g. phvbo8an.pfb)
@@ -2199,6 +2301,11 @@ Explanation of trees and files normally used:
       
     2) If neither of the above two are present and changes are made, a
     new config file is created in \$TEXMFCONFIG/web2c/updmap.cfg.
+  
+  In general, the idea is that if a given config file is not writable, a
+  higher-level one can be used.  That way, the distribution's settings
+  can be overridden for system-wide using TEXMFLOCAL, and then system
+  settings can be overridden again for a particular using using TEXMFHOME.
 
   Resolving multiple definitions of a font:
     If a font is defined in more than one map file, then the definition
@@ -2242,7 +2349,7 @@ Explanation of trees and files normally used:
 
 For step-by-step instructions on making new fonts known to TeX, read
 http://tug.org/fonts/fontinstall.html.  For even more terse
-instructions, read the beginning of updmap.cfg.
+instructions, read the beginning of the main updmap.cfg.
 
 Report bugs to: tex-k\@tug.org
 TeX Live home page: <http://tug.org/texlive/>

@@ -23,14 +23,14 @@
 *  @author Taco Hoekwater
 */
 
+#include "pfaedit.h"
+#include "ustring.h"
+#include "lib/lib.h"            /* web2c's lib, for recorder_record_input */
+
 #include <stdio.h>
 #include <lua.h>
 #include <lauxlib.h>
 #include <locale.h>
-
-#include "pfaedit.h"
-#include "ustring.h"
-#include "lib/lib.h"            /* web2c's lib, for recorder_record_input */
 
 static const char _svn_version[] =
     "$Id: luafflib.c 4524 2012-12-20 15:38:02Z taco $ "
@@ -2523,7 +2523,7 @@ void do_ff_info(lua_State * L, SplineFont * sf)
     dump_stringfield(L, "familyname", sf->familyname);
     dump_stringfield(L, "fontname", sf->fontname);
     dump_stringfield(L, "fullname", sf->fullname);
-    dump_intfield(L, "italicangle", sf->italicangle);
+    dump_floatfield(L, "italicangle", sf->italicangle);
     dump_stringfield(L, "version", sf->version);
     dump_stringfield(L, "weight", sf->weight);
 

@@ -1,4 +1,4 @@
-% $Id: mp.w 1918 2013-06-13 12:47:55Z taco $
+% $Id: mp.w 1924 2013-09-20 15:02:58Z taco $
 %
 % This file is part of MetaPost;
 % the MetaPost program is in the public domain.
@@ -140,9 +140,9 @@ typedef struct MP_instance {
 #endif
 
 @ @c
-#include <stdio.h>
 #define KPATHSEA_DEBUG_H 1
 #include <w2c/config.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
@@ -32727,7 +32727,7 @@ static integer mp_dimen_out (MP mp, mp_number x_orig) {
     mp_number arg1;
     new_number (arg1);
     number_clone (arg1, x);
-    number_multiply_int (x, 16);
+    number_multiply_int (arg1, 16);
     make_scaled (x, arg1, internal_value (mp_design_size));
     free_number (arg1);
   }

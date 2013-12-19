@@ -1,4 +1,4 @@
-# $Id: Makefile 30418 2013-05-12 17:54:12Z karl $
+# $Id: Makefile 32017 2013-10-27 23:31:02Z karl $
 # This file is public domain.  (Originally written by Karl Berry, 2009.)
 
 e2p = ./epstopdf.pl #--debug
@@ -13,9 +13,11 @@ check: check-help check-version \
        check-help-r \
        check-nogs \
        check-restricted-gscmd \
+       check-gscmd check-gsopt check-gsopts \
        check-filter check-filter-outfile check-write-error check-gscmd \
        check-simple check-atend check-binary check-bin2 \
        check-binhdr-lf check-binhdr-cr check-binhdr-crlf \
+       check-tn5002 check-floral
 
 # needs new kpsewhich: check-restricted-safe-in check-restricted-safe-out
 check-help:
@@ -63,6 +65,15 @@ check-write-error:
 
 check-gscmd:
 	-$(e2p) --gscmd=true test-simple.eps
+	-$(e2p) --gscmd='foo bar' test-simple.eps # fails
+
+check-gsopt:
+	-$(e2p) --gscmd=echo --gsopt=foo --gsopt=bar test-simple.eps
+	-$(e2p) --restricted --gsopt=bar test-simple.eps # fails
+
+check-gsopts:
+	-$(e2p) --gscmd=echo --gsopts='foo bar' test-simple.eps
+	-$(e2p) --restricted --gsopts=bar test-simple.eps # fails
 
 check-simple:
 	$(MAKE) file=test-simple check1
@@ -85,13 +96,28 @@ check-binhdr-cr:
 check-binhdr-crlf:
 	$(MAKE) file=test-binhdr-crlf check1
 
+check-tn5002:
+	$(MAKE) file=test-tn5002-cr check1
+	$(MAKE) file=test-tn5002-crlf check1
+	$(MAKE) file=test-tn5002-lf check1
+
+# complicated, from http://www.vectorfloral.com/floral-swirly-flowers-with-butterflies-vector-graphic-174.html
+# another, even bigger, is at http://www.backgroundvector.com/abstract-colorful-background-vector-image-94.html
+# both are CC-BY 3.0.
+check-floral:
+	$(MAKE) file=test-floral check1
+
 check1:
 	$(e2p) $(file).eps 
 	pdfinfo $(file).pdf | grep "Page size"
 
+# put tar contents in a directory for CTAN.
 dist: epstopdf.tar.gz epstopdf.html
 epstopdf.tar.gz: README epstopdf.pl epstopdf.1 repstopdf.1 epstopdf.man1.pdf
-	tar czf epstopdf.tar.gz $^
+	rm -rf epstopdf; mkdir epstopdf
+	cp $^ epstopdf
+	tar czf epstopdf.tar.gz epstopdf
+	rm -rf epstopdf
 	# upload .tar.gz to ctan.org/upload, move .html to ~www/epstopdf.
 
 groff = groff

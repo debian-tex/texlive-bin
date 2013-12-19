@@ -79,7 +79,7 @@ bin_links = \
 	omfonts$(EXEEXT):ovf2ovp \
 	omfonts$(EXEEXT):ovp2ovf
 
-include $(top_srcdir)/../am/bin_links.am
+include $(top_srcdir)/../../am/bin_links.am
 
 if OTANGLE
 if OMFONTS
@@ -129,7 +129,7 @@ EXTRA_DIST += tests/repeat.opl tests/repeated.opl
 DISTCLEANFILES += tests/xrepeated.*
 ## selectfont.test
 EXTRA_DIST += tests/sample.out tests/sample.ovp tests/sample0-h.opl
-DISTCLEANFILES += tests/sample*.ofm tests/sample.ovf tests/sample1-h.opl tests/xsample.out
+DISTCLEANFILES += tests/sample*.ofm tests/sample*.ovf tests/sample1-h.opl tests/xsample*.out
 ## specialhex.test
 EXTRA_DIST += tests/specialhex.ovp
 DISTCLEANFILES += tests/specialhex.ofm tests/specialhex.opl \

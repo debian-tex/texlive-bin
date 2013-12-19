@@ -36,9 +36,7 @@ authorization from the copyright holders.
  * additional plain C extensions for XeTeX - mostly platform-neutral
  */
 
-/* We must include this first to avoid conflicting eof() declarations
-   from mingw32's <io.h> and web2c/lib/lib.h.  */
-#include <kpathsea/config.h>
+#include <w2c/config.h>
 
 #ifdef XETEX_OTHER
 #include "poppler-config.h"
@@ -46,6 +44,10 @@ authorization from the copyright holders.
 #endif
 
 #include "zlib.h"
+
+#ifdef _MSC_VER
+#undef timezone
+#endif
 
 #include <time.h> /* For `struct tm'.  */
 #if defined (HAVE_SYS_TIME_H)
@@ -718,7 +720,6 @@ read_tag_with_param(const char* cp, int* param)
 {
 	const char* cp2;
 	hb_tag_t tag;
-	int i;
 
 	cp2 = cp;
 	while (*cp2 && (*cp2 != ':') && (*cp2 != ';') && (*cp2 != ',') && (*cp2 != '='))
@@ -2002,7 +2003,6 @@ measure_native_node(void* pNode, int use_glyph_metrics)
 		/* need to find direction runs within the text, and call layoutChars separately for each */
 
 		UBiDiDirection	dir;
-		float	x, y;
 		void*	glyph_info = 0;
 		static	float*	positions = 0;
 		static	float*	advances = 0;
@@ -2731,6 +2731,7 @@ open_dvi_output(FILE** fptr)
 		}
 #if defined(WIN32)
 		{
+			wchar_t *tmp1w;
 			char *p, *pp, *bindir, *fullcmd, *prgnam;
 			bindir = kpse_var_value("SELFAUTOLOC");
 			for(pp = bindir; *pp; pp++) {
@@ -2746,10 +2747,12 @@ open_dvi_output(FILE** fptr)
 			}
 			*p = '\0';
 			fullcmd = concatn("\"\"", bindir, "\\", prgnam, "\"", pp, "\"", NULL); 
-			*fptr = popen(fullcmd, "w");
+			tmp1w = get_wstring_from_mbstring(CP_UTF8, (const char *)fullcmd, tmp1w=NULL);
+			*fptr = _wpopen(tmp1w, L"wb");
 			free(bindir);
 			free(prgnam);
 			free(fullcmd);
+			free(tmp1w);
 		}
 #else
 		*fptr = popen(cmd, "w");

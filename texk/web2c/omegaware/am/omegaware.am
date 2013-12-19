@@ -47,20 +47,24 @@ ofm2opl.c ofm2opl.h: ofm2opl-web2c
 	@$(web2c) ofm2opl
 ofm2opl-web2c: ofm2opl.p $(web2c_depend)
 	@$(web2c) ofm2opl
-EXTRA_DIST += $(ofm2opl_sources)
-ofm2opl_sources = omegaware/ofm2opl.web omegaware/ofm2opl.ch
-ofm2opl.p: tangle$(EXEEXT) $(ofm2opl_sources)
-	$(tangle_silent)$(ow_tangle) ofm2opl ofm2opl
+ofm2opl.p: tangle$(EXEEXT) ofm2opl.web omegaware/ofm2opl.ch
+	$(tangle_silent)$(ow_otangle) ofm2opl ofm2opl
+ofm2opl.web: tie$(EXEEXT) omegaware/ofm2opl.web omegaware/ofm2opl.up
+	$(tie) -m ofm2opl.web omegaware/ofm2opl.web omegaware/ofm2opl.up
+EXTRA_DIST += omegaware/ofm2opl.web omegaware/ofm2opl.up omegaware/ofm2opl.ch
+DISTCLEANFILES += ofm2opl.web
 
 nodist_opl2ofm_SOURCES = opl2ofm.c opl2ofm.h
 opl2ofm.c opl2ofm.h: opl2ofm-web2c
 	@$(web2c) opl2ofm
 opl2ofm-web2c: opl2ofm.p $(web2c_depend)
 	@$(web2c) opl2ofm
-EXTRA_DIST += $(opl2ofm_sources)
-opl2ofm_sources = omegaware/opl2ofm.web omegaware/opl2ofm.ch
-opl2ofm.p: tangle$(EXEEXT) $(opl2ofm_sources)
-	$(tangle_silent)$(ow_tangle) opl2ofm opl2ofm
+opl2ofm.p: tangle$(EXEEXT) opl2ofm.web omegaware/opl2ofm.ch
+	$(tangle_silent)$(ow_otangle) opl2ofm opl2ofm
+opl2ofm.web: tie$(EXEEXT) omegaware/opl2ofm.web omegaware/opl2ofm.up
+	$(tie) -m opl2ofm.web omegaware/opl2ofm.web omegaware/opl2ofm.up
+EXTRA_DIST += omegaware/opl2ofm.web omegaware/opl2ofm.up omegaware/opl2ofm.ch
+DISTCLEANFILES += opl2ofm.web
 
 nodist_otangle_SOURCES = otangle.c otangle.h
 otangle.c otangle.h: otangle-web2c
@@ -102,7 +106,8 @@ DISTCLEANFILES += ovp2ovf.web
 OTANGLE_tests = omegaware/odvicopy.test omegaware/odvitype.test \
 	omegaware/otangle.test
 OMFONTS_tests = omegaware/level1.test omegaware/ofonts.test \
-	omegaware/omfonts.test omegaware/realnum.test omegaware/repeat.test \
+	omegaware/omfonts.test omegaware/overbmp.test\
+	omegaware/realnum.test omegaware/repeat.test \
 	omegaware/selectfont.test omegaware/specialhex.test
 EXTRA_DIST += $(OTANGLE_tests) $(OMFONTS_tests)
 
@@ -145,6 +150,10 @@ EXTRA_DIST += omegaware/tests/Cherokee.pl omegaware/tests/OCherokee.ovp
 DISTCLEANFILES += omegaware/tests/Cherokee.tfm omegaware/tests/OCherokee.ofm \
 	omegaware/tests/OCherokee.opl omegaware/tests/OCherokee.ovf \
 	omegaware/tests/xCherokee.* omegaware/tests/xOCherokee.*
+## omegaware/overbmp.test
+EXTRA_DIST += omegaware/tests/inbmp.opl omegaware/tests/overbmp.opl \
+	omegaware/tests/overbmp.ovp
+DISTCLEANFILES += omegaware/tests/xinbmp* omegaware/tests/xoverbmp*
 ## omegaware/otangle.test
 DISTCLEANFILES += ocftest.*
 ## omegaware/realnum.test
@@ -156,8 +165,8 @@ DISTCLEANFILES += omegaware/tests/xrepeated.*
 ## omegaware/selectfont.test
 EXTRA_DIST += omegaware/tests/sample.out omegaware/tests/sample.ovp \
 	omegaware/tests/sample0-h.opl
-DISTCLEANFILES += omegaware/tests/sample*.ofm omegaware/tests/sample.ovf \
-	omegaware/tests/sample1-h.opl omegaware/tests/xsample.out
+DISTCLEANFILES += omegaware/tests/sample*.ofm omegaware/tests/sample*.ovf \
+	omegaware/tests/sample1-h.opl omegaware/tests/xsample*.out
 ## omegaware/specialhex.test
 EXTRA_DIST += omegaware/tests/specialhex.ovp
 DISTCLEANFILES += omegaware/tests/specialhex.ofm omegaware/tests/specialhex.opl \

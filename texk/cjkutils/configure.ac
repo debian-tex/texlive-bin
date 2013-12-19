@@ -1,13 +1,13 @@
 dnl Process this file with autoconf to produce a configure script.
 dnl
-dnl   Copyright (C) 2009-2012 Peter Breitenlohner <tex-live@tug.org>
+dnl   Copyright (C) 2009-2013 Peter Breitenlohner <tex-live@tug.org>
 dnl
 dnl   This file is free software; the copyright holder
 dnl   gives unlimited permission to copy and/or distribute it,
 dnl   with or without modifications, as long as this notice is preserved.
 dnl
 m4_include([version.ac])[] dnl define cjk_version
-AC_INIT([CJK utils for TeX Live], cjk_version, [tex-k@tug.org])
+AC_INIT([CJK utils (TeX Live)], cjk_version, [tex-k@tug.org])
 AC_PREREQ([2.65])
 AC_CONFIG_SRCDIR([cjkutils-]cjk_version[/hbf2gf/hbf.h])
 AC_CONFIG_AUX_DIR([../../build-aux])
@@ -62,10 +62,7 @@ if test x"$do_cweb" = xyes; then
 fi
 AM_CONDITIONAL([do_cweb], [test "x$do_cweb" = xyes])
 
-KPSE_COMPILER_WARNINGS
-
-KPSE_CHECK_WIN32
-AM_CONDITIONAL([WIN32], [test "x$kpse_cv_have_win32" != xno])
+KPSE_COND_WIN32
 
 AC_SUBST([CJKUTILS_TREE], [cjkutils-]cjk_version)
 

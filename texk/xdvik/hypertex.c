@@ -60,13 +60,13 @@ http://xdvi.sourceforge.net/gui.html#navigation-openLinks
 
 #define COPY_TMP_FILE 0 /* see comments below */
 
+#include "xdvi-config.h"
+#include "xdvi.h"
+
     /* #define DEBUG */
 
     /*  #define DEBUG_MEMORY_HANDLING */
 #include "alloc-debug.h"
-
-#include "xdvi-config.h"
-#include "xdvi.h"
 
 #include <string.h>
 
@@ -1313,7 +1313,7 @@ void
 htex_record_position(int ulx, int uly, int w, int h)
 {
     int lrx, lry;
-    int y_delta, x_delta;
+    int y_delta;
 
     if (!INSIDE_MANE_WIN) /* this would give wrong values */
 	return;
@@ -1322,7 +1322,6 @@ htex_record_position(int ulx, int uly, int w, int h)
     lry = uly + h;
 
     y_delta = lry - uly;
-    x_delta = lrx - ulx;
 
     /* heuristics for creating new bounding box at what might be linebreaks */
     if (lrx < x_pos_bak /* ordinary linebreak */

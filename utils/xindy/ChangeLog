@@ -1,3 +1,16 @@
+2013-10-23  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* configure.ac: Use Makefile fragment for persian alphabet.
+
+2013-07-05  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* Makefile.am: Moved Makefile fragments to ../../am/.
+
+2013-06-20  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* configure.ac, ac/xindy.ac: Fixed some typos, replacing
+	'with-recode' => 'with-xindy-recode'.
+
 2013-02-08  Peter Breitenlohner  <peb@mppmu.mpg.de>
 
 	* Makefile.am (scriptsdir), configure.ac (pkglibdir, docdir):

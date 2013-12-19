@@ -11,7 +11,18 @@
 #define setintone(w,a) ((w).cint1=(a))
 #endif
 
+#ifndef KANJI
 #define KANJI
+#endif
+
+/* allow file names with 0x5c in (e)pTeX on windows */
+#if defined(WIN32)
+#include <kpathsea/knj.h>
+#define not_kanji_char_seq(a,b) (!(is_cp932_system && isknj(a) && isknj2(b)))
+#else
+#define not_kanji_char_seq(a,b) (1)
+#endif
+#define notkanjicharseq not_kanji_char_seq
 
 #if !defined(WIN32)
 extern int sjisterminal;

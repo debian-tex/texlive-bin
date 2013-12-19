@@ -114,6 +114,7 @@ var k,@!l:KANJI_code; {small indices or counters}
   pseudoprinting}
 @!trick_buf2:array[0..ssup_error_line] of 0..2; {pTeX: buffer for KANJI}
 @!kcode_pos: 0..2; {pTeX: denotes whether first byte or second byte of KANJI}
+@!prev_char: ASCII_code;
 @z
 
 @x [5.55] l.1519 - pTeX: Initialize the kcode_pos
@@ -2406,6 +2407,37 @@ else if (cur_cmd>active_char)or(cur_chr>255) then
   end;
 @z
 
+@x pTeX for Windows, treat filename with 0x5c
+@p procedure begin_name;
+begin area_delimiter:=0; ext_delimiter:=0; quoted_filename:=false;
+end;
+@y
+@p procedure begin_name;
+begin area_delimiter:=0; ext_delimiter:=0; quoted_filename:=false; prev_char:=0;
+end;
+@z
+
+@x pTeX for Windows, treat filename with 0x5c
+else  begin str_room(1); append_char(c); {contribute |c| to the current string}
+  if IS_DIR_SEP(c) then
+    begin area_delimiter:=cur_length; ext_delimiter:=0;
+    end
+  else if c="." then ext_delimiter:=cur_length;
+  more_name:=true;
+  end;
+end;
+@y
+else  begin str_room(1); append_char(c); {contribute |c| to the current string}
+  if (IS_DIR_SEP(c)and(not_kanji_char_seq(prev_char,c))) then
+    begin area_delimiter:=cur_length; ext_delimiter:=0;
+    end
+  else if c="." then ext_delimiter:=cur_length;
+  more_name:=true;
+  end;
+  prev_char:=c;
+end;
+@z
+
 @x [29.526] l.10668 - pTeX: scan file name
 loop@+begin if (cur_cmd>other_char)or(cur_chr>255) then {not a character}
     begin back_input; goto done;
@@ -4214,18 +4246,16 @@ loop@+  begin if is_char_node(s) then
 
 @x [44.968] l.19535 - pTeX: dir_node
   hlist_node,vlist_node,rule_node:@<Insert glue for |split_top_skip|
-    and set~|p:=null|@>;
 @y
-  hlist_node,vlist_node,dir_node,rule_node:
-    @<Insert glue for |split_top_skip| and set~|p:=null|@>;
+  dir_node,
+  hlist_node,vlist_node,rule_node:@<Insert glue for |split_top_skip|
 @z
 
 @x [44.973] l.19626 - pTeX: dir_node
 hlist_node,vlist_node,rule_node: begin@t@>@;@/
-  cur_height:=cur_height+prev_dp+height(p); prev_dp:=depth(p);
 @y
-hlist_node,vlist_node,dir_node,rule_node: begin@t@>@;@/
-  cur_height:=cur_height+prev_dp+height(p); prev_dp:=depth(p);
+dir_node,
+hlist_node,vlist_node,rule_node: begin@t@>@;@/
 @z
 
 @x [44.977] l.19710 - pTeX: free box node

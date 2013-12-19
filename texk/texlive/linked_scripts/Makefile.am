@@ -106,12 +106,21 @@ texmf_other_scripts = \
 	jfontmaps/kanji-fontmap-creator.pl \
 	jfontmaps/kanji-config-updmap.pl \
 	jfontmaps/kanji-config-updmap-sys.sh \
+	kotex-utils/jamo-normalize.pl \
+	kotex-utils/komkindex.pl \
+	kotex-utils/ttf2kotexfont.pl \
+	latex-git-log/latex-git-log \
 	latex2man/latex2man \
 	latexdiff/latexdiff.pl \
 	latexdiff/latexdiff-vc.pl \
 	latexdiff/latexrevise.pl \
+	latexindent/latexindent.pl \
 	latexmk/latexmk.pl \
 	latexpand/latexpand \
+	lilyglyphs/lily-glyph-commands.py \
+	lilyglyphs/lily-image-commands.py \
+	lilyglyphs/lily-rebuild-pdfs.py \
+	ltximg/ltximg.pl \
 	luaotfload/luaotfload-tool.lua \
 	m-tx/m-tx.lua \
 	match_parens/match_parens \
@@ -132,9 +141,12 @@ texmf_other_scripts = \
 	pkfix/pkfix.pl \
 	pkfix-helper/pkfix-helper \
 	pmx/pmx2pdf.lua \
+	pmxchords/pmxchords.lua \
 	pst2pdf/pst2pdf.pl \
 	ptex2pdf/ptex2pdf.lua \
 	purifyeps/purifyeps \
+	pythontex/pythontex.py \
+	pythontex/depythontex.py \
 	splitindex/splitindex.pl \
 	sty2dtx/sty2dtx.pl \
 	svn-multi/svn-multi.pl \

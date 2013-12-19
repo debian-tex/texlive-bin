@@ -14,11 +14,11 @@ dnl
 dnl *********************************************************************
 dnl
 m4_include([version.ac])[] dnl define lcdf_typetools_version
-AC_INIT([LCDF typetools for TeX Live], lcdf_typetools_version, [tex-k@tug.org])
+AC_INIT([LCDF typetools (TeX Live)], lcdf_typetools_version, [tex-k@tug.org])
 AC_PREREQ([2.65])
 AC_CONFIG_SRCDIR([lcdf-typetools-]lcdf_typetools_version[/NEWS])
 AC_CONFIG_AUX_DIR([../../build-aux])
-AC_CONFIG_MACRO_DIR([../../m4])
+AC_CONFIG_MACRO_DIRS([../../m4 m4])
 
 dnl Common code for all programs using libkpathsea.
 KPSE_COMMON([lcdf-typetools])
@@ -344,6 +344,7 @@ if test "x$enable_selfauto_set" = xyes -a "x$kpathsea" != xno -a "x$enable_texli
     SELFAUTOLOC=`$kpsewhich --expand-var='$SELFAUTOLOC' 2>/dev/null`
     SELFAUTODIR=`$kpsewhich --expand-var='$SELFAUTODIR' 2>/dev/null`
     SELFAUTOPARENT=`$kpsewhich --expand-var='$SELFAUTOPARENT' 2>/dev/null`
+    SELFAUTOGRANDPARENT=`$kpsewhich --expand-var='$SELFAUTOGRANDPARENT' 2>/dev/null`
     if test -z "$SELFAUTODIR"; then
 	AC_MSG_WARN([
 =========================================
@@ -357,6 +358,9 @@ Either supply the correct PREFIX to --with-kpathsea, or supply
     AC_DEFINE_UNQUOTED([SELFAUTOLOC], "$SELFAUTOLOC", [kpsewhich's $SELFAUTOLOC variable])
     AC_DEFINE_UNQUOTED([SELFAUTODIR], "$SELFAUTODIR", [kpsewhich's $SELFAUTODIR variable])
     AC_DEFINE_UNQUOTED([SELFAUTOPARENT], "$SELFAUTOPARENT", [kpsewhich's $SELFAUTOPARENT variable])
+    if test -n "$SELFAUTOGRANDPARENT"; then
+	AC_DEFINE_UNQUOTED([SELFAUTOGRANDPARENT], "$SELFAUTOGRANDPARENT", [kpsewhich's $SELFAUTOGRANDPARENT variable])
+    fi
 fi
 
 

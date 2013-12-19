@@ -8,6 +8,10 @@
  *     Werner Lemberg <wl@gnu.org>
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -363,7 +367,7 @@ buildtfm(Font *fnt)
       oops("No TTF characters.");
   }
 
-  header = (long *)mymalloc(40000L);
+  header = (long *)mycalloc(40000L, sizeof(char));
   fnt->cksum = checksum(fnt->inencptrs);
   header[0] = fnt->cksum;
   header[1] = 0xA00000;                     /* 10pt design size */

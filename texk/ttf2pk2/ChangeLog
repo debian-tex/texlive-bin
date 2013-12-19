@@ -1,3 +1,40 @@
+2013-08-06  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* tfmaux.c: Use mycalloc() to initialize header array (with 0).
+
+2013-07-18  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* ttf2tfm.c: Build title with progname instead of argv[0] as
+	suggested by Werner Lemberg <wl@gnu.org>.
+
+	* tests/ttf2pk.test: Also check some .pl and .vpl files.
+	* tests/GenR-ec.vpl, GenR102-ec.pl, ipaexg-[hv]03.pl:
+	Expected test output files.
+	* Makefile.am (EXTRA_DIST): Add the additional files.
+
+2013-06-30  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* configure.ac, filesrch.c: Renamed c-auto.h => config.h.
+
+	* Include <config.h> first in all C files and never in headers.
+
+2013-06-27  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	Avoid compiler warnings (found by Mojca).
+	* newobj.c: Boolean is False/True (No/Yes/Only is PSstate).
+	* ttflib.c: An unsigned int is never < 0.
+
+2013-06-10  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* ftlib.c: Apply 'vert'/'vrt2' substitutions for rotated fonts.
+	* newobj.[ch]: Replace my{m,c,re}alloc() => x{m,c,re}alloc().
+
+	* ac/withenable.ac: Enabled by default.
+
+2013-06-04  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* newobj.c: Define mycalloc(), already declared in newobj.c.
+
 2013-02-08  Peter Breitenlohner  <peb@mppmu.mpg.de>
 
 	* Makefile.am ({cfg,enc}datadir): Change texmf => texmf-dist.

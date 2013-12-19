@@ -1,5 +1,5 @@
 #! /bin/sh
-# $Id: dvipng.test 26589 2012-05-23 07:16:33Z peter $
+# $Id: dvipng.test 31117 2013-07-06 09:40:06Z peter $
 # Public domain.  Originally written by Peter Breitenlohner, 2009.
 
 get_val () {
@@ -24,4 +24,8 @@ export TEXMFCNF TEXFONTMAPS ENCFONTS TEXMFMAIN TEXMFDIST TEXMFLOCAL
 
 ./dvipng -T tight -strict $srcdir/dvipng-test.dvi || exit 1
 
-echo View the result e.g. with  display dvipng-test\*.png
+echo View the result e.g. with display dvipng-test\*.png
+
+./dvipng --gif -T tight -strict $srcdir/dvipng-test.dvi || exit 1
+
+echo View the result e.g. with display dvipng-test\*.gif

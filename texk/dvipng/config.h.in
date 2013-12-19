@@ -27,15 +27,6 @@
 /* Define to 1 if you have the <assert.h> header file. */
 #undef HAVE_ASSERT_H
 
-/* Define to 1 if you have the `bcmp' function. */
-#undef HAVE_BCMP
-
-/* Define to 1 if you have the `bcopy' function. */
-#undef HAVE_BCOPY
-
-/* Define to 1 if you have the `bzero' function. */
-#undef HAVE_BZERO
-
 /* Define to 1 if you have the <dirent.h> header file, and it defines `DIR'.
    */
 #undef HAVE_DIRENT_H
@@ -100,9 +91,6 @@
 /* Define to 1 if you have the `getwd' function. */
 #undef HAVE_GETWD
 
-/* Define to 1 if you have the `index' function. */
-#undef HAVE_INDEX
-
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
@@ -111,6 +99,9 @@
 
 /* Define to 1 if your kpathsea has kpse_enc_format. */
 #undef HAVE_KPSE_ENC_FORMATS
+
+/* Define to 1 if you have the `kpse_program_basename' function. */
+#undef HAVE_KPSE_PROGRAM_BASENAME
 
 /* Define to 1 if you have the `gd' library (-lgd). */
 #undef HAVE_LIBGD
@@ -121,18 +112,11 @@
 /* Define to 1 if you have the `png' library (-lpng). */
 #undef HAVE_LIBPNG
 
-/* Define to 1 if you have the `t1' library (-lt1). */
-#undef HAVE_LIBT1
-
 /* Define to 1 if you have the `z' library (-lz). */
 #undef HAVE_LIBZ
 
 /* Define to 1 if you have the <limits.h> header file. */
 #undef HAVE_LIMITS_H
-
-/* Define to 1 if your system has a GNU libc compatible `malloc' function, and
-   to 0 otherwise. */
-#undef HAVE_MALLOC
 
 /* Define to 1 if you have the `memcmp' function. */
 #undef HAVE_MEMCMP
@@ -172,9 +156,6 @@
 
 /* Define to 1 if you have the <pwd.h> header file. */
 #undef HAVE_PWD_H
-
-/* Define to 1 if you have the `rindex' function. */
-#undef HAVE_RINDEX
 
 /* Define to 1 if stdbool.h conforms to C99. */
 #undef HAVE_STDBOOL_H
@@ -231,9 +212,6 @@
 
 /* Define to 1 if you have <sys/wait.h> that is POSIX.1 compatible. */
 #undef HAVE_SYS_WAIT_H
-
-/* Define to 1 if you have the <t1lib.h> header file. */
-#undef HAVE_T1LIB_H
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
@@ -301,6 +279,9 @@
 /* Version number of package */
 #undef VERSION
 
+/* Define to 1 if <zlib.h> declares 'z_const'. */
+#undef ZLIB_CONST
+
 /* Enable large inode numbers on Mac OS X 10.5.  */
 #ifndef _DARWIN_USE_64_BIT_INODE
 # define _DARWIN_USE_64_BIT_INODE 1
@@ -333,9 +314,6 @@
    such a type exists and the standard includes do not define it. */
 #undef int64_t
 
-/* Define to rpl_malloc if the replacement function should be used. */
-#undef malloc
-
 /* Define to `int' if <sys/types.h> does not define. */
 #undef pid_t
 
@@ -348,3 +326,6 @@
 
 /* Define as `fork' if `vfork' does not work. */
 #undef vfork
+
+/* Define as empty if not declared in <zlib.h>. */
+#undef z_const

@@ -8,6 +8,10 @@
  *     Werner Lemberg <wl@gnu.org>
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <stdlib.h>
 #include <stddef.h>         /* for size_t */
 #include <string.h>
@@ -18,6 +22,7 @@
 #include "texenc.h"
 
 
+#if !defined(HAVE_LIBKPATHSEA)
 void *
 mymalloc(size_t len)
 {
@@ -33,6 +38,20 @@ mymalloc(size_t len)
     p = malloc(len);
   else
     p = malloc(1);
+
+  if (p == NULL)
+    oops("Out of memory.");
+
+  return p;
+}
+
+
+void *
+mycalloc(size_t nmemb, size_t len)
+{
+  void *p;
+
+  p = calloc(nmemb ? nmemb : 1, len ? len : 1);
 
   if (p == NULL)
     oops("Out of memory.");
@@ -62,6 +81,7 @@ myrealloc(void *oldp, size_t len)
 
   return p;
 }
+#endif
 
 
 /*
@@ -336,7 +356,7 @@ init_font_structure(Font *fnt)
   fnt->slant = 0;
   fnt->capheight = 0.8;
   fnt->PSnames = No;
-  fnt->rotate = No;
+  fnt->rotate = False;
 
   fnt->efactorparam = NULL;
   fnt->slantparam = NULL;

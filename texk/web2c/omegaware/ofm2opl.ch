@@ -110,31 +110,21 @@ end else begin
 end;
 @z
 
-@x [18,19] Make |tfm| be dynamically allocated, and rename `index'.
+@x [18] Make |tfm| be dynamically allocated, and rename `index'.
 @<Types...@>=
 @!byte=0..255; {unsigned eight-bit quantity}
-@!index=-1000..tfm_size; {address of a byte in |tfm|}
-@!char_type=0..65535;
-@!xchar_type=0..65536;
-@!xxchar_type=0..65537;
-@!xxxchar_type=0..65538;
-
-@
-@<Glob...@>=
-@!tfm:array [-1000..tfm_size] of byte; {the input data all goes here}
+@!index=0..tfm_size; {address of a byte in |tfm|}
 @y
 @d index == index_type
 
 @<Types...@>=
 @!byte=0..255; {unsigned eight-bit quantity}
 @!index=integer; {address of a byte in |tfm|}
-@!char_type=0..65535;
-@!xchar_type=0..65536;
-@!xxchar_type=0..65537;
-@!xxxchar_type=0..65538;
+@z
 
-@ CHECK OUT tfm array ranges.
-@<Glob...@>=
+@x [19] Make |tfm| dynamically allocated.
+@!tfm:array [-1000..tfm_size] of byte; {the input data all goes here}
+@y
 {Kludge here to define |tfm| as a macro which takes care of the negative
  lower bound.  We've defined |tfm| for the benefit of web2c above.}
 @=#define tfm (tfmfilearray + 1001);@>@\
@@ -160,33 +150,35 @@ tfm_file_array
 % [27, 28] Change strings to C char pointers. The Pascal strings are
 % indexed starting at 1, so we pad with a blank.
 @x
-@!ASCII_04,@!ASCII_10,@!ASCII_14,HEX: packed array [1..32] of char;
+@!ASCII_04,@!ASCII_10,@!ASCII_14: packed array [1..32] of char;
   {strings for output in the user's external character set}
 @!MBL_string,@!RI_string,@!RCE_string:packed array [1..3] of char;
   {handy string constants for |face| codes}
+@!HEX: packed array [1..16] of char;
 @y
-@!ASCII_04,@!ASCII_10,@!ASCII_14,HEX: const_c_string;
+@!ASCII_04,@!ASCII_10,@!ASCII_14: const_c_string;
   {strings for output in the user's external character set}
 @!ASCII_all: packed array[0..256] of char;
 @!MBL_string,@!RI_string,@!RCE_string: const_c_string;
   {handy string constants for |face| codes}
+@!HEX: const_c_string;
 @z
 
 @x
 ASCII_04:=' !"#$%&''()*+,-./0123456789:;<=>?';@/
 ASCII_10:='@@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_';@/
 ASCII_14:='`abcdefghijklmnopqrstuvwxyz{|}~ ';@/
-HEX:='0123456789ABCDEF';@/
 MBL_string:='MBL'; RI_string:='RI '; RCE_string:='RCE';
+HEX:='0123456789ABCDEF';@/
 @y
 ASCII_04:='  !"#$%&''()*+,-./0123456789:;<=>?';@/
 ASCII_10:=' @@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_';@/
 ASCII_14:=' `abcdefghijklmnopqrstuvwxyz{|}~ ';@/
-HEX:=' 0123456789ABCDEF';@/
 strcpy (ASCII_all, ASCII_04);
 strcat (ASCII_all, '@@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_');
 strcat (ASCII_all, '`abcdefghijklmnopqrstuvwxyz{|}~');@/
 MBL_string:=' MBL'; RI_string:=' RI '; RCE_string:=' RCE';
+HEX:=' 0123456789ABCDEF';@/
 @z
 
 % [38] How we output the character code depends on |charcode_format|.

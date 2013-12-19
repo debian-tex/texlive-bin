@@ -15,7 +15,7 @@ dnl
 dnl *********************************************************************
 dnl
 m4_include([version.ac])[] dnl define xindy_version
-AC_INIT([xindy for TeX Live], xindy_version, [tex-k@tug.org])
+AC_INIT([xindy (TeX Live)], xindy_version, [tex-k@tug.org])
 AC_PREREQ([2.65])
 AC_CONFIG_SRCDIR([xindy-]xindy_version[/ChangeLog.Gour])
 AC_CONFIG_AUX_DIR([../../build-aux])
@@ -102,7 +102,7 @@ if test "x$enable_xindy_rules:$enable_xindy_docs:$PDFLATEX" = xyes:yes:no; then
   AC_MSG_ERROR([PDFLATEX is required to build xindy docs])
 fi
 
-if test "x$with_recode" = xyes; then
+if test "x$with_xindy_recode" = xyes; then
   AC_CHECK_PROG([CONVERT_FROM_UTF8], [recode], [recode UTF-8..])
   if test "x$CONVERT_FROM_UTF8" != 'xrecode UTF-8..'; then
     AC_MSG_ERROR([--with-xindy-recode specified, but `recode' not found])
@@ -181,7 +181,6 @@ AC_CONFIG_FILES([Makefile \
 		xindy-]xindy_version[/make-rules/alphabets/macedonian/Makefile \
 		xindy-]xindy_version[/make-rules/alphabets/mongolian/Makefile \
 		xindy-]xindy_version[/make-rules/alphabets/norwegian/Makefile \
-		xindy-]xindy_version[/make-rules/alphabets/persian/Makefile \
 		xindy-]xindy_version[/make-rules/alphabets/polish/Makefile \
 		xindy-]xindy_version[/make-rules/alphabets/portuguese/Makefile \
 		xindy-]xindy_version[/make-rules/alphabets/romanian/Makefile \

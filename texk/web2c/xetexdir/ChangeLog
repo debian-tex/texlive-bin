@@ -1,3 +1,47 @@
+2013-12-06  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* XeTeX_ext.c: Remove unused variables.
+	'i' in read_tag_with_param(const char* cp, int* param), and
+	'x', 'y' in a block if (fontarea[f] == OTGR_FONT_FLAG) {
+	in measure_native_node(void* pNode, int use_glyph_metrics).
+
+2013-12-05  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* XeTeX_ext.c: Rewrite command line for popen(). Windows only.
+
+2013-09-25  Karl Berry  <karl@tug.org>
+
+	* xetexextra.h (BANNER),
+	* am/xetex.am (xetex_cppflags): remove XETEX_BUILD_DATE,
+	so we have reproducible binaries again.  (Change already made
+	upstream.)
+
+2013-07-02  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* XeTeX_ext.c: Undefine timezone before reading time.h for MSVC.
+
+2013-07-02  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* XeTeXFontInst.cpp, XeTeXFontInst_Mac.cpp, XeTeXFontMgr.cpp,
+	XeTeXFontMgr_FC.cpp, XeTeXFontMgr_Mac.mm,
+	XeTeXLayoutInterface.cpp, XeTeXOTMath.cpp, XeTeX_ext.c,
+	hz.cpp, pdfimage.cpp: Always first include <w2c/config.h>.
+	* XeTeX_ext.h: Do not include <w2c/config.h>.
+	* image/bmpimage.[ch], image/jpegimage.[ch]: First include
+	<w2c/config.h> in C files and not in headers.
+
+2013-06-28  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* XeTeXFontInst.h: Include "XeTeXFontMgr.h" before <stdio.h>.
+	* XeTeX_ext.h: Include <w2c/c-auto.h> before <unicode/utypes.h>.
+	* pdfimage.cpp: Include "XeTeX_ext.h" before "pdfimage.h".
+
+2013-05-30  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* pdfimage.cpp [MINGW]: Include kpathsea/mingw32.h (via
+	XeTeX_ext.h) before PDFDoc.h etc to avoid conflicting typedef of
+	boolean from rpcndr.h.
+
 2013-03-27  Khaled Hosny  <khaledhosny@eglug.org>
 
 	XeTeX 0.9999.2

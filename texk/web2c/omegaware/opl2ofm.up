@@ -1,0 +1,41 @@
+@x [3] Increase constants.
+@d char_max=@"FFFF
+@y
+@d char_max=@"10FFFF
+@z
+@x [3] Increase constants.
+@d width_max=@"FFFF
+@y
+@d width_max=@"10FFFF
+@z
+
+@x [51]
+@d max_byte=@"FFFF
+
+@p function get_byte:byte; {scans a one-byte property value}
+@y
+@d max_byte=@"10FFFF
+
+@p function get_byte:integer; {scans a one-byte property value}
+@z
+@x [53]
+    skip_error('This value shouldn''t exceed 65535');
+@y
+    skip_error('This value shouldn''t exceed 1114111');
+@z
+@x [54]
+    skip_error('This value shouldn''t exceed ''177777');
+@y
+    skip_error('This value shouldn''t exceed ''4177777');
+@z
+@x [55]
+    skip_error('This value shouldn''t exceed "FFFF');
+@y
+    skip_error('This value shouldn''t exceed "10FFFF');
+@z
+
+@x [159]
+      while (not diff) and (cprime<=ec) do begin
+@y
+      while (not diff) and (cprime<=ec) and (cprime-c<@"10000) do begin
+@z

@@ -5,7 +5,7 @@
 
 package TeXLive::TLUtils;
 
-my $svnrev = '$Revision: 30367 $';
+my $svnrev = '$Revision: 31914 $';
 my $_modulerevision;
 if ($svnrev =~ m/: ([0-9]+) /) {
   $_modulerevision = $1;
@@ -298,7 +298,7 @@ sub platform_name {
     chomp (my $sw_vers = `sw_vers -productVersion`);
     my ($os_major,$os_minor) = split (/\./, $sw_vers);
     #
-    chomp (my $sysctl = `sysctl hw.cpu64bit_capable`);
+    chomp (my $sysctl = `PATH=/usr/sbin:\$PATH sysctl hw.cpu64bit_capable`);
     my (undef,$hw_64_bit) = split (" ", $sysctl);
     #
     $CPU = ($os_major >= 10 && $os_minor >= 6 && $hw_64_bit >= 1)
@@ -342,6 +342,7 @@ sub platform_desc {
     'i386-linux'       => 'Intel x86 with GNU/Linux',
     'i386-solaris'     => 'Intel x86 with Solaris',
     'mips-irix'        => 'SGI IRIX',
+    'mipsel-linux'     => 'MIPSel with GNU/Linux',
     'powerpc-aix'      => 'PowerPC with AIX',
     'powerpc-darwin'   => 'PowerPC with MacOSX/Darwin',
     'powerpc-linux'    => 'PowerPC with GNU/Linux',
@@ -520,19 +521,21 @@ sub xsystem {
 
 =item C<run_cmd($cmd)>
 
-runs a command and captures its output. Then returns a list with the
-output as first element and the return value (exit code) as second.
+runs shell CMD and captures its output. Returns a list with CMD's
+output as the first element and the return value (exit code) as second.
 
 =cut
 
 sub run_cmd {
   my $cmd = shift;
   my $output = `$cmd`;
+  $output = "" if ! defined ($output);  # don't return undef
+
   my $retval = $?;
   if ($retval != 0) {
     $retval /= 256 if $retval > 0;
   }
-  return ($output, $retval);
+  return ($output,$retval);
 }
 
 
@@ -2891,18 +2894,28 @@ sub create_language_lua {
 }
 
 sub _create_config_files {
-  my ($tlpdb, $headfile, $dest,$localconf, $keepfirstline, $cc, $tlpdblinesref, @postlines) = @_;
+  my ($tlpdb, $headfile, $dest,$localconf, $keepfirstline, $cc,
+      $tlpdblinesref, @postlines) = @_;
   my $root = $tlpdb->root;
-  open(INFILE,"<$root/$headfile") or die("Cannot open $root/$headfile");
-  my @lines = <INFILE>;
+  my @lines = ();
+  if (-r "$root/$headfile") {
+    # we might be in user mode and do *not* want that the generation
+    # of the configuration file just boils out.
+    open (INFILE, "<$root/$headfile")
+      || die "open($root/$headfile) failed, but -r ok: $!";
+    @lines = <INFILE>;
+    close (INFILE);
+  } else {
+    tlwarn("TLUtils::_create_config_files: $root/$headfile: "
+           . " head file not found, ok in user mode");
+  }
   push @lines, @$tlpdblinesref;
-  close (INFILE);
   if (defined($localconf) && -r $localconf) {
     #
     # this should be done more intelligently, but for now only add those
     # lines without any duplication check ...
-    open FOO, "<$localconf"
-      or die "strange, -r ok but cannot open $localconf: $!";
+    open (FOO, "<$localconf")
+      || die "strange, -r ok but cannot open $localconf: $!";
     my @tmp = <FOO>;
     close (FOO);
     push @lines, @tmp;

@@ -4,7 +4,7 @@ if [ -n "$1" ] ; then
 else
   svnroot=/src/TeX/texlive-svn/Build/source
 fi
-baseyear=2013
+baseyear=2014
 
 svni=$(cd $svnroot ; svn info | grep "^Last Changed Rev" | awk '{print$4}')
 verstr=texlive-bin-$baseyear.`date +%Y%m%d`.$svni
@@ -20,8 +20,8 @@ rm -rf $verstr/inst
 rm -rf $verstr/Work
 rm -rf $verstr/utils/biber/bin
 #
-# remove system libraries, keep only teckit
-for i in harfbuzz cairo freetype freetype2 gd graphite2 icu libpng pixman poppler t1lib xpdf zlib zziplib ; do
+# remove system libraries, keep only teckit and lua52
+for i in harfbuzz cairo freetype freetype2 gd graphite2 icu libpng pixman poppler t1lib xpdf zlib zziplib pixman potrace ; do
   rm -rf $verstr/libs/$i
 done
 find $verstr -name \.svn -exec rm -rf '{}' \;

@@ -23,9 +23,23 @@ rm -rf $verstr/utils/biber/bin
 # remove system libraries, keep only teckit and lua52 and libpng
 # teckit: not in Debian
 # lua52: system usage not supported in TeX Live
-# libpng: too old in Debian
-# libpaper: system usage not supported in TeX Live
-for i in harfbuzz cairo freetype freetype2 gd graphite2 icu pixman poppler t1lib xpdf zlib zziplib pixman potrace ; do
+# libpng etc needs libong >= 1.4, currently not in Debian
+for i in \
+	cairo		\
+	freetype2	\
+	gd		\
+	graphite2	\
+	harfbuzz	\
+	icu		\
+	libpng		\
+	paper		\
+	pixman		\
+	poppler		\
+	potrace		\
+	xpdf		\
+	zlib		\
+	zziplib		\
+  do
   rm -rf $verstr/libs/$i
 done
 find $verstr -name \.svn -exec rm -rf '{}' \;

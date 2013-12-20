@@ -49,6 +49,8 @@ override_dh_auto_configure:
 	--with-system-zlib			\
 	--with-system-zzlib			\
 	--with-system-freetype2			\
+	--with-system-libpng			\
+	--with-system-gd			\
 	--with-system-xpdf			\
 	--with-system-poppler			\
 	--with-system-potrace			\

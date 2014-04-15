@@ -44,6 +44,7 @@ override_dh_auto_configure:
 	--disable-native-texlive-build		\
 	--disable-largefile			\
 	--disable-missing			\
+	--disable-linked-scripts		\
 	--with-banner-add=/Debian		\
 	--enable-shared				\
 	--with-system-zlib			\

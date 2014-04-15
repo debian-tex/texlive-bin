@@ -39,7 +39,7 @@ for i in \
 	xpdf		\
 	zlib		\
 	zziplib		\
-  do
+	; do
   rm -rf $verstr/libs/$i
 done
 find $verstr -name \.svn -exec rm -rf '{}' \;

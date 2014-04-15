@@ -1,3 +1,14 @@
+2014-01-25  TANAKA Takuji  <KXD02663@nifty.ne.jp>
+
+	* ptexenc.c: Return replacement character U+FFFD
+	for illegal surrogate pair in console (keyboard) input
+	in upTeX on Windows.
+
+2014-01-03  TANAKA Takuji  <KXD02663@nifty.ne.jp>
+
+	* ptexenc.c, ptexenc/unicode.h: Enable console (keyboard) input
+	of Unicode characters in upTeX on Windows.
+
 2013-08-17  Peter Breitenlohner  <peb@mppmu.mpg.de>
 
 	* configure.ac (AH_TOP): Simplify the generation of c-auto.h.

@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
 dnl
-dnl   Copyright (C) 2009-2013 Peter Breitenlohner <tex-live@tug.org>
+dnl   Copyright (C) 2009-2014 Peter Breitenlohner <tex-live@tug.org>
 dnl
 dnl   This file is free software; the copyright holder
 dnl   gives unlimited permission to copy and/or distribute it,
@@ -23,8 +23,7 @@ AC_CONFIG_MACRO_DIRS([../../m4 m4])
 dnl Common code for all programs using libkpathsea.
 KPSE_COMMON([lcdf-typetools])
 
-LCDF_TYPETOOLS_VERSION=lcdf_typetools_version
-AC_SUBST([LCDF_TYPETOOLS_VERSION])
+AC_SUBST([LCDF_TYPETOOLS_VERSION], lcdf_typetools_version)
 
 AC_CONFIG_HEADERS([autoconf.h])
 
@@ -75,8 +74,8 @@ dnl
 dnl endianness
 dnl
 
-AC_C_BIGENDIAN(, [AC_DEFINE([WORDS_LITTLEENDIAN], 1, [Define to 1 if your processor stores words with the least significant byte
-   first (like Intel and VAX, unlike Motorola and SPARC).])])
+AC_DEFINE([WORDS_BIGENDIAN_SET], [1], [Define if WORDS_BIGENDIAN has been set.])
+AC_C_BIGENDIAN()
 
 
 dnl
@@ -233,6 +232,7 @@ Cannot find a definition for ntohs and/or ntohl!
   fi
 fi
 AC_LANG_C
+AC_SEARCH_LIBS([ntohs], [-lnet -lwinsock32])
 
 KPSE_CHECK_WIN32
 if test "x$kpse_cv_have_win32" != xno; then

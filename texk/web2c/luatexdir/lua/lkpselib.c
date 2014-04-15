@@ -29,7 +29,7 @@
 #include <kpathsea/paths.h>
 
 static const char _svn_version[] =
-    "$Id: lkpselib.c 4595 2013-03-19 14:52:12Z taco $ $URL: https://foundry.supelec.fr/svn/luatex/tags/beta-0.76.0/source/texk/web2c/luatexdir/lua/lkpselib.c $";
+    "$Id: lkpselib.c 4847 2014-03-05 18:13:17Z luigi $ $URL: https://foundry.supelec.fr/svn/luatex/trunk/source/texk/web2c/luatexdir/lua/lkpselib.c $";
 
 static const unsigned filetypes[] = {
     kpse_gf_format,
@@ -153,7 +153,7 @@ static const char *const filetypenames[] = {
 };
 
 
-#define KPATHSEA_METATABLE  "luatex_kpathsea"
+#define KPATHSEA_METATABLE  "luatex.kpathsea"
 
 /* set to 1 by the |program_name| function */
 

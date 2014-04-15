@@ -1,8 +1,6 @@
-/*  
-
-    This is extractbb, a bounding box extraction program.
-
-    Copyright (C) 2008-2013 by Jin-Hwan Cho and Matthias Franz
+/* This is extractbb, a bounding box extraction program. 
+    Copyright (C) 2008-2014 by Jin-Hwan Cho and Matthias Franz
+    and the dvipdfmx project team.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -15,8 +13,7 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #ifdef HAVE_CONFIG_H
@@ -48,7 +45,7 @@ static void show_version(void)
 {
   fprintf (stdout, "\nThis is " XBB_PROGRAM " Version " VERSION "\n");
   fprintf (stdout, "A bounding box extraction utility from PDF, PNG, and JPEG.\n");
-  fprintf (stdout, "\nCopyright (C) 2008-2013 by Jin-Hwan Cho and Matthias Franz\n");
+  fprintf (stdout, "\nCopyright (C) 2008-2014 by Jin-Hwan Cho and Matthias Franz\n");
   fprintf (stdout, "\nThis is free software; you can redistribute it and/or modify\n");
   fprintf (stdout, "it under the terms of the GNU General Public License as published by\n");
   fprintf (stdout, "the Free Software Foundation; either version 2 of the License, or\n");

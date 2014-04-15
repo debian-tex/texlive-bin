@@ -1,3 +1,29 @@
+2014-03-17  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* XeTeXFontInst.cpp, XeTeXFontInst_Mac.cpp, XeTeXFontMgr.cpp,
+	XeTeXFontMgr_FC.cpp, XeTeXLayoutInterface.cpp, XeTeXOTMath.cpp,
+	hz.cpp, pdfimage.cpp: <w2c/config.h> is now C++ safe.
+
+	* XeTeXFontMgr.cpp, XeTeXLayoutInterface.cpp, XeTeXOTMath.cpp,
+	hz.cpp: Move extern declarations from the Pascal/WEB side ...
+	* XeTeX_web.h (new): ... to here.
+	* am/xetex.am: Add the new file.
+
+2014-02-08  TANAKA Takuji  <KXD02663@nifty.ne.jp>
+
+	* XeTeX_ext.h: Display output of Unicode characters
+	on console. (Windows only)
+
+2014-01-20  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	TeX tuneup of 2014.
+	* xetex.web: Adapt to TeX Version 3.14159265.
+
+2014-01-17  TANAKA Takuji  <KXD02663@nifty.ne.jp>
+
+	* XeTeX_ext.c, xetex.h: Accept Unicode characters from STDIN
+	on console. (Windows only)
+
 2013-12-06  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
 
 	* XeTeX_ext.c: Remove unused variables.

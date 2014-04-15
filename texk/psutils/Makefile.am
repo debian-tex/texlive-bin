@@ -1,6 +1,6 @@
 ## Makefile.am for the TeX Live subdirectory texk/psutils/
 ##
-## Copyright (C) 2009-2013 Peter Breitenlohner <tex-live@tug.org>
+## Copyright (C) 2009-2014 Peter Breitenlohner <tex-live@tug.org>
 ## You may freely use, modify and/or distribute this file.
 ##
 ## We want to re-distribute the whole original psutils source tree.
@@ -12,18 +12,26 @@ EXTRA_DIST += $(PSUTILS_TREE)-PATCHES
 dist-hook:
 	rm -rf `find $(distdir) -name .svn -o -name .deps -o -name .dirstamp -o -name '*.$(OBJEXT)'`
 
-AM_CPPFLAGS = $(KPATHSEA_INCLUDES) $(PAPER_INCLUDES) -D_Noreturn= -D_GL_ATTRIBUTE_CONST=
+AM_CPPFLAGS = -I$(srcdir)/$(PSUTILS_TREE) $(KPATHSEA_INCLUDES) $(LIBPAPER_INCLUDES)
 AM_CFLAGS = $(WARNING_CFLAGS)
 
 noinst_LIBRARIES = libpsutils.a
 
 libpsutils_a_SOURCES = \
+	binary-io.h \
+	paper-size.c \
+	progname.c \
+	progname.h \
+	texlive.h \
+	verror.h \
+	verror.c \
+	xvasprintf.h \
 	@PSUTILS_TREE@/psspec.c \
 	@PSUTILS_TREE@/psspec.h \
 	@PSUTILS_TREE@/psutil.c \
 	@PSUTILS_TREE@/psutil.h
 
-$(libpsutils_a_OBJECTS): $(KPATHSEA_DEPEND) $(PAPER_DEPEND)
+$(libpsutils_a_OBJECTS): $(KPATHSEA_DEPEND) $(LIBPAPER_DEPEND)
 
 bin_PROGRAMS = epsffit psbook psnup psresize psselect pstops
 
@@ -39,7 +47,10 @@ psselect_SOURCES = @PSUTILS_TREE@/psselect.c
 
 pstops_SOURCES = @PSUTILS_TREE@/pstops.c
 
-LDADD = libpsutils.a $(KPATHSEA_LIBS) $(PAPER_LIBS)
+$(epsffit_OBJECTS) $(psbook_OBJECTS) $(psnup_OBJECTS) \
+  $(psresize_OBJECTS) $(psselect_OBJECTS) $(pstops_OBJECTS): libpsutils.a
+
+LDADD = libpsutils.a $(KPATHSEA_LIBS) $(LIBPAPER_LIBS)
 
 perl_scripts = \
 	extractres \
@@ -58,6 +69,8 @@ install-data-hook: install-perl-links
 
 uninstall-hook: uninstall-links
 
+## Manpages
+##
 man1_MANS = \
 	@PSUTILS_TREE@/epsffit.1 \
 	@PSUTILS_TREE@/extractres.1 \
@@ -70,10 +83,15 @@ man1_MANS = \
 	@PSUTILS_TREE@/pstops.1 \
 	@PSUTILS_TREE@/psutils.1
 
+## Data
+##
+configdatadir = $(datarootdir)/texmf-dist/psutils
+dist_configdata_DATA = data/paper.cfg
+
 ## Rebuild libkpathsea
 @KPATHSEA_RULE@
 ## Rebuild libpaper
-@PAPER_RULE@
+@LIBPAPER_RULE@
 
 ## Tests
 ##

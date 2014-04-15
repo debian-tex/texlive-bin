@@ -1,8 +1,6 @@
-/*  
+/* This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
 
-    This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
-
-    Copyright (C) 2002-2012 by Jin-Hwan Cho and Shunsaku Hirata,
+    Copyright (C) 2002-2014 by Jin-Hwan Cho and Shunsaku Hirata,
     the dvipdfmx project team.
 
     Copyright (C) 1998, 1999 by Mark A. Wicks <mwicks@kettering.edu>
@@ -29,6 +27,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 
+#include "dvipdfmx.h"
 #include "error.h"
 
 #define DPX_MESG        0
@@ -67,7 +66,7 @@ WARN (const char *fmt, ...)
   if (really_quiet < 2) {
     if (WANT_NEWLINE())
       fprintf(stderr, "\n");
-    fprintf(stderr, "** WARNING ** ");
+    fprintf(stderr, "%s:warning: ", my_name);
     va_start(argp, fmt);
     vfprintf(stderr, fmt, argp);
     va_end(argp);
@@ -85,7 +84,7 @@ ERROR (const char *fmt, ...)
   if (really_quiet < 3) {
     if (WANT_NEWLINE())
       fprintf(stderr, "\n");
-    fprintf(stderr, "** ERROR ** ");
+    fprintf(stderr, "%s:fatal: ", my_name);
     va_start(argp, fmt);
     vfprintf(stderr, fmt, argp);
     va_end(argp);

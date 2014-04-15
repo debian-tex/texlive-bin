@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
 dnl
-dnl   Copyright (C) 2009-2013 Peter Breitenlohner <tex-live@tug.org>
+dnl   Copyright (C) 2009-2014 Peter Breitenlohner <tex-live@tug.org>
 dnl
 dnl   This file is free software; the copyright holder
 dnl   gives unlimited permission to copy and/or distribute it,
@@ -17,10 +17,14 @@ KPSE_COMMON([psutils])
 
 AC_CONFIG_HEADERS([config.h])
 
-AH_BOTTOM([#include <kpathsea/getopt.h>])
+AH_TOP([#ifndef _PSUTILS_CONFIG_H
+#define _PSUTILS_CONFIG_H 1])
+AH_BOTTOM([#include <texlive.h>
+
+#endif /* _PSUTILS_CONFIG_H */])
 
 KPSE_KPATHSEA_FLAGS
-KPSE_PAPER_FLAGS
+KPSE_LIBPAPER_FLAGS
 
 KPSE_COND_WIN32_WRAP
 

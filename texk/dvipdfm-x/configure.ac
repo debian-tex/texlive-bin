@@ -1,12 +1,12 @@
 dnl Process this file with autoconf to produce a configure script.
 dnl
-dnl   Copyright (C) 2009-2013 Peter Breitenlohner <tex-live@tug.org>
+dnl   Copyright (C) 2009-2014 Peter Breitenlohner <tex-live@tug.org>
 dnl
 dnl   This file is free software; the copyright holder
 dnl   gives unlimited permission to copy and/or distribute it,
 dnl   with or without modifications, as long as this notice is preserved.
 dnl
-AC_INIT([dvipdfm-x (TeX Live)], [20130624], [tex-k@tug.org])
+AC_INIT([dvipdfm-x (TeX Live)], [20140317], [tex-k@tug.org])
 AC_PREREQ([2.65])
 AC_CONFIG_SRCDIR([agl.c])
 AC_CONFIG_AUX_DIR([../../build-aux])
@@ -54,7 +54,7 @@ KPSE_KPATHSEA_FLAGS
 KPSE_ZLIB_FLAGS
 KPSE_LIBPNG_FLAGS
 KPSE_FREETYPE2_FLAGS
-KPSE_PAPER_FLAGS
+KPSE_LIBPAPER_FLAGS
 AC_DEFINE([HAVE_LIBPAPER], [1], [Define if you have libpaper.])
 
 KPSE_SAVE_FLAGS

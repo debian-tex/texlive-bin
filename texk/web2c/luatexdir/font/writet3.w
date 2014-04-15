@@ -20,8 +20,8 @@
 
 @ @c
 static const char _svn_version[] =
-    "$Id: writet3.w 4442 2012-05-25 22:40:34Z hhenkel $"
-    "$URL: https://foundry.supelec.fr/svn/luatex/tags/beta-0.76.0/source/texk/web2c/luatexdir/font/writet3.w $";
+    "$Id: writet3.w 4956 2014-03-28 12:12:17Z luigi $"
+    "$URL: https://foundry.supelec.fr/svn/luatex/trunk/source/texk/web2c/luatexdir/font/writet3.w $";
 
 #include "ptexlib.h"
 #include <kpathsea/tex-glyph.h>
@@ -50,7 +50,7 @@ int t3_curbyte = 0;
 
 #define t3_check_eof()                                     \
     if (t3_eof())                                          \
-        pdftex_fail("unexpected end of file");
+        luatex_fail("unexpected end of file");
 
 @
 @c
@@ -141,7 +141,7 @@ static boolean writepk(PDF pdf, internal_font_number f)
         if (name == NULL ||
             !FILESTRCASEEQ(cur_file_name, font_ret.name) ||
             !kpse_bitmap_tolerance((float) font_ret.dpi, (float) dpi)) {
-            pdftex_fail("Font %s at %i not found", cur_file_name, (int) dpi);
+            luatex_fail("Font %s at %i not found", cur_file_name, (int) dpi);
         }
     }
     callback_id = callback_defined(read_pk_file_callback);
@@ -150,7 +150,7 @@ static boolean writepk(PDF pdf, internal_font_number f)
             (run_callback
              (callback_id, "S->bSd", name, &file_opened, &t3_buffer, &t3_size)
              && file_opened && t3_size > 0)) {
-            pdftex_warn("Font %s at %i not found", cur_file_name, (int) dpi);
+            luatex_warn("Font %s at %i not found", cur_file_name, (int) dpi);
             cur_file_name = NULL;
             return false;
         }
@@ -162,8 +162,7 @@ static boolean writepk(PDF pdf, internal_font_number f)
     }
     t3_image_used = true;
     is_pk_font = true;
-    if (tracefilenames)
-        tex_printf(" <%s", (char *) name);
+    report_start_file(filetype_font,(char *) name);
     cd.rastersize = 256;
     cd.raster = xtalloc((unsigned long) cd.rastersize, halfword);
     check_preamble = true;
@@ -378,7 +377,6 @@ void writet3(PDF pdf, internal_font_number f)
         }
     pdf_end_dict(pdf);
     pdf_end_obj(pdf);
-    if (tracefilenames)
-        tex_printf(">");
+    report_stop_file(filetype_font);
     cur_file_name = NULL;
 }

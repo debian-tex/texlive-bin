@@ -1,12 +1,12 @@
 #!/usr/bin/env perl
-# $Id: tlmgr.pl 31977 2013-10-23 14:04:44Z preining $
+# $Id: tlmgr.pl 33356 2014-04-02 23:22:46Z preining $
 #
-# Copyright 2008-2013 Norbert Preining
+# Copyright 2008-2014 Norbert Preining
 # This file is licensed under the GNU General Public License version 2
 # or any later version.
 
-my $svnrev = '$Revision: 31977 $';
-my $datrev = '$Date: 2013-10-23 16:04:44 +0200 (Wed, 23 Oct 2013) $';
+my $svnrev = '$Revision: 33356 $';
+my $datrev = '$Date: 2014-04-03 01:22:46 +0200 (Thu, 03 Apr 2014) $';
 my $tlmgrrevision;
 my $prg;
 if ($svnrev =~ m/: ([0-9]+) /) {
@@ -1841,6 +1841,7 @@ sub action_restore {
     }
   } else {
     print "revision $rev for $pkg is not present in $opts{'backupdir'}\n";
+    finish(1);
   }
 }
 
@@ -4768,6 +4769,7 @@ sub check_runfiles {
   # build a list of all runtime files associated to 'normal' packages
   (my $non_normal = `ls "$Master/bin"`) =~ s/\n/\$|/g; # binaries
   $non_normal .= '^0+texlive|^bin-|^collection-|^scheme-|^texlive-|^texworks';
+  $non_normal .= '|^pgf$';  # has lots of intentionally duplicated .lua
   my @runtime_files = ();
   #
   foreach my $tlpn ($localtlpdb->list_packages) {
@@ -4814,6 +4816,7 @@ sub check_runfiles {
             |kinsoku\.tex
             |language\.dat
             |language\.def
+            |local\.mf
             |m-tex4ht\.tex
             |metatex\.tex
             |.*-noEmbed\.map
@@ -5892,14 +5895,14 @@ sub check_for_critical_updates
 
 sub critical_updates_warning {
   tlwarn("=" x 79, "\n");
-  tlwarn("Updates for tlmgr itself are present.\n");
-  tlwarn("So, please update the package manager first, via either\n");
+  tlwarn("tlmgr itself needs to be updated.\n");
+  tlwarn("Please do this via either\n");
   tlwarn("  tlmgr update --self\n");
   tlwarn("or by getting the latest updater for Unix-ish systems:\n");
   tlwarn("  $TeXLiveURL/update-tlmgr-latest.sh\n");
   tlwarn("and/or Windows systems:\n");
   tlwarn("  $TeXLiveURL/update-tlmgr-latest.exe\n");
-  tlwarn("Then continue with other updates.\n");
+  tlwarn("Then continue with other updates as usual.\n");
   tlwarn("=" x 79, "\n");
 }
 
@@ -6617,11 +6620,7 @@ number of backups to keep.  Thus, backups are disabled if the value is
 0.  In the C<--clean> mode of the C<backup> action this option also
 specifies the number to be kept.
 
-To setup C<autobackup> to C<-1> on the command line, use either:
-
-  tlmgr option autobackup infty
-
-or:
+To setup C<autobackup> to C<-1> on the command line, use:
 
   tlmgr option -- autobackup -1
 

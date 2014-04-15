@@ -20,13 +20,12 @@
 
 @ @c
 static const char _svn_version[] =
-    "$Id: writet1.w 4442 2012-05-25 22:40:34Z hhenkel $"
-    "$URL: https://foundry.supelec.fr/svn/luatex/tags/beta-0.76.0/source/texk/web2c/luatexdir/font/writet1.w $";
+    "$Id: writet1.w 4956 2014-03-28 12:12:17Z luigi $"
+    "$URL: https://foundry.supelec.fr/svn/luatex/trunk/source/texk/web2c/luatexdir/font/writet1.w $";
 
 #include "ptexlib.h"
 #include <string.h>
 
-#define t1_log(str)      if(tracefilenames) tex_printf("%s", str)
 #define get_length1()    t1_length1 = t1_offset() - t1_save_offset
 #define get_length2()    t1_length2 = t1_offset() - t1_save_offset
 #define get_length3()    t1_length3 = fixedcontent? t1_offset() - t1_save_offset : 0
@@ -257,7 +256,7 @@ static void enc_getline(void)
     char c;
   restart:
     if (enc_eof())
-        pdftex_fail("unexpected end of file");
+        luatex_fail("unexpected end of file");
     p = enc_line;
     do {
         c = (char) enc_getchar();
@@ -283,7 +282,7 @@ char **load_enc_file(char *enc_name)
     cur_file_name = luatex_find_file(enc_name, find_enc_file_callback);
 
     if (cur_file_name == NULL) {
-        pdftex_fail("cannot find encoding file '%s' for reading", enc_name);
+        luatex_fail("cannot find encoding file '%s' for reading", enc_name);
     }
     callback_id = callback_defined(read_enc_file_callback);
     enc_curbyte = 0;
@@ -292,12 +291,12 @@ char **load_enc_file(char *enc_name)
         if (run_callback(callback_id, "S->bSd", cur_file_name,
                          &file_opened, &enc_buffer, &enc_size)) {
             if ((!file_opened) || enc_size == 0) {
-                pdftex_fail("cannot open encoding file '%s' for reading", cur_file_name);
+                luatex_fail("cannot open encoding file '%s' for reading", cur_file_name);
             }
         }
     } else {
         if (!enc_open(cur_file_name)) {
-            pdftex_fail("cannot open encoding file '%s' for reading", cur_file_name);
+            luatex_fail("cannot open encoding file '%s' for reading", cur_file_name);
         }
         enc_read_file();
         enc_close();
@@ -305,13 +304,11 @@ char **load_enc_file(char *enc_name)
     glyph_names = xtalloc(256, char *);
     for (i = 0; i < 256; i++)
         glyph_names[i] = (char *) notdef;
-    t1_log("{");
-
-    t1_log(cur_file_name);
+    report_start_file(filetype_map,cur_file_name);
     enc_getline();
     if (*enc_line != '/' || (r = strchr(enc_line, '[')) == NULL) {
         remove_eol(r, enc_line);
-        pdftex_fail
+        luatex_fail
             ("invalid encoding vector (a name or `[' missing): `%s'", enc_line);
     }
     names_count = 0;
@@ -324,7 +321,7 @@ char **load_enc_file(char *enc_name)
             *p = 0;
             skip(r, ' ');
             if (names_count >= 256)
-                pdftex_fail("encoding vector contains more than 256 names");
+                luatex_fail("encoding vector contains more than 256 names");
             if (strcmp(buf, notdef) != 0)
                 glyph_names[names_count] = xstrdup(buf);
             names_count++;
@@ -334,7 +331,7 @@ char **load_enc_file(char *enc_name)
                 goto done;
             else {
                 remove_eol(r, enc_line);
-                pdftex_fail
+                luatex_fail
                     ("invalid encoding vector: a name or `] def' expected: `%s'",
                      enc_line);
             }
@@ -343,7 +340,7 @@ char **load_enc_file(char *enc_name)
         r = enc_line;
     }
   done:
-    t1_log("}");
+    report_stop_file(filetype_map);
     cur_file_name = NULL;
     xfree(enc_buffer);
     return glyph_names;
@@ -376,7 +373,7 @@ static int t1_getbyte(void)
         return c;
     if (t1_block_length == 0) {
         if (c != 128)
-            pdftex_fail("invalid marker");
+            luatex_fail("invalid marker");
         c = t1_getchar();
         if (c == 3) {
             while (!t1_eof())
@@ -456,7 +453,7 @@ static float t1_scan_num(char *p, char **r)
     skip(p, ' ');
     if (sscanf(p, "%g", &f) != 1) {
         remove_eol(p, t1_line_array);
-        pdftex_fail("a number expected: `%s'", t1_line_array);
+        luatex_fail("a number expected: `%s'", t1_line_array);
     }
     if (r != NULL) {
         for (; isdigit(*p) || *p == '.' ||
@@ -488,7 +485,7 @@ static void t1_getline(void)
     static int eexec_len = 17;  /* |strlen(eexec_str)| */
   restart:
     if (t1_eof())
-        pdftex_fail("unexpected end of file");
+        luatex_fail("unexpected end of file");
     t1_line_ptr = t1_line_array;
     alloc_array(t1_line, 1, T1_BUF_SIZE);
     t1_cslen = 0;
@@ -573,10 +570,9 @@ static void t1_printf(PDF pdf, const char *fmt, ...)
 }
 
 @ @c
-static void t1_init_params(const char *open_name_prefix)
+static void t1_init_params(int open_name_prefix)
 {
-    t1_log(open_name_prefix);
-    t1_log(cur_file_name);
+    report_start_file(open_name_prefix,cur_file_name);
     t1_lenIV = 4;
     t1_dr = 55665;
     t1_er = 55665;
@@ -589,9 +585,9 @@ static void t1_init_params(const char *open_name_prefix)
     t1_check_pfa();
 }
 
-static void t1_close_font_file(const char *close_name_suffix)
+static void t1_close_font_file(int close_name_suffix)
 {
-    t1_log(close_name_suffix);
+    report_stop_file(close_name_suffix);
     cur_file_name = NULL;
 }
 
@@ -605,7 +601,7 @@ static void t1_check_block_len(boolean decrypt)
         c = edecrypt((byte) c);
     l = (int) t1_block_length;
     if (!(l == 0 && (c == 10 || c == 13))) {
-        pdftex_fail("%i bytes more than expected were ignored", l + 1);
+        luatex_fail("%i bytes more than expected were ignored", l + 1);
     }
 }
 
@@ -642,7 +638,7 @@ static void t1_stop_eexec(PDF pdf)
             if (last_hexbyte == 0)
                 t1_puts(pdf, "00");
             else
-                pdftex_fail("unexpected data after eexec");
+                luatex_fail("unexpected data after eexec");
         }
     }
     t1_cs = false;
@@ -680,7 +676,7 @@ static void t1_scan_keys(PDF pdf)
     if (t1_prefix("/FontType")) {
         p = t1_line_array + strlen("FontType") + 1;
         if ((i = (int) t1_scan_num(p, 0)) != 1)
-            pdftex_fail("Type%d fonts unsupported by pdfTeX", i);
+            luatex_fail("Type%d fonts unsupported by pdfTeX", i);
         return;
     }
     for (key = (const key_entry *) font_key; key - font_key < FONT_KEYS_NUM;
@@ -696,7 +692,7 @@ static void t1_scan_keys(PDF pdf)
     if ((k = (int) (key - font_key)) == FONTNAME_CODE) {
         if (*p != '/') {
             remove_eol(p, t1_line_array);
-            pdftex_fail("a name expected: `%s'", t1_line_array);
+            luatex_fail("a name expected: `%s'", t1_line_array);
         }
         r = ++p;                /* skip the slash */
         for (q = t1_buf_array; *p != ' ' && *p != 10; *q++ = *p++);
@@ -738,7 +734,7 @@ static void t1_scan_param(PDF pdf)
     if (t1_prefix(lenIV)) {
         t1_lenIV = (short) t1_scan_num(t1_line_array + strlen(lenIV), 0);
         if (t1_lenIV < 0)
-            pdftex_fail("negative value of lenIV is not supported");
+            luatex_fail("negative value of lenIV is not supported");
         return;
     }
     t1_scan_keys(pdf);
@@ -776,7 +772,7 @@ static char **t1_builtin_enc(void)
             }
             return glyph_names;
         } else
-            pdftex_fail
+            luatex_fail
                 ("cannot subset font (unknown predefined encoding `%s')",
                  t1_buf_array);
     }
@@ -808,7 +804,7 @@ static char **t1_builtin_enc(void)
                 *p = 0;
                 skip(r, ' ');
                 if (counter > 255)
-                    pdftex_fail("encoding vector contains more than 256 names");
+                    luatex_fail("encoding vector contains more than 256 names");
                 if (strcmp(t1_buf_array, notdef) != 0)
                     glyph_names[counter] = xstrdup(t1_buf_array);
                 counter++;
@@ -818,7 +814,7 @@ static char **t1_builtin_enc(void)
                     break;
                 else {
                     remove_eol(r, t1_line_array);
-                    pdftex_fail
+                    luatex_fail
                         ("a name or `] def' or `] readonly def' expected: `%s'",
                          t1_line_array);
                 }
@@ -897,7 +893,7 @@ static void t1_check_end(PDF pdf)
 
 @
 @c
-static boolean t1_open_fontfile(const char *open_name_prefix)
+static boolean t1_open_fontfile(int open_name_prefix)
 {
     ff_entry *ff;
     int callback_id = 0;
@@ -906,13 +902,13 @@ static boolean t1_open_fontfile(const char *open_name_prefix)
     t1_size = 0;
     ff = check_ff_exist(fd_cur->fm->ff_name, is_truetype(fd_cur->fm));
     if (ff->ff_path == NULL) {
-        pdftex_fail("cannot open Type 1 font file for reading (%s)",
+        luatex_fail("cannot open Type 1 font file for reading (%s)",
                     fd_cur->fm->ff_name);
         return false;
     }
     cur_file_name = luatex_find_file(ff->ff_path, find_type1_file_callback);
     if (cur_file_name == NULL) {
-        pdftex_fail("cannot open Type 1 font file for reading (%s)",
+        luatex_fail("cannot open Type 1 font file for reading (%s)",
                     ff->ff_path);
         return false;
     }
@@ -921,7 +917,7 @@ static boolean t1_open_fontfile(const char *open_name_prefix)
         if (!run_callback(callback_id, "S->bSd", cur_file_name,
                           &file_opened, &t1_buffer, &t1_size)
             && file_opened && t1_size > 0) {
-            pdftex_warn("cannot open Type 1 font file for reading (%s)",
+            luatex_warn("cannot open Type 1 font file for reading (%s)",
                         cur_file_name);
             return false;
         }
@@ -972,7 +968,7 @@ static void t1_include(PDF pdf)
 @c
 #define check_subr(subr) \
     if (subr >= subr_size || subr < 0) \
-        pdftex_fail("Subrs array: entry index out of range (%i)",  subr);
+        luatex_fail("Subrs array: entry index out of range (%i)",  subr);
 
 static const char **check_cs_token_pair(void)
 {
@@ -998,7 +994,7 @@ static void cs_store(boolean is_subr)
     } else {
         ptr = cs_ptr++;
         if (cs_ptr - cs_tab > cs_size)
-            pdftex_fail
+            luatex_fail
                 ("CharStrings dict: more entries than dict size (%i)", cs_size);
         if (strcmp(t1_buf_array + 1, notdef) == 0)      /* skip the slash */
             ptr->name = (char *) notdef;
@@ -1040,7 +1036,7 @@ static boolean is_cc_init = false;
     stack_ptr -= N
 
 #define stack_error(N) {                \
-    pdftex_fail("CharString: invalid access (%i) to stack (%i entries)", \
+    luatex_fail("CharString: invalid access (%i) to stack (%i entries)", \
                  (int) N, (int)(stack_ptr - cc_stack));                  \
     goto cs_error;                    \
 }
@@ -1110,9 +1106,9 @@ static void cs_fail(const char *cs_name, int subr, const char *fmt, ...)
     vsprintf(buf, fmt, args);
     va_end(args);
     if (cs_name == NULL)
-        pdftex_fail("Subr (%i): %s", (int) subr, buf);
+        luatex_fail("Subr (%i): %s", (int) subr, buf);
     else
-        pdftex_fail("CharString (/%s): %s", cs_name, buf);
+        luatex_fail("CharString (/%s): %s", cs_name, buf);
 }
 
 @ fix a return-less subr by appending |CS_RETURN|
@@ -1176,7 +1172,7 @@ static void cs_mark(const char *cs_name, int subr)
                 if (strcmp(ptr->name, cs_name) == 0)
                     break;
             if (ptr == cs_ptr) {
-                pdftex_warn("glyph `%s' undefined", cs_name);
+                luatex_warn("glyph `%s' undefined", cs_name);
                 return;
             }
             if (ptr->name == notdef)
@@ -1282,7 +1278,7 @@ static void cs_mark(const char *cs_name, int subr)
         }
     }
     if (cs_name == NULL && last_cmd != CS_RETURN) {
-        pdftex_warn("last command in subr `%i' is not a RETURN; "
+        luatex_warn("last command in subr `%i' is not a RETURN; "
                     "I will add it now but please consider fixing the font",
                     (int) subr);
         append_cs_return(ptr);
@@ -1361,8 +1357,7 @@ static void t1_subset_ascii_part(PDF pdf)
         }
         make_subset_tag(fd_cur);
         assert(t1_fontname_offset != 0);
-        strncpy((char *) pdf->fb->data + t1_fontname_offset, fd_cur->subset_tag,
-                6);
+        strncpy((char *) pdf->fb->data + t1_fontname_offset, fd_cur->subset_tag,6);
     }
     /* now really all glyphs needed from this font are in the |fd_cur->gl_tree| */
     if (t1_encoding == ENC_STANDARD)
@@ -1635,7 +1630,7 @@ static void t1_check_unusual_charstring(void)
     char *p = strstr(t1_line_array, charstringname) + strlen(charstringname);
     int i;
     /* if no number follows "/CharStrings", let's read the next line */
-    if (sscanf(p, "%i", &i) != 1) { 
+    if (sscanf(p, "%i", &i) != 1) {
         strcpy(t1_buf_array, t1_line_array);
         t1_getline();
         strcat(t1_buf_array, t1_line_array);
@@ -1670,7 +1665,7 @@ static void t1_subset_charstrings(PDF pdf)
     t1_mark_glyphs();
     if (subr_tab != NULL) {
         if (cs_token_pair == NULL)
-            pdftex_fail
+            luatex_fail
                 ("This Type 1 font uses mismatched subroutine begin/end token pairs.");
         t1_subr_flush();
     }
@@ -1720,15 +1715,15 @@ void writet1(PDF pdf, fd_entry * fd)
 
     t1_save_offset = 0;
     if (!is_subsetted(fd_cur->fm)) {    /* include entire font */
-        if (!(fd->ff_found = t1_open_fontfile("<<")))
+        if (!(fd->ff_found = t1_open_fontfile(filetype_subset)))
             return;
         t1_include(pdf);
-        t1_close_font_file(">>");
+        t1_close_font_file(7);
         xfree(t1_buffer);
         return;
     }
     /* partial downloading */
-    if (!(fd->ff_found = t1_open_fontfile("<")))
+    if (!(fd->ff_found = t1_open_fontfile(filetype_font)))
         return;
     t1_subset_ascii_part(pdf);
     t1_start_eexec(pdf);
@@ -1737,7 +1732,7 @@ void writet1(PDF pdf, fd_entry * fd)
     t1_read_subrs(pdf);
     t1_subset_charstrings(pdf);
     t1_subset_end(pdf);
-    t1_close_font_file(">");
+    t1_close_font_file(3);
     xfree(t1_buffer);
 }
 

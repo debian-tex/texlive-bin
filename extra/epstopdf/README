@@ -1,4 +1,4 @@
-$Id: README 17507 2010-03-19 22:52:56Z karl $
+$Id: README 32701 2014-01-17 18:09:54Z karl $
 This file is public domain.  (Originally written by Karl Berry, 2009.)
 
 This is the README for the epstopdf script distribution.
@@ -7,6 +7,8 @@ Primary distribution point: http://mirror.ctan.org/support/epstopdf/
   (list of mirrors at: http://ctan.org/mirrors)
 
 Home page: http://tug.org/epstopdf/
+
+Run epstopdf --help for the usual list of options, examples, etc.
 
 Mailing list for bugs and discussion: http://lists.tug.org/tex-k
 When reporting bugs, please include an input file and command line

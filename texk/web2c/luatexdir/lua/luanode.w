@@ -17,15 +17,18 @@
 % You should have received a copy of the GNU General Public License along
 % with LuaTeX; if not, see <http://www.gnu.org/licenses/>.
 
+/* hh-ls: we make sure that lua never sees prev of head but also that when
+nodes are removedor inserted, temp nodes don't interfere */
+
 @ @c
 static const char _svn_version[] =
-    "$Id: luanode.w 4442 2012-05-25 22:40:34Z hhenkel $"
-    "$URL: https://foundry.supelec.fr/svn/luatex/tags/beta-0.76.0/source/texk/web2c/luatexdir/lua/luanode.w $";
+    "$Id: luanode.w 4956 2014-03-28 12:12:17Z luigi $"
+    "$URL: https://foundry.supelec.fr/svn/luatex/trunk/source/texk/web2c/luatexdir/lua/luanode.w $";
 
 #include "ptexlib.h"
 #include "lua/luatex-api.h"
 
-@ @c
+/* TO BE REMOVED
 static const char *group_code_names[] = {
     "",
     "simple",
@@ -53,10 +56,11 @@ static const char *group_code_names[] = {
 };
 
 const char *pack_type_name[] = { "exactly", "additional" };
-
+*/
 
 @ @c
-void lua_node_filter_s(int filterid, const char *extrainfo)
+void
+lua_node_filter_s(int filterid, int extrainfo)
 {
     lua_State *L = Luas;
     int callback_id = callback_defined(filterid);
@@ -69,7 +73,7 @@ void lua_node_filter_s(int filterid, const char *extrainfo)
         lua_settop(L, s_top);
         return;
     }
-    lua_pushstring(L, extrainfo);       /* arg 1 */
+    lua_push_string_by_index(L,extrainfo); /* arg 1 */
     if (lua_pcall(L, 1, 0, 0) != 0) {
         fprintf(stdout, "error: %s\n", lua_tostring(L, -1));
         lua_settop(L, s_top);
@@ -80,16 +84,15 @@ void lua_node_filter_s(int filterid, const char *extrainfo)
     return;
 }
 
+
 @ @c
 void
-lua_node_filter(int filterid, int xextrainfo, halfword head_node,
-                halfword * tail_node)
+lua_node_filter(int filterid, int extrainfo, halfword head_node, halfword * tail_node)
 {
     halfword ret;
     int a;
     lua_State *L = Luas;
     int s_top = lua_gettop(L);
-    const char *extrainfo = group_code_names[xextrainfo];
     int callback_id = callback_defined(filterid);
     if (head_node == null || vlink(head_node) == null || callback_id <= 0) {
 	lua_settop(L, s_top);
@@ -99,8 +102,9 @@ lua_node_filter(int filterid, int xextrainfo, halfword head_node,
         lua_settop(L, s_top);
         return;
     }
+    alink(vlink(head_node)) = null ; /* hh-ls */
     nodelist_to_lua(L, vlink(head_node));       /* arg 1 */
-    lua_pushstring(L, extrainfo);       /* arg 2 */
+    lua_push_group_code(L,extrainfo); /* arg 2 */
     if (lua_pcall(L, 2, 1, 0) != 0) {   /* no arg, 1 result */
         fprintf(stdout, "error: %s\n", lua_tostring(L, -1));
         lua_settop(L, s_top);
@@ -131,7 +135,6 @@ lua_node_filter(int filterid, int xextrainfo, halfword head_node,
     return;
 }
 
-
 @ @c
 int
 lua_linebreak_callback(int is_broken, halfword head_node, halfword * new_head)
@@ -150,6 +153,7 @@ lua_linebreak_callback(int is_broken, halfword head_node, halfword * new_head)
        lua_settop(L, s_top);
         return ret;
     }
+    alink(vlink(head_node)) = null ; /* hh-ls */
     nodelist_to_lua(L, vlink(head_node));       /* arg 1 */
     lua_pushboolean(L, is_broken);      /* arg 2 */
     if (lua_pcall(L, 2, 1, 0) != 0) {   /* no arg, 1 result */
@@ -188,12 +192,13 @@ lua_hpack_filter(halfword head_node, scaled size, int pack_type, int extrainfo,
         lua_settop(L, s_top);
         return head_node;
     }
+    alink(head_node) = null ; /* hh-ls */
     nodelist_to_lua(L, head_node);
-    lua_pushstring(L, group_code_names[extrainfo]);
+    lua_push_group_code(L,extrainfo);
     lua_pushnumber(L, size);
-    lua_pushstring(L, pack_type_name[pack_type]);
+    lua_push_pack_type(L,pack_type);
     if (pack_direction >= 0)
-        lua_pushstring(L, string_dir(pack_direction));
+        lua_push_dir_par(L, pack_direction);
     else
         lua_pushnil(L);
     if (lua_pcall(L, 5, 1, 0) != 0) {   /* no arg, 1 result */
@@ -233,7 +238,7 @@ lua_vpack_filter(halfword head_node, scaled size, int pack_type, scaled maxd,
         lua_settop(L, s_top);
         return head_node;
     }
-    if (strcmp("output", group_code_names[extrainfo]) == 0) {
+    if  (extrainfo == 8)  { /* output */
         callback_id = callback_defined(pre_output_filter_callback);
     } else {
         callback_id = callback_defined(vpack_filter_callback);
@@ -246,13 +251,14 @@ lua_vpack_filter(halfword head_node, scaled size, int pack_type, scaled maxd,
         lua_settop(L, s_top);
         return head_node;
     }
+    alink(head_node) = null ; /* hh-ls */
     nodelist_to_lua(L, head_node);
-    lua_pushstring(L, group_code_names[extrainfo]);
+    lua_push_group_code(L,extrainfo);
     lua_pushnumber(L, size);
-    lua_pushstring(L, pack_type_name[pack_type]);
+    lua_push_pack_type(L,pack_type);
     lua_pushnumber(L, maxd);
     if (pack_direction >= 0)
-        lua_pushstring(L, string_dir(pack_direction));
+         lua_push_dir_par(L, pack_direction);
     else
         lua_pushnil(L);
     if (lua_pcall(L, 6, 1, 0) != 0) {   /* no arg, 1 result */
@@ -283,7 +289,7 @@ lua_vpack_filter(halfword head_node, scaled size, int pack_type, scaled maxd,
 @ This is a quick hack to fix etex's \.{\\lastnodetype} now that
   there are many more visible node types. TODO: check the
   eTeX manual for the expected return values.
- 
+
 @c
 int visible_last_node_type(int n)
 {
@@ -331,6 +337,7 @@ void copy_pdf_literal(pointer r, pointer p)
     }
 }
 
+@ @c
 void copy_late_lua(pointer r, pointer p)
 {
     late_lua_type(r) = late_lua_type(p);
@@ -342,6 +349,15 @@ void copy_late_lua(pointer r, pointer p)
     } else {
         lua_rawgeti(Luas, LUA_REGISTRYINDEX, late_lua_data(p));
         late_lua_data(r) = luaL_ref(Luas, LUA_REGISTRYINDEX);
+    }
+}
+
+@ @c
+void copy_user_lua(pointer r, pointer p)
+{
+    if (user_node_value(p) != 0) {
+        lua_rawgeti(Luas, LUA_REGISTRYINDEX, user_node_value(p));
+        user_node_value(r) = luaL_ref(Luas, LUA_REGISTRYINDEX);
     }
 }
 
@@ -366,6 +382,15 @@ void free_late_lua(pointer p)
         luaL_unref(Luas, LUA_REGISTRYINDEX, late_lua_data(p));
     }
 }
+
+@ @c
+void free_user_lua(pointer p)
+{
+    if (user_node_value(p) != 0) {
+        luaL_unref(Luas, LUA_REGISTRYINDEX, user_node_value(p));
+    }
+}
+
 
 @ @c
 void show_pdf_literal(pointer p)

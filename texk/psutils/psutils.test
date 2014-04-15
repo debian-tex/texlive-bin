@@ -1,7 +1,11 @@
 #! /bin/sh
 
-# Copyright (C) 2011-2013 Peter Breitenlohner <tex-live@tug.org>
+# Copyright (C) 2011-2014 Peter Breitenlohner <tex-live@tug.org>
 # You may freely use, modify and/or distribute this file.
+
+TEXMFCNF=$srcdir/../kpathsea
+PSUTILSINPUTS=$srcdir/data
+export TEXMFCNF PSUTILSINPUTS
 
 failed=
 
@@ -19,7 +23,7 @@ rm -rf play*
 	|| failed="$failed psbook"
 
 ./psresize -Pa4 -pa5 playsel.ps \
-	| sed -e 's/ -0\.000000 / 0.000000 /' >playres.ps \
+	| sed -e 's/-0\.000000 /0.000000 /' >playres.ps \
 	&& diff playres.ps $srcdir/tests/playres.ps \
 	&& echo "psresize tests OK" \
 	|| failed="$failed psresize"

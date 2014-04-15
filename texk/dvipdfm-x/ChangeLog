@@ -1,3 +1,75 @@
+2014-03-31  Karl Berry  <karl@tug.org>
+
+	* dvipdfmx.c (show_usage): avoid long lines in help msg,
+	include bug reporting address, and
+	(show_version): use printf instead of fprintf(stdout.
+
+2014-03-24  Karl Berry  <karl@tug.org>
+
+	* error.c (WARN, ERROR): use my_name, not loud stars.
+	#include "dvipdfmx.h" for decl.
+	* tt_table.c: use WARN for warnings, not fprintf.
+
+2014-03-20  Karl Berry  <karl@tug.org>
+
+	* dvipdfmx.c (show_version): eliminate useless leading blank line.
+	(main): special-case --help and --version on their own to avoid
+	possible diagnostics.
+
+2014-03-18  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* xbb.c: Update one more Copyright year.
+	* tests/{img,pic}{jpeg,png,pdf}.{bb,xbb}: Update Creator.
+
+2014-03-17  Karl Berry  <karl@tug.org>
+
+	* configure.ac: version 20140317 for TeX Live 2014.
+	* all files: update copyright years.
+
+2014-03-17  Bob Tennent  <rdt@cs.queensu.ca>
+
+	* dpxfile.c (dpx_open_file),
+	* fontmap.c (pdf_load_fontmap_file): show fontmap file found,
+	if verbose.
+
+2014-03-06  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* dvi.c, dvipdfmx.c: Remove unused code.
+	* pdfdraw.c: Remove unused arg1 of pdf_dev__rectshape() and
+	pdf_dev__flushpath().
+
+2014-01-27  TANAKA Takuji  <KXD02663@nifty.ne.jp>
+
+	* dvipdfmx.c: Revise procedure of reading command line arguments.
+	(Windows only)
+
+2014-01-20  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* dpxfile.c: Fix a bug in dpx_file_apply_filter(), report from
+	Michael Rutter <http://tug.org/pipermail/tex-live/2014-January/034771.html>
+
+2014-01-13  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* Makefile.am, /ac/withenable.ac, configure.ac:
+	Replace libs/paper => libs/libpaper.
+
+2014-01-13  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* dbxfile.c [WIN32]: Include <wchar.h>.  Avoid use of
+	uninitialized variables cmdvw and qvw.
+
+2014-01-12  TANAKA Takuji  <KXD02663@nifty.ne.jp>
+
+	* dvipdfmx.c: Add '--kpathsea-debug' option and
+	fix a bug in '--dvipdfm' option.
+	* dvipdfmx.c, mfileio.[ch], dbxfile.c: Allow Unicode file name
+	on Windows.
+
+2014-01-02  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* pngimage.c: Allow libpng >= 1.6.3 to read images with
+	incorrect CMF bytes.
+
 2013-12-16  Peter Breitenlohner  <peb@mppmu.mpg.de>
 
 	* Makefile.am (dvipdfmx_SOURCES): Move cidtype0.c to here.

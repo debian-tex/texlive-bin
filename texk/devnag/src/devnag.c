@@ -1656,8 +1656,7 @@ void dnproc(void) {
 	    wrong[2] = '\0';
 	    err_ill(wrong);
 	 }
-    else
-    if (i == 5) put_ch(47);
+	 else if (i == 5) put_ch(47);
 	 else put_ch((short)(i+20));
 	 break;
        case end_of_line:
@@ -1670,7 +1669,7 @@ void dnproc(void) {
 	    else put_ch('}');
 	    dnready = TRUE;
 	    put_word();
-	    strcpy(inbuf, &inbuf[buf_idx]);
+	    memmove(inbuf, inbuf+buf_idx, strlen(inbuf+buf_idx)+1);
 	 }
 	 break;
        case '}':
@@ -1680,7 +1679,7 @@ void dnproc(void) {
 	    else put_ch(symbol);
 	    dnready = TRUE;
 	    put_word();
-	    strcpy(inbuf, &inbuf[buf_idx]);
+	    memmove(inbuf, inbuf+buf_idx, strlen(inbuf+buf_idx)+1);
 	 }
 	 else put_ch(symbol);
 	 break;
@@ -1698,7 +1697,7 @@ void dnproc(void) {
 	 sendchar('\n');
 	 break;
        case '<':
-    put_syll();
+	 put_syll();
 	 do {
 	    symbol = inp_ch();
 	    if (symbol == end_of_line) symbol = '\n';
@@ -1794,7 +1793,7 @@ void dnproc(void) {
 	 fputs("Error: missing }", stderr);
 	 exit(1);
        default:
-    if (symbol < 0) err_ill('\0');  /* accented character inside dn mode */
+	 if (symbol < 0) err_ill('\0');  /* accented character inside dn mode */
 	 i = 0;
 	 do { i++; } while ((i != 10) && (chset4[i-1] != symbol));
 	 if (i == 10) put_ch(symbol);
@@ -2266,7 +2265,7 @@ void put_word(void) {
    if (do_hyphen) {                                          /* hack */
       do {
 	 w_ptr = strstr(word, "\\-\\qq{");
-	 if (w_ptr != NULL) strcpy(w_ptr, w_ptr+2);
+	 if (w_ptr != NULL) memmove(w_ptr, w_ptr+2, strlen(w_ptr+2)+1);
       }
       while (w_ptr != NULL);
    }
@@ -2500,7 +2499,7 @@ char find_dn(void) {
       }
       dn_ptr += 1;
    }
-   strcpy(inbuf, dn_ptr);
+   memmove(inbuf, dn_ptr, strlen(dn_ptr)+1);
    return(TRUE);
 }
 

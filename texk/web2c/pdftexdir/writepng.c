@@ -1,5 +1,5 @@
 /*
-Copyright 1996-2011 Han The Thanh, <thanh@pdftex.org>
+Copyright 1996-2014 Han The Thanh, <thanh@pdftex.org>
 
 This file is part of pdfTeX.
 
@@ -33,6 +33,10 @@ void read_png_info(integer img)
         pdftex_fail("libpng: png_create_info_struct() failed");
     if (setjmp(png_jmpbuf(png_ptr(img))))
         pdftex_fail("libpng: internal error");
+#if PNG_LIBPNG_VER >= 10603
+    /* ignore possibly incorrect CMF bytes */
+    png_set_option(png_ptr(img), PNG_MAXIMUM_INFLATE_WINDOW, PNG_OPTION_ON);
+#endif
     png_init_io(png_ptr(img), png_file);
     png_read_info(png_ptr(img), png_info(img));
     /* resolution support */

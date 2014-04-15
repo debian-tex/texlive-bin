@@ -1,8 +1,6 @@
-/*  
-    
-    This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
+/* This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
 
-    Copyright (C) 2007-2012 by Jin-Hwan Cho and Shunsaku Hirata,
+    Copyright (C) 2007-2014 by Jin-Hwan Cho and Shunsaku Hirata,
     the dvipdfmx project team.
     
     Copyright (C) 1998, 1999 by Mark A. Wicks <mwicks@kettering.edu>
@@ -48,6 +46,7 @@
 #ifdef WIN32
 #include <io.h>
 #include <process.h>
+#include <wchar.h>
 #else
 #if HAVE_SYS_WAIT_H
 #include <sys/wait.h>
@@ -165,6 +164,9 @@ static int exec_spawn (char *cmd)
   char *p, *pp;
   char buf[1024];
   int  i, ret = -1;
+#ifdef WIN32
+  wchar_t **cmdvw, **qvw;
+#endif
 
   if (!cmd)
     return -1;
@@ -233,7 +235,24 @@ static int exec_spawn (char *cmd)
     qv++;
   }
 #ifdef WIN32
-  ret = spawnvp (_P_WAIT, *cmdv, (const char* const*) cmdv);
+  cmdvw = xcalloc (i + 2, sizeof (wchar_t *));
+  qv = cmdv;
+  qvw = cmdvw;
+  while (*qv) {
+    *qvw = get_wstring_from_fsyscp(*qv, *qvw=NULL);
+    qv++;
+    qvw++;
+  }
+  *qvw = NULL;
+  ret = _wspawnvp (_P_WAIT, *cmdvw, (const wchar_t* const*) cmdvw);
+  if (cmdvw) {
+    qvw = cmdvw;
+    while (*qvw) {
+      free (*qvw);
+      qvw++;
+    }
+    free (cmdvw);
+  }
 #else
   i = fork ();
   if (i < 0)
@@ -394,6 +413,8 @@ dpx_open_file (const char *filename, int type)
   switch (type) {
   case DPX_RES_TYPE_FONTMAP:
     fqpn = dpx_find_fontmap_file(filename);
+    if (verbose) 
+      MESG(fqpn);
     break;
   case DPX_RES_TYPE_T1FONT:
     fqpn = dpx_find_type1_file(filename);
@@ -985,6 +1006,7 @@ if ((l) + (n) >= (m)) { \
         } else {
           strcpy(cmd + n, input); n += strlen(input);
         }
+        break;
       case  'v': /* Version number, e.g. 1.4 */ {
        char buf[6];
        sprintf(buf, "1.%hu", (unsigned short) version);

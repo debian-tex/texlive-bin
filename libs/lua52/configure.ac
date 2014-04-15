@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
 dnl
-dnl   Copyright (C) 2013 Peter Breitenlohner <tex-live@tug.org>
+dnl   Copyright (C) 2013, 2014 Peter Breitenlohner <tex-live@tug.org>
 dnl
 dnl   This file is free software; the copyright holder
 dnl   gives unlimited permission to copy and/or distribute it,
@@ -25,8 +25,14 @@ AC_CONFIG_HEADERS([config.h])[]dnl unused, to avoid zillions of -D's on command 
 
 AM_CONDITIONAL([build], [test "x$enable_build" != xno])
 
+AC_SEARCH_LIBS([sqrt], [m])
+
 KPSE_LUA52_DEFINES
 KPSE_LARGEFILE([LUA52_DEFINES])
+
+if test "x$ac_cv_header_stdc" = xyes; then
+  LUA52_DEFINES="$LUA52_DEFINES -DHAVE_UNISTD_H"
+fi
 
 AC_SUBST([LUA52_TREE], [lua-]lua52_version)
 

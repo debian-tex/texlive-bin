@@ -1,6 +1,6 @@
 % luainit.w
 %
-% Copyright 2006-2013 Taco Hoekwater <taco@@luatex.org>
+% Copyright 2006-2014 Taco Hoekwater <taco@@luatex.org>
 %
 % This file is part of LuaTeX.
 %
@@ -19,14 +19,18 @@
 
 @ @c
 static const char _svn_version[] =
-    "$Id: luainit.w 4524 2012-12-20 15:38:02Z taco $"
-    "$URL: https://foundry.supelec.fr/svn/luatex/tags/beta-0.76.0/source/texk/web2c/luatexdir/lua/luainit.w $";
+    "$Id: luainit.w 4956 2014-03-28 12:12:17Z luigi $"
+    "$URL: https://foundry.supelec.fr/svn/luatex/trunk/source/texk/web2c/luatexdir/lua/luainit.w $";
 
 #include "ptexlib.h"
 
 #include <kpathsea/c-stat.h>
 
 #include "lua/luatex-api.h"
+
+/* internalized strings: see luatex-api.h */
+set_make_keys; 
+
 
 @
 TH: TODO
@@ -37,7 +41,7 @@ Better to wait until Karl has some time (after texlive 2008) so we can
 synchronize with kpathsea. One problem, for instance, is that I would
 like to resolve the full executable path.  |kpse_set_program_name()| does
 that, indirectly (by setting SELFAUTOLOC in the environment), but it
-does much more, making it hard to use for our purpose. 
+does much more, making it hard to use for our purpose.
 
 In fact, it sets three C variables:
 
@@ -49,14 +53,25 @@ and five environment variables:
 
 @c
 const_string LUATEX_IHELP[] = {
+#ifdef LuajitTeX
+    "Usage: luajittex --lua=FILE [OPTION]... [TEXNAME[.tex]] [COMMANDS]",
+    "   or: luajittex --lua=FILE [OPTION]... \\FIRST-LINE",
+    "   or: luajittex --lua=FILE [OPTION]... &FMT ARGS",
+    "  Run LuajitTeX on TEXNAME, usually creating TEXNAME.pdf.",
+#else
     "Usage: luatex --lua=FILE [OPTION]... [TEXNAME[.tex]] [COMMANDS]",
     "   or: luatex --lua=FILE [OPTION]... \\FIRST-LINE",
     "   or: luatex --lua=FILE [OPTION]... &FMT ARGS",
     "  Run LuaTeX on TEXNAME, usually creating TEXNAME.pdf.",
+#endif
     "  Any remaining COMMANDS are processed as luatex input, after TEXNAME is read.",
     "",
     "  Alternatively, if the first non-option argument begins with a backslash,",
+#ifdef LuajitTeX
+    "  luajittex interprets all non-option arguments as an input line.",
+#else
     "  luatex interprets all non-option arguments as an input line.",
+#endif
     "",
     "  Alternatively, if the first non-option argument begins with a &, the",
     "  next word is taken as the FMT to read, overriding all else.  Any",
@@ -79,7 +94,11 @@ const_string LUATEX_IHELP[] = {
     "   --fmt=FORMAT                  load the format file FORMAT",
     "   --halt-on-error               stop processing at the first error",
     "   --help                        display help and exit",
+#ifdef LuajitTeX
+    "   --ini                         be iniluajittex, for dumping formats",
+#else
     "   --ini                         be iniluatex, for dumping formats",
+#endif
     "   --interaction=STRING          set interaction mode (STRING=batchmode/nonstopmode/scrollmode/errorstopmode)",
     "   --jobname=STRING              set the job name to STRING",
     "   --kpathsea-debug=NUMBER       set path searching debugging flags according to the bits of NUMBER",
@@ -103,6 +122,11 @@ const_string LUATEX_IHELP[] = {
     "",
     "  --luaonly                run a lua file, then exit",
     "  --luaconly               byte-compile a lua file, then exit",
+    "  --luahashchars           the bits used by current Lua interpreter for strings hashing",
+#ifdef LuajitTeX
+    "  --jiton                  turns the JIT compiler on (default off)",
+    "  --jithash=STRING         choose the hash function for the lua strings (lua51|luajit20: default lua51)",
+#endif
     "",
     "See the reference manual for more information about the startup process.",
     NULL
@@ -140,6 +164,9 @@ static char *ex_selfdir(char *argv0)
 #endif
 }
 
+
+
+
 @ @c
 static void
 prepare_cmdline(lua_State * L, char **av, int ac, int zero_offset)
@@ -169,15 +196,21 @@ static string user_progname = NULL;
 char *startup_filename = NULL;
 int lua_only = 0;
 int lua_offset = 0;
+unsigned char show_luahashchars = 0;
+
+#ifdef LuajitTeX
+int luajiton   = 0;
+char *jithash_hashname = NULL;
+#endif
 
 int safer_option = 0;
 int nosocket_option = 0;
 
-@ Reading the options.  
+@ Reading the options.
 
 @ Test whether getopt found an option ``A''.
 Assumes the option index is in the variable |option_index|, and the
-option table in a variable |long_options|.  
+option table in a variable |long_options|.
 
 @c
 #define ARGUMENT_IS(a) STREQ (long_options[option_index].name, a)
@@ -187,6 +220,11 @@ static struct option long_options[]
 = { {"fmt", 1, 0, 0},
 {"lua", 1, 0, 0},
 {"luaonly", 0, 0, 0},
+{"luahashchars", 0, 0, 0},
+#ifdef LuajitTeX
+{"jiton", 0, 0, 0},
+{"jithash", 1, 0, 0},
+#endif
 {"safer", 0, &safer_option, 1},
 {"nosocket", 0, &nosocket_option, 1},
 {"help", 0, 0, 0},
@@ -228,6 +266,20 @@ static struct option long_options[]
 };
 
 @ @c
+int lua_numeric_field_by_index(lua_State * L, int name_index, int dflt)
+{
+    register int i = dflt;
+    lua_rawgeti(L, LUA_REGISTRYINDEX, name_index);      /* fetch the stringptr */
+    lua_rawget(L, -2);
+    if (lua_type(L, -1) == LUA_TNUMBER) {
+        i = lua_roundnumber(L, -1);
+    }
+    lua_pop(L, 1);
+    return i;
+}
+
+
+@ @c
 static void parse_options(int ac, char **av)
 {
 #ifdef WIN32
@@ -239,8 +291,13 @@ static void parse_options(int ac, char **av)
     int option_index;
     char *firstfile = NULL;
     opterr = 0;                 /* dont whine */
+#ifdef LuajitTeX
+    if ((strstr(argv[0], "luajittexlua") != NULL) ||
+        (strstr(argv[0], "texluajit") != NULL)) {
+#else
     if ((strstr(argv[0], "luatexlua") != NULL) ||
         (strstr(argv[0], "texlua") != NULL)) {
+#endif
         lua_only = 1;
         luainit = 1;
     }
@@ -249,8 +306,11 @@ static void parse_options(int ac, char **av)
 
         if (g == -1)            /* End of arguments, exit the loop.  */
             break;
-        if (g == '?')           /* Unknown option.  */
-            continue;
+        if (g == '?')  {         /* Unknown option.  */
+          if (!luainit)
+            fprintf(stderr,"%s: unrecognized option '%s'\n", argv[0], argv[optind-1]);
+          continue;
+        }
 
         assert(g == 0);         /* We have no short option names.  */
 
@@ -262,6 +322,24 @@ static void parse_options(int ac, char **av)
             startup_filename = optarg;
             lua_offset = (optind - 1);
             luainit = 1;
+#ifdef LuajitTeX
+        } else if (ARGUMENT_IS("jiton")) {
+            luajiton = 1;
+        } else if (ARGUMENT_IS("jithash")) {
+	      size_t len = strlen(optarg);
+	      if (len<16)
+		jithash_hashname = optarg;
+	      else{
+		WARNING2("hash name truncated to 15 characters from %d. (%s)",
+			 (int) len, optarg);
+		jithash_hashname = (string) xmalloc(16);
+                strncpy(jithash_hashname, optarg, 15);
+                jithash_hashname[15] = 0;
+	      }
+#endif
+
+        } else if (ARGUMENT_IS("luahashchars")) {
+            show_luahashchars = 1;
 
         } else if (ARGUMENT_IS("kpathsea-debug")) {
             kpathsea_debug |= atoi(optarg);
@@ -341,12 +419,21 @@ static void parse_options(int ac, char **av)
         } else if (ARGUMENT_IS("version")) {
             print_version_banner();
             /* *INDENT-OFF* */
+#ifdef LuajitTeX
+            puts("\n\nExecute  'luajittex --credits'  for credits and version details.\n\n"
+#else
             puts("\n\nExecute  'luatex --credits'  for credits and version details.\n\n"
+#endif
                  "There is NO warranty. Redistribution of this software is covered by\n"
                  "the terms of the GNU General Public License, version 2 or (at your option)\n"
                  "any later version. For more information about these matters, see the file\n"
-                 "named COPYING and the LuaTeX source.\n\n" 
-                 "Copyright 2013 Taco Hoekwater, the LuaTeX Team.\n");
+                 "named COPYING and the LuaTeX source.\n\n"
+#ifdef LuajitTeX
+                 "LuaTeX is Copyright 2014 Taco Hoekwater, the LuaTeX Team.\n"
+                 "Libraries and JIT extensions by Luigi Scarso, the LuaTeX SwigLib team.\n");
+#else
+                 "Copyright 2014 Taco Hoekwater, the LuaTeX Team.\n");
+#endif
             /* *INDENT-ON* */
             uexit(0);
         } else if (ARGUMENT_IS("credits")) {
@@ -354,23 +441,37 @@ static void parse_options(int ac, char **av)
             initversionstring(&versions);
             print_version_banner();
             /* *INDENT-OFF* */
-            puts("\n\nThe LuaTeX team is Hans Hagen, Hartmut Henkel, Taco Hoekwater.\n" 
-                 "LuaTeX merges and builds upon (parts of) the code from these projects:\n\n" 
-                 "tex       by Donald Knuth\n" 
-                 "etex      by Peter Breitenlohner, Phil Taylor and friends\n" 
-                 "omega     by John Plaice and Yannis Haralambous\n" 
-                 "aleph     by Giuseppe Bilotta\n" 
-                 "pdftex    by Han The Thanh and friends\n" 
-                 "kpathsea  by Karl Berry, Olaf Weber and others\n" 
-                 "lua       by Roberto Ierusalimschy, Waldemar Celes,\n" 
-                 "             Luiz Henrique de Figueiredo\n" 
-                 "metapost  by John Hobby, Taco Hoekwater and friends.\n" 
-                 "poppler   by Derek Noonburg, Kristian H\\ogsberg (partial)\n" 
-                 "fontforge by George Williams (partial)\n\n" 
-                 "Some extensions to lua and additional lua libraries are used, as well as\n" 
-                 "libraries for graphic inclusion. More details can be found in the source.\n" 
-                 "Code development was sponsored by a grant from Colorado State University\n" 
+            puts("\n\nThe LuaTeX team is Hans Hagen, Hartmut Henkel, Taco Hoekwater.\n"
+#ifdef LuajitTex
+                 "LuajitTeX merges and builds upon (parts of) the code from these projects:\n\n"
+#else
+                 "LuaTeX merges and builds upon (parts of) the code from these projects:\n\n"
+#endif
+                 "tex       by Donald Knuth\n"
+                 "etex      by Peter Breitenlohner, Phil Taylor and friends\n"
+                 "omega     by John Plaice and Yannis Haralambous\n"
+                 "aleph     by Giuseppe Bilotta\n"
+                 "pdftex    by Han The Thanh and friends\n"
+                 "kpathsea  by Karl Berry, Olaf Weber and others\n"
+                 "lua       by Roberto Ierusalimschy, Waldemar Celes,\n"
+                 "             Luiz Henrique de Figueiredo\n"
+                 "metapost  by John Hobby, Taco Hoekwater and friends.\n"
+                 "poppler   by Derek Noonburg, Kristian H\\ogsberg (partial)\n"
+#ifdef LuajitTeX
+                 "fontforge by George Williams (partial)\n"
+                 "luajit    by Mike Pall\n\n"
+#else
+                 "fontforge by George Williams (partial)\n\n"
+#endif
+                 "Some extensions to lua and additional lua libraries are used, as well as\n"
+                 "libraries for graphic inclusion. More details can be found in the source.\n"
+                 "Code development was sponsored by a grant from Colorado State University\n"
+#ifdef LuajitTeX
+                 "via the 'oriental tex' project, the TeX User Groups, and donations.\n"
+                 "The additional libraries and the LuaJIT extensions are provided by the LuaTeX SwigLib project.\n");
+#else
                  "via the 'oriental tex' project, the TeX User Groups, and donations.\n");
+#endif
             /* *INDENT-ON* */
             puts(versions);
             uexit(0);
@@ -443,7 +544,7 @@ static void parse_options(int ac, char **av)
     }
 }
 
-@ test for readability 
+@ test for readability
 @c
 #define is_readable(a) (stat(a,&finfo)==0) && S_ISREG(finfo.st_mode) &&  \
   (f=fopen(a,"r")) != NULL && !fclose(f)
@@ -559,12 +660,12 @@ static const char *luatex_kpse_find_aux(lua_State *L, const char *name,
 }
 
 @ The lua search function.
- 
+
 When kpathsea is not initialized, then it runs the
 normal lua function that is saved in the registry, otherwise
 it uses kpathsea.
 
-two registry ref variables are needed: one for the actual lua 
+two registry ref variables are needed: one for the actual lua
 function, the other for its environment .
 
 @c
@@ -613,12 +714,24 @@ static int luatex_kpse_clua_find(lua_State * L)
         const char *path_saved;
         char *prefix, *postfix, *p, *total;
         char *extensionless;
+        char *temp_name;
+        int j;
         filename = luatex_kpse_find_aux(L, name, kpse_clua_format, "C");
     	if (filename == NULL)
            return 1;               /* library not found in this path */
 	extensionless = strdup(filename);
 	if (!extensionless) return 1;  /* allocation failure */
-	p = strstr(extensionless, name);
+	/* Fix Issue 850: replace '.' with LUA_DIRSEP */
+        temp_name = strdup(name);
+        for(j=0; ; j++){
+          if ((unsigned char)temp_name[j]=='\0') {
+            break;
+          }
+          if ((unsigned char)temp_name[j]=='.'){
+            temp_name[j]=LUA_DIRSEP[0];
+          }
+        }
+	p = strstr(extensionless, temp_name);
 	if (!p) return 1;  /* this would be exceedingly weird */
 	*p = '\0';
 	prefix = strdup(extensionless);
@@ -648,20 +761,25 @@ static int luatex_kpse_clua_find(lua_State * L)
 	lua_pop(L,1); /* pop "package" */
 	free(extensionless);
 	free(total);
+        free(temp_name);
         return 1;
     }
 }
 
-@ Setting up the new search functions. 
+@ Setting up the new search functions.
 
-This replaces package.searchers[2] and package.searchers[3] with the 
+This replaces package.searchers[2] and package.searchers[3] with the
 functions defined above.
 
 @c
 static void setup_lua_path(lua_State * L)
 {
     lua_getglobal(L, "package");
+#ifdef LuajitTeX
+    lua_getfield(L, -1, "loaders");
+#else
     lua_getfield(L, -1, "searchers");
+#endif
     lua_rawgeti(L, -1, 2);      /* package.searchers[2] */
     lua_loader_function = luaL_ref(L, LUA_REGISTRYINDEX);
     lua_pushcfunction(L, luatex_kpse_lua_find);
@@ -682,6 +800,13 @@ int tex_table_id;
 int pdf_table_id;
 int token_table_id;
 int node_table_id;
+
+@ @c
+int l_pack_type_index       [PACK_TYPE_SIZE] ;
+int l_group_code_index      [GROUP_CODE_SIZE];
+int l_math_style_name_index [MATH_STYLE_NAME_SIZE];
+int l_dir_par_index         [DIR_PAR_SIZE];
+int l_dir_text_index        [DIR_TEXT_SIZE];
 
 
 #if defined(WIN32) || defined(__MINGW32__) || defined(__CYGWIN__)
@@ -747,34 +872,37 @@ void lua_initialize(int ac, char **av)
     static char LC_CTYPE_C[] = "LC_CTYPE=C";
     static char LC_COLLATE_C[] = "LC_COLLATE=C";
     static char LC_NUMERIC_C[] = "LC_NUMERIC=C";
+#ifdef LuajitTeX
+    static char engine_luatex[] = "engine=luajittex";
+#else
     static char engine_luatex[] = "engine=luatex";
+#endif
     /* Save to pass along to topenin.  */
     argc = ac;
     argv = av;
 
-    if (luatex_svn < 0) {
-        const char *fmt = "This is LuaTeX, Version %s-%s " WEB2CVERSION;
-        size_t len;
-        char buf[16];
-        sprintf(buf, "%d", luatex_date_info);
-        len = strlen(fmt) + strlen(luatex_version_string) + strlen(buf) - 3;
 
-        /* len is just enough, because of the placeholder chars in fmt
-           that get replaced by the arguments.  */
-        banner = xmalloc(len);
-        sprintf(banner, fmt, luatex_version_string, buf);
-    } else {
-        const char *fmt = "This is LuaTeX, Version %s%s" WEB2CVERSION " (rev %d)";
-        size_t len;
-        char buf[18];
-#ifndef NATIVE_TEXLIVE_BUILD
-        sprintf(buf, "-%d", luatex_date_info);
+    if (luatex_svn < 0) {
+#ifdef LuajitTeX
+        const char *fmt = "This is LuajitTeX, Version %s" WEB2CVERSION;
 #else
-	buf[0] = 0; /* TL: skip datestamp provoking ever-changing binaries */
+        const char *fmt = "This is LuaTeX, Version %s" WEB2CVERSION;
 #endif
-        len = strlen(fmt) + strlen(luatex_version_string) + strlen(buf) + 6;
+        size_t len;
+        len = strlen(fmt) + strlen(luatex_version_string) ;
+
         banner = xmalloc(len);
-        sprintf(banner, fmt, luatex_version_string, buf, luatex_svn);
+        sprintf(banner, fmt, luatex_version_string);
+    } else {
+#ifdef LuajitTeX
+        const char *fmt = "This is LuajitTeX, Version %s" WEB2CVERSION " (rev %d)";
+#else
+        const char *fmt = "This is LuaTeX, Version %s" WEB2CVERSION " (rev %d)";
+#endif
+        size_t len;
+        len = strlen(fmt) + strlen(luatex_version_string) + 6;
+        banner = xmalloc(len);
+        sprintf(banner, fmt, luatex_version_string, luatex_svn);
     }
     ptexbanner = banner;
 
@@ -782,12 +910,23 @@ void lua_initialize(int ac, char **av)
 
     /* be 'luac' */
     if (argc >1) {
+#ifdef LuajitTeX
+        if (FILESTRCASEEQ(kpse_invocation_name, "texluajitc"))
+            exit(luac_main(ac, av));
+        if (STREQ(argv[1], "--luaconly") || STREQ(argv[1], "--luac")) {
+            char *argv1 = xmalloc (strlen ("luajittex") + 1);
+            av[1] = argv1;
+            strcpy (av[1], "luajittex");
+            exit(luac_main(--ac, ++av));
+        }
+#else
         if (FILESTRCASEEQ(kpse_invocation_name, "texluac"))
             exit(luac_main(ac, av));
         if (STREQ(argv[1], "--luaconly") || STREQ(argv[1], "--luac")) {
             strcpy(av[1], "luatex");
             exit(luac_main(--ac, ++av));
         }
+#endif
     }
 #if defined(WIN32) || defined(__MINGW32__) || defined(__CYGWIN__)
     mk_suffixlist();
@@ -820,6 +959,20 @@ void lua_initialize(int ac, char **av)
     putenv(engine_luatex);
 
     luainterpreter();
+
+    /* init internalized strings */
+    set_init_keys;
+
+    lua_pushstring(Luas,"lua.functions");
+    lua_newtable(Luas);
+    lua_settable(Luas,LUA_REGISTRYINDEX);
+
+    /* here start the key definitions */
+    set_pack_type_index;
+    set_l_group_code_index;
+    set_l_math_style_name_index;
+    set_l_dir_par_index;
+    set_l_dir_text_index;
 
     prepare_cmdline(Luas, argv, argc, lua_offset);      /* collect arguments */
     setup_lua_path(Luas);

@@ -1,5 +1,5 @@
 /*
-Copyright 1996-2013 Han The Thanh, <thanh@pdftex.org>
+Copyright 1996-2014 Han The Thanh, <thanh@pdftex.org>
 
 This file is part of pdfTeX.
 
@@ -16,9 +16,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along
 with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-extern "C" {
 #include <w2c/config.h>
-}
 
 #include <stdlib.h>
 #include <stddef.h>

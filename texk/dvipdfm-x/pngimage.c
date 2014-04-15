@@ -1,8 +1,6 @@
-/*  
+/* This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
 
-    This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
-
-    Copyright (C) 2002-2012 by Jin-Hwan Cho and Shunsaku Hirata,
+    Copyright (C) 2002-2014 by Jin-Hwan Cho and Shunsaku Hirata,
     the dvipdfmx project team.
     
     Copyright (C) 1998, 1999 by Mark A. Wicks <mwicks@kettering.edu>
@@ -184,6 +182,11 @@ png_include_image (pdf_ximage *ximage, FILE *png_file)
       png_destroy_read_struct(&png_ptr, NULL, NULL);
     return -1;
   }
+
+#if PNG_LIBPNG_VER >= 10603
+  /* ignore possibly incorrect CMF bytes */
+  png_set_option(png_ptr, PNG_MAXIMUM_INFLATE_WINDOW, PNG_OPTION_ON);
+#endif
 
   /* Inititializing file IO. */
   png_init_io (png_ptr, png_file);

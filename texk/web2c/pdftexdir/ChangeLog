@@ -1,3 +1,48 @@
+2014-03-18  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* pdftex.web and writefont.c: Import from r704.
+
+2014-03-17  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* pdftoepdf.cc, pdftosrc.cc: Kpathsea headers and <w2c/config.h>
+	are now C++ safe.
+
+2014-03-07  Karl Berry  <karl@tug.org>
+
+	* pdftex_version.h,
+	* pdftex.web (pdftex_revision, pdftex_version_string): [1.40.]15.
+
+2014-02-14  Karl Berry  <karl@gnu.org>
+
+	* pdftex.web (pdf_suppress_warning_page_group): new primitive
+	parameter \pdfsuppresswarningpagegroup.
+	(get_pdf_suppress_warning_page_group): new fn to get its value.
+	* pdftopdf.cc (write_epdf): check it before issuing warning.
+
+2014-01-20  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	TeX tuneup of 2014.
+	* pdftex.web, tex.ch0: Adapt to TeX Version 3.14159265.
+
+2014-01-09  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* pdftoepdf.cc (copyObject): Always write "\nendstream" for
+	PDF/A-1b compliance.
+
+2014-01-02  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* writepng.c: Allow libpng >= 1.6.3 to read images with
+	incorrect CMF bytes.
+
+2014-01-01  Karl Berry  <karl@tug.org>
+
+	* All source files: update copyright years to include 2014.
+
+2013-12-23  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* pdftex.web (pdf_end_stream): Always write "\nendstream" for
+	PDF/A-1b compliance.
+
 2013-12-17  Peter Breitenlohner  <peb@mppmu.mpg.de>
 
 	* pdftex.web: Always write "\n" after "obj" and before "endobj".
@@ -226,7 +271,7 @@
 
 2012-04-15  Karl Berry  <karl@tug.org>
 
-	* pdftex.web (pdftex_revision, pdftex_version_string)
+	* pdftex.web (pdftex_revision, pdftex_version_string): 1.40.13.
 
 2012-04-12  Thanh Han The  <thanh@river-valley.org>
 

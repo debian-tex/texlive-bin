@@ -19,8 +19,8 @@
 
 @ @c
 static const char _svn_version[] =
-    "$Id: writetype0.w 4442 2012-05-25 22:40:34Z hhenkel $"
-    "$URL: https://foundry.supelec.fr/svn/luatex/tags/beta-0.76.0/source/texk/web2c/luatexdir/font/writetype0.w $";
+    "$Id: writetype0.w 4956 2014-03-28 12:12:17Z luigi $"
+    "$URL: https://foundry.supelec.fr/svn/luatex/trunk/source/texk/web2c/luatexdir/font/writetype0.w $";
 
 #include "ptexlib.h"
 #include "font/writettf.h"
@@ -48,7 +48,7 @@ void writetype0(PDF pdf, fd_entry * fd)
     cur_file_name =
         luatex_find_file(fd_cur->fm->ff_name, find_opentype_file_callback);
     if (cur_file_name == NULL) {
-        pdftex_fail("cannot find OpenType font file for reading (%s)",
+        luatex_fail("cannot find OpenType font file for reading (%s)",
                     fd_cur->fm->ff_name);
     }
     callback_id = callback_defined(read_opentype_file_callback);
@@ -57,12 +57,12 @@ void writetype0(PDF pdf, fd_entry * fd)
                          &file_opened, &ttf_buffer, &ttf_size) &&
             file_opened && ttf_size > 0) {
         } else {
-            pdftex_fail("cannot open OpenType font file for reading (%s)",
+            luatex_fail("cannot open OpenType font file for reading (%s)",
                         cur_file_name);
         }
     } else {
         if (!otf_open(cur_file_name)) {
-            pdftex_fail("cannot open OpenType font file for reading (%s)",
+            luatex_fail("cannot open OpenType font file for reading (%s)",
                         cur_file_name);
         }
         ttf_read_file();
@@ -71,11 +71,10 @@ void writetype0(PDF pdf, fd_entry * fd)
 
     fd_cur->ff_found = true;
 
-    if (tracefilenames) {
-        if (is_subsetted(fd_cur->fm))
-            tex_printf("<%s", cur_file_name);
-        else
-            tex_printf("<<%s", cur_file_name);
+    if (is_subsetted(fd_cur->fm)) {
+        report_start_file(filetype_subset, cur_file_name);
+    } else {
+        report_start_file(filetype_font, cur_file_name);
     }
     ttf_read_tabdir();
     /* read font parameters */
@@ -116,11 +115,10 @@ void writetype0(PDF pdf, fd_entry * fd)
     }
     xfree(dir_tab);
     xfree(ttf_buffer);
-    if (tracefilenames) {
-        if (is_subsetted(fd_cur->fm))
-            tex_printf(">");
-        else
-            tex_printf(">>");
+    if (is_subsetted(fd_cur->fm)) {
+        report_stop_file(filetype_subset);
+    } else {
+        report_stop_file(filetype_font);
     }
     cur_file_name = NULL;
 }

@@ -455,7 +455,7 @@ static int put_multibyte(long c, FILE *fp) {
                 return EOF;
 
             return BYTE4(c);
-      }
+        }
     }
 #endif
 
@@ -557,7 +557,49 @@ static int getc4(FILE *fp)
 {
     struct unget_st *p = &ungetbuff[fileno(fp)];
 
-    if (p->size == 0) return getc(fp);
+    if (p->size == 0)
+#ifdef WIN32
+    {
+        const int fd = fileno(fp);
+        HANDLE hStdin;
+        DWORD ret;
+        wchar_t wc[2];
+        long c;
+        static wchar_t wcbuf = L'\0';
+
+        if (!(fd == fileno(stdin) && _isatty(fd) && is_internalUPTEX()))
+            return getc(fp);
+
+        hStdin = GetStdHandle(STD_INPUT_HANDLE);
+        if (wcbuf) {
+            wc[0] = wcbuf;
+            wcbuf = L'\0';
+        }
+        else if (ReadConsoleW(hStdin, wc, 1, &ret, NULL) == 0)
+            return EOF;
+        if (0xd800<=wc[0] && wc[0]<0xdc00) {
+            if (ReadConsoleW(hStdin, wc+1, 1, &ret, NULL) == 0)
+                return EOF;
+            if (0xdc00<=wc[1] && wc[1]<0xe000) {
+                c = UTF16StoUTF32(wc[0], wc[1]);
+            } else {
+                wcbuf = wc[1];
+                c = U_REPLACEMENT_CHARACTER;  /* illegal upper surrogate pair */
+            }
+        } else if (0xdc00<=wc[0] && wc[0]<0xe000) {
+            c = U_REPLACEMENT_CHARACTER;      /* illegal lower surrogate pair */
+        } else {
+            c = wc[0];
+        }
+        c = UCStoUTF8(c);
+        /* always */       p->buff[p->size++]=BYTE4(c);
+        if (BYTE3(c) != 0) p->buff[p->size++]=BYTE3(c);
+        if (BYTE2(c) != 0) p->buff[p->size++]=BYTE2(c);
+        if (BYTE1(c) != 0) p->buff[p->size++]=BYTE1(c);
+    }
+#else
+        return getc(fp);
+#endif
     return p->buff[--p->size];
 }
 

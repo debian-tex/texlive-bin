@@ -1,4 +1,4 @@
-% $Id: psout.w 1892 2013-03-22 10:21:05Z taco $
+% $Id: psout.w 1996 2014-04-09 07:23:33Z taco $
 % This file is part of MetaPost;
 % the MetaPost program is in the public domain.
 % See the <Show version...> code in mpost.w for more info.
@@ -1205,8 +1205,9 @@ static int check_fm_entry (MP mp, fm_entry * fm, boolean warn) {
     float d;
     fm_entry *fm;
     char fm_line[FM_BUF_SIZE], buf[FM_BUF_SIZE];
-    char *p, *q, *r, *s;
+    char *p, *q, *s;
     char warn_s[128];
+    char *r = NULL;
     switch (mp->ps->mitem->type) {
     case MAPFILE:
         p = fm_line;
@@ -1609,10 +1610,14 @@ void mp_read_psname_table (MP mp) {
 
 @* \[44c] Helper functions for Type1 fonts.
 
+Avoid to redefine |Byte| and |Bytef| from |<zlib.h>|.
+
 @<Types...@>=
 typedef char char_entry;
+#ifndef ZCONF_H
 typedef unsigned char  Byte;
 typedef Byte  Bytef;
+#endif
 
 @ @<Glob...@>=
 char_entry *char_ptr, *char_array;

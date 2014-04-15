@@ -1,6 +1,6 @@
 /****************************************************************************\
  Part of the XeTeX typesetting system
- Copyright (c) 2010-2012 by Han The Thanh
+ Copyright (c) 2010-2014 by Han The Thanh
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
@@ -27,15 +27,9 @@ use or other dealings in this Software without prior written
 authorization from the copyright holders.
 \****************************************************************************/
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 #include <w2c/config.h>
-#ifdef __cplusplus
-}
-#endif
 
-#include "XeTeX_ext.h"
+#include "XeTeX_web.h"
 
 #include <map>
 #include <iostream>
@@ -45,8 +39,6 @@ using namespace std;
 typedef pair<int, unsigned int> GlyphId;
 typedef map<GlyphId, int>  ProtrusionFactor;
 ProtrusionFactor leftProt, rightProt;
-
-extern "C" {
 
 void set_cp_code(int fontNum, unsigned int code, int side, int value)
 {
@@ -82,7 +74,4 @@ int get_cp_code(int fontNum, unsigned int code, int side)
         return 0;
     return it->second;
 }
-
-}
-
 

@@ -1,8 +1,6 @@
-/*  
+/* This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
 
-    This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
-
-    Copyright (C) 2002-2012 by Jin-Hwan Cho and Shunsaku Hirata,
+    Copyright (C) 2002-2014 by Jin-Hwan Cho and Shunsaku Hirata,
     the dvipdfmx project team.
     
     Copyright (C) 1998, 1999 by Mark A. Wicks <mwicks@kettering.edu>
@@ -37,7 +35,11 @@ int mfclose (FILE *file, const char *function, int line);
 #define MFCLOSE(file) \
    mfclose((file),__FUNCTION__,__LINE__)
 #else
+#if defined(WIN32)
+#define MFOPEN(name,mode) fsyscp_fopen((name),(mode))
+#else
 #define MFOPEN(name,mode) fopen((name),(mode))
+#endif
 #define MFCLOSE(file) fclose(file)
 #endif
 

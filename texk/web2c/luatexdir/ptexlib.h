@@ -18,7 +18,7 @@
    You should have received a copy of the GNU General Public License along
    with LuaTeX; if not, see <http://www.gnu.org/licenses/>. */
 
-/* $Id: ptexlib.h 4597 2013-03-19 15:10:44Z taco $ */
+/* $Id: ptexlib.h 4965 2014-03-28 17:50:08Z luigi $ */
 
 #ifndef PTEXLIB_H
 #  define PTEXLIB_H
@@ -85,7 +85,7 @@ extern char **suffixlist;       /* in luainit.w */
 
 #  define check_buf(size, buf_size)                                 \
   if ((unsigned)(size) > (unsigned)(buf_size))                      \
-    pdftex_fail("buffer overflow: %d > %d at file %s, line %d",     \
+    luatex_fail("buffer overflow: %d > %d at file %s, line %d",     \
                 (int)(size), (int)(buf_size), __FILE__,  __LINE__ )
 
 #  define append_char_to_buf(c, p, buf, buf_size) do { \
@@ -255,7 +255,7 @@ void lua_node_filter(int filterid, int extrainfo, halfword head_node,
                      halfword * tail_node);
 halfword lua_vpack_filter(halfword head_node, scaled size, int pack_type,
                           scaled maxd, int extrainfo, int d);
-void lua_node_filter_s(int filterid, const char *extrainfo);
+void lua_node_filter_s(int filterid, int extrainfo);
 int lua_linebreak_callback(int is_broken, halfword head_node,
                            halfword * new_head);
 
@@ -265,7 +265,9 @@ void free_pdf_literal(pointer p);
 void show_pdf_literal(pointer p);
 
 void copy_late_lua(pointer r, pointer p);
+void copy_user_lua(pointer r, pointer p);
 void free_late_lua(pointer p);
+void free_user_lua(pointer p);
 void show_late_lua(pointer p);
 
 void load_tex_patterns(int curlang, halfword head);
@@ -296,6 +298,9 @@ void vf_out_image(PDF pdf, unsigned i);
 
 /* lua/ltexiolib.c */
 void flush_loggable_info(void);
+
+/* lua/luastuff.w and lua/luajitstuff.w */
+void luafunctioncall(int slot);
 
 /* lua/luastuff.c */
 void luatokencall(int p, int nameptr);

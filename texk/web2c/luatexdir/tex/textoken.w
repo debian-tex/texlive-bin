@@ -19,8 +19,8 @@
 
 @ @c
 static const char _svn_version[] =
-    "$Id: textoken.w 4586 2013-03-01 09:52:21Z taco $"
-    "$URL: https://foundry.supelec.fr/svn/luatex/tags/beta-0.76.0/source/texk/web2c/luatexdir/tex/textoken.w $";
+    "$Id: textoken.w 4956 2014-03-28 12:12:17Z luigi $"
+    "$URL: https://foundry.supelec.fr/svn/luatex/trunk/source/texk/web2c/luatexdir/tex/textoken.w $";
 
 #include "ptexlib.h"
 
@@ -28,7 +28,6 @@ static const char _svn_version[] =
 #define pausing int_par(pausing_code)
 #define cat_code_table int_par(cat_code_table_code)
 #define tracing_nesting int_par(tracing_nesting_code)
-#define end_line_char int_par(end_line_char_code)
 #define suppress_outer_error int_par(suppress_outer_error_code)
 
 #define every_eof equiv(every_eof_loc)
@@ -43,7 +42,7 @@ static const char _svn_version[] =
       a=get_cat_code(cat_code_table,b);                           \
   } while (0)
 
- 
+
 @ The \TeX\ system does nearly all of its own memory allocation, so that it
 can readily be transported into environments that do not have automatic
 facilities for strings, garbage collection, etc., and so that it can be in
@@ -60,7 +59,7 @@ value represents a null pointer. \TeX\ does not assume that |mem[null]| exists.
 
 
 
-@ Locations in |fixmem| are used for storing one-word records; a conventional 
+@ Locations in |fixmem| are used for storing one-word records; a conventional
 \.{AVAIL} stack is used for allocation in this array.
 
 @c
@@ -407,7 +406,7 @@ void token_show(halfword p)
 }
 
 
- 
+
 @ |delete_token_ref|, is called when
 a pointer to a token list's reference count is being removed. This means
 that the token list should disappear if the reference count was |null|,
@@ -457,7 +456,7 @@ typedef enum { next_line_ok, next_line_return,
 
 static next_line_retval next_line(void);        /* below */
 
- 
+
 @  In case you are getting bored, here is a slightly less trivial routine:
    Given a string of lowercase letters, like `\.{pt}' or `\.{plus}' or
    `\.{width}', the |scan_keyword| routine checks to see whether the next
@@ -498,7 +497,7 @@ boolean scan_keyword(const char *s)
                 token_link(q) = null;
                 token_link(p) = q;
                 begin_token_list(token_link(backup_head), backed_up);
-                if (cur_cmd != endv_cmd) 
+                if (cur_cmd != endv_cmd)
    	           align_state = saved_align_state;
             } else {
                 back_input();
@@ -516,7 +515,7 @@ boolean scan_keyword(const char *s)
 
 @ We can not return |undefined_control_sequence| under some conditions
  (inside |shift_case|, for example). This needs thinking.
- 
+
 @c
 halfword active_to_cs(int curchr, int force)
 {
@@ -543,7 +542,7 @@ halfword active_to_cs(int curchr, int force)
     return curcs;
 }
 
-@ TODO this function should listen to \.{\\escapechar} 
+@ TODO this function should listen to \.{\\escapechar}
 
 @c
 static char *cs_to_string(halfword p)
@@ -587,7 +586,7 @@ static char *cs_to_string(halfword p)
     return (char *) ret;
 }
 
-@ TODO this is a quick hack, will be solved differently soon 
+@ TODO this is a quick hack, will be solved differently soon
 
 @c
 static char *cmd_chr_to_string(int cmd, int chr)
@@ -822,7 +821,7 @@ static boolean get_next_file(void)
         } else {
             do_get_cat_code(cur_cmd, cur_chr);
         }
-        /* 
+        /*
            Change state if necessary, and |goto switch| if the current
            character should be ignored, or |goto reswitch| if the current
            character changes to another;
@@ -927,13 +926,13 @@ static boolean get_next_file(void)
                case skip_blanks + mac_param:
                case skip_blanks + sub_mark:
                case skip_blanks + letter:
-               case skip_blanks + other_char:     
+               case skip_blanks + other_char:
                case new_line    + math_shift:
                case new_line    + tab_mark:
                case new_line    + mac_param:
                case new_line    + sub_mark:
                case new_line    + letter:
-               case new_line    + other_char: 
+               case new_line    + other_char:
 #else
         default:
 #endif
@@ -1072,7 +1071,7 @@ static boolean process_sup_mark(void)
    a file; once they have been scanned the first time, their |eqtb| location
    serves as a unique identification, so \TeX\ doesn't need to refer to the
    original name any more except when it prints the equivalent in symbolic form.
-   
+
    The program that scans a control sequence has been written carefully
    in order to avoid the blowups that might otherwise occur if a malicious
    user tried something like `\.{\\catcode\'15=0}'. The algorithm might
@@ -1238,14 +1237,6 @@ static boolean check_expanded_code(int *kk)
     return false;
 }
 
-@ todo: this is a function because it is still used from the converted pascal.
-   once that is gone, it can be a \#define again
-
-@c
-boolean end_line_char_inactive(void)
-{
-    return ((end_line_char < 0) || (end_line_char > 127));
-}
 
 @ All of the easy branches of |get_next| have now been taken care of.
   There is one more branch.
@@ -1310,9 +1301,8 @@ static next_line_retval next_line(void)
                     if (!((iname == 19) || (iname == 21)))
                         file_warning(); /* give warning for some unfinished groups and/or conditionals */
             if ((iname > 21) || (iname == 20)) {
-                if (tracefilenames)
-                    print_char(')');
-                open_parens--;
+                report_stop_file(filetype_tex);
+                decr(open_parens);
 #if 0
                 update_terminal(); /* show user that file has been read */
 #endif
@@ -1327,7 +1317,7 @@ static next_line_retval next_line(void)
             }
             return next_line_restart;
         }
-        if (inhibit_eol || end_line_char_inactive())
+        if (inhibit_eol || end_line_char_inactive)
             ilimit--;
         else
             buffer[ilimit] = (packed_ASCII_code) end_line_char;
@@ -1346,7 +1336,7 @@ static next_line_retval next_line(void)
         if (selector < log_only)
             open_log_file();
         if (interaction > nonstop_mode) {
-            if (end_line_char_inactive())
+            if (end_line_char_inactive)
                 ilimit++;
             if (ilimit == istart) {     /* previous line was empty */
                 tprint_nl("(Please type a command or say `\\end')");
@@ -1355,7 +1345,7 @@ static next_line_retval next_line(void)
             first = istart;
             prompt_input("*");  /* input on-line into |buffer| */
             ilimit = last;
-            if (end_line_char_inactive())
+            if (end_line_char_inactive)
                 ilimit--;
             else
                 buffer[ilimit] = (packed_ASCII_code) end_line_char;
@@ -1370,7 +1360,7 @@ static next_line_retval next_line(void)
     return next_line_ok;
 }
 
-@ Let's consider now what happens when |get_next| is looking at a token list. 
+@ Let's consider now what happens when |get_next| is looking at a token list.
 
 @c
 static boolean get_next_tokenlist(void)
@@ -1423,7 +1413,7 @@ static boolean get_next_tokenlist(void)
    this routine are executed more often than any other instructions of \TeX.
    @^mastication@>@^inner loop@>
 
-@ sets |cur_cmd|, |cur_chr|, |cur_cs| to next token 
+@ sets |cur_cmd|, |cur_chr|, |cur_cs| to next token
 
 @c
 void get_next(void)
@@ -1504,7 +1494,7 @@ void get_token_lua(void)
 }
 
 
-@ changes the string |s| to a token list 
+@ changes the string |s| to a token list
 @c
 halfword string_to_toks(char *ss)
 {
@@ -1571,7 +1561,7 @@ static halfword lua_str_toks(lstring b)
 }
 
 
-@ Incidentally, the main reason for wanting |str_toks| is the function |the_toks|, 
+@ Incidentally, the main reason for wanting |str_toks| is the function |the_toks|,
 which has similar input/output characteristics.
 
 @c
@@ -1630,7 +1620,7 @@ static void print_job_name(void)
 @ Here is a routine that print the result of a convert command, using
    the argument |i|. It returns |false | if it does not know to print
    the code |c|. The function exists because lua code and tex code can
-   both call it to convert something. 
+   both call it to convert something.
 
 @c
 static boolean print_convert_string(halfword c, int i)
@@ -1718,27 +1708,28 @@ static boolean print_convert_string(halfword c, int i)
 }
 
 @ @c
-int scan_lua_state(void)
+int scan_lua_state(void) /* hh-ls: optional name or number (not optional name optional number) */
 {
-    int sn = 0;
-    if (scan_keyword("name")) {
-        scan_pdf_ext_toks();
-        sn = def_ref;
-    }
     /* Parse optional lua state integer, or an instance name to be stored in |sn| */
     /* Get the next non-blank non-relax non-call token */
+    int sn = 0;
     do {
         get_x_token();
     } while ((cur_cmd == spacer_cmd) || (cur_cmd == relax_cmd));
-
     back_input();               /* have to push it back, whatever it is  */
     if (cur_cmd != left_brace_cmd) {
-        scan_register_num();
-        if (get_lua_name(cur_val))
-            sn = (cur_val - 65536);
+        if (scan_keyword("name")) {
+            (void) scan_toks(false, true);
+            sn = def_ref;
+        } else {
+            scan_register_num();
+            if (get_lua_name(cur_val))
+                sn = (cur_val - 65536);
+        }
     }
     return sn;
 }
+
 
 
 @ The procedure |conv_toks| uses |str_toks| to insert the token list
@@ -1840,7 +1831,7 @@ void conv_toks(void)
         save_warning_index = warning_index;
         save_def_ref = def_ref;
         u = save_cur_string();
-        scan_pdf_ext_toks();
+        scan_toks(false, true); /*hh-ls was scan_pdf_ext_toks();*/
         s = tokens_to_string(def_ref);
         delete_token_ref(def_ref);
         def_ref = save_def_ref;
@@ -1870,7 +1861,7 @@ void conv_toks(void)
             save_scanner_status = scanner_status;
             save_def_ref = def_ref;
             save_warning_index = warning_index;
-            scan_pdf_ext_toks();
+            scan_toks(false, true); /*hh-ls was scan_pdf_ext_toks();*/
             bool = in_lua_escape;
             in_lua_escape = true;
             escstr.s = (unsigned char *) tokenlist_to_cstring(def_ref, false, &l);
@@ -1893,7 +1884,7 @@ void conv_toks(void)
         save_warning_index = warning_index;
         save_def_ref = def_ref;
         u = save_cur_string();
-        scan_pdf_ext_toks();
+        scan_toks(false, true); /*hh-ls was scan_pdf_ext_toks();*/
         warning_index = save_warning_index;
         scanner_status = save_scanner_status;
         ins_list(token_link(def_ref));
@@ -1907,7 +1898,7 @@ void conv_toks(void)
         save_def_ref = def_ref;
         save_warning_index = warning_index;
         sn = scan_lua_state();
-        scan_pdf_ext_toks();
+        scan_toks(false, true); /*hh-ls was scan_pdf_ext_toks();*/
         s = def_ref;
         warning_index = save_warning_index;
         def_ref = save_def_ref;
@@ -1919,6 +1910,19 @@ void conv_toks(void)
         if (luacstrings > 0)
             lua_string_start();
         return;
+        break;
+    case lua_function_code:
+        scan_int();
+        if (cur_val <= 0) {
+            pdf_error("luafunction", "invalid number");
+        } else {
+            u = save_cur_string();
+            luacstrings = 0;
+            luafunctioncall(cur_val);
+            restore_cur_string(u);
+            if (luacstrings > 0)
+                lua_string_start();
+        }
         break;
     case pdf_insert_ht_code:
         scan_register_num();
@@ -2021,6 +2025,7 @@ void conv_toks(void)
         case pdf_creation_date_code:
         case lua_escape_string_code:
         case lua_code:
+        case lua_function_code:
         case expanded_code:
             break;
         default:
@@ -2040,7 +2045,7 @@ void conv_toks(void)
 @c
 boolean in_lua_escape;
 
-@ probably not needed anymore 
+@ probably not needed anymore
 @c
 boolean is_convert(halfword c)
 {
@@ -2157,7 +2162,7 @@ void read_toks(int n, halfword r, halfword j)
 
         }
         ilimit = last;
-        if (end_line_char_inactive())
+        if (end_line_char_inactive)
             decr(ilimit);
         else
             buffer[ilimit] = (packed_ASCII_code) int_par(end_line_char_code);
@@ -2167,8 +2172,7 @@ void read_toks(int n, halfword r, halfword j)
         /* Handle \.{\\readline} and |goto done|; */
         if (j == 1) {
             while (iloc <= ilimit) {    /* current line not yet finished */
-                cur_chr = buffer[iloc];
-                incr(iloc);
+		do_buffer_to_unichar(cur_chr, iloc);
                 if (cur_chr == ' ')
                     cur_tok = space_token;
                 else
@@ -2257,7 +2261,7 @@ str_number tokens_to_string(halfword p)
 #define is_cat_letter(a)                                                \
     (get_char_cat_code(pool_to_unichar(str_string((a)))) == 11)
 
-@ the actual token conversion in this function is now functionally 
+@ the actual token conversion in this function is now functionally
    equivalent to |show_token_list|, except that it always prints the
    whole token list.
    TODO: check whether this causes problems in the lua library.

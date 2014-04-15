@@ -18,20 +18,19 @@
    with LuaTeX; if not, see <http://www.gnu.org/licenses/>. */
 
 static const char _svn_version[] =
-    "$Id: lpdflib.c 4524 2012-12-20 15:38:02Z taco $ "
-    "$URL: https://foundry.supelec.fr/svn/luatex/tags/beta-0.76.0/source/texk/web2c/luatexdir/lua/lpdflib.c $";
+    "$Id: lpdflib.c 4956 2014-03-28 12:12:17Z luigi $ "
+    "$URL: https://foundry.supelec.fr/svn/luatex/trunk/source/texk/web2c/luatexdir/lua/lpdflib.c $";
 
 #include "ptexlib.h"
 #include "lua/luatex-api.h"
 
-#define PDF_ENV "pdf_env"
-
 static int luapdfprint(lua_State * L)
 {
     int n;
-    const_lstring st, modestr;
+    const_lstring st;
+    const char *modestr_s;
     ctm_transform_modes literal_mode;
-    st.s = modestr.s = NULL;
+    st.s = modestr_s = NULL;
     n = lua_gettop(L);
     if (!lua_isstring(L, -1)) {
         luaL_error(L, "no string to print");
@@ -41,10 +40,10 @@ static int luapdfprint(lua_State * L)
         if (!lua_isstring(L, -2)) {
             luaL_error(L, "invalid argument for print literal mode");
         } else {
-            modestr.s = lua_tolstring(L, -2, &modestr.l);
-            if (modestr.l == 6 && strncmp(modestr.s, "direct", 6) == 0)
-                literal_mode = direct_always;
-            else if (modestr.l == 4 && strncmp(modestr.s, "page", 4) == 0)
+	    modestr_s = lua_tostring(L, -2);
+	    if (lua_key_eq(modestr_s,direct))
+	      literal_mode = direct_always;
+	    else if (lua_key_eq(modestr_s,page))
                 literal_mode = direct_page;
             else {
                 luaL_error(L, "invalid argument for print literal mode");
@@ -97,7 +96,8 @@ static int l_immediateobj(lua_State * L)
     int n, first_arg = 1;
     int k;
     lstring buf;
-    const_lstring st1, st2, st3;
+    const_lstring st1,st2, st3;
+    const char *st1_s = NULL;
     st1.s = st2.s = st3.s = NULL;
     check_o_mode(static_pdf, "immediateobj()", 1 << OMODE_PDF, true);
     if (global_shipping_mode != NOT_SHIPPING)
@@ -124,8 +124,10 @@ static int l_immediateobj(lua_State * L)
         pdf_begin_obj(static_pdf, k, OBJSTM_ALWAYS);
         st1.s = lua_tolstring(L, first_arg, &st1.l);
         pdf_out_block(static_pdf, st1.s, st1.l);
-        if (st1.s[st1.l - 1] != '\n')
-            pdf_out(static_pdf, '\n');
+        /* already in pdf_end_obj:
+            if (st1.s[st1.l - 1] != '\n')
+                pdf_out(static_pdf, '\n');
+        */
         pdf_end_obj(static_pdf);
         break;
     case 2:
@@ -134,17 +136,18 @@ static int l_immediateobj(lua_State * L)
             luaL_error(L, "pdf.immediateobj() 1st argument must be string");
         if (!lua_isstring(L, first_arg + 1))
             luaL_error(L, "pdf.immediateobj() 2nd argument must be string");
-        st1.s = lua_tolstring(L, first_arg, &st1.l);
+        st1_s = lua_tostring(L, first_arg);
         st2.s = lua_tolstring(L, first_arg + 1, &st2.l);
-        if (st1.l == 4 && strncmp((const char *) st1.s, "file", 4) == 0) {
+        if (lua_key_eq(st1_s, file)) {
             if (n == first_arg + 2)
-                luaL_error(L,
-                           "pdf.immediateobj() 3rd argument forbidden in file mode");
+                luaL_error(L, "pdf.immediateobj() 3rd argument forbidden in file mode");
             pdf_begin_obj(static_pdf, k, OBJSTM_ALWAYS);
             buf.s = fread_to_buf(L, st2.s, &buf.l);
             pdf_out_block(static_pdf, (const char *) buf.s, buf.l);
-            if (buf.s[buf.l - 1] != '\n')
-                pdf_out(static_pdf, '\n');
+            /* already in pdf_end_obj:
+                if (buf.s[buf.l - 1] != '\n')
+                    pdf_out(static_pdf, '\n');
+            */
             xfree(buf.s);
             pdf_end_obj(static_pdf);
         } else {
@@ -152,8 +155,7 @@ static int l_immediateobj(lua_State * L)
             pdf_begin_dict(static_pdf);
             if (n == first_arg + 2) {   /* write attr text */
                 if (!lua_isstring(L, first_arg + 2))
-                    luaL_error(L,
-                               "pdf.immediateobj() 3rd argument must be string");
+                    luaL_error(L, "pdf.immediateobj() 3rd argument must be string");
                 st3.s = lua_tolstring(L, first_arg + 2, &st3.l);
                 pdf_out_block(static_pdf, st3.s, st3.l);
                 if (st3.s[st3.l - 1] != '\n')
@@ -162,11 +164,9 @@ static int l_immediateobj(lua_State * L)
             pdf_dict_add_streaminfo(static_pdf);
             pdf_end_dict(static_pdf);
             pdf_begin_stream(static_pdf);
-            if (st1.l == 6 && strncmp((const char *) st1.s, "stream", 6) == 0) {
+            if (lua_key_eq(st1_s, stream)) {
                 pdf_out_block(static_pdf, st2.s, st2.l);
-            } else if (st1.l == 10
-                       && strncmp((const char *) st1.s, "streamfile",
-                                  10) == 0) {
+            }  else if (lua_key_eq(st1_s, streamfile)) {
                 buf.s = fread_to_buf(L, st2.s, &buf.l);
                 pdf_out_block(static_pdf, (const char *) buf.s, buf.l);
                 xfree(buf.s);
@@ -183,47 +183,10 @@ static int l_immediateobj(lua_State * L)
     return 1;
 }
 
-/**********************************************************************/
-/* for lookup within table in LUA_REGISTRYINDEX (instead of repeated strcmp()) */
-
-typedef enum { P__ZERO,
-    P_CATALOG,
-    P_H,
-    P_INFO,
-    P_NAMES,
-    P_PDFCATALOG,
-    P_PDFINFO,
-    P_PDFNAMES,
-    P_PDFTRAILER,
-    P_RAW,
-    P_STREAM,
-    P_TRAILER,
-    P_V,
-    P__SENTINEL
-} parm_idx;
-
-static const parm_struct pdf_parms[] = {
-    {NULL, P__ZERO},            /* dummy; lua indices run from 1 */
-    {"catalog", P_CATALOG},
-    {"h", P_H},
-    {"info", P_INFO},
-    {"names", P_NAMES},
-    {"pdfcatalog", P_PDFCATALOG},       /* obsolescent */
-    {"pdfinfo", P_PDFINFO},     /* obsolescent */
-    {"pdfnames", P_PDFNAMES},   /* obsolescent */
-    {"pdftrailer", P_PDFTRAILER},       /* obsolescent */
-    {"raw", P_RAW},
-    {"stream", P_STREAM},
-    {"trailer", P_TRAILER},
-    {"v", P_V},
-    {NULL, P__SENTINEL}
-};
-
-/**********************************************************************/
-
 static int table_obj(lua_State * L)
 {
-    int k, type, obj_compression;
+    const char *type;
+    int k, obj_compression;
     int compress_level = -1;    /* unset */
     int os_threshold = OBJSTM_ALWAYS;   /* default: put non-stream objects into object streams */
     int saved_compress_level = static_pdf->compress_level;
@@ -236,33 +199,21 @@ static int table_obj(lua_State * L)
 
     /* get object "type" */
 
-    lua_pushstring(L, "type");  /* ks t */
-    lua_gettable(L, -2);        /* vs? t */
+    lua_key_rawgeti(type);
     if (lua_isnil(L, -1))       /* !vs t */
         luaL_error(L, "pdf.obj(): object \"type\" missing");
     if (!lua_isstring(L, -1))   /* !vs t */
         luaL_error(L, "pdf.obj(): object \"type\" must be string");
-    lua_pushstring(L, PDF_ENV); /* s vs t */
-    lua_gettable(L, LUA_REGISTRYINDEX); /* t vs t */
-    lua_pushvalue(L, -2);       /* vs t vs t */
-    lua_gettable(L, -2);        /* i? t vs t */
-    if (!lua_isnumber(L, -1))   /* !i t vs t */
-        luaL_error(L, "pdf.obj(): \"%s\" is not a valid object type",
-                   lua_tostring(L, -3));
-    type = (int) lua_tointeger(L, -1);  /* i t vs t */
-    switch (type) {
-    case P_RAW:
-    case P_STREAM:
-        break;
-    default:
-        luaL_error(L, "pdf.obj(): \"%s\" is not a valid object type", lua_tostring(L, -3));     /* i vs t */
+    type = lua_tostring(L, -1);
+
+    if (! (lua_key_eq(type, raw) || lua_key_eq(type, stream))) {
+        luaL_error(L, "pdf.obj(): \"%s\" is not a valid object type", type);     /* i vs t */
     }
-    lua_pop(L, 3);              /* t */
+    lua_pop(L, 1);              /* t */
 
     /* get optional "immediate" */
 
-    lua_pushstring(L, "immediate");     /* ks t */
-    lua_gettable(L, -2);        /* b? t */
+    lua_key_rawgeti(immediate);
     if (!lua_isnil(L, -1)) {    /* b? t */
         if (!lua_isboolean(L, -1))      /* !b t */
             luaL_error(L, "pdf.obj(): \"immediate\" must be boolean");
@@ -272,8 +223,7 @@ static int table_obj(lua_State * L)
 
     /* is a reserved object referenced by "objnum"? */
 
-    lua_pushstring(L, "objnum");        /* ks t */
-    lua_gettable(L, -2);        /* vi? t */
+    lua_key_rawgeti(objnum);
     if (!lua_isnil(L, -1)) {    /* vi? t */
         if (!lua_isnumber(L, -1))       /* !vi t */
             luaL_error(L, "pdf.obj(): \"objnum\" must be integer");
@@ -294,12 +244,10 @@ static int table_obj(lua_State * L)
 
     /* get optional "attr" (allowed only for stream case) */
 
-    lua_pushstring(L, "attr");  /* ks t */
-    lua_gettable(L, -2);        /* attr-s? t */
+    lua_key_rawgeti(attr);
     if (!lua_isnil(L, -1)) {    /* attr-s? t */
-        if (type != P_STREAM)
-            luaL_error(L,
-                       "pdf.obj(): \"attr\" key not allowed for non-stream object");
+        if (! lua_key_eq(type, stream))
+            luaL_error(L, "pdf.obj(): \"attr\" key not allowed for non-stream object");
         if (!lua_isstring(L, -1))       /* !attr-s t */
             luaL_error(L, "pdf.obj(): object \"attr\" must be string");
         if (immediate == 1) {
@@ -307,17 +255,16 @@ static int table_obj(lua_State * L)
             lua_pop(L, 1);      /* t */
         } else
             obj_obj_stream_attr(static_pdf, k) = luaL_ref(Luas, LUA_REGISTRYINDEX);     /* t */
-    } else
+    } else {
         lua_pop(L, 1);          /* t */
+    }
 
     /* get optional "compresslevel" (allowed only for stream case) */
 
-    lua_pushstring(L, "compresslevel"); /* ks t */
-    lua_gettable(L, -2);        /* vi? t */
+    lua_key_rawgeti(compresslevel);
     if (!lua_isnil(L, -1)) {    /* vi? t */
-        if (type == P_RAW)
-            luaL_error(L,
-                       "pdf.obj(): \"compresslevel\" key not allowed for raw object");
+        if (lua_key_eq(type, raw))
+            luaL_error(L, "pdf.obj(): \"compresslevel\" key not allowed for raw object");
         if (!lua_isnumber(L, -1))       /* !vi t */
             luaL_error(L, "pdf.obj(): \"compresslevel\" must be integer");
         compress_level = (int) lua_tointeger(L, -1);    /* vi t */
@@ -332,12 +279,10 @@ static int table_obj(lua_State * L)
 
     /* get optional "objcompression" (allowed only for non-stream case) */
 
-    lua_pushstring(L, "objcompression");        /* ks t */
-    lua_gettable(L, -2);        /* b? t */
+    lua_key_rawgeti(objcompression);
     if (!lua_isnil(L, -1)) {    /* b? t */
-        if (type == P_STREAM)
-            luaL_error(L,
-                       "pdf.obj(): \"objcompression\" key not allowed for stream object");
+        if (lua_key_eq(type, stream))
+            luaL_error(L, "pdf.obj(): \"objcompression\" key not allowed for stream object");
         if (!lua_isboolean(L, -1))      /* !b t */
             luaL_error(L, "pdf.obj(): \"objcompression\" must be boolean");
         obj_compression = lua_toboolean(L, -1); /* 0 or 1 */
@@ -353,44 +298,43 @@ static int table_obj(lua_State * L)
 
     /* now the object contents for all cases are handled */
 
-    lua_pushstring(L, "string");        /* ks t */
-    lua_gettable(L, -2);        /* string-s? t */
-    lua_pushstring(L, "file");  /* ks string-s? t */
-    lua_gettable(L, -3);        /* file-s? string-s? t */
+    lua_key_rawgeti(string);
+    lua_key_rawgeti_n(file,-2);
+
     if (!lua_isnil(L, -1) && !lua_isnil(L, -2)) /* file-s? string-s? t */
-        luaL_error(L,
-                   "pdf.obj(): \"string\" and \"file\" must not be given together");
+        luaL_error(L, "pdf.obj(): \"string\" and \"file\" must not be given together");
     if (lua_isnil(L, -1) && lua_isnil(L, -2))   /* nil nil t */
         luaL_error(L, "pdf.obj(): no \"string\" or \"file\" given");
 
-    switch (type) {
-    case P_RAW:
+    if (lua_key_eq(type, raw)) {
         if (immediate == 1)
             pdf_begin_obj(static_pdf, k, os_threshold);
         if (!lua_isnil(L, -2)) {        /* file-s? string-s? t */
             /* from string */
             lua_pop(L, 1);      /* string-s? t */
             if (!lua_isstring(L, -1))   /* !string-s t */
-                luaL_error(L,
-                           "pdf.obj(): \"string\" must be string for raw object");
+                luaL_error(L, "pdf.obj(): \"string\" must be string for raw object");
             if (immediate == 1) {
                 st.s = lua_tolstring(L, -1, &st.l);
                 pdf_out_block(static_pdf, st.s, st.l);
-                if (st.s[st.l - 1] != '\n')
-                    pdf_out(static_pdf, '\n');
+                /* already in pdf_end_obj:
+                    if (st.s[st.l - 1] != '\n')
+                        pdf_out(static_pdf, '\n');
+                */
             } else
                 obj_obj_data(static_pdf, k) = luaL_ref(L, LUA_REGISTRYINDEX);   /* t */
         } else {
             /* from file */
             if (!lua_isstring(L, -1))   /* !file-s nil t */
-                luaL_error(L,
-                           "pdf.obj(): \"file\" name must be string for raw object");
+                luaL_error(L, "pdf.obj(): \"file\" name must be string for raw object");
             if (immediate == 1) {
                 st.s = lua_tolstring(L, -1, &st.l);     /* file-s nil t */
                 buf.s = fread_to_buf(L, st.s, &buf.l);
                 pdf_out_block(static_pdf, (const char *) buf.s, buf.l);
-                if (buf.s[buf.l - 1] != '\n')
-                    pdf_out(static_pdf, '\n');
+                /* already in pdf_end_obj:
+                    if (buf.s[buf.l - 1] != '\n')
+                        pdf_out(static_pdf, '\n');
+                */
                 xfree(buf.s);
             } else {
                 set_obj_obj_is_file(static_pdf, k);
@@ -399,8 +343,7 @@ static int table_obj(lua_State * L)
         }
         if (immediate == 1)
             pdf_end_obj(static_pdf);
-        break;
-    case P_STREAM:
+    } else {
         if (immediate == 1) {
             pdf_begin_obj(static_pdf, k, OBJSTM_NEVER); /* 0 = not an object stream candidate! */
             pdf_begin_dict(static_pdf);
@@ -423,8 +366,7 @@ static int table_obj(lua_State * L)
             /* from string */
             lua_pop(L, 1);      /* string-s? t */
             if (!lua_isstring(L, -1))   /* !string-s t */
-                luaL_error(L,
-                           "pdf.obj(): \"string\" must be string for stream object");
+                luaL_error(L, "pdf.obj(): \"string\" must be string for stream object");
             if (immediate == 1) {
                 st.s = lua_tolstring(L, -1, &st.l);     /* string-s t */
                 pdf_out_block(static_pdf, st.s, st.l);
@@ -433,8 +375,7 @@ static int table_obj(lua_State * L)
         } else {
             /* from file */
             if (!lua_isstring(L, -1))   /* !file-s nil t */
-                luaL_error(L,
-                           "pdf.obj(): \"file\" name must be string for stream object");
+                luaL_error(L, "pdf.obj(): \"file\" name must be string for stream object");
             if (immediate == 1) {
                 st.s = lua_tolstring(L, -1, &st.l);     /* file-s nil t */
                 buf.s = fread_to_buf(L, st.s, &buf.l);
@@ -449,9 +390,6 @@ static int table_obj(lua_State * L)
             pdf_end_stream(static_pdf);
             pdf_end_obj(static_pdf);
         }
-        break;
-    default:
-        assert(0);
     }
     static_pdf->compress_level = saved_compress_level;
     return k;
@@ -461,8 +399,7 @@ static int orig_obj(lua_State * L)
 {
     int n, first_arg = 1;
     int k;
-    const_lstring st;
-    st.s = NULL;
+    const char *st_s = NULL ;
     n = lua_gettop(L);
     if (n > 0 && lua_type(L, 1) == LUA_TNUMBER) {
         first_arg++;
@@ -491,8 +428,8 @@ static int orig_obj(lua_State * L)
             luaL_error(L, "pdf.obj() 1st argument must be string");
         if (!lua_isstring(L, first_arg + 1))
             luaL_error(L, "pdf.obj() 2nd argument must be string");
-        st.s = lua_tolstring(L, first_arg, &st.l);
-        if (st.l == 4 && strncmp((const char *) st.s, "file", 4) == 0) {
+        st_s = lua_tostring(L, first_arg);
+        if (lua_key_eq(st_s, file)) {
             if (n == first_arg + 2)
                 luaL_error(L, "pdf.obj() 3rd argument forbidden in file mode");
             set_obj_obj_is_file(static_pdf, k);
@@ -503,10 +440,9 @@ static int orig_obj(lua_State * L)
                 obj_obj_stream_attr(static_pdf, k) =
                     luaL_ref(Luas, LUA_REGISTRYINDEX);
             }
-            if (st.l == 6 && strncmp((const char *) st.s, "stream", 6) == 0) {
+            if (lua_key_eq(st_s, stream)) {
                 set_obj_obj_is_stream(static_pdf, k);
-            } else if (st.l == 10
-                       && strncmp((const char *) st.s, "streamfile", 10) == 0) {
+            } else if (lua_key_eq(st_s, streamfile)) {
                 set_obj_obj_is_stream(static_pdf, k);
                 set_obj_obj_is_file(static_pdf, k);
             } else
@@ -550,8 +486,7 @@ static int l_refobj(lua_State * L)
 static int l_reserveobj(lua_State * L)
 {
     int n;
-    const_lstring st;
-    st.s = 0;
+    const char *st_s = NULL;
     n = lua_gettop(L);
     switch (n) {
     case 0:
@@ -562,8 +497,7 @@ static int l_reserveobj(lua_State * L)
     case 1:
         if (!lua_isstring(L, -1))
             luaL_error(L, "pdf.reserveobj() optional argument must be string");
-        st.s = lua_tolstring(L, 1, &st.l);
-        if (st.l == 5 && strncmp((const char *) st.s, "annot", 5) == 0) {
+        if (lua_key_eq(st_s, annot)) {
             pdf_last_annot = pdf_create_obj(static_pdf, obj_type_annot, 0);
         } else {
             luaL_error(L, "pdf.reserveobj() optional string must be \"annot\"");
@@ -587,8 +521,7 @@ static int l_registerannot(lua_State * L)
             luaL_error(L, "pdf.registerannot() can only be used in late lua");
         i = (int) luaL_checkinteger(L, 1);
         if (i <= 0)
-            luaL_error(L,
-                       "pdf.registerannot() can only register positive object numbers");
+            luaL_error(L, "pdf.registerannot() can only register positive object numbers");
         addto_page_resources(static_pdf, obj_type_annot, i);
         break;
     default:
@@ -597,101 +530,134 @@ static int l_registerannot(lua_State * L)
     return 0;
 }
 
-static int getpdf(lua_State * L)
+static int l_get_pdf_value(lua_State * L, int key)
 {
-    char *s;
-    int i, l;
-    if (lua_isstring(L, 2) && (lua_tostring(L, 2) != NULL)) {
-        lua_pushstring(L, PDF_ENV);     /* s ... */
-        lua_gettable(L, LUA_REGISTRYINDEX);     /* t ... */
-        lua_pushvalue(L, 2);    /* st t ... */
-        lua_gettable(L, -2);    /* i? t ... */
-        if (lua_isnumber(L, -1)) {      /* i t ... */
-            i = (int) lua_tointeger(L, -1);     /* i t ... */
-            lua_pop(L, 2);      /* ... */
-            switch (i) {
-            case P_PDFCATALOG:
-            case P_CATALOG:
-                s = tokenlist_to_cstring(pdf_catalog_toks, true, &l);
-                lua_pushlstring(L, s, (size_t) l);
-                break;
-            case P_PDFINFO:
-            case P_INFO:
-                s = tokenlist_to_cstring(pdf_info_toks, true, &l);
-                lua_pushlstring(L, s, (size_t) l);
-                break;
-            case P_PDFNAMES:
-            case P_NAMES:
-                s = tokenlist_to_cstring(pdf_names_toks, true, &l);
-                lua_pushlstring(L, s, (size_t) l);
-                break;
-            case P_PDFTRAILER:
-            case P_TRAILER:
-                s = tokenlist_to_cstring(pdf_trailer_toks, true, &l);
-                lua_pushlstring(L, s, (size_t) l);
-                break;
-            case P_H:
-                lua_pushnumber(L, static_pdf->posstruct->pos.h);
-                break;
-            case P_V:
-                lua_pushnumber(L, static_pdf->posstruct->pos.v);
-                break;
-            default:
-                lua_rawget(L, -2);
-            }
-        } else {
-            lua_pop(L, 2);      /* ... */
-            lua_rawget(L, -2);
-        }
-    } else {
-        lua_pushnil(L);
-    }
+    lua_rawgeti(L, LUA_REGISTRYINDEX, lua_key_index(pdf_data));
+    lua_gettable(L, LUA_REGISTRYINDEX);
+    /* [table] */
+    lua_rawgeti(L, LUA_REGISTRYINDEX, key);
+    /* [table] [key] */
+    lua_rawget(L,-2);
     return 1;
 }
+static int l_get_pageresources(lua_State * L) {
+    return l_get_pdf_value(L,lua_key_index(pageresources));
+}
+static int l_get_pageattributes(lua_State * L) {
+    return l_get_pdf_value(L,lua_key_index(pageattributes));
+}
+static int l_get_pagesattributes(lua_State * L) {
+    return l_get_pdf_value(L,lua_key_index(pagesattributes));
+}
+static int l_get_catalog(lua_State * L) {
+    return l_get_pdf_value(L,lua_key_index(catalog));
+}
+static int l_get_info(lua_State * L) {
+    return l_get_pdf_value(L,lua_key_index(info));
+}
+static int l_get_names(lua_State * L) {
+    return l_get_pdf_value(L,lua_key_index(names));
+}
 
-static int setpdf(lua_State * L)
+
+static int l_get_trailer(lua_State * L) {
+    return l_get_pdf_value(L,lua_key_index(trailer));
+}
+
+
+static int getpdf(lua_State * L)
 {
-    int i;
-    if (lua_gettop(L) != 3) {
+    /* [pdf table] [key] */
+    const char *s ;
+    if (lua_gettop(L) != 2) {
         return 0;
     }
-    (void) luaL_checkstring(L, 2);      /* ... */
-    lua_pushstring(L, PDF_ENV); /* s ... */
-    lua_gettable(L, LUA_REGISTRYINDEX); /* t ... */
-    lua_pushvalue(L, 2);        /* st t ... */
-    lua_gettable(L, -2);        /* i? t ... */
-    if (lua_isnumber(L, -1)) {  /* i t ... */
-        i = (int) lua_tointeger(L, -1); /* i t ... */
-        lua_pop(L, 2);          /* ... */
-        switch (i) {
-        case P_PDFCATALOG:
-        case P_CATALOG:
-            pdf_catalog_toks = tokenlist_from_lua(L);
-            break;
-        case P_PDFINFO:
-        case P_INFO:
-            pdf_info_toks = tokenlist_from_lua(L);
-            break;
-        case P_PDFNAMES:
-        case P_NAMES:
-            pdf_names_toks = tokenlist_from_lua(L);
-            break;
-        case P_PDFTRAILER:
-        case P_TRAILER:
-            pdf_trailer_toks = tokenlist_from_lua(L);
-            break;
-        case P_H:
-        case P_V:
-            /* can't set |h| and |v| yet */
-        default:
-            lua_rawset(L, -3);
+    if (lua_isstring(L, -1)) {
+        s =  lua_tostring(L, -1);
+        if (lua_key_eq(s,h)) {
+            lua_pushnumber(L, static_pdf->posstruct->pos.h);
+        } else if (lua_key_eq(s,v)) {
+            lua_pushnumber(L, static_pdf->posstruct->pos.v);
+        } else if (
+                lua_key_eq(s,catalog) || lua_key_eq(s,info) || lua_key_eq(s,trailer) || lua_key_eq(s,names) ||
+                lua_key_eq(s,pageattributes) || lua_key_eq(s,pagesattributes) || lua_key_eq(s,pageresources)
+            ) {
+            lua_rawgeti(L, LUA_REGISTRYINDEX, luaS_index(pdf_data));
+            lua_gettable(L, LUA_REGISTRYINDEX);
+            /* [pdf table] [key] [pdf.data table] */
+            lua_replace(L, -3);
+            /* [pdf.data table] [key] */
         }
-    } else {
-        lua_pop(L, 2);          /* ... */
-        lua_rawset(L, -3);
+    }
+    lua_rawget(L, -2);
+    return 0;
+}
+
+
+
+
+static int l_set_pdf_value(lua_State * L, int key)
+{
+    if (lua_isstring(L, -1)) {
+        /* [value] */
+        lua_rawgeti(L, LUA_REGISTRYINDEX, lua_key_index(pdf_data));
+        lua_gettable(L, LUA_REGISTRYINDEX);
+        /* [value] [table]  */
+        lua_rawgeti(L, LUA_REGISTRYINDEX, key);
+        /* [value] [table] [key] */
+        lua_pushvalue(L, -3);
+        /* [table] [key] [value] */
+        lua_rawset(L,-3);
     }
     return 0;
 }
+static int l_set_pageresources(lua_State * L) {
+    return l_set_pdf_value(L,lua_key_index(pageresources));
+}
+static int l_set_pageattributes(lua_State * L) {
+    return l_set_pdf_value(L,lua_key_index(pageattributes));
+}
+static int l_set_pagesattributes(lua_State * L) {
+    return l_set_pdf_value(L,lua_key_index(pagesattributes));
+}
+static int l_set_catalog(lua_State * L) {
+    return l_set_pdf_value(L,lua_key_index(catalog));
+}
+static int l_set_info(lua_State * L) {
+    return l_set_pdf_value(L,lua_key_index(info));
+}
+static int l_set_names(lua_State * L) {
+    return l_set_pdf_value(L,lua_key_index(names));
+}
+static int l_set_trailer(lua_State * L) {
+    return l_set_pdf_value(L,lua_key_index(trailer));
+}
+
+
+static int setpdf(lua_State * L)
+{
+    /* [pdf table] [key] [value] */
+    const char *s ;
+    if (lua_gettop(L) != 3) {
+        return 0;
+    }
+    if (lua_isstring(L, -2)) {
+        s =  lua_tostring(L, -1);
+        if (
+                lua_key_eq(s,catalog) || lua_key_eq(s,info) || lua_key_eq(s,trailer) || lua_key_eq(s,names) ||
+                lua_key_eq(s,pageattributes) || lua_key_eq(s,pagesattributes) || lua_key_eq(s,pageresources)
+            ) {
+            lua_rawgeti(L, LUA_REGISTRYINDEX, luaS_index(pdf_data));
+            lua_gettable(L, LUA_REGISTRYINDEX);
+            /* [pdf table] [key] [value] [pdf.data table] */
+            lua_replace(L, -4);
+            /* [pdf.data table] [key] [value] */
+        }
+    }
+    lua_rawset(L, -3);
+    return 0;
+}
+
 
 static int l_objtype(lua_State * L)
 {
@@ -739,18 +705,6 @@ static int l_mapline(lua_State * L)
     return 0;
 }
 
-static int l_pdfmapfile(lua_State * L)
-{
-    luaL_error(L, "pdf.pdfmapfile() is obsolete. Use pdf.mapfile() instead.");
-    return 0;
-}
-
-static int l_pdfmapline(lua_State * L)
-{
-    luaL_error(L, "pdf.pdfmapline() is obsolete. Use pdf.mapline() instead.");
-    return 0;
-}
-
 static int l_pageref(lua_State * L)
 {
     int n = lua_gettop(L);
@@ -764,6 +718,53 @@ static int l_pageref(lua_State * L)
     return 1;
 }
 
+static int l_getpos(lua_State * L)
+{
+    lua_pushnumber(L, static_pdf->posstruct->pos.h);
+    lua_pushnumber(L, static_pdf->posstruct->pos.v);
+    return 2;
+}
+
+static int l_gethpos(lua_State * L)
+{
+    lua_pushnumber(L, static_pdf->posstruct->pos.h);
+    return 1;
+}
+
+static int l_getvpos(lua_State * L)
+{
+    lua_pushnumber(L, static_pdf->posstruct->pos.v);
+    return 1;
+}
+
+static int l_getmatrix(lua_State * L)
+{
+    if (matrix_stack_used > 0) {
+        matrix_entry *m = &matrix_stack[matrix_stack_used - 1];
+        lua_pushnumber(L, m->a);
+        lua_pushnumber(L, m->b);
+        lua_pushnumber(L, m->c);
+        lua_pushnumber(L, m->d);
+        lua_pushnumber(L, m->e);
+        lua_pushnumber(L, m->f);
+    } else {
+        lua_pushnumber(L, 1);
+        lua_pushnumber(L, 0);
+        lua_pushnumber(L, 0);
+        lua_pushnumber(L, 1);
+        lua_pushnumber(L, 0);
+        lua_pushnumber(L, 0);
+    }
+    return 6 ;
+}
+
+static int l_hasmatrix(lua_State * L)
+{
+    lua_pushboolean(L, (matrix_stack_used > 0));
+    return 1 ;
+}
+
+
 static const struct luaL_Reg pdflib[] = {
     {"immediateobj", l_immediateobj},
     {"mapfile", l_mapfile},
@@ -772,12 +773,29 @@ static const struct luaL_Reg pdflib[] = {
     {"obj", l_obj},
     {"objtype", l_objtype},
     {"pageref", l_pageref},
-    {"pdfmapfile", l_pdfmapfile},       /* obsolete */
-    {"pdfmapline", l_pdfmapline},       /* obsolete */
     {"print", luapdfprint},
     {"refobj", l_refobj},
     {"registerannot", l_registerannot},
     {"reserveobj", l_reserveobj},
+    {"getpos", l_getpos},
+    {"gethpos", l_gethpos},
+    {"getvpos", l_getvpos},
+    {"getmatrix", l_getmatrix},
+    {"hasmatrix", l_hasmatrix},
+    {"setcatalog", l_set_catalog},
+    {"setinfo", l_set_info},
+    {"setnames", l_set_names},
+    {"settrailer", l_set_trailer},
+    {"setpageresources", l_set_pageresources},
+    {"setpageattributes", l_set_pageattributes},
+    {"setpagesattributes", l_set_pagesattributes},
+    {"getcatalog", l_get_catalog},
+    {"getinfo", l_get_info},
+    {"getnames", l_get_names},
+    {"gettrailer", l_get_trailer},
+    {"getpageresources", l_get_pageresources},
+    {"getpageattributes", l_get_pageattributes},
+    {"getpagesattributes", l_get_pagesattributes},
     {NULL, NULL}                /* sentinel */
 };
 
@@ -785,10 +803,13 @@ static const struct luaL_Reg pdflib[] = {
 
 int luaopen_pdf(lua_State * L)
 {
-    preset_environment(L, pdf_parms, PDF_ENV);
+    lua_pushstring(L,"pdf.data");
+    lua_newtable(L);
+    lua_settable(L,LUA_REGISTRYINDEX);
+    /* */
     luaL_register(L, "pdf", pdflib);
     /* build meta table */
-    luaL_newmetatable(L, "pdf_meta");
+    luaL_newmetatable(L, "pdf.meta");
     lua_pushstring(L, "__index");
     lua_pushcfunction(L, getpdf);
     /* do these later, NYI */

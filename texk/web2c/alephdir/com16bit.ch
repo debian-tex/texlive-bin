@@ -40,9 +40,9 @@
 @z
 
 @x
-@d banner=='This is Aleph, Version 3.1415926-',Omega_version_banner,'-',eTeX_version_banner,'-',Aleph_version_banner {printed when \TeX\ starts}
+@d banner=='This is Aleph, Version 3.14159265-',Omega_version_banner,'-',eTeX_version_banner,'-',Aleph_version_banner {printed when \TeX\ starts}
 @y
-@d banner=='This is Aleph, Version 3.1415926-',Omega_version_banner,'-',eTeX_version_banner,'-',Aleph_version_banner {printed when \TeX\ starts}
+@d banner=='This is Aleph, Version 3.14159265-',Omega_version_banner,'-',eTeX_version_banner,'-',Aleph_version_banner {printed when \TeX\ starts}
 @d banner_k==banner {Web2C announces itself}
 @z
 
@@ -419,6 +419,8 @@ We define |input_ln| in C, for efficiency.
 @!dump_line:boolean; {was a \.{\%\AM format} line seen?}
 tini@/
 @#
+@!dump_name:const_cstring; {format name for terminal display}
+@#
 @!bound_default:integer; {temporary for setup}
 @!bound_name:const_cstring; {temporary for setup}
 @#
@@ -664,7 +666,7 @@ end
 @!trick_buf:array[0..ssup_error_line] of ASCII_code; {circular buffer for
 @z
 
-@x [5.61] l.1556 - Print rest of banner, eliminate misleading `(no format preloaded)'.
+@x [5.61] l.1556 - Print rest of banner.
 wterm(eTeX_banner);
 if format_ident=0 then wterm_ln(' (no format preloaded)')
 else  begin slow_print(format_ident); print_ln;
@@ -672,8 +674,9 @@ else  begin slow_print(format_ident); print_ln;
 @y
 wterm(eTeX_banner);
 wterm(version_string);
-if format_ident>0 then slow_print(format_ident);
-print_ln;
+if format_ident=0 then wterm_ln(' (preloaded format=',dump_name,')')
+else  begin slow_print(format_ident); print_ln;
+  end;
 @z
 
 @x [6.73] l.1732 - Add unspecified_mode.
@@ -2419,12 +2422,6 @@ if interaction_option<>unspecified_mode then interaction:=interaction_option;
 if (x<>69069)or eof(fmt_file) then goto bad_fmt
 @y
 if x<>69069 then goto bad_fmt
-@z
-
-@x [50.1328] l.24124 - Eliminate probably wrong word `preloaded' from format_idents.
-print(" (preloaded format="); print(job_name); print_char(" ");
-@y
-print(" (format="); print(job_name); print_char(" ");
 @z
 
 @x [51.1332] l.24203 - make the main program a procedure, for eqtb hack.

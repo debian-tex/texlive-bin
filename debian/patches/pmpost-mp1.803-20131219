@@ -25,7 +25,7 @@
  % interactive `e' option.  %d is replaced by the line number and %s by
 --- texlive-bin.orig/texk/web2c/Makefile.am
 +++ texlive-bin/texk/web2c/Makefile.am
-@@ -179,6 +179,9 @@
+@@ -181,6 +181,9 @@
  ## MetaPost
  include $(srcdir)/mplibdir/am/mplib.am
  
@@ -37,12 +37,12 @@
  
 --- texlive-bin.orig/texk/web2c/ac/web2c.ac
 +++ texlive-bin/texk/web2c/ac/web2c.ac
-@@ -41,6 +41,7 @@
- [[pdftex], [yes], [yes], [pdfTeX],  [xpdf libpng]],
- [[luatex], [yes], [],    [luaTeX],  [poppler cairo libpng zziplib lua52]],
- [[mp],     [yes], [],    [MetaPost],[cairo libpng]],
-+[[pmp],    [yes], [],    [pMetaPost], [cairo libpng ptexenc]],
- [[xetex],  [yes], [yes], [XeTeX],   [poppler libpng freetype2 teckit harfbuzz]],
+@@ -42,6 +42,7 @@
+ [[luatex],    [yes], [],    [LuaTeX],    [poppler cairo libpng zziplib lua52]],
+ [[luajittex], [yes], [],    [LuaJITTeX], [poppler cairo libpng zziplib luajit]],
+ [[mp],        [yes], [],    [MetaPost],  [cairo libpng]],
++[[pmp],       [yes], [],    [pMetaPost], [cairo libpng ptexenc]],
+ [[xetex],     [yes], [yes], [XeTeX],     [poppler libpng freetype2 teckit harfbuzz]],
  ])[]dnl
  m4_foreach([Kpse_Prog], [kpse_tex_progs],
 --- /dev/null

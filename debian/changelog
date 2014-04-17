@@ -9,8 +9,9 @@ texlive-bin (2014.20140415.33437-1) UNRELEASED; urgency=low
   * build against libpng16-dev
   * disable pmpost building for now
   * add build-deps: llibxp-dev, libxi-dev for new xdvi
+  * don't remove X_PRE_LIBS from xdvik, otherwise linking breaks
 
- -- Norbert Preining <preining@debian.org>  Thu, 17 Apr 2014 10:48:32 +0900
+ -- Norbert Preining <preining@debian.org>  Thu, 17 Apr 2014 13:29:45 +0900
 
 texlive-bin (2013.20130729.30972-2) unstable; urgency=low
 

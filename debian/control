@@ -13,10 +13,10 @@ Package: texlive-binaries
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, tex-common (>= 3), perl, dpkg (>= 1.15.4) | install-info
 Recommends: texlive-base, python, ruby, wish
-Replaces: texlive-metapost (<< 2010), texlive-base (<< 2010), ptex-bin, mendexk, jmpost
+Replaces: texlive-metapost (<< 2010), texlive-base (<< 2010), ptex-bin, mendexk, jmpost, luatex (<< 2014)
 Conflicts: mendexk, makejvf, jmpost
-Breaks: texlive-base (<< 2013), jtex-bin, multex-bin
-Provides: texlive-base-bin, makejvf, mendexk, jmpost
+Breaks: texlive-base (<< 2013), jtex-bin, multex-bin, luatex (<< 2014)
+Provides: texlive-base-bin, makejvf, mendexk, jmpost, luatex
 Description: Binaries for TeX Live
  This package contains all the binaries of TeX Live packages.
  .

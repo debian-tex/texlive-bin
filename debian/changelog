@@ -1,14 +1,14 @@
-texlive-bin (2014.20131219.32443-1) UNRELEASED; urgency=low
+texlive-bin (2014.20140415.33437-1) UNRELEASED; urgency=low
 
   * fix missing epoch for build-dep on automake (Closes: #726513)
   * update make-orig-tar for 2014
-  * Imported Upstream version 2014.20131219.32443
   * update patches for 2014, remove several outdated
   * build with --disable-linked-scripts instead of patching am file
   * build luatex again, we drop the independent package
   * bump standards version, no changes necessary
+  * build against libpng16-dev
 
- -- Norbert Preining <preining@debian.org>  Tue, 15 Apr 2014 15:20:10 +0900
+ -- Norbert Preining <preining@debian.org>  Thu, 17 Apr 2014 09:41:26 +0900
 
 texlive-bin (2013.20130729.30972-2) unstable; urgency=low
 

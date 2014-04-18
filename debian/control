@@ -58,3 +58,13 @@ Description: TeX Live: ptex encoding library (development part)
  This package contains the static library and header files for the
  ptexenc library, a library for encoding support in pTeX, a Japanese
  TeX engine.
+
+Package: luatex
+Section: oldlibs
+Priority: extra
+Architecture: all
+Depends: texlive-binaries (>= 2014)
+Description: TeX Live: transitional dummy package
+ This is a transitional package for luatex to ensure proper upgrade
+ to texlive-binaries. It can be safely removed after the installation
+ is complete.

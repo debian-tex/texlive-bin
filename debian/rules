@@ -60,6 +60,7 @@ override_dh_auto_configure:
 	--with-system-libgs			\
 	--with-system-cairo 			\
 	--with-system-pixman			\
+	--with-system-libpaper			\
 	--with-system-zziplib			\
 	--with-system-icu			\
 	--with-freetype2-include=/usr/include/freetype2 \

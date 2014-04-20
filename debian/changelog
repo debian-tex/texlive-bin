@@ -3,7 +3,8 @@ texlive-bin (2014.20140415.33437-1) UNRELEASED; urgency=low
   * fix missing epoch for build-dep on automake (Closes: #726513)
   * update make-orig-tar for 2014
   * update patches for 2014, remove several outdated
-  * build with --disable-linked-scripts instead of patching am file
+  * build with --disable-linked-scripts, and use patching of
+    Makefile.am file only for tl_scripts (texk/texlive/Makefile.am)
   * build luatex again, we drop the independent package
   * bump standards version, no changes necessary
   * build against libpng16-dev
@@ -12,7 +13,7 @@ texlive-bin (2014.20140415.33437-1) UNRELEASED; urgency=low
   * don't remove X_PRE_LIBS from xdvik, otherwise linking breaks
   * build transitional luatex package
 
- -- Norbert Preining <preining@debian.org>  Fri, 18 Apr 2014 12:02:28 +0900
+ -- Norbert Preining <preining@debian.org>  Sun, 20 Apr 2014 17:41:45 +0900
 
 texlive-bin (2013.20130729.30972-2) unstable; urgency=low
 

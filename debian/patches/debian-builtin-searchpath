@@ -115,7 +115,7 @@
 -$SELFAUTOPARENT/texmf-dist/web2c,\
 -$SELFAUTOPARENT/texmf/web2c\
 -}
-+TEXMFCNF = /etc/texmf/web2c;/usr/local/share/texmf/web2c;/usr/share/texmf/web2c;/usr/share/texlive/texmf-dist/web2c
++TEXMFCNF = {/etc/texmf/web2c,/usr/local/share/texmf/web2c,/usr/share/texmf/web2c,/usr/share/texlive/texmf-dist/web2c}
 +
  %
  % For reference, here is the old brace-using definition:

@@ -41,11 +41,11 @@
  TEXMFHOME = ~/texmf
  
  % TEXMFVAR, where texconfig/updmap/fmtutil store cached runtime data.
--TEXMFVAR = ~/.texlive2013/texmf-var
+-TEXMFVAR = ~/.texlive2014/texmf-var
 +TEXMFVAR = ~/.texmf-var
  
  % TEXMFCONFIG, where texconfig/updmap/fmtutil store configuration data.
--TEXMFCONFIG = ~/.texlive2013/texmf-config
+-TEXMFCONFIG = ~/.texlive2014/texmf-config
 +TEXMFCONFIG = ~/.texmf-config
  
  % List all the texmf trees. For an explanation of what they are, see the
@@ -84,7 +84,7 @@
  
  % On some systems, there will be a system tree which contains all the font
  % files that may be created as well as the formats.  For example
-@@ -485,33 +488,8 @@
+@@ -481,33 +484,8 @@
  % since we don't want to scatter ../'s throughout the value.  Hence we
  % explicitly list every directory.  Arguably more understandable anyway.
  %
@@ -115,7 +115,7 @@
 -$SELFAUTOPARENT/texmf-dist/web2c,\
 -$SELFAUTOPARENT/texmf/web2c\
 -}
-+TEXMFCNF = {/etc/texmf/web2c,/usr/local/share/texmf/web2c,/usr/share/texmf/web2c,/usr/share/texlive/texmf-dist/web2c}
++TEXMFCNF = /etc/texmf/web2c;/usr/local/share/texmf/web2c;/usr/share/texmf/web2c;/usr/share/texlive/texmf-dist/web2c
 +
  %
  % For reference, here is the old brace-using definition:

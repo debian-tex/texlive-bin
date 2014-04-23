@@ -7,3 +7,4 @@ disable-t1lib-gd-dvipng-freetype
 #pmpost-mp1.803-20131219
 fix-manpages
 mendex-snprintf
+relax-zlib-version-check

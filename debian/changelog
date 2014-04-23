@@ -12,8 +12,10 @@ texlive-bin (2014.20140422.33604-1) UNRELEASED; urgency=low
   * add build-deps: llibxp-dev, libxi-dev for new xdvi
   * don't remove X_PRE_LIBS from xdvik, otherwise linking breaks
   * build transitional luatex package
+  * add versioned dependencies on libkpathsea6 and libptexenc1, otherwise
+    some binaries do not work
 
- -- Norbert Preining <preining@debian.org>  Wed, 23 Apr 2014 08:28:07 +0900
+ -- Norbert Preining <preining@debian.org>  Wed, 23 Apr 2014 10:42:16 +0900
 
 texlive-bin (2013.20130729.30972-2) unstable; urgency=low
 

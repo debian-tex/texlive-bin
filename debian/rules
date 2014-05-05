@@ -39,7 +39,7 @@ override_dh_auto_configure:
 	# by a patch is executable
 	chmod 0755 texk/mendexk/tests/mendex.test
 	# run out configure script
-	dh_auto_configure -- --prefix=/usr 	\
+	dh_auto_configure -- -C --prefix=/usr 	\
 	--datarootdir=/usr/share/texlive	\
 	--disable-native-texlive-build		\
 	--disable-largefile			\

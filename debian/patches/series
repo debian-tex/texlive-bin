@@ -5,3 +5,5 @@ debian-no-tl-scripts
 61_path_max.diff
 fix-manpages
 relax-zlib-version-check
+pmpost-mp1.902
+upmpost-mp1.902

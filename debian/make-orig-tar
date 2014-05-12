@@ -23,15 +23,15 @@ rm -rf $verstr/utils/biber/bin
 # remove system libraries, keep only teckit and lua52 and libpng
 # teckit: not in Debian
 # lua52: system usage not supported in TeX Live
-# libpng etc needs libong >= 1.4, currently not in Debian
+# libpng >= 1.4 is not available in Debian/unstable
+# and depending libs are not compiled against it, 
+# as bad as it is, we have to keep 
+#	cairo freetype2 gd libpng
+
 for i in \
-	cairo		\
-	freetype2	\
-	gd		\
 	graphite2	\
 	harfbuzz	\
 	icu		\
-	libpng		\
 	libpaper	\
 	pixman		\
 	poppler		\

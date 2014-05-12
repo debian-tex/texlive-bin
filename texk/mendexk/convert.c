@@ -3,6 +3,8 @@
 #include <kpathsea/tex-file.h>
 #include <kpathsea/variable.h>
 #include <ptexenc/ptexenc.h>
+#include <ptexenc/unicode.h>
+#include <ptexenc/unicode-jp.h>
 
 #include "qsort.h"
 
@@ -13,13 +15,18 @@
 #include "kp.h"
 
 struct dictionary{
-char dic[2][50];
+char* dic[2];
 };
 
 static struct dictionary *dictable,*envdic;
 static int dlines=0,elines=0;
 
 static int dicvalread(const char *filename, struct dictionary *dicval, int line);
+
+#define is_katakana(a)  ((strncmp((a),KATATOP,2)>=0) && (strncmp((a),KATAEND,2)<=0))
+#define is_hiragana(a)  ((strncmp((a),HIRATOP,2)>=0) && (strncmp((a),HIRAEND,2)<=0))
+#define is_onbiki(a)    (strncmp((a),ONBIKI,2)==0)
+#define is_alpha_numeric(a)  ((strncmp((a),SPACE,2)>=0)&&(strncmp((a),ALPHAEND,2)<=0))
 
 /*   initialize kana table   */
 void initkanatable(void)
@@ -124,7 +131,7 @@ static int dcomp(const void *bf1, const void *bf2);
 static int dicvalread(const char *filename, struct dictionary *dicval, int line)
 {
 	int i,j,k;
-	char buff[256];
+	char buff[256],buff2[256];
 	FILE *fp;
 
 	if(kpse_in_name_ok(filename))
@@ -141,18 +148,20 @@ static int dicvalread(const char *filename, struct dictionary *dicval, int line)
 		}
 		for (j=0;((buff[j]==' ')||(buff[j]=='\t'));j++);
 		for (k=0;((buff[j]!='\r')&&(buff[j]!='\n')&&(buff[j]!=' ')&&(buff[j]!='\t'));j++,k++) {
-			dicval[i].dic[0][k]=buff[j];
+			buff2[k]=buff[j];
 		}
-		dicval[i].dic[0][k]='\0';
+		buff2[k]='\0';
+		dicval[i].dic[0]=xstrdup(buff2);
 		if (strlen(dicval[i].dic[0])==0) {
 			i--;
 			continue;
 		}
 		for (;((buff[j]==' ')||(buff[j]=='\t'));j++);
 		for (k=0;((buff[j]!='\r')&&(buff[j]!='\n')&&(buff[j]!=' ')&&(buff[j]!='\t'));j++,k++) {
-			dicval[i].dic[1][k]=buff[j];
+			buff2[k]=buff[j];
 		}
-		dicval[i].dic[1][k]='\0';
+		buff2[k]='\0';
+		dicval[i].dic[1]=xstrdup(buff2);
 		if (strlen(dicval[i].dic[1])==0) {
 			i--;
 			continue;
@@ -175,7 +184,7 @@ static int dcomp(const void *bf1, const void *bf2)
 	const struct dictionary *buff2 = (const struct dictionary *) bf2;
 	int i;
 
-	for (i=0;i<50;i++) {
+	for (i=0;i<256;i++) {
 		if (((*buff1).dic[0][i]=='\0')&&((*buff2).dic[0][i]=='\0')) return 0;
 		else if (((*buff1).dic[0][i]=='\0')&&((*buff2).dic[0][i]!='\0')) return 1;
 		else if (((*buff1).dic[0][i]!='\0')&&((*buff2).dic[0][i]=='\0')) return -1;
@@ -190,6 +199,8 @@ int convert(char *buff1, char *buff2)
 {
 	int i=0,j=0,k,l;
 	char errbuff[4096];
+	int chr,wclen;
+	char buff3[3];
 
 	while(1) {
 		if (buff1[i]=='\0') {
@@ -197,6 +208,28 @@ int convert(char *buff1, char *buff2)
 			break;
 		}
 		else {
+			if ((unsigned char)buff1[i]<0x80)
+				wclen=1;
+			else if (is_internalUPTEX()) {  /* convert a character from UTF8 to EUC */
+				wclen=multibytelen((unsigned char)buff1[i]);
+				if (wclen<0) {
+					verb_printf(efp,"\nWarning: Illegal lead byte 0x%x in UTF-8.", (unsigned char)buff1[i]);
+					i++;
+					continue;
+				}
+				chr = UCS2toJIS(UTF8StoUCS((unsigned char*)&buff1[i]));
+				if (chr==0) chr = 0xffff; /* conversion failed */
+				chr |= 0x8080;
+				buff3[0]=BYTE3(chr);
+				buff3[1]=BYTE4(chr);
+				buff3[2]='\0';
+			} else {
+				wclen=2;
+				buff3[0]=buff1[i];
+				buff3[1]=buff1[i+1];
+				buff3[2]='\0';
+			}
+
 			if ((buff1[i]>='a')&&(buff1[i]<='z')) {
 				buff2[j]=buff1[i]-32;
 				i++;
@@ -213,41 +246,41 @@ int convert(char *buff1, char *buff2)
 				j++;
 			}
 
-			else if ((strncmp(&buff1[i],KATATOP,2)>=0)&&(strncmp(&buff1[i],KATAEND,2)<=0)) {
+			else if (is_katakana(buff3)) {
 /*   katakana   */
 				for (k=0;k<strlen(katakana);k+=2) {
-					if (strncmp(&buff1[i],&katakana[k],2)==0) {
+					if (strncmp(buff3,&katakana[k],2)==0) {
 						strncpy(&buff2[j],&kanatable[k],2);
 						goto MATCH1;
 					}
 				}
-				sprintf(errbuff,"\nError: %s is bad katakana ",&buff1[i]);
+				sprintf(errbuff,"\nError: %s is bad katakana ",buff3);
 				fputs(errbuff,efp);
 				if (efp!=stderr) fputs(errbuff,stderr);
 				return -1;
 MATCH1:
-				i+=2;
+				i+=wclen;
 				j+=2;
 			}
 
-			else if ((strncmp(&buff1[i],HIRATOP,2)>=0)&&(strncmp(&buff1[i],HIRAEND,2)<=0)) {
+			else if (is_hiragana(buff3)) {
 /*   hiragana   */
 				for (k=0;k<strlen(hiragana);k+=2) {
-					if (strncmp(&buff1[i],&hiragana[k],2)==0) {
+					if (strncmp(buff3,&hiragana[k],2)==0) {
 						strncpy(&buff2[j],&kanatable[k],2);
 						goto MATCH2;
 					}
 				}
-				sprintf(errbuff,"\nError: %s is bad hiragana ",&buff1[i]);
+				sprintf(errbuff,"\nError: %s is bad hiragana ",buff3);
 				fputs(errbuff,efp);
 				if (efp!=stderr) fputs(errbuff,stderr);
 				return -1;
 MATCH2:
-				i+=2;
+				i+=wclen;
 				j+=2;
 			}
 
-			else if (strncmp(&buff1[i],ONBIKI,2)==0) {
+			else if (is_onbiki(buff3)) {
 /*   onbiki   */
 				if (j>=2) {
 					for (k=0;k<20;k+=2) {
@@ -264,25 +297,26 @@ MATCH2:
 				if (efp!=stderr) fputs(errbuff,stderr);
 				return -1;
 MATCH3:
-				i+=2;
+				i+=wclen;
 				j+=2;
 			}
 
 			else if ((unsigned char)buff1[i]>=0x80) {
-				if ((strncmp(&buff1[i],SPACE,2)>=0)&&(strncmp(&buff1[i],ALPHAEND,2)<=0)) {
+				if (is_alpha_numeric(buff3)) {
 /*   alpha-numeric,symbols   */
 					for (k=0;k<strlen(symboltable);k+=2) {
-						if (strncmp(&buff1[i],&symboltable[k],2)==0) {
+						if (strncmp(buff3,&symboltable[k],2)==0) {
 							buff2[j]=k/2+0x20;
 							if ((buff2[j]>='a')&&(buff2[j]<='z')) buff2[j]-=32;
+							i+=wclen;
 							j++;
-							i+=2;
 							break;
 						}
 					}
 					if (k==strlen(symboltable)) {
-						buff2[j++]=buff1[i++];
-						buff2[j++]=buff1[i++];
+						i+=wclen;
+						buff2[j++]=buff3[0];
+						buff2[j++]=buff3[1];
 					}
 				}
 
@@ -310,8 +344,9 @@ MATCH3:
 					if (((k==dlines)&&(elines==0))||((k==elines)&&(elines!=0))) {
 						if (force==1) {
 /*   forced convert   */
-							buff2[j++]=buff1[i++];
-							buff2[j++]=buff1[i++];
+							i+=wclen;
+							buff2[j++]=buff3[0];
+							buff2[j++]=buff3[1];
 						}
 						else {
 							sprintf(errbuff,"\nError: %s is no entry in dictionary file ",&buff1[i]);

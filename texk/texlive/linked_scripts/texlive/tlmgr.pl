@@ -1,12 +1,12 @@
 #!/usr/bin/env perl
-# $Id: tlmgr.pl 33590 2014-04-21 17:28:32Z karl $
+# $Id: tlmgr.pl 33955 2014-05-10 05:37:16Z preining $
 #
 # Copyright 2008-2014 Norbert Preining
 # This file is licensed under the GNU General Public License version 2
 # or any later version.
 
-my $svnrev = '$Revision: 33590 $';
-my $datrev = '$Date: 2014-04-21 19:28:32 +0200 (Mon, 21 Apr 2014) $';
+my $svnrev = '$Revision: 33955 $';
+my $datrev = '$Date: 2014-05-10 07:37:16 +0200 (Sat, 10 May 2014) $';
 my $tlmgrrevision;
 my $prg;
 if ($svnrev =~ m/: ([0-9]+) /) {
@@ -147,7 +147,8 @@ sub main {
   my %actionoptions = (
     "get-mirror"    => { },
     "option"        => { },
-    "conf"          => { },
+    "conf"          => { "conffile" => "=s", 
+                         "delete" => 1 },
     "version"       => { },
     "repository"    => { },
     "candidate"     => { },
@@ -4626,7 +4627,14 @@ sub action_recreate_tlpdb {
 #  CHECK
 #
 sub init_tltree {
-  my $svn = shift;
+  my ($svn) = @_;
+
+  # if we are on W32, die (no find).  
+  my $arch = $localtlpdb->platform();
+  if ($arch eq "win32") {
+    tldie("$prg: sorry, cannot check this on Windows.\n");
+  }
+
   my $Master = $localtlpdb->root;
   my $tltree = TeXLive::TLTREE->new ("svnroot" => $Master);
   if ($svn) {
@@ -4722,11 +4730,6 @@ sub check_files {
     }
     print "\n";
   }
-
-  # if we are on W32, return (no find).  We need -use-svn only for
-  # checking the live repository on tug, which is not w32.
-  my $arch = $localtlpdb->platform();
-  return $ret if $arch eq "win32";
 
   # check that all files in the trees are covered, along with
   # 00texlive.image, q.v.  The ones here are not included in the
@@ -5310,15 +5313,23 @@ sub action_conf {
     texconfig_conf_mimic();
     return;
   }
-  if ($arg eq "tlmgr" || $arg eq "texmf") {
+  if ($arg eq "tlmgr" || $arg eq "texmf" || $arg eq "updmap") {
     my ($fn,$cf);
+    if ($opts{'conffile'}) {
+      $fn = $opts{'conffile'} ;
+    }
     if ($arg eq "tlmgr") {
       chomp (my $TEXMFCONFIG = `kpsewhich -var-value=TEXMFCONFIG`);
-      $fn = "$TEXMFCONFIG/tlmgr/config";
+      $fn || ( $fn = "$TEXMFCONFIG/tlmgr/config" ) ;
       $cf = TeXLive::TLConfFile->new($fn, "#", "=");
-    } else {
-      $fn = "$Master/texmf.cnf";
+    } elsif ($arg eq "texmf") {
+      $fn || ( $fn = "$Master/texmf.cnf" ) ;
       $cf = TeXLive::TLConfFile->new($fn, "[%#]", "=");
+    } elsif ($arg eq "updmap") {
+      $fn || ( chomp ($fn = `kpsewhich updmap.cfg`) ) ;
+      $cf = TeXLive::TLConfFile->new($fn, '(#|(Mixed)?Map)', ' ');
+    } else {
+      # that cannot happen!
     }
     my ($key,$val) = @ARGV;
     if (!defined($key)) {
@@ -5333,31 +5344,44 @@ sub action_conf {
       }
     } else {
       if (!defined($val)) {
-        if (defined($cf->value($key))) {
-          info("$arg $key value: " . $cf->value($key) . " ($fn)\n");
+        if (defined($opts{'delete'})) {
+          if (defined($cf->value($key))) {
+            info("removing setting $arg $key value: " . $cf->value($key) . "from $fn\n");
+            $cf->delete_key($key);
+          } else {
+            info("$arg $key not defined, cannot remove ($fn)\n");
+          }
         } else {
-          info("$key not defined in $arg config file ($fn)\n");
-          if ($arg eq "texmf") {
-            # not in user-specific file, show anything kpsewhich gives us.
-            chomp (my $defval = `kpsewhich -var-value $key`);
-            if ($? != 0) {
-              info("$arg $key default value is unknown");
-            } else {
-              info("$arg $key default value: $defval");
+          if (defined($cf->value($key))) {
+            info("$arg $key value: " . $cf->value($key) . " ($fn)\n");
+          } else {
+            info("$key not defined in $arg config file ($fn)\n");
+            if ($arg eq "texmf") {
+              # not in user-specific file, show anything kpsewhich gives us.
+              chomp (my $defval = `kpsewhich -var-value $key`);
+              if ($? != 0) {
+                info("$arg $key default value is unknown");
+              } else {
+                info("$arg $key default value: $defval");
+              }
+              info(" (kpsewhich -var-value)\n");
             }
-            info(" (kpsewhich -var-value)\n");
           }
         }
       } else {
-        info("setting $arg $key to $val (in $fn)\n");
-        $cf->value($key, $val);
+        if (defined($opts{'delete'})) {
+          warning("$arg --delete and value for key $key given, don't know what to do!\n");
+        } else {
+          info("setting $arg $key to $val (in $fn)\n");
+          $cf->value($key, $val);
+        }
       }
     }
     if ($cf->is_changed) {
       $cf->save;
     }
   } else {
-    warn "$prg: unknown conf arg: $arg (try tlmgr or texmf)\n";
+    warn "$prg: unknown conf arg: $arg (try tlmgr or texmf or updmap)\n";
   }
 }
 
@@ -6151,7 +6175,7 @@ what remains to be done.
 
 Instead of the normal output intended for human consumption, write (to
 standard output) a fixed format more suitable for machine parsing.  See
-the L</"MACHINE-READABLE OUTPUT"> section below.
+the L</MACHINE-READABLE OUTPUT> section below.
 
 =item B<--no-execute-actions>
 
@@ -6276,7 +6300,7 @@ performed are written to the terminal.
 =item B<candidates I<pkg>>
 
 Shows the available candidate repositories for package I<pkg>.
-See L</"MULTIPLE REPOSITORIES"> below.
+See L</MULTIPLE REPOSITORIES> below.
 
 
 =back
@@ -6324,21 +6348,27 @@ checking the TL development repository.
 =back
 
 
-=head2 conf [texmf|tlmgr [I<key> [I<value>]]]
+=head2 conf [texmf|tlmgr|updmap [--conffile I<file>] [--delete] [I<key> [I<value>]]]
 
 With only C<conf>, show general configuration information for TeX Live,
 including active configuration files, path settings, and more.  This is
 like the C<texconfig conf> call, but works on all supported platforms.
 
-With either C<conf texmf> or C<conf tlmgr> given in addition, shows all
-key/value pairs (i.e., all settings) as saved in C<ROOT/texmf.cnf> or
-the tlmgr configuration file (see below), respectively.
+With either C<conf texmf>, C<conf tlmgr>, or C<conf updmap> given in 
+addition, shows all key/value pairs (i.e., all settings) as saved in 
+C<ROOT/texmf.cnf>, the tlmgr configuration file (see below), or the first
+found C<updmap.cfg> file (via kpsewhich), respectively.
 
 If I<key> is given in addition, shows the value of only that given
-I<key> in the respective file.
+I<key> in the respective file. In case the option I<--delete> is given,
+the respective setting (key value pair) will be removed from the 
+configuration file (note, it is removed, not commented!).
 
 If I<value> is given in addition, I<key> is set to I<value> in the 
 respective file.  I<No error checking is done!>
+
+In all cases the used config file can be selected via the option
+C<--conffile I<file>>, in case one wants to edit a different file.
 
 Practical application: if the execution of (some or all) system commands
 via C<\write18> was left enabled during installation, you can disable
@@ -6553,7 +6583,7 @@ are listed.
 
 In addition to the normal data displayed, also display information for
 given packages from the corresponding taxonomy (or all of them).  See
-L</"TAXONOMIES"> below for details.
+L</TAXONOMIES> below for details.
 
 =back
 
@@ -6967,8 +6997,8 @@ written to the terminal.
 
 =item B<repository set I<path>[#I<tag>] [I<path>[#I<tag>] ...]>
 
-This action manages the list of repositories.  See L</"MULTIPLE
-REPOSITORIES"> below for detailed explanations.
+This action manages the list of repositories.  See L</MULTIPLE
+REPOSITORIES> below for detailed explanations.
 
 The first form (C<list>) lists all configured repositories and the
 respective tags if set. If a path, url, or tag is given after the
@@ -7028,7 +7058,7 @@ word C<tables> (unless they also contain the word C<table> on its own).
 If a search for any (or all) taxonomies is done, by specifying one of
 the taxonomy options below, then instead of searching for packages, list
 the entire corresponding taxonomy (or all of them).  See
-L</"TAXONOMIES"> below.
+L</TAXONOMIES> below.
 
 =back
 
@@ -7049,7 +7079,7 @@ List all filenames containing I<what>.
 =item B<--characterization>
 
 Search in the corresponding taxonomy (or all) instead of the package
-descriptions.  See L</"TAXONOMIES"> below.
+descriptions.  See L</TAXONOMIES> below.
 
 =item B<--all>
 
@@ -7254,7 +7284,6 @@ If the package on the server is older than the package already installed
 downgrade.  Also, packages for uninstalled platforms are not installed.
 
 
-  
 =head1 USER MODE
 
 C<tlmgr> provides a restricted way, called ``user mode'', to manage
@@ -7308,7 +7337,7 @@ installed into a user tree.
 
 Description of changes of actions in user mode:
 
-=head3 install
+=head3 user mode install
 
 In user mode, the C<install> action checks that the package and all
 dependencies are all either relocated or already installed in the system
@@ -7324,23 +7353,20 @@ collection-context> would install C<collection-basic> and other
 collections, while in user mode, I<only> the packages mentioned in
 C<collection-context> are installed.
 
-=head2 backup, restore, remove, update
+=head2 user mode backup; restore; remove; update
 
 In user mode, these actions check that all packages to be acted on are
 installed in the user tree before proceeding; otherwise, they behave
 just as in normal mode.
  
-=head2 generate, option, paper
+=head2 user mode generate; option; paper
 
 In user mode, these actions operate only on the user tree's
 configuration files and/or C<texlive.tlpdb>.
 creates configuration files in user tree
 
-B<WARNING> repeated: this is still has to be considered experimental!
-Please report bugs to C<tex-live@tug.org> as usual
 
-
-=head1 TLMGR CONFIGURATION FILE
+=head1 CONFIGURATION FILE FOR TLMGR
 
 A small subset of the command line options can be set in a config file
 for C<tlmgr> which resides in C<TEXMFCONFIG/tlmgr/config>.  By default, the
@@ -7544,7 +7570,7 @@ only those I<not> installed, or only those with update available.
 =item Category
 
 Select which categories are shown: packages, collections, and/or
-schemes.  These are briefly explained in the L</"DESCRIPTION"> section
+schemes.  These are briefly explained in the L</DESCRIPTION> section
 above.
 
 =item Match
@@ -7674,7 +7700,7 @@ Several toggles are also here.  The first is C<Expert options>, which is
 set by default.  If you turn this off, the next time you start the GUI a
 simplified screen will be shown that display only the most important
 functionality.  This setting is saved in the configuration file of
-C<tlmgr>; see L<CONFIGURATION FILE> for details.
+C<tlmgr>; see L<CONFIGURATION FILE FOR TLMGR> for details.
 
 The other toggles are all off by default: for debugging output, to
 disable the automatic installation of new packages, and to disable the
@@ -7710,12 +7736,12 @@ written to stdout).  The idea is that a program can get all the
 information it needs by reading stdout.
 
 Currently this option only applies to the 
-L<update|/"update [I<option>]... [I<pkg>]...">, the
-L<install|"install [I<option>]... I<pkg>...">, and the
+L<update|/update [I<option>]... [I<pkg>]...>,
+L<install|/install [I<option>]... I<pkg>...>, and
 L</option> actions.  
 
 
-=head3 update, install
+=head2 Machine-readable C<update> and C<install> output
 
 The output format is as follows:
 
@@ -7837,7 +7863,7 @@ The estimated total time.
 
 =back
 
-=head3 option
+=head2 Machine-readable C<option> output
 
 The output format is as follows:
 

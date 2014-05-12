@@ -1,10 +1,10 @@
-$Id: README 33565 2014-04-20 22:56:10Z karl $
+$Id: README 33877 2014-05-06 08:26:54Z peter $
 Public domain.  Originally written 2005 by Karl Berry.
 
 Extra utilities we (optionally) compile for TeX Live.
 See comments in ../texk/README.
 
-asymptote 2.25 - checked 21apr14
+asymptote 2.27 - checked 29apr14
   update to TL from CTAN, to include prebuilt doc.
   see http://tug.org/texlive/build.html#asymptote
   and tlpkg/bin/tl-update-asy
@@ -17,9 +17,6 @@ pmx 2.7.0 - checked 11apr13
 
 ps2eps 1.68 - checked 10may12
   http://tm.uka.de/~bless/ps2eps
-
-songs 2.17 - checked 20dec13
-  http://songs.sourceforge.net/
 
 t1utils 1.38 - checked 3oct13
   http://www.lcdf.org/type/
@@ -40,9 +37,8 @@ xpdfopen 0.83 - checked 10may12
   http://cs.acadiau.ca/~jdiamond/xpdfopen/
 
 
-xindy 2.4 - checked 13may10
-  (with adaptations for TL)
-  http://www.ctan.org/indexing/xindy/
+xindy 2.5.0 - checked 28apr14
+  http://www.ctan.org/tex-archive/indexing/xindy/base/
 
 After building clisp as described below, run the TL
   Build --enable-xindy CLISP=$clisp_builddir/clisp

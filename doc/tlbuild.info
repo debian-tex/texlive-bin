@@ -20,7 +20,7 @@ versions, except that this permission notice may be stated in a
 translation approved by the TeX Users Group.
 INFO-DIR-SECTION TeX
 START-INFO-DIR-ENTRY
-* TeX Live building: (tlbuild). TL configuration and development.
+* TL-build: (tlbuild).          TeX Live configuration and development.
 END-INFO-DIR-ENTRY
 
 
@@ -61,6 +61,9 @@ sources.  The sources can be acquired in a number of ways; see
 found in other TL documentation resources, such as:
 
    * The TeX Live web pages: <http://tug.org/texlive>.
+
+   * The web page with an overview of how to build the binaries which
+     are distributed with TeX Live: <http://tug.org/texlive/build.html>.
 
    * The TeX Live user manual: <http://tug.org/texlive/doc.html>, or run
      'texdoc texlive'.
@@ -142,8 +145,8 @@ Automake/Autoconf output in general) should work with any reasonable
 
    However, a few programs in the tree have additional requirements:
 
-'biber'
-     requires 'perl' for autodetection of the TL platform name.
+'web2c'
+     requires 'perl' for some tests run by 'make check'.
 
 'xdvik'
 'xpdfopen'
@@ -154,11 +157,11 @@ Automake/Autoconf output in general) should work with any reasonable
      requires 'fontconfig' (again both headers and library).
 
 'xindy'
-     requires GNU 'clisp' and 'libffcall', and in addition 'perl',
-     'latex', and 'pdflatex' to build the rules and/or documentation.
+     requires GNU 'clisp' and in addition 'perl', 'latex', and
+     'pdflatex' to build the rules and/or documentation.
 
 Lacking the required tools, building these programs must avoided, e.g.,
-'configure --disable-biber --without-x --disable-xetex --disable-xindy'
+'configure --without-x --disable-xetex --disable-xindy'
 
    Modifying source files induces more requirements, as one might
 expect:
@@ -200,7 +203,21 @@ complicated.
 'configure' and 'make' oneself in a suitable empty subdirectory.
 Building in the source directory itself is not supported (sorry).
 
-   Running the top-level 'configure' script configures the top level and
+* Menu:
+
+* Build iteration::     What 'configure' and 'make' do.
+* Build problems::      If the build fails.
+* Build in parallel::   Simultaneous 'make' processes.
+* Build distribution::  Making a distribution tarball.
+* Build one package::   Example of working on just one program.
+
+
+File: tlbuild.info,  Node: Build iteration,  Next: Build problems,  Up: Building
+
+4.1 Build iteration
+===================
+
+Running the top-level 'configure' script configures the top level and
 the subdirectories 'libs', 'utils', and 'texk'.  Running 'make' at the
 top-level first iterates over all TeX-specific libraries, and then runs
 'make' in 'libs', 'utils', and 'texk' to iterate over all generic
@@ -219,37 +236,113 @@ iterations consist of two steps:
 the library and program modules, but finds (should find) nothing to be
 done unless some source files have been modified.
 
-   If configuring or building a module fails, you could either (a) find
-and fix the problem, or (b) remove the subdirectory for that module from
-the build tree, and rerun the top-level 'make' (or 'Build' with
-'--no-clean' as its first argument).
+
+File: tlbuild.info,  Node: Build problems,  Next: Build in parallel,  Prev: Build iteration,  Up: Building
 
-   With the configure option '--disable-all-pkgs', all program and
-library modules are configured but none of them is built.  The
-'Makefile' for each such module contains all build rules and
-dependencies and can be invoked to build an individual program or
-library and causes to first build any required libraries.  This
-"build-on-demand" procedure is used, e.g., in the 'luatex' repository to
-build LuaTeX, essentially from a subset of the complete TeX Live tree.
-Similarly, when, e.g., building the original e-TeX has been disabled (as
-it is by default), one can run 'make etex' (or 'make etex.exe') in
-'texk/web2c/' to build e-TeX (although there is no comparably simple way
-to install e-TeX).
+4.2 Build problems
+==================
 
-   The TL build system carefully formulates dependencies as well as
-'make' rules when a tool (such as 'tangle', 'ctangle', or 'convert')
-creates several output files.  This allows for parallel builds ('make -j
-N' with N>1 or even 'make -j') that can considerably speed up the TL
-build.  Independently, speed-up can also be achieved by using a
-configure cache file, i.e., with the option '-C' (recommended).
+If configuring or building a module fails, you could either (a) find and
+fix the problem, or (b) remove the subdirectory for that module from the
+build tree, and rerun the top-level 'make' (or 'Build' with '--no-clean'
+as its first argument).
 
-   Running 'make dist' at the top-level creates a tarball
+
+File: tlbuild.info,  Node: Build in parallel,  Next: Build distribution,  Prev: Build problems,  Up: Building
+
+4.3 Build in parallel
+=====================
+
+The TL build system carefully formulates dependencies as well as 'make'
+rules when a tool (such as 'tangle', 'ctangle', or 'convert') creates
+several output files.  This allows for parallel builds ('make -j N' with
+N>1 or even 'make -j') that can considerably speed up the TL build.
+
+   Incidentally, a noticeable speed-up can also be (independently)
+gained by using a configure cache file, i.e., with the option '-C'
+(recommended).
+
+
+File: tlbuild.info,  Node: Build distribution,  Next: Build one package,  Prev: Build in parallel,  Up: Building
+
+4.4 Build distribution
+======================
+
+Running 'make dist' at the top-level creates a tarball
 'tex-live-YYYY-MM-DD.tar.xz' from the TL source tree.  Running 'make
-dist-check' also verifies that this tarball suffices to build and
-install all of TL. (This is useful for checking consistency of the
-source tree and Makefiles, but the result is not a complete or even
-usable TeX system, since all the support files are lacking; see the next
-section.)
+distcheck' also verifies that this tarball suffices to build and install
+all of TL.
+
+   This is useful for checking consistency of the source tree and
+Makefiles, but the result is not a complete or even usable TeX system,
+since all the support files are lacking; *note Installing::.
+
+
+File: tlbuild.info,  Node: Build one package,  Prev: Build distribution,  Up: Building
+
+4.5 Build one package
+=====================
+
+To build one package, the basic idea is to use the 'configure' option
+'--disable-all-pkgs' (*note '--disable-all-pkgs'::).  Then all program
+and library modules are configured but none are made.  However, the
+'Makefile's still contain all build rules and dependencies and can be
+invoked to build an individual program or library and causes to first
+build any required libraries.
+
+   This "build-on-demand" procedure is used, e.g., in the 'luatex'
+repository to build LuaTeX, essentially from a subset of the complete
+TeX Live tree.  Similarly, when, e.g., building the original e-TeX has
+been disabled (as it is by default), one can run 'make etex' (or 'make
+etex.exe') in 'texk/web2c/' to build e-TeX (although there is no
+comparably simple way to install e-TeX).
+
+   If you want to work on a single program within the TL sources, this
+is the recommended way to do it.  Here is an example from start to
+finish for working on 'dvipdfmx'.
+
+     mkdir mydir && cd mydir  # new working directory
+
+     # Get sources (<http://tug.org/texlive/svn>)
+     rsync -a --delete --exclude=.svn --exclude=Work \
+           tug.org::tldevsrc/Build/source/ .
+
+     # Create build directory:
+     mkdir Work && cd Work
+
+     # Do the configure:
+     ../configure --disable-all-pkgs --enable-dvipdfm-x \
+       -C CFLAGS=-g CXXFLAGS=-g >&outc
+
+     # Do the make:
+     make >&outm
+
+     # Test:
+     cd texk/dvipdfmx
+     make check
+
+   Then you modify source files in 'mydir/texk/dvipdfm-x' and rerun
+'make' in 'mydir/Work/texk/dvipdfm-x' to rebuild.
+
+   The second line the 'configure' are invocation shows examples of
+extra things you likely want to specify if you intend to hack the
+sources (and not just build binaries): the '-C' speeds up 'configure',
+and the 'CFLAGS' and 'CXXFLAGS' are to eliminate compiler optimization
+for debugging purposes.
+
+   Of course, one should actually look at the output and check that
+things are working.  There are many 'configure' options you can tweak as
+desired; check the output from 'configure --help'.
+
+   Finally, the above retrieves the entire TL source tree (some 300mb).
+It is natural to ask if this is really necessary.  Strictly speaking,
+the answer is no, but it is vastly more convenient to do so.  If you cut
+down the source tree, you must also give additional 'configure' flags to
+individually disable using system versions of libraries, or the
+intricacies of the dependencies (such as 'teckit' requiring 'zlib') will
+have undesired side effects.  For an example, see the 'build-pdftex.sh'
+script in the 'pdftex' development sources (<http://pdftex.org>), which
+are indeed a cut-down TL source tree.
 
 
 File: tlbuild.info,  Node: Installing,  Next: Layout and infrastructure,  Prev: Building,  Up: Top
@@ -259,10 +352,10 @@ File: tlbuild.info,  Node: Installing,  Next: Layout and infrastructure,  Prev: 
 
 This section discusses the results of 'make install' in the source tree.
 
-   The main consideration is that this is not enough to make a usable
-TeX installation.  Beyond the binaries that are built from the sources,
-(thousands of) support files are needed; just as a first example
-'plain.tex' is not in the source tree.
+   The main consideration is that 'make install' is not enough to make a
+usable TeX installation.  Beyond the compiled binaries, (thousands of)
+support files are needed; just as a first example 'plain.tex' is not in
+the source tree.
 
    These support files are maintained completely independently and are
 not present in the source tree.  The best basis for dealing with them is
@@ -339,11 +432,17 @@ to 'DATAROOTDIR/texmf-dist/scripts/ps2eps/ps2eps.pl'.  For Windows, a
 standard wrapper binary (e.g., 'BINDIR/ps2eps.exe') serves the same
 purpose.  (The source for the wrapper is in 'texk/texlive/w32_wrapper'.)
 
-   One reason for all this is to avoid having many copies of the same
-script, but more importantly this allows invoking the same script on all
-operating systems.  Furthermore, we want the 'BINDIR' resulting from the
-build to be exactly what is in the TL distribution; any deviations cause
-considerable extra work.
+   One reason for this is to avoid having many copies of the same
+script; a more important reason is that it guarantees the scripts will
+stay in sync across the different supported operating systems.
+
+   Most important of all, we want the 'BINDIR' resulting from the build
+to be as close as possible to what is in the TL distribution.  At
+present, there are a few exceptions--Asymptote, Biber, Xindy--and each
+one creates considerable extra work.  We don't want to add more.  (See
+<http://tug.org/texlive/build.html> for information about building those
+exceptions, as well as the 'xz' and 'wget' programs that are used in the
+TL infrastructure.)
 
 
 File: tlbuild.info,  Node: Distro builds,  Prev: Linked scripts,  Up: Installing
@@ -352,7 +451,7 @@ File: tlbuild.info,  Node: Distro builds,  Prev: Linked scripts,  Up: Installing
 =================
 
 Although they use the same code base, building for the native TL
-distribution as shipped by the TL user groups is typically quite
+distribution as shipped by the TeX user groups is typically quite
 different from a "distro" build needed by, e.g., a full GNU/Linux or BSD
 operating system distribution.
 
@@ -403,8 +502,9 @@ find most relevant:
 (*note Installing::), and many other issues, such as font maps,
 languages, and formats, independently of the build.  Norbert Preining
 has written a detailed article on adapting TL for distros:
-<http://tug.org/TUGboat/tb34-3/tb108preining-distro.pdf>.  (If it needs
-updating at some point, perhaps we will merge it into this document.)
+<http://tug.org/TUGboat/tb34-3/tb108preining-distro.pdf>.  (If the
+article needs updating in the future, perhaps we will merge it into this
+document.)
 
 
 File: tlbuild.info,  Node: Layout and infrastructure,  Next: Configure options,  Prev: Installing,  Up: Top
@@ -511,8 +611,8 @@ and similar places.  The 'reautoconf' script does not touch those, but a
 TL cron job keeps them in sync (nightly).
 
    The directory 'extra/' contains things which are not part of the TL
-build, but are present for convenience, e.g., 'epstopdf' developed here
-and 'xz/' required by the TL installer.
+build, but are present just for (someone's) convenience, e.g.,
+'epstopdf' which is developed here.
 
 
 File: tlbuild.info,  Node: Autoconf macros,  Next: Library modules,  Prev: Top-level directories,  Up: Layout and infrastructure
@@ -1289,8 +1389,17 @@ File: tlbuild.info,  Node: '--disable-all-pkgs',  Next: Configure options for 't
 --------------------------
 
 Do not build any program modules by default--only those explicitly
-enabled.  Without this option, all modules are built except those that
-are explicitly disabled or specify 'disable' in their 'ac/withenable.ac'
+enabled.  This is useful when one wants to work on only a single
+program, which is specified with an additional '--enable' option, e.g.,
+'--enable-dvipdfm-x'.  It's still simplest to check out and configure
+the whole source tree, but at least only the program you are interested
+in, and its dependencies, are built.  The 'configure' will generally
+take less than a minute with everything disabled.  (It is a good idea to
+run 'make check' after doing this, and after making any changes, to
+ensure that whatever tests have been written still pass.)
+
+   Without this option, all modules are built except those that are
+explicitly disabled or specify 'disable' in their 'ac/withenable.ac'
 fragment.
 
 
@@ -1386,10 +1495,12 @@ File: tlbuild.info,  Node: Configure options for 'texk/dvipdfm-x',  Next: Config
 
 The former modules 'dvipdfmx' (extended DVI to PDF converter) and
 'xdvipdfmx' (the same, as used by XeTeX) have been merged into
-'dvipdfm-x'.
+'dvipdfm-x' at the source level.  Two separate binaries are still
+created by default.  In addition, 'dvipdfm' is created as a symlink to
+'dvipdfmx', with backward-compatible (very slightly different) behavior.
 
 '--disable-dvipdfmx'
-Do not build the 'dvipdfmx' program.
+Do not build the 'dvipdfmx' program or create the 'dvipdfm' symlink.
 
 '--disable-xdvipdfmx'
 Do not build the 'xdvipdfmx' program (building 'xdvipdfmx' requires the
@@ -1437,6 +1548,10 @@ Hardwire the location of Ghostscript ('gs').
 '--with-xdvi-x-toolkit=KIT'
 Use toolkit 'KIT' for 'xdvik', one of: 'motif xaw xaw3d neXtaw'.  The
 default is 'motif' if available, else 'xaw'.
+
+'--enable-xi2-scrolling'
+Use XInput 2.1 "smooth scrolling" if available.  (default: yes, except
+for a native TL build).
 
 
 File: tlbuild.info,  Node: Configure options for 'utils/xindy',  Prev: Configure options for 'texk/xdvik',  Up: Program-specific configure options
@@ -1584,27 +1699,6 @@ but that might not work for cross compilations.
      Name (or full path) for the 'perl', 'latex', and 'pdflatex'
      commands used, e.g., to build the 'xindy' documentation.
 
-'TL_PLATFORM'
-     The utility program 'biber' consists of many Perl modules bundled
-     into an executable by the 'Par::Packer' mechanism.  Therefore it is
-     not feasible to build 'biber' as part of TL.
-
-     However, in order for 'make install' to create all executables in
-     'bindir', the 'biber' module in TL contains pre-made binaries (by
-     'biber' contributors, released on the original 'biber' site) for
-     the platforms for which they are available.  TL merely checks if an
-     executable is present for the current platform, and if so, installs
-     it.
-
-     The complication is hidden in the phrase "current platform".  TL
-     has its own ideas about platform names, and the mapping from the
-     canonical system name determined by 'config.guess' or 'config.sub'
-     to the TL platform name is not trivial.  So, a value given for
-     'TL_PLATFORM' is used as the TL platform name.  Otherwise, the
-     build uses copies of the Perl modules 'TeXLive/TLUtils.pm' and
-     'TeXLive/TLConfig.pm', to avoid duplicating the platform-detection
-     logic.
-
 
 File: tlbuild.info,  Node: Cross compilation,  Next: Coding conventions,  Prev: Configure options,  Up: Top
 
@@ -1701,8 +1795,13 @@ avoided if possible and otherwise must supply a pessimistic test result.
 (auxiliary or installable) programs.  Auxiliary programs can be placed
 into a subdirectory that is configured natively as is done for
 'texk/web2c/web2c', 'texk/dvipsk/squeeze', and 'texk/xdvik/squeeze'.
-The module 'libs/freetype' uses the value of 'CC_BUILD', 'BUILD-gcc',
+The module 'libs/freetype2' uses the value of 'CC_BUILD', 'BUILD-gcc',
 'gcc', or 'cc' as compiler for the auxiliary program.
+
+   Building LuaTeX (or LuaJITTeX) uses the auxiliary program 'txt2zlib'
+to create 'pdflua.c' and, if necessary, update the distributed version
+of that file.  In a cross compilation we simply use that distributed
+file.
 
    The situation for installable programs needed by the build process is
 somewhat different.  A quite expensive possibility, chosen for the ICU
@@ -1853,14 +1952,14 @@ Index
 * --bindir configure option:             '--prefix' '--bindir' ....
                                                                (line  6)
 * --build=HOST:                          Cross configuring.    (line  6)
-* --disable-all-packages configure option: Building.           (line 46)
+* --disable-all-packages configure option: Build one package.  (line  6)
 * --disable-all-pkgs:                    '--disable-all-pkgs'. (line  6)
 * --disable-bibtex8:                     Configure options for 'texk/bibtex-x'.
                                                                (line  9)
 * --disable-dump-share:                  Configure options for 'texk/web2c'.
                                                                (line 27)
 * --disable-dvipdfmx:                    Configure options for 'texk/dvipdfm-x'.
-                                                               (line 10)
+                                                               (line 12)
 * --disable-etex-synctex:                Configure options for 'texk/web2c'.
                                                                (line 64)
 * --disable-ipc:                         Configure options for 'texk/web2c'.
@@ -1883,7 +1982,7 @@ Index
 * --disable-web-progs:                   Configure options for 'texk/web2c'.
                                                                (line 46)
 * --disable-xdvipdfmx:                   Configure options for 'texk/dvipdfm-x'.
-                                                               (line 13)
+                                                               (line 15)
 * --enable-*win for Metafont window support: Configure options for 'texk/web2c'.
                                                                (line 60)
 * --enable-auto-core:                    Configure options for 'texk/web2c'.
@@ -1912,6 +2011,8 @@ Index
                                                                (line 64)
 * --enable-texlive-build:                '--disable-native-texlive-build'.
                                                                (line 16)
+* --enable-xi2-scrolling:                Configure options for 'texk/xdvik'.
+                                                               (line 13)
 * --enable-xindy-docs:                   Configure options for 'utils/xindy'.
                                                                (line 10)
 * --enable-xindy-rules:                  Configure options for 'utils/xindy'.
@@ -1919,7 +2020,7 @@ Index
 * --host=HOST:                           Cross configuring.    (line  6)
 * --libdir:                              '--enable-multiplatform'.
                                                                (line  6)
-* --no-clean Build option:               Building.             (line 40)
+* --no-clean Build option:               Build problems.       (line  6)
 * --prefix configure option:             '--prefix' '--bindir' ....
                                                                (line  6)
 * --with-banner-add=STR:                 Configure options for 'texk/web2c'.
@@ -1958,6 +2059,8 @@ Index
                                                                (line 12)
 * --without-ln-s:                        '--without-ln-s'.     (line  6)
 * --without-x:                           '--without-x'.        (line  6)
+* -C configure option:                   Build in parallel.    (line 11)
+* -j make option:                        Build in parallel.    (line  6)
 * adapting TeX Live for distros:         Distro builds.        (line 54)
 * adding a new generic library:          Adding a new generic library module.
                                                                (line  6)
@@ -1970,14 +2073,14 @@ Index
                                                                (line 14)
 * ANSI C:                                Declarations and definitions.
                                                                (line  6)
-* asymptote:                             'asymptote'.          (line  6)
+* asymptote:                             Linked scripts.       (line 22)
+* asymptote <1>:                         'asymptote'.          (line  6)
 * Autoconf:                              Overview of build system.
                                                                (line  6)
 * autoconf macros:                       Autoconf macros.      (line  6)
 * Automake:                              Overview of build system.
                                                                (line  6)
-* biber:                                 Variables for configure.
-                                                               (line 46)
+* biber:                                 Linked scripts.       (line 22)
 * bibtex-x:                              Configure options for 'texk/bibtex-x'.
                                                                (line  6)
 * bibtex8:                               Configure options for 'texk/bibtex-x'.
@@ -1986,17 +2089,23 @@ Index
                                                                (line  6)
 * BSD distro:                            Distro builds.        (line  6)
 * build directory, required:             Building.             (line 17)
-* build on demand:                       Building.             (line 46)
+* build iteration:                       Build iteration.      (line  6)
+* build on demand:                       Build one package.    (line  6)
+* build one package:                     Build one package.    (line  6)
+* build problems:                        Build problems.       (line  6)
 * Build script:                          Building.             (line  6)
 * build system, design of:               Overview of build system.
                                                                (line  6)
 * BUILDCC, BUILDCFLAGS, ...:             Cross configuring.    (line 42)
 * building:                              Building.             (line  6)
+* building a distribution:               Build distribution.   (line  6)
+* building in parallel:                  Build in parallel.    (line  6)
 * C, ANSI, required:                     Declarations and definitions.
                                                                (line  6)
 * C99, avoided:                          Declarations and definitions.
                                                                (line  6)
-* cache for 'configure':                 Building.             (line 58)
+* cache file, for 'configure':           Build in parallel.    (line 11)
+* cache for 'configure':                 Build in parallel.    (line  6)
 * callexe.c:                             Macros for Windows.   (line 32)
 * CC:                                    Variables for configure.
                                                                (line 10)
@@ -2014,8 +2123,6 @@ Index
 * compilers, C and C++:                  Prerequisites.        (line  6)
 * config.guess, config.sub:              Top-level directories.
                                                                (line 30)
-* config.guess, config.sub <1>:          Variables for configure.
-                                                               (line 57)
 * 'configure' options:                   Configure options.    (line  6)
 * 'configure' options, for 'bibtex-x':   Configure options for 'texk/bibtex-x'.
                                                                (line  6)
@@ -2052,11 +2159,12 @@ Index
 * cross compilation configuring:         Cross configuring.    (line  6)
 * cross compilation problems:            Cross problems.       (line  6)
 * cross compilation, with host binary:   'xdvik' package.      (line 14)
-* ctangle:                               Cross problems.       (line 26)
+* ctangle:                               Cross problems.       (line 31)
 * CXX:                                   Variables for configure.
                                                                (line 11)
 * declarations and definitions, in source code: Declarations and definitions.
                                                                (line  6)
+* dependencies, with several output files: Build in parallel.  (line  6)
 * DESTDIR:                               '--prefix' '--bindir' ....
                                                                (line  9)
 * directories, for installation:         Installation directories.
@@ -2064,7 +2172,9 @@ Index
 * directories, top-level:                Top-level directories.
                                                                (line  6)
 * discards qualifiers warning:           Const.                (line 30)
-* distribution tarball, making:          Building.             (line 65)
+* 'dist' and 'distcheck' targets for 'make': Build distribution.
+                                                               (line  6)
+* distribution tarball, making:          Build distribution.   (line  6)
 * distro, building for:                  Distro builds.        (line  6)
 * dvipdfmx:                              Configure options for 'texk/dvipdfm-x'.
                                                                (line  6)
@@ -2078,6 +2188,7 @@ Index
                                                                (line 43)
 * 'extra/' top-level directory:          Top-level directories.
                                                                (line 39)
+* failure to build:                      Build problems.       (line  6)
 * 'ffcall', required by 'xindy':         Prerequisites.        (line 30)
 * flags, macros for library and header:  Macros for library and header flags.
                                                                (line  6)
@@ -2103,7 +2214,7 @@ Index
                                                                (line 30)
 * iconv:                                 Configure options for 'utils/xindy'.
                                                                (line 23)
-* ICU cross compiling:                   Cross problems.       (line 20)
+* ICU cross compiling:                   Cross problems.       (line 25)
 * ICU libraries:                         Variables for configure.
                                                                (line 24)
 * icu-config:                            Variables for configure.
@@ -2118,8 +2229,8 @@ Index
 * interprocess communication:            Configure options for 'texk/web2c'.
                                                                (line 31)
 * introduction:                          Introduction.         (line  6)
-* iteration through sources, by 'configure' and 'make': Building.
-                                                               (line 21)
+* iteration through sources, by 'configure' and 'make': Build iteration.
+                                                               (line  6)
 * kpathsea library:                      'kpathsea' library.   (line  6)
 * kpathsea.ac:                           'kpathsea' library.   (line 20)
 * kpse-libpng-flags.m4:                  'png' library.        (line 43)
@@ -2192,7 +2303,6 @@ Index
                                                                (line  6)
 * LFS (large file support):              '--disable-largefile'.
                                                                (line  6)
-* 'libffcall', required by 'xindy':      Prerequisites.        (line 30)
 * libfreetype:                           Variables for configure.
                                                                (line 24)
 * 'libfreetype', and 'const':            Const.                (line 21)
@@ -2240,15 +2350,14 @@ Index
 * motif:                                 Configure options for 'texk/xdvik'.
                                                                (line  9)
 * native cross compilation:              Cross compilation.    (line 10)
+* one package, building:                 Build one package.    (line  6)
 * OpenGL, required for Asymptote:        'asymptote'.          (line  6)
 * operating system distribution, building for: Distro builds.  (line  6)
 * opl2ofm, et al.:                       Configure options for 'texk/web2c'.
                                                                (line 37)
-* otangle:                               Cross problems.       (line 26)
+* otangle:                               Cross problems.       (line 31)
 * overall build process:                 Building.             (line  6)
-* Par::Packer:                           Variables for configure.
-                                                               (line 46)
-* parallel build:                        Building.             (line 58)
+* parallel build:                        Build in parallel.    (line  6)
 * paths, for installation:               Installation directories.
                                                                (line  6)
 * PDF files, size of:                    '--disable-largefile'.
@@ -2257,12 +2366,10 @@ Index
                                                                (line 41)
 * PERL:                                  Variables for configure.
                                                                (line 39)
-* 'perl', required by 'biber', etc.:     Prerequisites.        (line 19)
+* 'perl', required by 'web2c', etc.:     Prerequisites.        (line 19)
 * PKG_CONFIG:                            Variables for configure.
                                                                (line 23)
 * plain.tex, not in source tree:         Installing.           (line  8)
-* platform, current:                     Variables for configure.
-                                                               (line 57)
 * png library:                           'png' library.        (line  6)
 * poppler:                               Configure options for system 'poppler'.
                                                                (line  6)
@@ -2272,6 +2379,7 @@ Index
 * preloaded binaries:                    Configure options for 'texk/web2c'.
                                                                (line 50)
 * prerequisites for building:            Prerequisites.        (line  6)
+* problems with build:                   Build problems.       (line  6)
 * program module, adding:                Adding a new program module.
                                                                (line  6)
 * program modules:                       Program modules.      (line  6)
@@ -2283,12 +2391,15 @@ Index
 * requirements for building:             Prerequisites.        (line  6)
 * runscript.exe:                         Macros for Windows.   (line 25)
 * scripts, linked and not maintained:    Linked scripts.       (line  6)
+* scrolling:                             Configure options for 'texk/xdvik'.
+                                                               (line 13)
 * SED:                                   Variables for configure.
                                                                (line 34)
 * setup macros, general:                 General setup macros. (line  6)
 * shared libraries, using vs. avoiding:  Distro builds.        (line 11)
 * size of PDF and PS files:              '--disable-largefile'.
                                                                (line 10)
+* size of source tree:                   Build one package.    (line 57)
 * source code declarations:              Declarations and definitions.
                                                                (line  6)
 * source directory building, not supported: Building.          (line 17)
@@ -2308,24 +2419,19 @@ Index
                                                                (line 64)
 * system distribution, building for:     Distro builds.        (line  6)
 * t1utils package:                       't1utils' package.    (line  6)
-* tangle:                                Cross problems.       (line 26)
+* tangle:                                Cross problems.       (line 31)
 * tests, running:                        Overview of build system.
                                                                (line  6)
 * TeX-specific library module, adding:   Adding a new TeX-specific library module.
                                                                (line  6)
 * texlive.tlpdb, TeX Live database:      Installing.           (line  8)
-* tie:                                   Cross problems.       (line 26)
+* tie:                                   Cross problems.       (line 31)
 * timestamps, in repository:             Build system tools.   (line 34)
-* TLConfig.pm:                           Variables for configure.
-                                                               (line 57)
-* TLUtils.pm:                            Variables for configure.
-                                                               (line 57)
-* TL_PLATFORM:                           Variables for configure.
-                                                               (line 45)
 * tools, for building:                   Build system tools.   (line  6)
 * top-level directories:                 Top-level directories.
                                                                (line  6)
 * touching files to avoid rerunning:     Build system tools.   (line 39)
+* txt2zlib:                              Cross problems.       (line 20)
 * type cast, avoiding:                   Const.                (line 38)
 * use-commit-times, Subversion:          Build system tools.   (line 34)
 * variable declarations, in source code: Declarations and definitions.
@@ -2337,6 +2443,7 @@ Index
 * web2c program:                         Cross problems.       (line 13)
 * web2c.ac:                              Configure options for 'texk/web2c'.
                                                                (line 42)
+* wget:                                  Linked scripts.       (line 22)
 * WIN32, Automake conditional:           Macros for Windows.   (line 16)
 * WIN32_WRAP, Automake conditional:      Macros for Windows.   (line 25)
 * Windows, invoking scripts on:          Linked scripts.       (line  6)
@@ -2356,86 +2463,95 @@ Index
                                                                (line  6)
 * xdvipdfmx:                             Configure options for 'texk/dvipdfm-x'.
                                                                (line  6)
-* xindy:                                 'xindy' package.      (line  6)
-* xindy <1>:                             Configure options for 'utils/xindy'.
+* xindy:                                 Linked scripts.       (line 22)
+* xindy <1>:                             'xindy' package.      (line  6)
+* xindy <2>:                             Configure options for 'utils/xindy'.
                                                                (line  6)
-* 'xindy' cross compiling impossible:    Cross problems.       (line 33)
+* 'xindy' cross compiling impossible:    Cross problems.       (line 38)
+* XInput:                                Configure options for 'texk/xdvik'.
+                                                               (line 13)
 * Xlib:                                  Configure options for 'texk/web2c'.
                                                                (line 22)
 * xpdf as library:                       Configure options for system 'poppler'.
                                                                (line  6)
+* xz:                                    Linked scripts.       (line 22)
 * zlib library:                          'zlib' library.       (line  6)
 
 
 
 Tag Table:
-Node: Top987
-Node: Introduction1780
-Node: Overview of build system2815
-Node: Prerequisites4879
-Node: Building6981
-Node: Installing10631
-Node: Installation directories11659
-Node: Linked scripts13479
-Node: Distro builds14627
-Node: Layout and infrastructure17007
-Node: Build system tools17796
-Node: Top-level directories19808
-Node: Autoconf macros21875
-Node: General setup macros22576
-Node: Macros for programs23443
-Node: Macros for compilers24255
-Node: Macros for libraries25689
-Node: Macros for library and header flags26115
-Node: Macros for Windows27984
-Node: Library modules29561
-Node: 'png' library30058
-Node: 'zlib' library32351
-Node: 'freetype' library32872
-Node: 'kpathsea' library33406
-Node: Program modules34830
-Node: 't1utils' package35266
-Node: 'xindy' package35833
-Node: 'xdvik' package37012
-Node: 'asymptote'38091
-Node: Extending TeX Live38546
-Node: Adding a new program module38914
-Node: Adding a new generic library module40433
-Node: Adding a new TeX-specific library module42646
-Node: Configure options43333
-Node: Global configure options44724
-Node: '--disable-native-texlive-build'45292
-Node: '--prefix' '--bindir' ...46288
-Node: '--disable-largefile'46836
-Node: '--disable-missing'47603
-Node: '--enable-compiler-warnings='LEVEL48010
-Node: '--enable-cxx-runtime-hack'48755
-Node: '--enable-maintainer-mode'49188
-Node: '--enable-multiplatform'49723
-Node: '--enable-shared'50284
-Node: '--enable-silent-rules'50661
-Node: '--without-ln-s'51123
-Node: '--without-x'51480
-Node: Program-specific configure options51672
-Node: '--enable-PROG' '--disable-PROG'52335
-Node: '--disable-all-pkgs'52618
-Node: Configure options for 'texk/web2c'53071
-Node: Configure options for 'texk/bibtex-x'55738
-Node: Configure options for 'texk/dvipdfm-x'56314
-Node: Configure options for 'texk/dvisvgm'56924
-Node: Configure options for 'texk/texlive'57814
-Node: Configure options for 'texk/xdvik'58241
-Node: Configure options for 'utils/xindy'58730
-Node: Library-specific configure options59792
-Node: Configure options for 'kpathsea'60806
-Node: Configure options for system 'poppler'61519
-Node: Variables for configure62286
-Node: Cross compilation64792
-Node: Cross configuring66057
-Node: Cross problems67730
-Node: Coding conventions69371
-Node: Declarations and definitions70035
-Node: Const72218
-Node: Index74081
+Node: Top993
+Node: Introduction1786
+Node: Overview of build system2965
+Node: Prerequisites5029
+Node: Building7091
+Node: Build iteration8310
+Node: Build problems9382
+Node: Build in parallel9775
+Node: Build distribution10367
+Node: Build one package10938
+Node: Installing13711
+Node: Installation directories14726
+Node: Linked scripts16546
+Node: Distro builds18027
+Node: Layout and infrastructure20417
+Node: Build system tools21206
+Node: Top-level directories23218
+Node: Autoconf macros25272
+Node: General setup macros25973
+Node: Macros for programs26840
+Node: Macros for compilers27652
+Node: Macros for libraries29086
+Node: Macros for library and header flags29512
+Node: Macros for Windows31381
+Node: Library modules32958
+Node: 'png' library33455
+Node: 'zlib' library35748
+Node: 'freetype' library36269
+Node: 'kpathsea' library36803
+Node: Program modules38227
+Node: 't1utils' package38663
+Node: 'xindy' package39230
+Node: 'xdvik' package40409
+Node: 'asymptote'41488
+Node: Extending TeX Live41943
+Node: Adding a new program module42311
+Node: Adding a new generic library module43830
+Node: Adding a new TeX-specific library module46043
+Node: Configure options46730
+Node: Global configure options48121
+Node: '--disable-native-texlive-build'48689
+Node: '--prefix' '--bindir' ...49685
+Node: '--disable-largefile'50233
+Node: '--disable-missing'51000
+Node: '--enable-compiler-warnings='LEVEL51407
+Node: '--enable-cxx-runtime-hack'52152
+Node: '--enable-maintainer-mode'52585
+Node: '--enable-multiplatform'53120
+Node: '--enable-shared'53681
+Node: '--enable-silent-rules'54058
+Node: '--without-ln-s'54520
+Node: '--without-x'54877
+Node: Program-specific configure options55069
+Node: '--enable-PROG' '--disable-PROG'55732
+Node: '--disable-all-pkgs'56015
+Node: Configure options for 'texk/web2c'57009
+Node: Configure options for 'texk/bibtex-x'59676
+Node: Configure options for 'texk/dvipdfm-x'60252
+Node: Configure options for 'texk/dvisvgm'61091
+Node: Configure options for 'texk/texlive'61981
+Node: Configure options for 'texk/xdvik'62408
+Node: Configure options for 'utils/xindy'63018
+Node: Library-specific configure options64080
+Node: Configure options for 'kpathsea'65094
+Node: Configure options for system 'poppler'65807
+Node: Variables for configure66574
+Node: Cross compilation68002
+Node: Cross configuring69267
+Node: Cross problems70940
+Node: Coding conventions72801
+Node: Declarations and definitions73465
+Node: Const75648
+Node: Index77511
 
 End Tag Table

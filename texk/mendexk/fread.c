@@ -207,9 +207,17 @@ LOOP:
 			wbuff[k]=buff[j];
 			if (buff[j]!=escape) esc=0;
 			if ((unsigned char)buff[j]>=0x80) {
-				wbuff[k+1]=buff[j+1];
-				j++;
-				k++;
+				int len = multibytelen((unsigned char)buff[j]);
+				if (len<0) {
+					verb_printf(efp,"\nWarning: Illegal input of lead byte 0x%x in UTF-8.",(unsigned char)buff[j]);
+					k--;
+					continue;
+				}
+				while(--len) {
+					wbuff[k+1]=buff[j+1];
+					j++;
+					k++;
+				}
 			}
 		}
 		ind[i].words=indent+1;
@@ -447,10 +455,6 @@ static int getestr(char *buff, char *estr)
 		if (buff[i]==arg_open) nest++;
 		else if (buff[i]==arg_close) nest--;
 		estr[i]=buff[i];
-		if ((unsigned char)buff[i]>0x80) {
-			i++;
-			estr[i]=buff[i];
-		}
 	}
 
 	return -1;

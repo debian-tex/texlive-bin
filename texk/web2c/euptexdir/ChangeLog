@@ -1,3 +1,12 @@
+2014-05-05  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+2014-05-06  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* euptex.defines: Add a primitive \pdffiledump for euptex.
+
+2014-05-02  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* euptrip/euptrip.diffs: Updated for TL14.
+
 2014-01-22  Peter Breitenlohner  <peb@mppmu.mpg.de>
 
 	* eptrip/etrip.{log,tex} (removed): Renamed ...

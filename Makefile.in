@@ -121,7 +121,6 @@ am__aclocal_m4_deps = $(top_srcdir)/m4/kpse-cairo-flags.m4 \
 	$(top_srcdir)/m4/ltsugar.m4 $(top_srcdir)/m4/ltversion.m4 \
 	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/tardate.ac \
 	$(top_srcdir)/version.ac \
-	$(top_srcdir)/utils/biber/ac/withenable.ac \
 	$(top_srcdir)/utils/m-tx/ac/withenable.ac \
 	$(top_srcdir)/utils/pmx/ac/withenable.ac \
 	$(top_srcdir)/utils/ps2eps/ac/withenable.ac \
@@ -451,12 +450,14 @@ distuninstallcheck_listfiles = find . -type f -o -type l -print
 distcleancheck_listfiles = find . -type f -o -type l -print
 EXTRA_DIST = \
 	Build \
-	README.coding \
-	README.config \
-	README.cross \
-	README.distro \
-	README.hacking \
-	README.layout \
+	README.0overview \
+	README.1prerequisites \
+	README.2building \
+	README.3installing \
+	README.4layout \
+	README.5configure \
+	README.6cross \
+	README.7coding \
 	build-aux/README.TL \
 	m4/ChangeLog \
 	m4/README \

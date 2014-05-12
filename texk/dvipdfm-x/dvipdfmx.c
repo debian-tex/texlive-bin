@@ -182,7 +182,7 @@ show_usage (void)
   printf ("  -g dimension\tAnnotation \"grow\" amount [0.0in]\n");
   printf ("  -h | --help \tShow this help message and exit\n");
   printf ("  -l \t\tLandscape mode\n");
-  printf ("  -m number\tSet additional magnification\n");
+  printf ("  -m number\tSet additional magnification [1.0]\n");
   printf ("  -o filename\tSet output file name, \"-\" for stdout [dvifile.pdf]\n");
   printf ("  -p papersize\tSet papersize [a4]\n");
   printf ("  -q \t\tBe quiet\n");
@@ -914,6 +914,25 @@ main (int argc, char *argv[])
 #endif
 #endif
 
+  if (argc > 1 &&
+               (STREQ (argv[1], "--xbb") ||
+                (!is_xetex && STREQ (argv[1], "--dvipdfm")) ||
+                STREQ (argv[1], "--ebb"))) {
+    argc--;
+    base = argv++[1]+2;
+  } else
+    base = kpse_program_basename (argv[0]);
+  
+  if (FILESTRCASEEQ (base, "extractbb") || FILESTRCASEEQ (base, "xbb")) {
+    my_name = "extractbb";
+    return extractbb (argc, argv);
+  }
+  if (FILESTRCASEEQ (base, "ebb")) {
+    my_name = "ebb";
+    compat_mode = 1;
+    return extractbb (argc, argv);
+  }
+
   /* Special-case single option --help or --version, to avoid possible
      diagnostics about config files, etc.  */
   if (argc == 2 && STREQ (argv[1], "--help")) {
@@ -924,22 +943,6 @@ main (int argc, char *argv[])
     exit(0);
   }
 
-  if (argc > 1 &&
-               (STREQ (argv[1], "--xbb") ||
-                (!is_xetex && STREQ (argv[1], "--dvipdfm")) ||
-                STREQ (argv[1], "--ebb"))) {
-    argc--;
-    base = argv++[1]+2;
-  } else
-    base = kpse_program_basename (argv[0]);
-  
-  if (FILESTRCASEEQ (base, "extractbb") || FILESTRCASEEQ (base, "xbb"))
-    return extractbb (argc, argv);
-  if (FILESTRCASEEQ (base, "ebb")) {
-    compat_mode = 1;
-    return extractbb (argc, argv);
-  }
-  
   if (!is_xetex && FILESTRCASEEQ (base, "dvipdfm"))
     compat_mode = 1;
   else

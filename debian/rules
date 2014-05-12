@@ -34,6 +34,17 @@ endif
 override_dh_autoreconf:
 	dh_autoreconf --as-needed
 
+#
+# we need libpng >= 1.4 which is not available in unstable and
+# seems not to arrive anytime soon. We have to rebuild also
+# the following depending libs with new libpng: gd freetype2 cairo
+#	--with-system-freetype2			\
+	--with-freetype2-include=/usr/include/freetype2 \
+#	--with-system-libpng			\
+#	--with-system-gd			\
+#	--with-system-cairo 			\
+#
+
 override_dh_auto_configure:
 	# we have to make sure that the mendex test case that is added
 	# by a patch is executable
@@ -49,21 +60,16 @@ override_dh_auto_configure:
 	--enable-shared				\
 	--with-system-zlib			\
 	--with-system-zzlib			\
-	--with-system-freetype2			\
-	--with-system-libpng			\
-	--with-system-gd			\
 	--with-system-xpdf			\
 	--with-system-poppler			\
 	--with-system-potrace			\
 	--with-system-graphite2			\
 	--with-system-harfbuzz 			\
 	--with-system-libgs			\
-	--with-system-cairo 			\
 	--with-system-pixman			\
 	--with-system-libpaper			\
 	--with-system-zziplib			\
 	--with-system-icu			\
-	--with-freetype2-include=/usr/include/freetype2 \
 	--with-x				\
 	--with-mf-x-toolkit			\
 	--with-xdvi-x-toolkit=xaw		\

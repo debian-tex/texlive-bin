@@ -3,7 +3,6 @@ debian-builtin-searchpath
 debian-no-tl-scripts
 60_unneeded_linking
 61_path_max.diff
-disable-t1lib-gd-dvipng-freetype
 fix-manpages
 mendex-snprintf
 relax-zlib-version-check

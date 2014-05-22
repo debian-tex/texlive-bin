@@ -246,7 +246,8 @@ DISTCLEANFILES = scripts-list
 #
 # We support native builds, multiplatform or not, as well as distro builds.
 #
-EXTRA_DIST = scripts.lst ../../../build-aux/relpath
+EXTRA_DIST = scripts.lst context/stubs/unix/ctxtools \
+	context/stubs/unix/pstopdf ../../../build-aux/relpath
 
 # Copies of these scripts exist here for the sake of avoiding
 # dangling symlinks produced by `make install'.
@@ -376,10 +377,10 @@ texmf_other_scripts = \
 
 texmf_context_scripts = \
 	context/stubs/unix/context \
-	context/stubs/unix/ctxtools \
+	context/stubs/unix/contextjit \
 	context/stubs/unix/luatools \
 	context/stubs/unix/mtxrun \
-	context/stubs/unix/pstopdf \
+	context/stubs/unix/mtxrunjit \
 	context/stubs/unix/texexec \
 	context/stubs/unix/texmfstart
 

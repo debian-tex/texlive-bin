@@ -1,3 +1,10 @@
+texlive-bin (2014.20140522.34183-1) experimental; urgency=medium
+
+  * bump breaks to << 2014, and also break against tex-common << 5
+  * Imported Upstream version 2014.20140522.34183
+
+ -- Norbert Preining <preining@debian.org>  Thu, 22 May 2014 11:40:15 +0900
+
 texlive-bin (2014.20140512.33982-1) experimental; urgency=low
 
   * fix missing epoch for build-dep on automake (Closes: #726513)

@@ -1,4 +1,4 @@
-# $Id$
+# $Id: splitinfo.gawk 34143 2014-05-20 17:30:45Z karl $
 # Public domain.  Originally written 2014 by Karl Berry.
 # Split chapter 2 of plain text output from makeinfo,
 # making each section into a separate README file.
@@ -10,8 +10,8 @@ BEGIN {
 
 {
   if (/^[*]+$/) { # starting new chapter
-    # if we're at the index, quit.
-    if (lastline == "Index") exit (0);
+    # if we're at the index or an appendix, quit.
+    if (lastline == "Index" || lastline ~ /^Appendix /) exit (0);
     
     # move on unless starting a chapter we want (not top, intro, etc.)
     if (lastline !~ /^[2-9]/) next;

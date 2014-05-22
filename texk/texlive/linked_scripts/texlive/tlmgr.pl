@@ -1,12 +1,12 @@
 #!/usr/bin/env perl
-# $Id: tlmgr.pl 33955 2014-05-10 05:37:16Z preining $
+# $Id: tlmgr.pl 34139 2014-05-20 01:40:43Z preining $
 #
 # Copyright 2008-2014 Norbert Preining
 # This file is licensed under the GNU General Public License version 2
 # or any later version.
 
-my $svnrev = '$Revision: 33955 $';
-my $datrev = '$Date: 2014-05-10 07:37:16 +0200 (Sat, 10 May 2014) $';
+my $svnrev = '$Revision: 34139 $';
+my $datrev = '$Date: 2014-05-20 03:40:43 +0200 (Tue, 20 May 2014) $';
 my $tlmgrrevision;
 my $prg;
 if ($svnrev =~ m/: ([0-9]+) /) {
@@ -286,11 +286,12 @@ sub main {
   }
 
   if ($opts{"help"} || $opts{"h"}) {
-    # perldoc does ASCII emphasis on the output, so it's nice to use it.
-    # But not all Unix platforms have it, and on Windows our Config.pm
-    # can apparently interfere, so always skip it there.
+    # perldoc does ASCII emphasis on the output, and runs it through
+    # $PAGER, so people want it.  But not all Unix platforms have it,
+    # and on Windows our Config.pm can apparently interfere, so always
+    # skip it there.  Or if users have NOPERLDOC set in the environment.
     my @noperldoc = ();
-    if (win32()) {
+    if (win32() || $ENV{"NOPERLDOC"}) {
       @noperldoc = ("-noperldoc", "1");
     } else {
       if (!TeXLive::TLUtils::which("perldoc")) {
@@ -309,9 +310,10 @@ sub main {
         }
       }
     }
-    # in some cases LESSPIPE of less breaks control characters
-    # and the output of pod2usage is broken.
-    # We add/set LESS=-R in the environment and unset LESSPIPE to be sure
+    # less can break control characters and thus the output of pod2usage
+    # is broken.  We add/set LESS=-R in the environment and unset
+    # LESSPIPE and LESSOPEN to try to help.
+    # 
     if (defined($ENV{'LESS'})) {
       $ENV{'LESS'} .= " -R";
     } else {
@@ -4810,8 +4812,6 @@ sub check_runfiles {
   }
   shift @duplicates; # get rid of the fake 1st value
 
-  # @duplicates = ('8r-base.map', 'aer.sty', 'lm-ec.map'); # for debugging
-
   # check if duplicates are different files.
   foreach my $f (@duplicates) {
     # assume tex4ht, xdy, afm stuff is ok, and don't worry about
@@ -4823,6 +4823,7 @@ sub check_runfiles {
             |Makefile
             |README
             |cid2code\.txt
+            |context\/stubs
             |etex\.src
             |kinsoku\.tex
             |language\.dat
@@ -5329,7 +5330,7 @@ sub action_conf {
       $fn || ( chomp ($fn = `kpsewhich updmap.cfg`) ) ;
       $cf = TeXLive::TLConfFile->new($fn, '(#|(Mixed)?Map)', ' ');
     } else {
-      # that cannot happen!
+      die "Should not happen, conf arg=$arg";
     }
     my ($key,$val) = @ARGV;
     if (!defined($key)) {
@@ -5397,15 +5398,19 @@ sub texconfig_conf_mimic {
     info("$cmd: " . TeXLive::TLUtils::which($cmd) . "\n");
   }
   info("=========================== active config files ==========================\n");
-  for my $m (qw/texmf.cnf updmap.cfg fmtutil.cnf config.ps mktex.cnf
-                pdftexconfig.tex/) {
+  for my $m (qw/texmf.cnf updmap.cfg/) {
+    for my $f (`kpsewhich -all $m`) {
+      info("$m: $f");
+    }
+  }
+  for my $m (qw/fmtutil.cnf config.ps mktex.cnf pdftexconfig.tex/) {
     info("$m: " . `kpsewhich $m`);
   }
 
   #tlwarn("missing finding of XDvi, config!\n");
 
   info("============================= font map files =============================\n");
-  for my $m (qw/psfonts.map pdftex.map ps2pk.map dvipdfm.map/) {
+  for my $m (qw/psfonts.map pdftex.map ps2pk.map kanjix.map/) {
     info("$m: " . `kpsewhich $m`);
   }
 
@@ -6238,7 +6243,12 @@ revision number for the loaded TeX Live Perl modules are shown, too.
 
 =head2 help
 
-Gives this help information (same as C<--help>).
+Display this help information and exit (same as C<--help>, and on the
+web at L<http://tug.org/texlive/doc/tlmgr.html>).  Sometimes the
+C<perldoc> and/or C<PAGER> programs on the system have problems,
+resulting in control characters being literally output.  This can't
+always be detected, but you can set the C<NOPERLDOC> environment
+variable and C<perldoc> will not be used.
 
 =head2 version
 
@@ -6293,7 +6303,7 @@ performed are written to the terminal.
 =back
 
 
-=head2 candidates
+=head2 candidates I<pkg>
 
 =over 4
 
@@ -6354,21 +6364,20 @@ With only C<conf>, show general configuration information for TeX Live,
 including active configuration files, path settings, and more.  This is
 like the C<texconfig conf> call, but works on all supported platforms.
 
-With either C<conf texmf>, C<conf tlmgr>, or C<conf updmap> given in 
-addition, shows all key/value pairs (i.e., all settings) as saved in 
-C<ROOT/texmf.cnf>, the tlmgr configuration file (see below), or the first
-found C<updmap.cfg> file (via kpsewhich), respectively.
+With either C<conf texmf>, C<conf tlmgr>, or C<conf updmap> given in
+addition, shows all key/value pairs (i.e., all settings) as saved in
+C<ROOT/texmf.cnf>, the tlmgr configuration file (see below), or the
+first found (via kpsewhich) C<updmap.cfg> file, respectively.
 
-If I<key> is given in addition, shows the value of only that given
-I<key> in the respective file. In case the option I<--delete> is given,
-the respective setting (key value pair) will be removed from the 
-configuration file (note, it is removed, not commented!).
+If I<key> is given in addition, shows the value of only that I<key> in
+the respective file.  If option I<--delete> is also given, the
+configuration file -- it is removed, not just commented out!
 
 If I<value> is given in addition, I<key> is set to I<value> in the 
 respective file.  I<No error checking is done!>
 
-In all cases the used config file can be selected via the option
-C<--conffile I<file>>, in case one wants to edit a different file.
+In all cases the file used can be explicitly specified via the option
+C<--conffile I<file>>, in case one wants to operate on a different file.
 
 Practical application: if the execution of (some or all) system commands
 via C<\write18> was left enabled during installation, you can disable
@@ -6376,9 +6385,16 @@ it afterwards:
   
   tlmgr conf texmf shell_escape 0
 
+A more complicated example: the C<TEXMFHOME> tree (see the main TeX Live
+guide, L<http://tug.org/texlive/doc.html>) can be set to multiple
+directories, but they must be enclosed in braces and separated by
+commas, so quoting the value to the shell is a good idea.  Thus:
+
+  tlmgr conf texmf TEXMFHOME "{~/texmf,~/texmfbis}"
+
 Warning: The general facility is here, but tinkering with settings in
-this way is very strongly discouraged.  Again, no error checking is
-done, so any sort of breakage is possible.
+this way is very strongly discouraged.  Again, no error checking on
+either keys or values is done, so any sort of breakage is possible.
 
 
 =head2 dump-tlpdb [--local|--remote]
@@ -7337,7 +7353,7 @@ installed into a user tree.
 
 Description of changes of actions in user mode:
 
-=head3 user mode install
+=head2 user mode install
 
 In user mode, the C<install> action checks that the package and all
 dependencies are all either relocated or already installed in the system

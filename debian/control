@@ -3,20 +3,20 @@ Section: tex
 Priority: optional
 Maintainer: Debian TeX Maintainers <debian-tex-maint@lists.debian.org>
 Uploaders: Norbert Preining <preining@debian.org>, Frank Küster <frank@kuesterei.ch>
-Build-Depends: debhelper (>= 7.0.50~), sharutils, libncurses5-dev | libncurses-dev, libxaw7-dev, libpng-dev, zlib1g-dev | libz-dev, flex, bison, libpoppler-private-dev (>= 0.12.4), libfontconfig1-dev, dh-autoreconf, time, libgraphite2-dev, libgs-dev, libcairo2-dev (>= 1.12), libpixman-1-dev (>= 0.18), libzzip-dev (>= 0.12), libharfbuzz-dev (>= 0.9.18-3), libicu-dev, recode, texinfo, automake (>= 1:1.13.1), autoconf (>= 2.69), libtool (>= 2.4.2), m4 (>= 1.4.16)
-Standards-Version: 3.9.4
+Build-Depends: debhelper (>= 7.0.50~), sharutils, libncurses5-dev | libncurses-dev, libxaw7-dev, zlib1g-dev | libz-dev, flex, bison, libpoppler-private-dev (>= 0.12.4), libfontconfig1-dev, dh-autoreconf, time, libgraphite2-dev, libgs-dev, libpixman-1-dev (>= 0.32.4), libzzip-dev (>= 0.12), libharfbuzz-dev (>= 0.9.18-3), libicu-dev, recode, texinfo, automake (>= 1:1.13.1), autoconf (>= 2.69), libtool (>= 2.4.2), m4 (>= 1.4.16), libpotrace-dev (>= 1.11), libxp-dev, libxi-dev, libpaper-dev
+Standards-Version: 3.9.5
 Homepage: http://www.tug.org/texlive/
 Vcs-Git: git://anonscm.debian.org/debian-tex/texlive-bin.git
 Vcs-Browser: http://anonscm.debian.org/gitweb/?p=debian-tex/texlive-bin.git
 
 Package: texlive-binaries
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, tex-common (>= 3), perl, dpkg (>= 1.15.4) | install-info
-Recommends: texlive-base, luatex, python, ruby, wish
-Replaces: texlive-metapost (<< 2010), texlive-base (<< 2010), ptex-bin, mendexk, jmpost
+Depends: libptexenc1 (>= ${source:Version}), libptexenc1 (<< ${source:Version}.1~), libkpathsea6 (>= ${source:Version}), libkpathsea6 (<< ${source:Version}.1~), ${shlibs:Depends}, ${misc:Depends}, tex-common (>= 3), perl, dpkg (>= 1.15.4) | install-info
+Recommends: texlive-base, python, ruby, wish
+Replaces: texlive-metapost (<< 2010), texlive-base (<< 2010), ptex-bin, mendexk, jmpost, luatex (<< 2014)
 Conflicts: mendexk, makejvf, jmpost
-Breaks: texlive-base (<< 2013), jtex-bin, multex-bin
-Provides: texlive-base-bin, makejvf, mendexk, jmpost
+Breaks: texlive-base (<< 2014), jtex-bin, multex-bin, luatex (<< 2014), tex-common (<< 5)
+Provides: texlive-base-bin, makejvf, mendexk, jmpost, luatex
 Description: Binaries for TeX Live
  This package contains all the binaries of TeX Live packages.
  .
@@ -28,7 +28,7 @@ Package: libkpathsea6
 Section: libs
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}
-Breaks: texlive-binaries (<< 2013), texlive-base (<< 2013)
+Breaks: texlive-binaries (<< 2014), texlive-base (<< 2014)
 Description: TeX Live: path search library for TeX (runtime part)
  This package contains the runtime part of the Kpathsea[rch] library,
  which implements generic path searching, configuration, and
@@ -47,6 +47,7 @@ Package: libptexenc1
 Section: libs
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}
+Breaks: texlive-binaries (<< 2014), texlive-base (<< 2014)
 Description: TeX Live: pTeX encoding library
  library for encoding support in pTeX, a Japanese TeX engine.
 
@@ -58,3 +59,13 @@ Description: TeX Live: ptex encoding library (development part)
  This package contains the static library and header files for the
  ptexenc library, a library for encoding support in pTeX, a Japanese
  TeX engine.
+
+Package: luatex
+Section: oldlibs
+Priority: extra
+Architecture: all
+Depends: texlive-binaries (>= 2014)
+Description: TeX Live: transitional dummy package
+ This is a transitional package for luatex to ensure proper upgrade
+ to texlive-binaries. It can be safely removed after the installation
+ is complete.

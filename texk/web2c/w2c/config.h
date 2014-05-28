@@ -1,6 +1,6 @@
 /* w2c/config.h: All .c files include this first.
 
-Copyright 1995, 1996, 2006, 2007, 2009, 2010, 2012 Karl Berry.
+Copyright 1995, 1996, 2006, 2007, 2009, 2010, 2012, 2014 Karl Berry.
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -26,6 +26,10 @@ along with this program; if not, see <http://www.gnu.org/licenses/.  */
 /* How to open a binary file.  */
 #include <kpathsea/c-fopen.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* The smallest signed type: use `signed char' if ANSI C, `short' if
    char is unsigned, otherwise `char'.  */
 #ifndef SCHAR_TYPE
@@ -88,6 +92,9 @@ typedef off_t longinteger;
 #define LONGINTEGER_TYPE long
 #define LONGINTEGER_PRI "l"
 #endif
+
+/* We also need a genuine 64-bit integer type, in case of 32-bit off_t */
+typedef LONGINTEGER_TYPE integer64;
 
 /* I don't want to write a configure test for remove when all Unix
    machines have unlink.  But, for the sake of non-Unix machines that
@@ -125,5 +132,9 @@ extern void uexit (int status);
 /* usage.c */
 extern void usage (const_string progname);
 extern void usagehelp (const_string *message, const_string bug_email);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* not WEB2C_CONFIG_H */

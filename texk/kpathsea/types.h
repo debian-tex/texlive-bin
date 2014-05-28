@@ -1,6 +1,6 @@
 /* types.h: general types for kpathsea.
 
-   Copyright 1993, 1995, 1996, 2005, 2008-2013 Karl Berry.
+   Copyright 1993, 1995, 1996, 2005, 2008-2014 Karl Berry.
 
    This library is free software; you can redistribute it and/or
    modify it under the terms of the GNU Lesser General Public
@@ -18,29 +18,11 @@
 #ifndef KPATHSEA_TYPES_H
 #define KPATHSEA_TYPES_H
 
+/* Our string, boolean, etc.  */
+#include <kpathsea/simpletypes.h>
+
 /* Required until all programs use the new API, if ever.  */
 #define KPSE_COMPAT_API 1
-
-/* Booleans.  */
-/* NeXT wants to define their own boolean type.  */
-#ifndef HAVE_BOOLEAN
-#define HAVE_BOOLEAN
-typedef int boolean;
-/* `true' and `false' are reserved words in C++.  */
-#ifndef __cplusplus
-#ifndef true
-#define true 1
-#define false 0
-#endif /* not true */
-#endif /* not __cplusplus */
-#endif /* not HAVE_BOOLEAN */
-
-/* The X library (among other things) defines `FALSE' and `TRUE', and so
-   we only want to define them if necessary, for use by application code.  */
-#ifndef FALSE
-#define FALSE false
-#define TRUE true
-#endif /* FALSE */
 
 #include <stdio.h> /* for FILE* */
 
@@ -65,22 +47,24 @@ typedef int boolean;
 # define PRIX64		__PRI64_PREFIX "X"
 #endif
 
-/* The usual null-terminated string.  */
-typedef char *string;
-
-/* A pointer to constant data.  (ANSI says `const string' is
-   `char * const', which is a constant pointer to non-constant data.)  */
-typedef const char *const_string;
-
-/* A generic pointer.  */
-typedef void *address;
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* function pointer prototype definitions for recorder */
 typedef void (*p_record_input) (const_string);
 typedef void (*p_record_output) (const_string);
 
+#ifdef __cplusplus
+}
+#endif
+
 /* the cache structure from elt-dirs.c */
 #include <kpathsea/str-llist.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef struct
 {
@@ -94,9 +78,17 @@ typedef struct {
   boolean expanding;
 } expansion_type;
 
+#ifdef __cplusplus
+}
+#endif
+
 
 #include <kpathsea/hash.h>
 #include <kpathsea/str-list.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* from old tex-file.h */
 
@@ -330,5 +322,9 @@ extern KPSEDLL kpathsea kpse_def;
 #define kpse_invocation_short_name   kpse_def_inst.invocation_short_name
 
 #endif /* KPSE_COMPAT_API */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* not KPATHSEA_TYPES_H */

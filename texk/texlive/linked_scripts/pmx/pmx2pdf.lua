@@ -1,12 +1,12 @@
 #!/usr/bin/env texlua  
 
-VERSION = "0.2.1"
+VERSION = "0.3.2"
 
 --[[
      pmx2pdf: processes MusiXTeX files using pmxab as a pre-processor 
      (and deletes intermediate files)
 
-     (c) Copyright 2011-12 Bob Tennent rdt@cs.queensu.ca
+     (c) Copyright 2011-13 Bob Tennent rdt@cs.queensu.ca
 
      This program is free software; you can redistribute it and/or modify it
      under the terms of the GNU General Public License as published by the
@@ -28,6 +28,15 @@ VERSION = "0.2.1"
 
   ChangeLog:
 
+     version 0.3.2 2013-12-14 RDT
+       restore the -c option that somehow got dropped
+
+     version 0.3.1 2013-12-11 RDT
+       added -F fmt option
+
+     version 0.3.0 2013-12-10 RDT
+       added -c option to preprocess using pmxchords
+
      version 0.2.1 2012-05-15 RDT
        renamed to avoid possible name clashes
 
@@ -48,6 +57,8 @@ function usage()
   print("         -s  stop at dvi")
   print("         -t  stop at tex/mid")
   print("         -i  retain intermediate files")
+  print("         -c  preprocess using pmxchords")
+  print("         -F fmt  use fmt as the TeX processor")
   print("         -f  restore default processing")
 end
 
@@ -62,6 +73,7 @@ if #arg == 0 then
 end
 
 -- defaults:
+pmxab = "pmxab"
 tex = "etex"  
 musixflx = "musixflx"
 dvi = "dvips"
@@ -95,11 +107,16 @@ repeat
   elseif this_arg == "-s" then
     dvi = ""; ps2pdf = ""
   elseif this_arg == "-f" then
-    tex = "etex"; dvi = "dvips"; ps2pdf = "ps2pdf"; intermediate = 1
+    pmxab = "pmxab"; tex = "etex"; dvi = "dvips"; ps2pdf = "ps2pdf"; intermediate = 1
   elseif this_arg == "-t" then
     tex = ""; dvi = ""; ps2pdf = ""
   elseif this_arg == "-i" then
     intermediate = 0
+  elseif this_arg == "-c" then
+    pmxab = "pmxchords"
+  elseif this_arg == "-F" then
+    narg = narg+1
+    tex = arg[narg]
   else
     filename = this_arg 
     if filename ~= "" and string.sub(filename, -4, -1) == ".pmx" then
@@ -108,9 +125,9 @@ repeat
     if not io.open(filename .. ".pmx", "r") then
       print("Non-existent file: ", filename .. ".pmx")
     else
-      print("Processing ".. filename .. ".pmx.")
+      print("Processing ".. filename .. ".pmx" .. " using " .. pmxab .. "." )
       os.remove( filename .. ".mx2" )
-      os.execute("pmxab" .. " " .. filename )
+      os.execute(pmxab .. " " .. filename )
       pmxaerr = io.open("pmxaerr.dat", "r")
       if (not pmxaerr) then
         print("No log file.")

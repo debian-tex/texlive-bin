@@ -1,9 +1,9 @@
 @x
 @d my_name=='ptftopl'
-@d banner=='This is pTFtoPL, Version 3.2-p1.7'
+@d banner=='This is pTFtoPL, Version 3.3-p1.7'
 @y
 @d my_name=='uptftopl'
-@d banner=='This is upTFtoPL, Version 3.2-p1.7-u1.11'
+@d banner=='This is upTFtoPL, Version 3.3-p1.7-u1.11'
 @z
 
 @x
@@ -22,8 +22,8 @@
   begin cx:=jis_code; out('J '); {specify jiscode format}
 @y
   begin cx:=jis_code;
-  if (isinternalUPTEX) then out(' U ')
-  else out(' J '); {specify jiscode format}
+  if (isinternalUPTEX) then out('U ')
+  else out('J '); {specify jiscode format}
 @z
 
 @x

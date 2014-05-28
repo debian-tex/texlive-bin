@@ -3,38 +3,14 @@
 /* Define to 1 if the `closedir' function returns void instead of `int'. */
 #undef CLOSEDIR_VOID
 
-/* Define to one of `_getb67', `GETB67', `getb67' for Cray-2 and Cray-YMP
-   systems. This function is required for `alloca.c' support on those systems.
-   */
-#undef CRAY_STACKSEG_END
-
-/* Define to 1 if using `alloca.c'. */
-#undef C_ALLOCA
-
 /* Define as 1 to get the debug (-d) option. */
 #undef DEBUG
 
 /* Define as the path to GhostScript. */
 #undef GS_PATH
 
-/* Define to 1 if you have `alloca', as a function or macro. */
-#undef HAVE_ALLOCA
-
-/* Define to 1 if you have <alloca.h> and it should be used (not on Ultrix).
-   */
-#undef HAVE_ALLOCA_H
-
 /* Define to 1 if you have the <assert.h> header file. */
 #undef HAVE_ASSERT_H
-
-/* Define to 1 if you have the `bcmp' function. */
-#undef HAVE_BCMP
-
-/* Define to 1 if you have the `bcopy' function. */
-#undef HAVE_BCOPY
-
-/* Define to 1 if you have the `bzero' function. */
-#undef HAVE_BZERO
 
 /* Define to 1 if you have the <dirent.h> header file, and it defines `DIR'.
    */
@@ -54,9 +30,6 @@
 
 /* Define to 1 if you have the <float.h> header file. */
 #undef HAVE_FLOAT_H
-
-/* Define to 1 if you have the `fork' function. */
-#undef HAVE_FORK
 
 /* Define to 1 if fseeko (and presumably ftello) exists and is declared. */
 #undef HAVE_FSEEKO
@@ -100,9 +73,6 @@
 /* Define to 1 if you have the `getwd' function. */
 #undef HAVE_GETWD
 
-/* Define to 1 if you have the `index' function. */
-#undef HAVE_INDEX
-
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
@@ -111,6 +81,9 @@
 
 /* Define to 1 if your kpathsea has kpse_enc_format. */
 #undef HAVE_KPSE_ENC_FORMATS
+
+/* Define to 1 if you have the `kpse_program_basename' function. */
+#undef HAVE_KPSE_PROGRAM_BASENAME
 
 /* Define to 1 if you have the `gd' library (-lgd). */
 #undef HAVE_LIBGD
@@ -121,18 +94,11 @@
 /* Define to 1 if you have the `png' library (-lpng). */
 #undef HAVE_LIBPNG
 
-/* Define to 1 if you have the `t1' library (-lt1). */
-#undef HAVE_LIBT1
-
 /* Define to 1 if you have the `z' library (-lz). */
 #undef HAVE_LIBZ
 
 /* Define to 1 if you have the <limits.h> header file. */
 #undef HAVE_LIMITS_H
-
-/* Define to 1 if your system has a GNU libc compatible `malloc' function, and
-   to 0 otherwise. */
-#undef HAVE_MALLOC
 
 /* Define to 1 if you have the `memcmp' function. */
 #undef HAVE_MEMCMP
@@ -172,9 +138,6 @@
 
 /* Define to 1 if you have the <pwd.h> header file. */
 #undef HAVE_PWD_H
-
-/* Define to 1 if you have the `rindex' function. */
-#undef HAVE_RINDEX
 
 /* Define to 1 if stdbool.h conforms to C99. */
 #undef HAVE_STDBOOL_H
@@ -232,26 +195,11 @@
 /* Define to 1 if you have <sys/wait.h> that is POSIX.1 compatible. */
 #undef HAVE_SYS_WAIT_H
 
-/* Define to 1 if you have the <t1lib.h> header file. */
-#undef HAVE_T1LIB_H
-
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
-/* Define to 1 if you have the `vfork' function. */
-#undef HAVE_VFORK
-
-/* Define to 1 if you have the <vfork.h> header file. */
-#undef HAVE_VFORK_H
-
 /* Define to 1 if you have the `vprintf' function. */
 #undef HAVE_VPRINTF
-
-/* Define to 1 if `fork' works. */
-#undef HAVE_WORKING_FORK
-
-/* Define to 1 if `vfork' works. */
-#undef HAVE_WORKING_VFORK
 
 /* Define to 1 if the system has the type `_Bool'. */
 #undef HAVE__BOOL
@@ -281,14 +229,6 @@
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
-/* If using the C implementation of alloca, define if you know the
-   direction of stack growth for your system; otherwise it will be
-   automatically deduced at runtime.
-	STACK_DIRECTION > 0 => grows toward higher addresses
-	STACK_DIRECTION < 0 => grows toward lower addresses
-	STACK_DIRECTION = 0 => direction of growth unknown */
-#undef STACK_DIRECTION
-
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
@@ -300,6 +240,9 @@
 
 /* Version number of package */
 #undef VERSION
+
+/* Define to 1 if <zlib.h> declares 'z_const'. */
+#undef ZLIB_CONST
 
 /* Enable large inode numbers on Mac OS X 10.5.  */
 #ifndef _DARWIN_USE_64_BIT_INODE
@@ -333,9 +276,6 @@
    such a type exists and the standard includes do not define it. */
 #undef int64_t
 
-/* Define to rpl_malloc if the replacement function should be used. */
-#undef malloc
-
 /* Define to `int' if <sys/types.h> does not define. */
 #undef pid_t
 
@@ -346,5 +286,5 @@
    such a type exists and the standard includes do not define it. */
 #undef uint64_t
 
-/* Define as `fork' if `vfork' does not work. */
-#undef vfork
+/* Define as empty if not declared in <zlib.h>. */
+#undef z_const

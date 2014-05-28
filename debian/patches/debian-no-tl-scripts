@@ -1,0 +1,16 @@
+---
+ texk/texlive/Makefile.am |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+--- texlive-bin.orig/texk/texlive/Makefile.am
++++ texlive-bin/texk/texlive/Makefile.am
+@@ -5,7 +5,8 @@
+ ##
+ ACLOCAL_AMFLAGS = -I ../../m4
+ 
+-SUBDIRS = tl_scripts
++#SUBDIRS = tl_scripts
++SUBDIRS = 
+ if LINKED_SCRIPTS
+ SUBDIRS += linked_scripts
+ endif LINKED_SCRIPTS

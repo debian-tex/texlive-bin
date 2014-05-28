@@ -25,6 +25,20 @@
 Copyright (C) 1989-2010 M.J.E. Mol, MESA Consulting B.V."
 
 
+#if defined(KPATHSEA)
+# define NO_DEBUG 1
+# include <kpathsea/config.h>
+# include <kpathsea/readable.h>
+#if defined(WIN32)
+# include <kpathsea/variable.h>
+#endif
+# include <sys/types.h>
+# include <sys/stat.h>
+#else
+# define TRUE        1
+# define FALSE       0
+#endif
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -34,17 +48,6 @@ Copyright (C) 1989-2010 M.J.E. Mol, MESA Consulting B.V."
 # if !defined(THINK_C)
 #  include <unistd.h>
 # endif
-#endif
-
-#if defined(KPATHSEA)
-# define NO_DEBUG 1
-# include <kpathsea/config.h>
-# include <kpathsea/readable.h>
-# include <sys/types.h>
-# include <sys/stat.h>
-#else
-# define TRUE        1
-# define FALSE       0
 #endif
 
 #define nil         NULL

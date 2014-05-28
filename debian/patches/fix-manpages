@@ -133,7 +133,7 @@
  Urbana-Champaign.  This page was mostly written by Pierre MacKay.
 --- texlive-bin.orig/texk/xdvik/xdvi.1.in
 +++ texlive-bin/texk/xdvik/xdvi.1.in
-@@ -126,7 +126,7 @@
+@@ -124,7 +124,7 @@
  [\fB\-mgs\fP[\fIn\fP] \fIsize\fP]
  [\fB\-mousemode\fP \fI0|1|2\fP]
  #ifcolor
@@ -142,7 +142,7 @@
  #endif
  #ifdps
  [\fB\-nodps\fP]
-@@ -165,7 +165,7 @@
+@@ -166,7 +166,7 @@
  #ifps
  [\fB\-postscript\fP \fIflag\fP]
  #endif
@@ -151,7 +151,7 @@
  [\fB\-rv\fP]
  [\fB\-S\fP \fIdensity\fP]
  [\fB\-s\fP \fIshrink\fP]
-@@ -191,7 +191,7 @@
+@@ -193,7 +193,7 @@
  .B Xdvi
  is a program for previewing
  .I dvi
@@ -160,7 +160,7 @@
  .BR tex (1)
  program, under the X window system.
  .PP
-@@ -384,12 +384,12 @@
+@@ -394,12 +394,12 @@
  .br
  For the bitmask representation, multiple values can
  be specified by adding the numbers that represent the individual bits;
@@ -175,7 +175,7 @@
  all file searching and opening commands, use
  .BR search,expand,paths,hash,stat,open .
  (The option `kpathsea' is provided as a shorthand for these.)
-@@ -484,7 +484,7 @@
+@@ -494,7 +494,7 @@
  .BR XEDITOR ,
  .BR VISUAL ,
  and
@@ -184,7 +184,7 @@
  (in this sequence). If the string is found as the value
  of the
  .SB VISUAL
-@@ -625,10 +625,10 @@
+@@ -627,10 +627,10 @@
  .TP
  .BI \-font " font"
  .RB ( *font )
@@ -197,7 +197,7 @@
  .RS 7
  .nf
  .ft 3
-@@ -686,7 +686,7 @@
+@@ -688,7 +688,7 @@
  as described in the
  .I X(7x)
  man page. The geometry of child windows can be set
@@ -206,7 +206,7 @@
  .br
  .I xdvi*helpwindow.geometry: 600x800
  .\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-@@ -1026,7 +1026,7 @@
+@@ -1020,7 +1020,7 @@
  already running.
  This argument makes it run in the foreground instead.  This is useful
  for debugging, or if your client application cannot deal well with
@@ -215,7 +215,7 @@
  in
  .B emacs
  are known to have problems with this.
-@@ -1255,7 +1255,7 @@
+@@ -1230,7 +1230,7 @@
  .B DESCRIPTION
  above, xdvi will create a temporary copy of the DVI file so that it
  can be accessed without interruptions even while the file is being
@@ -224,7 +224,7 @@
  .BR TeX .
  Since this introduces the overhead of copying the file every time
  it has changed, the
-@@ -1306,7 +1306,7 @@
+@@ -1322,7 +1322,7 @@
  .RB ( .pixelsPerInch )
  Defines the size of the fonts to use, in pixels per inch.  The
  default value is @BDPI@.  This option is provided only for backwards
@@ -233,7 +233,7 @@
  and the Metafont mode via the
  .B \-mfmode
  option (which see).
-@@ -1562,7 +1562,7 @@
+@@ -1578,7 +1578,7 @@
  extensions in both filenames.
  .TP
  2.
@@ -242,7 +242,7 @@
  .IR ./test.tex ,
  .IR ../test.tex ,
  .IR /my/homedir/tex/test.tex
-@@ -1596,7 +1596,7 @@
+@@ -1620,7 +1620,7 @@
  .B \-thorough
  .RB ( .thorough )
  .B Xdvi
@@ -251,7 +251,7 @@
  .BR \enotin )
  are printed correctly.  On monochrome displays, this is always possible
  with one logical operation, either
-@@ -1690,7 +1690,7 @@
+@@ -1714,7 +1714,7 @@
  the DVI file for changes every
  .I n
  seconds. If the DVI file has been completely written by TeX, it will
@@ -260,7 +260,7 @@
  possible. The default for this option is 0, i.e. no watching.
  .br
  Since xdvi cannot handle partial DVI files, it tries not to reload
-@@ -1859,7 +1859,7 @@
+@@ -1883,7 +1883,7 @@
  .\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
  .\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
  .\"
@@ -269,7 +269,7 @@
  .\" strict ASCII order (found that more intuitive). Sequence for each letter
  .\" is: Alt-Ctrl, Ctrl, uppercase, lowercase.
  .\"
-@@ -2050,7 +2050,7 @@
+@@ -2074,7 +2074,7 @@
  .sp
  If given a numeric argument that is not 0 or 1, greyscale anti-aliasing is
  turned on, and the gamma resource is set to the value divided by
@@ -278,7 +278,7 @@
  .RB ` 150G '
  turns on greyscale and sets gamma to 1.5.
  #endif
-@@ -2177,7 +2177,7 @@
+@@ -2201,7 +2201,7 @@
  .TP
  .B Ctrl-o
  .RB [ select-dvi-file() ]
@@ -287,7 +287,7 @@
  .I dvi
  file. A file-selection widget is popped up for you to choose the DVI
  file from. If a prefix argument
-@@ -2413,7 +2413,7 @@
+@@ -2437,7 +2437,7 @@
  switched on (if they had been invisible before) or off.
  .br
  Toggling the scrollbars may behave erratically with the
@@ -296,7 +296,7 @@
  resizing the window, and at certain window sizes one of the
  scrollbars may fail to disappear.
  .br
-@@ -2545,7 +2545,7 @@
+@@ -2569,7 +2569,7 @@
  .\" Note that in order to assign magnifier actions to
  .\" the buttons 4 or 5, you need to use the resource
  .\" .B wheelTranslations
@@ -305,7 +305,7 @@
  .\" .sp
  .\" xdvi.wheelTranslations: <Btn4Down>: magnifier(*4)\en\e
  .\"     <Btn5Down>:	magnifier(*5)\en
-@@ -2597,7 +2597,7 @@
+@@ -2621,7 +2621,7 @@
  .B text-selection()
  This action allows you to mark a rectangular region of text in the DVI file.
  The text is put into the X selection buffer and can be pasted into other
@@ -314,7 +314,7 @@
  in the
  .B Save
  dialog; see the discussion there for more information on encoding issues.
-@@ -2693,7 +2693,7 @@
+@@ -2717,7 +2717,7 @@
  .PP
  Mouse actions should refer only to
  .B ButtonPress
@@ -323,7 +323,7 @@
  .BR "<Btn1Down>:magnifier(*1)" ).
  The corresponding motion and release events will be handled internally.
  A key action may be bound to a mouse event, but not vice versa.
-@@ -2937,7 +2937,7 @@
+@@ -2961,7 +2961,7 @@
  .\" .fi
  .\" .RE
  .\" .PP
@@ -332,7 +332,7 @@
  .\" PostScript), the files
  .\" .B mime.types
  .\" and
-@@ -2985,9 +2985,9 @@
+@@ -3009,9 +3009,9 @@
  This emphasizes the fact that searching in the
  formatted text (the DVI output) works differently from
  searching in the source text: Searching in the DVI file makes it easier to
@@ -344,7 +344,7 @@
  footnotes. In these cases it's better to search in the \*(Te\& source
  instead. The use of
  .I source specials
-@@ -3061,10 +3061,10 @@
+@@ -3085,10 +3085,10 @@
  .TP
  -
  \fIa|b\fR matches \fIa\fR or \fIb\fR. Brackets can be used
@@ -357,7 +357,7 @@
  first match.
  .TP
  -
-@@ -3086,7 +3086,7 @@
+@@ -3110,7 +3110,7 @@
  These can be negated by inserting a \fI^\fR symbol after the first bracket:
  .I [^[:alpha:]]
  
@@ -366,7 +366,7 @@
  .B IEEE Std 1003.1
  standard definition available online from:
  
-@@ -3174,7 +3174,7 @@
+@@ -3198,7 +3198,7 @@
  listed in the
  .B Dvips options
  field are segmented at whitespaces and passed as separate arguments to dvips.
@@ -375,7 +375,7 @@
  the following string into the
  .B Printer
  field:
-@@ -3192,16 +3192,16 @@
+@@ -3216,16 +3216,16 @@
  .B dvipsPrinterString
  .TP
  .B dvipsOptionsString
@@ -395,7 +395,7 @@
  .I -paper a4r
  is translated into the dvips options
  .IR "-t a4 -t landscape" .
-@@ -3243,8 +3243,8 @@
+@@ -3267,8 +3267,8 @@
  .TP
  -
  Plain text in ISO-8859-1 or UTF-8 encoding. The latter will preserve more
@@ -406,7 +406,7 @@
  as text; so this funcionality works best for plain text documents.
  If a character cannot be displayed in the selected
  charset, it is replaced by `\e' followed by the hexadecimal character code.
-@@ -3348,7 +3348,7 @@
+@@ -3372,7 +3372,7 @@
  are supported (these names are case-insensitive).
  .br
  Note that UTF-8 is
@@ -415,7 +415,7 @@
  symbols) of a DVI file. If ISO-8859-1 is active, characters that cannot be displayed
  are replaced by `\e' followed by the hexadecimal character code.
  For other encodings, such characters may trigger iconv error messages.
-@@ -3432,7 +3432,7 @@
+@@ -3456,7 +3456,7 @@
  pixmap should have width
  \fIn\fR x \fIh\fR if \fIh\fR is the height of the pixmap.
  .PP
@@ -424,7 +424,7 @@
  .B toolbarTranslations
  can be used to map icons/buttons to specific actions.
  The resource should contain a string separated by newline characters,
-@@ -3663,7 +3663,7 @@
+@@ -3687,7 +3687,7 @@
  .BR xdvi ,
  unless your system
  administrator or TeX distribution has already done so (which is the case
@@ -433,7 +433,7 @@
  fonts,
  .B xdvik
  will search using the
-@@ -3688,7 +3688,7 @@
+@@ -3712,7 +3712,7 @@
  .RB `` xdvi: ''.
  Doing so does not change the behavior of the special under
  .BR xdvi ,
@@ -442,7 +442,7 @@
  .\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
  .\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
  .SH SOURCE SPECIALS
-@@ -3726,7 +3726,7 @@
+@@ -3750,7 +3750,7 @@
  inherited across pages.
  .sp
  You will need a \*(Te\& implementation that provides an appropriate
@@ -451,7 +451,7 @@
  .IR -src )
  or a macro package
  (such as
-@@ -3802,12 +3802,12 @@
+@@ -3826,12 +3826,12 @@
  If an asterisk
  .RB ( * )
  appears just before the width, then the measurements refer to the document
@@ -466,7 +466,7 @@
  .RS 5
  .ft 3
  .nf
-@@ -3863,7 +3863,7 @@
+@@ -3887,7 +3887,7 @@
  .B dvips
  documentation) is not supported.
  There are also some restrictions due to the way xdvi's  drawing  routines
@@ -475,7 +475,7 @@
  .B \ecolorbox
  and
  .B \efcolorbox
-@@ -4244,11 +4244,11 @@
+@@ -4268,11 +4268,11 @@
  and
  .B \efcolorbox
  macros;  this is not likely to change in the near future. This also

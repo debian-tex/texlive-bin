@@ -19,8 +19,8 @@
 
 @ @c
 static const char _svn_version[] =
-    "$Id: writecff.w 4551 2013-01-04 16:08:20Z taco $"
-    "$URL: https://foundry.supelec.fr/svn/luatex/tags/beta-0.76.0/source/texk/web2c/luatexdir/font/writecff.w $";
+    "$Id: writecff.w 4956 2014-03-28 12:12:17Z luigi $"
+    "$URL: https://foundry.supelec.fr/svn/luatex/trunk/source/texk/web2c/luatexdir/font/writecff.w $";
 
 #include "ptexlib.h"
 #include "lua/luatex-api.h"
@@ -51,9 +51,9 @@ static unsigned long get_unsigned(cff_font * cff, int n)
 }
 
 @ @c
-#define CFF_ERROR pdftex_fail
+#define CFF_ERROR luatex_fail
 #undef WARN
-#define WARN pdftex_warn
+#define WARN luatex_warn
 
 const char *const cff_stdstr[CFF_STDSTR_MAX] = {
     ".notdef", "space", "exclam", "quotedbl", "numbersign",
@@ -561,7 +561,7 @@ static double arg_stack[CFF_DICT_STACK_LIMIT];
 @
 CFF DICT encoding:
 TODO: default values
- 
+
 @c
 #define CFF_LAST_DICT_OP1 22
 #define CFF_LAST_DICT_OP2 39
@@ -735,12 +735,17 @@ static double get_real(card8 ** data, card8 * endptr, int *status)
         *status = CFF_CFF_ERROR_PARSE_CFF_ERROR;
     } else {
         char *s;
+	/* strtod sets errno for  OVERFLOW and _maybe_ UNDERFLOW */
+        /* but not for an invalid  conversion (as for example  if we try to convert "foo" in a double )*/
+        /* At least in glib sets errno also for UNDERFLOW */
+        /* We don't save/restore the prev. errno */
+        errno=0;
         result = strtod(work_buffer, &s);
-        if (*s != 0 || errno == ERANGE) {
-            *status = CFF_CFF_ERROR_PARSE_CFF_ERROR;
-        }
+        if ( (result==0.0 && work_buffer==s) || errno ) {
+              /* conversion is not possible */
+             *status = CFF_CFF_ERROR_PARSE_CFF_ERROR;
+         }
     }
-
     return result;
 }
 
@@ -858,7 +863,7 @@ cff_dict *cff_dict_unpack(card8 * data, card8 * endptr)
     }
 
     if (status != CFF_PARSE_OK) {
-        pdftex_fail("Parsing CFF DICT failed. (error=%d)", status);
+        luatex_fail("Parsing CFF DICT failed. (error=%d)", status);
     } else if (stack_top != 0) {
         WARN("Garbage in CFF DICT data.");
         stack_top = 0;
@@ -891,16 +896,16 @@ double cff_dict_get(cff_dict * dict, const char *key, int idx)
 
     for (i = 0; i < dict->count; i++) {
         if (strcmp(key, (dict->entries)[i].key) == 0) {
-            if ((dict->entries)[i].count > idx)
+           if ((dict->entries)[i].count > idx)
                 value = (dict->entries)[i].values[idx];
             else
-                pdftex_fail("Invalid index number.");
+                luatex_fail("Invalid index number.");
             break;
         }
     }
 
     if (i == dict->count)
-        pdftex_fail("DICT entry \"%s\" not found.", key);
+        luatex_fail("DICT entry \"%s\" not found.", key);
 
     return value;
 }
@@ -1117,7 +1122,7 @@ cff_font *read_cff(unsigned char *buf, long buflength, int n)
         return NULL;
     }
     if (cff->header_major > 1) {
-        pdftex_warn("CFF major version %u not supported.", cff->header_major);
+        luatex_warn("CFF major version %u not supported.", cff->header_major);
         cff_close(cff);
         return NULL;
     }
@@ -1126,7 +1131,7 @@ cff_font *read_cff(unsigned char *buf, long buflength, int n)
     /* Name INDEX */
     idx = cff_get_index(cff);
     if (n > idx->count - 1) {
-        pdftex_warn("Invalid CFF fontset index number.");
+        luatex_warn("Invalid CFF fontset index number.");
         cff_close(cff);
         return NULL;
     }
@@ -1251,6 +1256,7 @@ static long pack_real(card8 * dest, long destlen, double value)
 {
     long e;
     int i = 0, pos = 2;
+    int res;
 #define CFF_REAL_MAX_LEN 17
 
     if (destlen < 2)
@@ -1282,10 +1288,16 @@ static long pack_real(card8 * dest, long destlen, double value)
         }
     }
 
-    sprintf(work_buffer, "%1.14g", value);
-    for (i = 0; i < CFF_REAL_MAX_LEN; i++) {
+    res=sprintf(work_buffer, "%1.14g", value);
+    if (res<0) CFF_ERROR("Invalid conversion.");
+    if (res>CFF_REAL_MAX_LEN) res=CFF_REAL_MAX_LEN;
+
+    for (i = 0; i < res; i++) {
         unsigned char ch = 0;
+
         if (work_buffer[i] == '\0') {
+	  /* res should prevent this.  */
+	  /* CFF_ERROR("Cannot happen"); */
             break;
         } else if (work_buffer[i] == '.') {
             ch = 0x0a;
@@ -1528,11 +1540,11 @@ void cff_dict_set(cff_dict * dict, const char *key, int idx, double value)
     }
 
     if (i == dict->count)
-        pdftex_fail("DICT entry \"%s\" not found.", key);
+        luatex_fail("DICT entry \"%s\" not found.", key);
 }
 
 
-@ Strings 
+@ Strings
 @c
 char *cff_get_string(cff_font * cff, s_SID id)
 {
@@ -1901,7 +1913,7 @@ static double width = 0.0;
 static double seac[4] = { 0.0, 0.0, 0.0, 0.0 };
 #endif
 
-@  Operand stack and Transient array 
+@  Operand stack and Transient array
 @c
 static int cs2_stack_top = 0;
 static double cs2_arg_stack[CS_ARG_STACK_MAX];
@@ -2053,7 +2065,7 @@ static void clear_stack(card8 ** dest, card8 * limit)
 @
  Single byte operators:
   Path construction, Operator for finishing a path, Hint operators.
- 
+
  phase:
  \item 0: inital state
  \item 1: hint declaration, first stack-clearing operator appeared
@@ -2182,10 +2194,10 @@ do_operator1(card8 ** dest, card8 * limit, card8 ** data, card8 * endptr)
 @
  Double byte operators:
  Flex, arithmetic, conditional, and storage operators.
- 
+
  Following operators are not supported:
    random: How random ?
- 
+
 @c
 static void
 do_operator2(card8 ** dest, card8 * limit, card8 ** data, card8 * endptr)
@@ -2463,7 +2475,7 @@ static void get_fixed(card8 ** data, card8 * endptr)
 @
  Subroutines:
   The bias for subroutine number is introduced in type 2 charstrings.
- 
+
   subr:     set to a pointer to the subroutine charstring.
   len:      set to the length of subroutine charstring.
   |subr_idx|: CFF INDEX data that contains subroutines.
@@ -3002,7 +3014,7 @@ static void write_fontfile(PDF pdf, cff_font * cffont, char *fullname)
   if ((avl_find(fd->gl_tree,glyph) != NULL)) {                                 \
       size = (long)(cs_idx->offset[code+1] - cs_idx->offset[code]);	\
     if (size > CS_STR_LEN_MAX) {                                               \
-      pdftex_fail("Charstring too long: gid=%u, %ld bytes", code, size);       \
+      luatex_fail("Charstring too long: gid=%u, %ld bytes", code, size);       \
     }                                                                          \
     if (charstring_len + CS_STR_LEN_MAX >= max_len) {                          \
 	max_len = (long)(charstring_len + 2 * CS_STR_LEN_MAX);		\
@@ -3163,8 +3175,8 @@ void write_cff(PDF pdf, cff_font * cffont, fd_entry * fd)
         }
     }
 
-    /* CIDSet: a table of bits indexed by cid, bytes with high order bit first, 
-       each (set) bit is a (present) CID. */	
+    /* CIDSet: a table of bits indexed by cid, bytes with high order bit first,
+       each (set) bit is a (present) CID. */
     if (1) {
       int cid;
       cidset = pdf_create_obj(pdf, obj_type_others, 0);
@@ -3374,7 +3386,7 @@ void write_cid_cff(PDF pdf, cff_font * cffont, fd_entry * fd)
         }
     }
 
-    /* CIDSet: a table of bits indexed by cid, bytes with high order bit first, 
+    /* CIDSet: a table of bits indexed by cid, bytes with high order bit first,
        each (set) bit is a (present) CID. */
     if (1) {
         cidset = pdf_create_obj(pdf, obj_type_others, 0);
@@ -3389,7 +3401,9 @@ void write_cid_cff(PDF pdf, cff_font * cffont, fd_entry * fd)
             }
             pdf_begin_obj(pdf, cidset, OBJSTM_NEVER);
             pdf_begin_dict(pdf);
-            pdf_begin_stream(pdf);
+            pdf_dict_add_streaminfo(pdf);
+            pdf_end_dict(pdf);
+	    pdf_begin_stream(pdf);
             pdf_out_block(pdf, stream, l);
             pdf_end_stream(pdf);
             pdf_end_obj(pdf);
@@ -3443,7 +3457,7 @@ void write_cid_cff(PDF pdf, cff_font * cffont, fd_entry * fd)
                               (CIDToGIDMap[2 * cid + 1]));
         size = (long) (cs_idx->offset[gid_org + 1] - cs_idx->offset[gid_org]);
         if (size > CS_STR_LEN_MAX) {
-            pdftex_fail("Charstring too long: gid=%u, %ld bytes", cid, size);
+            luatex_fail("Charstring too long: gid=%u, %ld bytes", cid, size);
         }
         if (charstring_len + CS_STR_LEN_MAX >= max_len) {
             max_len = charstring_len + 2 * CS_STR_LEN_MAX;
@@ -3541,13 +3555,11 @@ void writetype1w(PDF pdf, fd_entry * fd)
     }
     fclose(fp);
 
-    if (tracefilenames) {
-        if (is_subsetted(fd->fm))
-            tex_printf("<%s", cur_file_name);
-        else
-            tex_printf("<<%s", cur_file_name);
+    if (is_subsetted(fd->fm)) {
+        report_start_file(filetype_subset,cur_file_name);
+    } else {
+        report_start_file(filetype_font,cur_file_name);
     }
-
     (void) ff_createcff(ff->ff_path, &tfm_buffer, &tfm_size);
 
     if (tfm_size > 0) {
@@ -3564,11 +3576,10 @@ void writetype1w(PDF pdf, fd_entry * fd)
                 cur_file_name);
         uexit(1);
     }
-    if (tracefilenames) {
-        if (is_subsetted(fd->fm))
-            tex_printf(">");
-        else
-            tex_printf(">>");
+    if (is_subsetted(fd->fm)) {
+        report_stop_file(filetype_subset);
+    } else {
+        report_stop_file(filetype_font);
     }
     cur_file_name = NULL;
 }

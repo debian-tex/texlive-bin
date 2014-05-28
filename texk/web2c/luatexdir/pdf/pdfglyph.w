@@ -19,8 +19,8 @@
 
 @ @c
 static const char _svn_version[] =
-    "$Id: pdfglyph.w 4575 2013-02-08 20:42:52Z hhenkel $"
-    "$URL: https://foundry.supelec.fr/svn/luatex/tags/beta-0.76.0/source/texk/web2c/luatexdir/pdf/pdfglyph.w $";
+    "$Id: pdfglyph.w 4718 2014-01-02 15:35:31Z taco $"
+    "$URL: https://foundry.supelec.fr/svn/luatex/trunk/source/texk/web2c/luatexdir/pdf/pdfglyph.w $";
 
 #include "ptexlib.h"
 #include "pdf/pdfpage.h"
@@ -33,11 +33,11 @@ static const char _svn_version[] =
 #define e_tj 3                  /* must be 3; movements in []TJ are in fontsize/$10^3$ units */
 
 @ @c
-static long pdf_char_width(pdfstructure * p, internal_font_number f, int i)
+static int64_t pdf_char_width(pdfstructure * p, internal_font_number f, int i)
 {
     /* use exactly this formula also for calculating the /Width array values */
     return
-        lround((double) char_width(f, i) / font_size(f) *
+        i64round((double) char_width(f, i) / font_size(f) *
                ten_pow[e_tj + p->cw.e]);
 }
 
@@ -46,14 +46,13 @@ void pdf_print_charwidth(PDF pdf, internal_font_number f, int i)
 {
     pdffloat cw;
     pdfstructure *p = pdf->pstruct;
-    assert(pdf_font_blink(f) == null_font);     /* must use unexpanded font! */
     cw.m = pdf_char_width(p, f, i);
     cw.e = p->cw.e;
     print_pdffloat(pdf, cw);
 }
 
 @ @c
-static void setup_fontparameters(PDF pdf, internal_font_number f)
+static void setup_fontparameters(PDF pdf, internal_font_number f, int ex_glyph)
 {
     float slant, extend, expand, scale = 1.0;
     float u = 1.0;
@@ -65,24 +64,26 @@ static void setup_fontparameters(PDF pdf, internal_font_number f)
         u = font_units_per_em(f) / 1000.0;
     pdf->f_cur = f;
     p->f_pdf = pdf_set_font(pdf, f);
-    p->fs.m = lround(font_size(f) / u / one_bp * ten_pow[p->fs.e]);
+    p->fs.m = i64round(font_size(f) / u / one_bp * ten_pow[p->fs.e]);
     slant = font_slant(f) / 1000.0;
     extend = font_extend(f) / 1000.0;
-    expand = 1.0 + font_expand_ratio(f) / 1000.0;
+    expand = 1.0 + (ex_glyph/1) / 1000.0;
     p->tj_delta.e = p->cw.e - 1;        /* "- 1" makes less corrections inside []TJ */
     /* no need to be more precise than TeX (1sp) */
     while (p->tj_delta.e > 0
            && (double) font_size(f) / ten_pow[p->tj_delta.e + e_tj] < 0.5)
         p->tj_delta.e--;        /* happens for very tiny fonts */
     assert(p->cw.e >= p->tj_delta.e);   /* else we would need, e. g., |ten_pow[-1]| */
-    p->tm[0].m = lround(scale * expand * extend * ten_pow[p->tm[0].e]);
-    p->tm[2].m = lround(slant * ten_pow[p->tm[2].e]);
-    p->tm[3].m = lround(scale * ten_pow[p->tm[3].e]);
+    p->tm[0].m = i64round(scale * expand * extend * ten_pow[p->tm[0].e]);
+    p->tm[2].m = i64round(slant * ten_pow[p->tm[2].e]);
+    p->tm[3].m = i64round(scale * ten_pow[p->tm[3].e]);
     p->k2 =
         ten_pow[e_tj +
                 p->cw.e] * scale / (ten_pow[p->pdf.h.e] * pdf2double(p->fs) *
                                     pdf2double(p->tm[0]));
-}
+    p->cur_ex = ex_glyph ;  /* we keep track of the state of ex */
+} 
+
 
 @ @c
 static void set_font(PDF pdf)
@@ -192,29 +193,60 @@ void end_chararray(PDF pdf)
 }
 
 @ @c
-void pdf_place_glyph(PDF pdf, internal_font_number f, int c)
+void pdf_place_glyph(PDF pdf, internal_font_number f, int c, int ex)
 {
     boolean move;
     pdfstructure *p = pdf->pstruct;
     scaledpos pos = pdf->posstruct->pos;
+
     if (!char_exists(f, c))
         return;
-    /* ensure to be within BT...ET */
-    if (is_pagemode(p)) {
-        pdf_goto_textmode(pdf);
-        p->need_tf = true;
-    }
-    /* all font setup */
-    if (f != pdf->f_cur || p->need_tf) {
-        setup_fontparameters(pdf, f);
-        if (p->need_tf || p->f_pdf != p->f_pdf_cur || p->fs.m != p->fs_cur.m) {
-            pdf_goto_textmode(pdf);
-            set_font(pdf);
-        } else if (p->tm0_cur.m != p->tm[0].m) {
-            /* catch in-line HZ expand change due to efcode */
-            p->need_tm = true;
-        }
-    }
+
+/*
+ p->need_tf : okay, set somewhere else
+ f != pdf->f_cur : font change
+ p->f_pdf != p->f_pdf_cur : font change
+ p->fs.m ~= p->fs_cur.m : move
+ is_pagemode(p) -> stream change
+ p->tm0_cur.m -> p->tm[0].m : also move
+*/
+
+    /* fix issue 857 */
+    /* /\* ensure to be within BT...ET *\/ */
+    /* if (is_pagemode(p)) { */
+    /*     pdf_goto_textmode(pdf); */
+    /*     p->need_tf = true; */
+    /* } */
+    /* /\* all font setup *\/ */
+    /* if (true || f != pdf->f_cur || p->need_tf) { */
+    /*     setup_fontparameters(pdf, f, ex); */
+    /*     if (p->need_tf || p->f_pdf != p->f_pdf_cur || p->fs.m != p->fs_cur.m) { */
+    /*         pdf_goto_textmode(pdf); */
+    /*         set_font(pdf); */
+    /*     } else if (p->tm0_cur.m != p->tm[0].m) { */
+    /*         /\* catch in-line HZ expand change due to efcode *\/ */
+    /*         p->need_tm = true; */
+    /*     } */
+    /* } */
+
+
+    /* LS/HH: We need to adapt the tm when a font changes. A change can be a change in 
+       id (frontend) or pdf reference (backend, as we share font resources). At 
+       such a change we also need to adapt to the slant and extend. Initially
+       we also need to take the exfactor of a glyph into account. When the font is 
+       unchanged, we still need to check each glyph for a change in exfactor. We 
+       store the current one on the state record so that we can minimize testing. */
+
+   /* is the p->need_tf test really needed ? */ 
+    if (p->need_tf || f != pdf->f_cur || p->f_pdf != p->f_pdf_cur || p->fs.m != p->fs_cur.m || is_pagemode(p)) {
+         pdf_goto_textmode(pdf);
+         setup_fontparameters(pdf, f, ex);
+         set_font(pdf);
+    } else if (p->tm0_cur.m != p->tm[0].m || p->cur_ex != ex) {
+         setup_fontparameters(pdf, f, ex);
+         p->need_tm = true;
+    } 
+
     /* all movements */
     move = calc_pdfpos(p, pos); /* within text or chararray or char mode */
     if (move || p->need_tm) {

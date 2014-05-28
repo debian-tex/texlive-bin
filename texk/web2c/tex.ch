@@ -72,10 +72,10 @@ a modified \TeX{} version.
 @z
 
 @x [1.2] l.188
-@d banner=='This is TeX, Version 3.1415926' {printed when \TeX\ starts}
+@d banner=='This is TeX, Version 3.14159265' {printed when \TeX\ starts}
 @y
-@d TeX_banner_k=='This is TeXk, Version 3.1415926' {printed when \TeX\ starts}
-@d TeX_banner=='This is TeX, Version 3.1415926' {printed when \TeX\ starts}
+@d TeX_banner_k=='This is TeXk, Version 3.14159265' {printed when \TeX\ starts}
+@d TeX_banner=='This is TeX, Version 3.14159265' {printed when \TeX\ starts}
 @#
 @d banner==TeX_banner
 @d banner_k==TeX_banner_k
@@ -516,6 +516,8 @@ We define |input_ln| in C, for efficiency. Nevertheless we quote the module
 @!dump_line:boolean; {was a \.{\%\AM format} line seen?}
 tini@/
 @#
+@!dump_name:const_cstring; {format name for terminal display}
+@#
 @!bound_default:integer; {temporary for setup}
 @!bound_name:const_cstring; {temporary for setup}
 @#
@@ -757,14 +759,15 @@ else
   wterm(banner);
 @z
 
-@x [5.61] l.1556 - Print rest of banner, eliminate misleading `(no format preloaded)'.
+@x [5.61] l.1556 - Print rest of banner.
 if format_ident=0 then wterm_ln(' (no format preloaded)')
 else  begin slow_print(format_ident); print_ln;
   end;
 @y
 wterm(version_string);
-if format_ident>0 then slow_print(format_ident);
-print_ln;
+if format_ident=0 then wterm_ln(' (preloaded format=',dump_name,')')
+else  begin slow_print(format_ident); print_ln;
+  end;
 if shellenabledp then begin
   wterm(' ');
   if restrictedshell then begin
@@ -4031,13 +4034,6 @@ if interaction_option<>unspecified_mode then interaction:=interaction_option;
 if (x<>69069)or eof(fmt_file) then goto bad_fmt
 @y
 if x<>69069 then goto bad_fmt
-@z
-
-% Eliminate probably wrong word `preloaded' from format_idents.
-@x [50.1328] l.24124
-print(" (preloaded format="); print(job_name); print_char(" ");
-@y
-print(" (format="); print(job_name); print_char(" ");
 @z
 
 @x [51.1332] l.24203 - make the main program a procedure, for eqtb hack.

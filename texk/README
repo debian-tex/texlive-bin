@@ -1,4 +1,4 @@
-$Id: README 30772 2013-05-28 18:07:34Z karl $
+$Id: README 33742 2014-04-29 06:58:25Z peter $
 Copyright 2006-2012 TeX Users Group.
 You may freely use, modify and/or distribute this file.
 
@@ -27,7 +27,7 @@ bibtex-x - maintained here, contains
   bibtexu
     http://omega.enstb.org/yannis/bibtexu/
 
-chktex 1.7.1 - checked 27sep12
+chktex 1.7.2 - checked 30may13
   http://mirror.ctan.org/support/chktex/
   http://download.savannah.gnu.org/releases/chktex/
 
@@ -49,7 +49,9 @@ dvidvi - ?
 
 dviljk - maintained here, by Joachim Schrod
 
-dvipdfmx - maintained here, by Khaled Hosny, Jonathan Kew
+dvipdfm-x - maintained here, by Khaled Hosny, Jonathan Kew, contains
+  dvipdfmx
+  xdvipdfmx
 
 dvipng 1.14 - checked 10may12
   http://mirror.ctan.org/dviware/dvipng/ (but maybe stale)
@@ -59,8 +61,8 @@ dvipos - ?
 
 dvipsk - maintained here, by us
 
-dvisvgm - checked 21may13
-  http://downloads.sourceforge.net/dvisvgm/dvisvgm-1.2.2.tar.gz
+dvisvgm 1.6 - checked 29apr14
+  http://downloads.sourceforge.net/dvisvgm/
 
 gsftopk - from Paul Vojta's xdvi?
 
@@ -69,22 +71,21 @@ kpathsea - maintained here, by us
 lacheck - checked 25apr11
   http://mirror.ctan.org/support/lacheck/lacheck-1.26.tar.gz
 
-lcdf-typetools 2.98 - checked 11apr13
-  http://www.lcdf.org/type/
-  http://www.lcdf.org/type/lcdf-typetools-2.98.tar.gz
-
-luatex - update texmf-dist/doc/luatex/base from
-  https://foundry.supelec.fr/svn/luatex/trunk/manual
+lcdf-typetools 2.100 - checked 9jan14
+  http://www.lcdf.org/type/lcdf-typetools-2.100.tar.gz
 
 makeindexk - maintained here, by us
 
 makejvf - ?
 
-mendexk - ?
+mendexk - maintained here, by us (akira et al.)
 
 ps2pkm - ?
 
-ptexenc - ?
+psutils 1.23 - checked 16jan14
+  https://github.com/rrthomas/psutils/archive/v1.23.tar.gz
+
+ptexenc - maintained here, by us (akira et al.)
 
 seetexk - ?
 
@@ -95,7 +96,7 @@ tex4htk - checked 25apr11
 
 texlive - scripts maintained here, by us
 
-ttf2pk - maintained here, by us
+ttf2pk2 - maintained here, by us
 
 ttfdump - ?
 
@@ -103,9 +104,5 @@ web2c - maintained here, by us - core web2c, plain tex, etc.
         The TeX variant dirs (pdftexdir, xetexdir, etc.)
         updated here by their respective maintainers.
 
-xdv2pdf - maintained here, by Khaled Hosny, Jonathan Kew
-
-xdvik 22.86 - checked 7apr13
+xdvik 22.87 - checked 14apr14
   http://sourceforge.net/projects/xdvi/files/xdvik/
-
-xdvipdfmx - maintainered here, by Khaled Hosny, Jonathan Kew

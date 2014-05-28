@@ -6,6 +6,8 @@
  *   Copyright 1997-1999, 2000, 2002 by
  *     Frederic Loyer <loyer@ensta.fr>
  *     Werner Lemberg <wl@gnu.org>.
+ *   Copyright 2009-2013 by
+ *     Peter Breitenlohner <tex-live@tug.org>
  */
 
 /*
@@ -18,6 +20,10 @@
 /*
  *   Adapted from afm2tfm by F. Loyer <loyer@ensta.fr>.
  */
+
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -42,7 +48,7 @@
 #include "subfont.h"
 
 
-char ident[] = "ttf2tfm version 1.5";
+char ident[] = "ttf2tfm version 2.0";
 const char *progname = "ttf2tfm";            /* for error/warning messages */
 
 /* command line options */
@@ -268,6 +274,7 @@ release_subfont_list(Font *fnt)
 
 #define VERSION "\
 Copyright (C) 1997-1999, 2000, 2002 Frederic Loyer and Werner Lemberg.\n\
+              2009-2013 Peter Breitenlohner\n\
 There is NO warranty.  You may redistribute this software\n\
 under the terms of the GNU General Public License\n\
 and the Dvips copyright.\n\
@@ -357,16 +364,10 @@ handle_options(int argc, char *argv[], Font *fnt)
   if (!quiet)
     printf("This is %s\n", ident);
 
-#if defined(MSDOS) || defined(OS2) || defined(ATARIST)
   /* Make VPL file identical to that created under Unix */
   fnt->titlebuf = (char *)mymalloc(strlen(progname) + strlen(argv[1]) +
                                    1 + 1);
   sprintf(fnt->titlebuf, "%s %s", progname, argv[1]);
-#else
-  fnt->titlebuf = (char *)mymalloc(strlen(argv[0]) + strlen(argv[1]) +
-                                   1 + 1);
-  sprintf(fnt->titlebuf, "%s %s", argv[0], argv[1]);
-#endif
 
 
   /*

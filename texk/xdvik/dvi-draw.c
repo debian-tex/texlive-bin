@@ -855,7 +855,6 @@ shrink_glyph_grey(struct glyph *g)
     bmUnitT *unshrunk_ptr;
     unsigned int size;
     int row_num;
-    int actual_w;
 
 #if COLOR
     if (fg_active != fg_current) {
@@ -985,7 +984,6 @@ shrink_glyph_grey(struct glyph *g)
 #endif
     
     unshrunk_ptr = (bmUnitT *)g->bitmap.bits;
-    actual_w = g->bitmap.w;
     rows_left = g->bitmap.h;
     y = 0;
     /* the basic algorithm is the same as in the nogrey code, with the main
@@ -2962,6 +2960,10 @@ text_do_char(FILE *fp, struct scan_info *info, wide_ubyte ch)
 	}
 	maxchar = currinf.fontp->maxchar;
 	currinf.set_char_p = currinf.fontp->set_char_p;
+#if FREETYPE
+	if (currinf.set_char_p == set_ft_char)
+	    do_load_freetype_font();
+#endif
     }
 
     if (currinf.set_char_p == set_char) {
@@ -3087,6 +3089,10 @@ geom_do_char(FILE *fp, struct scan_info *info, wide_ubyte ch)
 	}
 	maxchar = currinf.fontp->maxchar;
 	currinf.set_char_p = currinf.fontp->set_char_p;
+#if FREETYPE
+	if (currinf.set_char_p == set_ft_char)
+	    do_load_freetype_font();
+#endif
     }
 
     if (currinf.set_char_p == set_char) {

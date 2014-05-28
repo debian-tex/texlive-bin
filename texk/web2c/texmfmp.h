@@ -99,6 +99,7 @@ typedef void* voidpointer;
 #endif /* MF */
 
 /* Restore underscores.  */
+#define dumpname dump_name
 #define kpsedvipsconfigformat kpse_dvips_config_format
 #define kpsefontmapformat kpse_fontmap_format
 #define kpsemfpoolformat kpse_mfpool_format
@@ -109,6 +110,19 @@ typedef void* voidpointer;
 
 /* Hacks for TeX that are better not to #ifdef, see lib/openclose.c.  */
 extern int tfmtemp, texinputtype;
+
+/* pdfTeX routines also used for e-pTeX and e-upTeX */
+#if defined (pdfTeX) || defined (epTeX) || defined (eupTeX)
+extern char start_time_str[];
+extern void pdftex_fail(const char *fmt, ...);
+extern void initstarttime(void);
+extern char *makecstring(integer s);
+extern char *makecfilename(integer s);
+extern void getcreationdate(void);
+extern void getfilemoddate(integer s);
+extern void getfilesize(integer s);
+extern void getfiledump(integer s, int offset, int length);
+#endif
 
 /* pdftex etc. except for tex use these for pipe support */
 #if defined(TeX) && !defined(onlyTeX)

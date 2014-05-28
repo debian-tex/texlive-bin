@@ -1,6 +1,6 @@
 /* mingw32.h: declarations for mingw32.
 
-   Copyright 2009-2012 Taco Hoekwater <taco@luatex.org>.
+   Copyright 2009-2014 Taco Hoekwater <taco@luatex.org>.
 
    This library is free software; you can redistribute it and/or
    modify it under the terms of the GNU Lesser General Public
@@ -49,6 +49,10 @@
 #define MAX_PIPES 128
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifdef MAKE_KPSE_DLL /* libkpathsea internal only */
 
 extern void init_user_info (void);
@@ -72,6 +76,11 @@ win32_popen (const char *command, const char *fmode)
 
   return _popen (command, mode);
 }
+#undef popen
 #define popen(cmd, mode) win32_popen(cmd, mode)
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

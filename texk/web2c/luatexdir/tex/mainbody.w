@@ -23,12 +23,12 @@
 
 @ @c
 static const char _svn_version[] =
-    "$Id: mainbody.w 4563 2013-01-21 03:22:53Z khaled $"
-    "$URL: https://foundry.supelec.fr/svn/luatex/tags/beta-0.76.0/source/texk/web2c/luatexdir/tex/mainbody.w $";
+    "$Id: mainbody.w 4956 2014-03-28 12:12:17Z luigi $"
+    "$URL: https://foundry.supelec.fr/svn/luatex/trunk/source/texk/web2c/luatexdir/tex/mainbody.w $";
 
 #include "ptexlib.h"
 
-@ 
+@
 pdfTeX is copyright (C) 1996-2006 Han The Thanh, <thanh@@pdftex.org>.
 
 e-TeX is copyright (C) 1994,98 by Peter Breitenlohner.
@@ -411,7 +411,7 @@ void main_body(void)
     if (bad > 0) {
         goto FINAL_END;
     }
-    print_banner(luatex_version_string, luatex_date_info, luatex_svn);
+    print_banner(luatex_version_string, luatex_svn);
 
     /* Get the first line of input and prepare to start */
     /* When we begin the following code, \TeX's tables may still contain garbage;
@@ -443,7 +443,7 @@ void main_body(void)
     if (pdf_draftmode_option != 0)
         pdf_draftmode = static_pdf->draftmode = pdf_draftmode_value;
     pdf_init_map_file((char *) pdftex_map);
-    if (end_line_char_inactive())
+    if (end_line_char_inactive)
         decr(ilimit);
     else
         buffer[ilimit] = (packed_ASCII_code) int_par(end_line_char_code);
@@ -590,8 +590,7 @@ void final_cleanup(void)
         else
             end_file_reading();
     while (open_parens > 0) {
-        if (tracefilenames)
-            tprint(" )");
+        report_stop_file(filetype_tex);
         decr(open_parens);
     }
     if (cur_level > level_one) {
@@ -647,7 +646,7 @@ void final_cleanup(void)
 }
 
 @ Once \TeX\ is working, you should be able to diagnose most errors with
-the \.{\\show} commands and other diagnostic features. 
+the \.{\\show} commands and other diagnostic features.
 An additional routine called |debug_help|
 will come into play when you type `\.D' after an error message;
 |debug_help| also occurs just before a fatal error causes \TeX\ to succumb.

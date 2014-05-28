@@ -1,5 +1,5 @@
 /*
-Copyright 1996-2011 Han The Thanh, <thanh@pdftex.org>
+Copyright 1996-2014 Han The Thanh, <thanh@pdftex.org>
 
 This file is part of pdfTeX.
 
@@ -21,10 +21,8 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
    MINGW32 <rpcndr.h> defining 'boolean' as 'unsigned char' and
    <kpathsea/types.h> defining Pascal's boolean as 'int'.
 */
-extern "C" {
 #include <w2c/config.h>
 #include <kpathsea/lib.h>
-}
 
 #include <stdlib.h>
 #include <math.h>
@@ -62,11 +60,16 @@ extern "C" {
 #include "Error.h"
 
 // This file is mostly C and not very much C++; it's just used to interface
-// the functions of xpdf, which happens to be written in C++.
+// the functions of xpdf, which are written in C++.
 
 extern "C" {
 #include <pdftexdir/ptexmac.h>
 #include <pdftexdir/pdftex-common.h>
+
+// This function from pdftex.web gets declared in pdftexcoerce.h in the
+// usual web2c way, but we cannot include that file here because C++
+// does not allow it.
+extern int getpdfsuppresswarningpagegroup(void);
 }
 
 // The prefix "PTEX" for the PDF keys is special to pdfTeX;
@@ -604,8 +607,7 @@ static void copyObject(Object * obj)
         pdf_puts(">>\n");
         pdf_puts("stream\n");
         copyStream(obj->getStream()->getUndecodedStream());
-        pdf_newline();
-        pdf_puts("endstream");  // can't simply write pdfendstream()
+        pdf_puts("\nendstream");
     } else if (obj->isRef()) {
         ref = obj->getRef();
         if (ref.num == 0) {
@@ -936,10 +938,13 @@ void write_epdf(void)
     pageDict->lookupNF((char *)"Group", &dictObj);
     if (!dictObj->isNull()) {
         if (pdfpagegroupval == 0) { 
-            // another pdf with page group was included earlier on the same page;
-            // copy the Group entry as is
-            pdftex_warn
-                ("PDF inclusion: multiple pdfs with page group included in a single page");
+            // another pdf with page group was included earlier on the
+            // same page; copy the Group entry as is.  See manual for
+            // info on why this is a warning.
+            if (getpdfsuppresswarningpagegroup() == 0) {
+                pdftex_warn
+    ("PDF inclusion: multiple pdfs with page group included in a single page");
+            }
             pdf_newline();
             pdf_puts("/Group ");
             copyObject(&dictObj);

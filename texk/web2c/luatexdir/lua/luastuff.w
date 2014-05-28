@@ -19,8 +19,8 @@
 
 @ @c
 static const char _svn_version[] =
-    "$Id: luastuff.w 4605 2013-03-21 14:35:55Z taco $"
-    "$URL: https://foundry.supelec.fr/svn/luatex/tags/beta-0.76.0/source/texk/web2c/luatexdir/lua/luastuff.w $";
+    "$Id: luastuff.w 4956 2014-03-28 12:12:17Z luigi $"
+    "$URL: https://foundry.supelec.fr/svn/luatex/trunk/source/texk/web2c/luatexdir/lua/luastuff.w $";
 
 #include "ptexlib.h"
 #include "lua/luatex-api.h"
@@ -33,7 +33,7 @@ int luastate_bytes = 0;
 int lua_active = 0;
 
 @ @c
-void make_table(lua_State * L, const char *tab, const char *getfunc,
+void make_table(lua_State * L, const char *tab, const char *mttab, const char *getfunc,
                 const char *setfunc)
 {
     /* make the table *//* |[{<tex>}]| */
@@ -44,7 +44,7 @@ void make_table(lua_State * L, const char *tab, const char *getfunc,
     lua_pushstring(L, tab);     /* |[{<tex>},"dimen"]| */
     lua_gettable(L, -2);        /* |[{<tex>},{<dimen>}]| */
     /* make the meta entries */
-    luaL_newmetatable(L, tab);  /* |[{<tex>},{<dimen>},{<dimen_m>}]| */
+    luaL_newmetatable(L, mttab);  /* |[{<tex>},{<dimen>},{<dimen_m>}]| */
     lua_pushstring(L, "__index");       /* |[{<tex>},{<dimen>},{<dimen_m>},"__index"]| */
     lua_pushstring(L, getfunc); /* |[{<tex>},{<dimen>},{<dimen_m>},"__index","getdimen"]| */
     lua_gettable(L, -5);        /* |[{<tex>},{<dimen>},{<dimen_m>},"__index",<tex.getdimen>]| */
@@ -91,6 +91,31 @@ static int my_luapanic(lua_State * L)
             lua_tostring(L, -1));
     return 0;
 }
+
+
+@ @c
+void luafunctioncall(int slot)
+{
+    int i ;
+    int stacktop = lua_gettop(Luas);
+    lua_active++;
+    lua_rawgeti(Luas, LUA_REGISTRYINDEX, lua_key_index(lua_functions));
+    lua_gettable(Luas, LUA_REGISTRYINDEX);
+    lua_rawgeti(Luas, -1,slot);
+    if (lua_isfunction(Luas,-1)) {
+        lua_pushcfunction(Luas, lua_traceback);     /* push traceback function */
+        lua_insert(Luas, -2);     /* put it under chunk  */
+        lua_pushnumber(Luas, slot);
+        i = lua_pcall(Luas, 1, 0, -2);
+        if (i != 0) {
+            lua_gc(Luas, LUA_GCCOLLECT, 0);
+            Luas = luatex_error(Luas, (i == LUA_ERRRUN ? 0 : 1));
+        }
+    }
+    lua_settop(Luas,stacktop);
+    lua_active--;
+}
+
 
 @ @c
 static const luaL_Reg lualibs[] = {
@@ -147,9 +172,12 @@ static int luatex_loadfile (lua_State *L) {
      return 2;  /* return nil plus error message */
   }
   status = luaL_loadfilex(L, fname, mode);
-  if (status == LUA_OK && env) {  /* 'env' parameter? */
-    lua_pushvalue(L, 3);
-    lua_setupvalue(L, -2, 1);  /* set it as 1st upvalue of loaded chunk */
+  if (status == LUA_OK) {
+    recorder_record_input(fname);
+    if (env) {  /* 'env' parameter? */
+      lua_pushvalue(L, 3);
+      lua_setupvalue(L, -2, 1);  /* set it as 1st upvalue of loaded chunk */
+    }
   }
   return load_aux(L, status);
 }
@@ -168,6 +196,7 @@ static int luatex_dofile (lua_State *L) {
       }
   }
   if (luaL_loadfile(L, fname) != 0) lua_error(L);
+  recorder_record_input(fname);
   lua_call(L, 0, LUA_MULTRET);
   return lua_gettop(L) - n;
 }
@@ -338,7 +367,7 @@ void unhide_lua_value(lua_State * L, const char *name, const char *item, int r)
 
 @ @c
 int lua_traceback(lua_State * L)
-{
+{ 
     lua_getglobal(L, "debug");
     if (!lua_istable(L, -1)) {
         lua_pop(L, 1);
@@ -356,7 +385,7 @@ int lua_traceback(lua_State * L)
 }
 
 @ @c
-static void luacall(int p, int nameptr, boolean is_string)
+static void luacall(int p, int nameptr, boolean is_string) /* hh-ls: optimized lua_id resolving */
 {
     LoadS ls;
     int i;
@@ -369,16 +398,30 @@ static void luacall(int p, int nameptr, boolean is_string)
     }
     lua_active++;
     if (is_string) {
-       const char *ss = NULL;
-       lua_rawgeti(Luas, LUA_REGISTRYINDEX, p);
-       ss = lua_tolstring(Luas, -1, &ll);
-       s = xmalloc(ll+1);
-       memcpy(s,ss,ll+1);
-       lua_pop(Luas,1);
+        const char *ss = NULL;
+        lua_rawgeti(Luas, LUA_REGISTRYINDEX, p);
+        if (lua_isfunction(Luas,-1)) {
+            int base = lua_gettop(Luas);        /* function index */
+            lua_checkstack(Luas, 1);
+            lua_pushcfunction(Luas, lua_traceback);     /* push traceback function */
+            lua_insert(Luas, base);     /* put it under chunk  */
+            i = lua_pcall(Luas, 0, 0, base);
+            lua_remove(Luas, base);     /* remove traceback function */
+            if (i != 0) {
+                lua_gc(Luas, LUA_GCCOLLECT, 0);
+                Luas = luatex_error(Luas, (i == LUA_ERRRUN ? 0 : 1));
+            }
+            lua_active--;
+            return ;
+        }
+        ss = lua_tolstring(Luas, -1, &ll);
+        s = xmalloc(ll+1);
+        memcpy(s,ss,ll+1);
+        lua_pop(Luas,1);
     } else {
-       int l = 0;
-       s = tokenlist_to_cstring(p, 1, &l);
-       ll = (size_t)l;
+        int l = 0;
+        s = tokenlist_to_cstring(p, 1, &l);
+        ll = (size_t)l;
     }
     ls.s = s;
     ls.size = ll;
@@ -386,18 +429,18 @@ static void luacall(int p, int nameptr, boolean is_string)
         if (nameptr > 0) {
             int l = 0; /* not used */
             lua_id = tokenlist_to_cstring(nameptr, 1, &l);
+            i = lua_load(Luas, getS, &ls, lua_id, NULL);
+            xfree(lua_id);
         } else if (nameptr < 0) {
-            char *tmp = get_lua_name((nameptr + 65536));
-            if (tmp != NULL)
-                lua_id = xstrdup(tmp);
-            else
-                lua_id = xstrdup("\\latelua ");
+            lua_id = get_lua_name((nameptr + 65536));
+            if (lua_id != NULL) {
+                i = lua_load(Luas, getS, &ls, lua_id, NULL);
+            } else {
+                i = lua_load(Luas, getS, &ls, "=[\\latelua]", NULL);
+            }
         } else {
-            lua_id = xmalloc(20);
-            snprintf((char *) lua_id, 20, "\\latelua ");
+            i = lua_load(Luas, getS, &ls, "=[\\latelua]", NULL);
         }
-
-        i = lua_load(Luas, getS, &ls, lua_id, NULL);
         if (i != 0) {
             Luas = luatex_error(Luas, (i == LUA_ERRSYNTAX ? 0 : 1));
         } else {
@@ -412,11 +455,12 @@ static void luacall(int p, int nameptr, boolean is_string)
                 Luas = luatex_error(Luas, (i == LUA_ERRRUN ? 0 : 1));
             }
         }
-        xfree(lua_id);
         xfree(ls.s);
     }
     lua_active--;
 }
+
+
 
 @ @c
 void late_lua(PDF pdf, halfword p)
@@ -432,7 +476,7 @@ void late_lua(PDF pdf, halfword p)
 }
 
 @ @c
-void luatokencall(int p, int nameptr)
+void luatokencall(int p, int nameptr) /* hh-ls: optimized lua_id resolving */
 {
     LoadS ls;
     int i, l;
@@ -447,16 +491,18 @@ void luatokencall(int p, int nameptr)
     if (ls.size > 0) {
         if (nameptr > 0) {
             lua_id = tokenlist_to_cstring(nameptr, 1, &l);
+            i = lua_load(Luas, getS, &ls, lua_id, NULL);
+	    xfree(lua_id);
         } else if (nameptr < 0) {
-            char *tmp = get_lua_name((nameptr + 65536));
-            if (tmp != NULL)
-                lua_id = xstrdup(tmp);
-            else
-                lua_id = xstrdup("\\directlua ");
+            lua_id = get_lua_name((nameptr + 65536));
+            if (lua_id != NULL) {
+                i = lua_load(Luas, getS, &ls, lua_id, NULL);
+            } else {
+                i = lua_load(Luas, getS, &ls, "=[\\directlua]", NULL);
+            }
         } else {
-            lua_id = xstrdup("\\directlua ");
+            i = lua_load(Luas, getS, &ls, "=[\\directlua]", NULL);
         }
-        i = lua_load(Luas, getS, &ls, lua_id, NULL);
         xfree(s);
         if (i != 0) {
             Luas = luatex_error(Luas, (i == LUA_ERRSYNTAX ? 0 : 1));
@@ -472,7 +518,6 @@ void luatokencall(int p, int nameptr)
                 Luas = luatex_error(Luas, (i == LUA_ERRRUN ? 0 : 1));
             }
         }
-        xfree(lua_id);
     }
     lua_active--;
 }
@@ -487,6 +532,7 @@ lua_State *luatex_error(lua_State * L, int is_fatal)
         luaerr.s = lua_tolstring(L, -1, &luaerr.l);
         err = (char *) xmalloc((unsigned) (luaerr.l + 1));
         snprintf(err, (luaerr.l + 1), "%s", luaerr.s);
+	last_lua_error = err;
     }
     if (is_fatal > 0) {
         /* Normally a memory error from lua.
@@ -499,7 +545,7 @@ lua_State *luatex_error(lua_State * L, int is_fatal)
         return (lua_State *) NULL;
     } else {
         lua_norm_error(err);
-        xfree(err);
+	/* last_lua_error = err so no need to xfree(err) */
         return L;
     }
 }

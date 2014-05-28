@@ -1,6 +1,6 @@
 ## Makefile.am for the TeX Live subdirectory texk/dvisvgm/
 ##
-## Copyright (C) 2009-2013 Peter Breitenlohner <tex-live@tug.org>
+## Copyright (C) 2009-2014 Peter Breitenlohner <tex-live@tug.org>
 ## You may freely use, modify and/or distribute this file.
 ##
 #************************************************************************
@@ -25,8 +25,7 @@ dist-hook:
 	rm -rf `find $(distdir) -name .svn -o -name .deps -o -name .dirstamp -o -name '*.$(OBJEXT)'`
 
 AM_CPPFLAGS = -I$(top_srcdir)/$(DVISVGM_TREE)/src
-AM_CPPFLAGS += -I$(top_srcdir)/$(DVISVGM_TREE)/potracelib
-AM_CPPFLAGS += $(KPATHSEA_INCLUDES) $(FREETYPE2_INCLUDES)
+AM_CPPFLAGS += $(KPATHSEA_INCLUDES) $(POTRACE_INCLUDES) $(FREETYPE2_INCLUDES)
 AM_CPPFLAGS += $(ZLIB_INCLUDES) $(LIBGS_INCLUDES)
 if WIN32
 AM_CPPFLAGS += -DTEXLIVEWIN32
@@ -47,22 +46,26 @@ dvisvgm_dependencies = $(KPATHSEA_DEPEND) $(ZLIB_DEPEND) $(FREETYPE2_DEPEND)
 
 $(dvisvgm_OBJECTS): libdvisvgm.a
 
-LDADD = $(noinst_LIBRARIES) $(KPATHSEA_LIBS) $(FREETYPE2_LIBS)
+LDADD = $(noinst_LIBRARIES) $(KPATHSEA_LIBS) $(POTRACE_LIBS) $(FREETYPE2_LIBS)
 LDADD += $(ZLIB_LIBS) $(LIBGS_LIBS)
 
-noinst_LIBRARIES = libdvisvgm.a libpotrace.a
+noinst_LIBRARIES = libdvisvgm.a
 
 nodist_libdvisvgm_a_SOURCES = \
 	@DVISVGM_TREE@/src/BgColorSpecialHandler.cpp \
 	@DVISVGM_TREE@/src/Bitmap.cpp \
 	@DVISVGM_TREE@/src/BoundingBox.cpp \
+	@DVISVGM_TREE@/src/CMap.cpp \
+	@DVISVGM_TREE@/src/CMapManager.cpp \
+	@DVISVGM_TREE@/src/CMapReader.cpp \
 	@DVISVGM_TREE@/src/CRC32.cpp \
 	@DVISVGM_TREE@/src/Calculator.cpp \
+	@DVISVGM_TREE@/src/CharMap.cpp \
+	@DVISVGM_TREE@/src/CharMapID.cpp \
 	@DVISVGM_TREE@/src/CmdLineParserBase.cpp \
 	@DVISVGM_TREE@/src/Color.cpp \
 	@DVISVGM_TREE@/src/ColorSpecialHandler.cpp \
 	@DVISVGM_TREE@/src/CommandLine.cpp \
-	@DVISVGM_TREE@/src/DVIActions.cpp \
 	@DVISVGM_TREE@/src/DVIReader.cpp \
 	@DVISVGM_TREE@/src/DVIToSVG.cpp \
 	@DVISVGM_TREE@/src/DVIToSVGActions.cpp \
@@ -71,6 +74,7 @@ nodist_libdvisvgm_a_SOURCES = \
 	@DVISVGM_TREE@/src/EPSFile.cpp \
 	@DVISVGM_TREE@/src/EPSToSVG.cpp \
 	@DVISVGM_TREE@/src/EmSpecialHandler.cpp \
+	@DVISVGM_TREE@/src/EncFile.cpp \
 	@DVISVGM_TREE@/src/FileFinder.cpp \
 	@DVISVGM_TREE@/src/FilePath.cpp \
 	@DVISVGM_TREE@/src/FileSystem.cpp \
@@ -80,12 +84,15 @@ nodist_libdvisvgm_a_SOURCES = \
 	@DVISVGM_TREE@/src/FontEngine.cpp \
 	@DVISVGM_TREE@/src/FontManager.cpp \
 	@DVISVGM_TREE@/src/FontMap.cpp \
+	@DVISVGM_TREE@/src/FontMetrics.cpp \
 	@DVISVGM_TREE@/src/GFReader.cpp \
 	@DVISVGM_TREE@/src/GFGlyphTracer.cpp \
 	@DVISVGM_TREE@/src/GFTracer.cpp \
 	@DVISVGM_TREE@/src/Ghostscript.cpp \
+	@DVISVGM_TREE@/src/HtmlSpecialHandler.cpp \
 	@DVISVGM_TREE@/src/InputBuffer.cpp \
 	@DVISVGM_TREE@/src/InputReader.cpp \
+	@DVISVGM_TREE@/src/JFM.cpp \
 	@DVISVGM_TREE@/src/Length.cpp \
 	@DVISVGM_TREE@/src/MapLine.cpp \
 	@DVISVGM_TREE@/src/Matrix.cpp \
@@ -94,6 +101,7 @@ nodist_libdvisvgm_a_SOURCES = \
 	@DVISVGM_TREE@/src/NoPsSpecialHandler.cpp \
 	@DVISVGM_TREE@/src/PSInterpreter.cpp \
 	@DVISVGM_TREE@/src/PSPattern.cpp \
+	@DVISVGM_TREE@/src/PSPreviewFilter.cpp \
 	@DVISVGM_TREE@/src/PdfSpecialHandler.cpp \
 	@DVISVGM_TREE@/src/PageRanges.cpp \
 	@DVISVGM_TREE@/src/PageSize.cpp \
@@ -120,15 +128,7 @@ nodist_libdvisvgm_a_SOURCES += \
 	@DVISVGM_TREE@/src/DLLoader.cpp
 endif dlloader
 
-$(libdvisvgm_a_OBJECTS): libpotrace.a
-
-nodist_libpotrace_a_SOURCES = \
-	@DVISVGM_TREE@/potracelib/curve.c \
-	@DVISVGM_TREE@/potracelib/decompose.c \
-	@DVISVGM_TREE@/potracelib/potracelib.c \
-	@DVISVGM_TREE@/potracelib/trace.c
-
-$(libpotrace_a_OBJECTS): config.force
+$(libdvisvgm_a_OBJECTS): $(POTRACE_DEPEND)
 
 config.force: $(dvisvgm_dependencies)
 	echo timestamp >config.force
@@ -138,6 +138,8 @@ DISTCLEANFILES = config.force CXXLD.sh
 
 ## Rebuild libkpathsea
 @KPATHSEA_RULE@
+## Rebuild libpotrace
+@POTRACE_RULE@
 ## Rebuild libfreetype
 @FREETYPE2_RULE@
 ## Rebuild libz

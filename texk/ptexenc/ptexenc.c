@@ -424,6 +424,7 @@ static int put_multibyte(long c, FILE *fp) {
         if ((fd == fileno(stdout) || fd == fileno(stderr)) && _isatty(fd)) {
             HANDLE hStdout;
             DWORD ret, wclen;
+            UINT cp;
             wchar_t buff[2];
             char str[4];
             int mblen;
@@ -440,8 +441,13 @@ static int put_multibyte(long c, FILE *fp) {
             /* always */       str[mblen++]=BYTE4(c);
 
 #define CP_932     932
+#define CP_UTF8    65001
 
-            if (MultiByteToWideChar(CP_932, 0, str, mblen, buff, 2) == 0)
+            if (is_internalUPTEX())
+                cp = CP_UTF8;
+            else
+                cp = CP_932;
+            if (MultiByteToWideChar(cp, 0, str, mblen, buff, 2) == 0)
                 return EOF;
 
             wclen = mblen > 3 ? 2 : 1;
@@ -449,7 +455,7 @@ static int put_multibyte(long c, FILE *fp) {
                 return EOF;
 
             return BYTE4(c);
-      }
+        }
     }
 #endif
 
@@ -484,9 +490,12 @@ int putc2(int c, FILE *fp)
 
 #ifdef WIN32
     if ((fp == stdout || fp == stderr) && (_isatty(fd) || !prior_file_enc)) {
-        if (sjisterminal)
-            output_enc = ENC_SJIS;
-        else
+        if (sjisterminal) {
+            if (is_internalUPTEX())
+                output_enc = ENC_UTF8;
+            else
+                output_enc = ENC_SJIS;
+        } else
 #else
     if ((fp == stdout || fp == stderr) && !prior_file_enc) {
 #endif
@@ -548,7 +557,49 @@ static int getc4(FILE *fp)
 {
     struct unget_st *p = &ungetbuff[fileno(fp)];
 
-    if (p->size == 0) return getc(fp);
+    if (p->size == 0)
+#ifdef WIN32
+    {
+        const int fd = fileno(fp);
+        HANDLE hStdin;
+        DWORD ret;
+        wchar_t wc[2];
+        long c;
+        static wchar_t wcbuf = L'\0';
+
+        if (!(fd == fileno(stdin) && _isatty(fd) && is_internalUPTEX()))
+            return getc(fp);
+
+        hStdin = GetStdHandle(STD_INPUT_HANDLE);
+        if (wcbuf) {
+            wc[0] = wcbuf;
+            wcbuf = L'\0';
+        }
+        else if (ReadConsoleW(hStdin, wc, 1, &ret, NULL) == 0)
+            return EOF;
+        if (0xd800<=wc[0] && wc[0]<0xdc00) {
+            if (ReadConsoleW(hStdin, wc+1, 1, &ret, NULL) == 0)
+                return EOF;
+            if (0xdc00<=wc[1] && wc[1]<0xe000) {
+                c = UTF16StoUTF32(wc[0], wc[1]);
+            } else {
+                wcbuf = wc[1];
+                c = U_REPLACEMENT_CHARACTER;  /* illegal upper surrogate pair */
+            }
+        } else if (0xdc00<=wc[0] && wc[0]<0xe000) {
+            c = U_REPLACEMENT_CHARACTER;      /* illegal lower surrogate pair */
+        } else {
+            c = wc[0];
+        }
+        c = UCStoUTF8(c);
+        /* always */       p->buff[p->size++]=BYTE4(c);
+        if (BYTE3(c) != 0) p->buff[p->size++]=BYTE3(c);
+        if (BYTE2(c) != 0) p->buff[p->size++]=BYTE2(c);
+        if (BYTE1(c) != 0) p->buff[p->size++]=BYTE1(c);
+    }
+#else
+        return getc(fp);
+#endif
     return p->buff[--p->size];
 }
 
@@ -711,6 +762,7 @@ long input_line2(FILE *fp, unsigned char *buff, long pos,
     const int fd = fileno(fp);
 
     if (infile_enc[fd] == ENC_UNKNOWN) { /* just after opened */
+        ungetbuff[fd].size = 0;
         if (isUTF8Nstream(fp)) infile_enc[fd] = ENC_UTF8;
         else                   infile_enc[fd] = get_file_enc();
     }
@@ -720,6 +772,13 @@ long input_line2(FILE *fp, unsigned char *buff, long pos,
     while (last < buffsize-30 && (i=getc4(fp)) != EOF && i!='\n' && i!='\r') {
         /* 30 is enough large size for one char */
         /* attention: 4 times of write_hex() eats 16byte */
+#ifdef WIN32
+        if (i == 0x1a && first == last &&
+            fd == fileno(stdin) && _isatty(fd)) { /* Ctrl+Z on console */
+                i = EOF;
+                break;
+        } else
+#endif
         if (i == ESC) {
             if ((i=getc4(fp)) == '$') { /* ESC '$' (Kanji-in) */
                 i = getc4(fp);
@@ -775,14 +834,6 @@ long input_line2(FILE *fp, unsigned char *buff, long pos,
     buffer[last] = '\0';
     if (i == EOF || i == '\n' || i == '\r') injis = false;
     if (lastchar != NULL) *lastchar = i;
-
-    if (i == '\r' && !isatty(fd)) {
-       int ii;
-       while ((ii = getc4(fp)) == EOF && errno == EINTR)
-          ;
-       if (ii != '\n')
-          ungetc4(ii, fp);
-    }
 
     return last;
 }

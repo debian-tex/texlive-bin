@@ -1,3 +1,81 @@
+2014-04-28  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	Makefile.am: New names for README.* files.
+
+2014-04-17  Karl Berry  <karl@tug.org>
+
+	* version.ac (tex_live_version): starting pretest, no more /dev.
+
+2014-04-04  Karl Berry  <karl@tug.org>
+
+	* Build (TL_MAKE,MAKE): set both in all cases.
+	(buildenv.log): include pwd, and use .log instead of .txt.
+
+2014-04-01  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* tardate.ac: Switch to 2014-04-01.
+
+2014-01-01  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* tardate.ac: Switch to 2014-01-01.
+
+2013-12-26  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* Makefile.am (ACLOCAL): Ensure aclocal.m4 is up to date.
+
+2013-10-08  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* doc: New directory for texlive.info & Co.
+	* Makefile.am, configure.ac: Adapted.
+
+2013-10-05  Karl Berry  <karl@tug.org>
+
+	* Build: reorder variables and settings for clarity.
+	(TL_CONF_BANNER): restore variable, default is empty string.
+	(TL_POSTCONFIGURE): new variable, default true.
+
+2013-09-03  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* Makefile.am: Drop ACLOCAL_AMFLAGS.
+	* configure.ac: Use AC_CONFIG_MACRO_DIRS.
+	Use KPSE_RECURSE_LIBS in m4/kpse-setup.m4 to recurse into all
+	TeX specific libraries.
+
+2013-09-01  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* tardate.ac: Switch to 2013-09-01.
+
+	* Makefile.am: Moved definition of cf_silent* from here ...
+	* am/recurse.am: ... to here 
+
+2013-08-24  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* Makefile.am: Add the make target 'texlinks'.
+
+2013-07-16  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* am/rebuild.am: Avoid still more 'parallel make' problems.
+
+2013-07-15  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* am/rebuild.am: Avoid more 'parallel make' problems.
+
+2013-07-06  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* am/*.am: Moved Makefile fragments from libs/am/ and tekk/am/.
+	* am/rebuild.am: New Makefile fragment to rebuild a library.
+	* am/reconfig.am: New Makefile fragment to reconfigure.
+	* am/recurse.am: New Makefile fragment to recurse into subdirs.
+
+	* Makefile.am, configure.ac: Use am/recurse.am.
+
+2013-06-24  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* configure.ac: Added Automake options 'tar-pax' for paths
+	longer than 100 chars and 'no-dist-gzip'.
+	* version.ac: Switch 2013 => 2014/dev'
+	* tardate.ac: Switch to 2013-06-24.
+
 2013-03-26  Karl Berry  <karl@tug.org>
 
 	* Build: use $MAKE rather than $TL_MAKE for the make clean

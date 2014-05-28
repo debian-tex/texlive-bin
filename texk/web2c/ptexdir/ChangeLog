@@ -1,3 +1,65 @@
+2014-05-06  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* ptex-base.ch: reset inhibit_glue_flag in several places
+	where it was missing.
+
+2014-05-02  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* ptrip/ptrip.diffs: Updated for TL14.
+
+2014-01-23  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* ptftopl.ch: Slightly simplified.  Fixed some typos.
+
+2014-01-22  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* ptrip/ptrip.diffs: Updated for pTeX 3.14159265.
+
+2014-01-20  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	TeX tuneup of 2014.
+	* ptex-base.ch: Adapt to TeX Version 3.14159265.
+	* ppltotf.ch: Adapt to PLtoTF Version 3.6.
+	* ptftopl.ch: Adapt to TFtoPL Version 3.3.
+
+2014-01-17  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* ptrip.test (removed): Renamed ...
+	* ptriptest (new): ... into this.
+	* am/ptex.am: Adapted.
+
+2013-12-31  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* ptftopl.ch, tests/min10.pl, tests/min10.pl: Don't write
+	SEVENBITSAFEFLAG for JFM (yoko or tate) fonts.
+
+2013-12-18  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* tests/min10.pl, tests/tmin10.pl: Converted to 7-bit ASCII.
+	* yokotate.test: Simplified.
+
+2013-12-17  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* ppltotf.ch: Drop one unused change set (is in ../pltotf.ch).
+	Print DIRECTION value with print_ln() instead of err_print().
+
+2013-11-18  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* ptex-base.ch: Simplify a few change sets.
+
+2013-08-12  TANAKA Takuji <KXD02663@nifty.ne.jp>
+
+	* kanji.h, ptex-base.ch, ptex.defines: Allow file names with 0x5c in
+	(e)pTeX on Windows.
+
+2013-06-18  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* am/ptex.am: Move PTEXENC_RULE to ../Makefile.am.
+
+2013-06-05  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* kanji.h: Avoid redefinition of KANJI.
+
 2013-05-05  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
 
 	* ptex-base.ch: Fix a bug that KANJI info of the last char in \hbox

@@ -34,32 +34,42 @@ endif
 override_dh_autoreconf:
 	dh_autoreconf --as-needed
 
+#
+# we need libpng >= 1.4 which is not available in unstable and
+# seems not to arrive anytime soon. We have to rebuild also
+# the following depending libs with new libpng: gd freetype2 cairo
+#	--with-system-freetype2			\
+	--with-freetype2-include=/usr/include/freetype2 \
+#	--with-system-libpng			\
+#	--with-system-gd			\
+#	--with-system-cairo 			\
+#
+
 override_dh_auto_configure:
 	# we have to make sure that the mendex test case that is added
 	# by a patch is executable
 	chmod 0755 texk/mendexk/tests/mendex.test
 	# run out configure script
-	dh_auto_configure -- --prefix=/usr 	\
+	dh_auto_configure -- -C --prefix=/usr 	\
 	--datarootdir=/usr/share/texlive	\
 	--disable-native-texlive-build		\
 	--disable-largefile			\
 	--disable-missing			\
+	--disable-linked-scripts		\
 	--with-banner-add=/Debian		\
 	--enable-shared				\
 	--with-system-zlib			\
-	--with-system-libpng			\
 	--with-system-zzlib			\
-	--with-system-freetype2			\
 	--with-system-xpdf			\
 	--with-system-poppler			\
+	--with-system-potrace			\
 	--with-system-graphite2			\
 	--with-system-harfbuzz 			\
 	--with-system-libgs			\
-	--with-system-cairo 			\
 	--with-system-pixman			\
+	--with-system-libpaper			\
 	--with-system-zziplib			\
 	--with-system-icu			\
-	--with-freetype2-include=/usr/include/freetype2 \
 	--with-x				\
 	--with-mf-x-toolkit			\
 	--with-xdvi-x-toolkit=xaw		\
@@ -69,7 +79,6 @@ override_dh_auto_configure:
 	--disable-musixflx			\
 	--disable-ps2eps			\
 	--disable-psutils			\
-	--disable-luatex			\
 	--disable-t1utils			\
 	--disable-cjkutils			\
 	--disable-chktex			\
@@ -96,10 +105,11 @@ override_dh_install:
 	rm -rf debian/texlive-binaries/usr/share/texlive
 	# remove wrongly added info/dir.gz
 	rm -f debian/texlive-binaries/usr/share/info/dir*
+	# remove tlbuild info document, not needed
+	rm debian/texlive-binaries/usr/share/info/tlbuild.info*
 	rm debian/texlive-binaries/usr/share/man/man1/latex.1*
 	rm debian/texlive-binaries/usr/share/man/man1/pdflatex.1*
 	rm debian/texlive-binaries/usr/share/man/man1/lamed.1*
-	rm debian/texlive-binaries/usr/share/man/man1/eplain.1*
 	rm debian/texlive-binaries/usr/share/man/man1/amstex.1*
 	# fix EUCJ encoding of mendex.1
 	recode EUC-JP..UTF8 debian/texlive-binaries/usr/share/man/man1/mendex.1
@@ -115,7 +125,7 @@ override_dh_installdocs:
 	dh_installdocs -plibptexenc1 -plibptexenc-dev \
 		texk/ptexenc/COPYRIGHT texk/ptexenc/README
 	dh_installdocs -plibkpathsea6 -plibkpathsea-dev \
-		texk/kpathsea/AUTHORS texk/kpathsea/BUGS \
+		texk/kpathsea/AUTHORS \
 		texk/kpathsea/NEWS texk/kpathsea/PROJECTS \
 		texk/kpathsea/README
 

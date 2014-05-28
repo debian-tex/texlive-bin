@@ -1,4 +1,4 @@
-$Id: README 30927 2013-06-25 11:39:10Z peter $
+$Id: README 33747 2014-04-29 08:43:06Z peter $
 Public domain.  Originally created by Karl Berry, 2005.
 
 Libraries we compile for TeX Live.
@@ -9,43 +9,45 @@ bypassing or using the original one.
 
 See also comments in ../texk/README.
 
-cairo 1.12.8 - checked 28nov12
+cairo 1.12.16 - checked 10sep13
   http://cairographics.org/releases/
 
-freetype 1.5 - ?
-
-freetype2 2.4.11 - checked 31dec12
+freetype2 2.5.3 - checked 8mar14
   http://savannah.nongnu.org/download/freetype/
 
-gd 2.0.35 - unchecked 10may12, libgd still down
-  http://www.libgd.org/releases/
-  http://www.boutell.com/gd/
-  https://bitbucket.org/pierrejoye/gd-libgd/overview
+gd 2.1.0 - checked 26jun13
+  https://bitbucket.org/libgd/gd-libgd/downloads/
 
-graphite2 1.2.1 - checked 7mar13
+graphite2 1.2.4 - checked 2dec13
   http://sourceforge.net/projects/silgraphite/files/graphite2/
 
-harfbuzz 0.9.15 - checked 5apr13
+harfbuzz 0.9.28 - checked 29apr14
   http://www.freedesktop.org/software/harfbuzz/release/
 
-icu 51.1 (51_r1) - checked 21mar13
+icu 53.1 (release) - checked 3apr14
   http://download.icu-project.org/files/icu4c/
 
-libpng 1.6.2 - checked 3jun13
-       1.5.16 - downgraded 7jun13
+libpaper 1.1.24+nmu2 - checked 24oct13
+  ftp://ftp.de.debian.org/debian/pool/main/libp/libpaper/
+
+libpng 1.6.10 - checked 15mar14
   http://www.libpng.org/ - used by many
   http://www.libpng.org/pub/png/pngcode.html
 
-pixman 0.28.0 - checked 28nov12
+lua 5.2.3 - checked 7dec13
+  http://www.lua.org/ftp/
+
+luajit 2.0.3 - checked 14mar14
+  http://luajit.org/download/LuaJIT-2.0.3.tar.gz
+
+pixman 0.32.4 - checked 18nov13
   http://cairographics.org/releases/
 
-poppler 0.22.2 - checked 12mar13
+poppler 0.25.2 - checked 27mar14
   http://poppler.freedesktop.org/ - used by luatex and xetex
 
-t1lib 5.1.2 - checked 10may12
-  (apparently unmaintained)
-  ftp://sunsite.unc.edu/pub/Linux/libs/graphics/
-  http://www.t1lib.org/
+potrace 1.11 - checked 12apr13
+  http://potrace.sourceforge.net
 
 teckit 2.5.3 - checked 17mar12
   http://scripts.sil.org/svn-public/teckit/TRUNK
@@ -55,7 +57,7 @@ xpdf 3.03 - checked 10may12
   ftp://ftp.foolabs.com/pub/xpdf/
   with modifications for pdftex
 
-zlib 1.2.7 - checked 3may12
+zlib 1.2.8 - checked 18may13
   http://www.zlib.net/ - used by many
 
 zziplib 0.13.62 - checked 12mar12

@@ -19,8 +19,8 @@
 
 @ @c
 static const char _svn_version[] =
-    "$Id: pdfgen.w 4568 2013-01-27 13:10:11Z hhenkel $"
-    "$URL: https://foundry.supelec.fr/svn/luatex/tags/beta-0.76.0/source/texk/web2c/luatexdir/pdf/pdfgen.w $";
+    "$Id: pdfgen.w 4967 2014-03-28 19:44:06Z luigi $"
+    "$URL: https://foundry.supelec.fr/svn/luatex/tags/beta-0.79.1/source/texk/web2c/luatexdir/pdf/pdfgen.w $";
 
 #include "ptexlib.h"
 
@@ -34,7 +34,7 @@ static const char _svn_version[] =
 
 #define check_nprintf(size_get, size_want) \
     if ((unsigned)(size_get) >= (unsigned)(size_want)) \
-        pdftex_fail ("snprintf failed: file %s, line %d", __FILE__, __LINE__);
+        luatex_fail ("snprintf failed: file %s, line %d", __FILE__, __LINE__);
 
 PDF static_pdf = NULL;
 
@@ -254,8 +254,7 @@ void fix_o_mode(PDF pdf)
     if (pdf->o_mode == OMODE_NONE)
         pdf->o_mode = o_mode;
     else if (pdf->o_mode != o_mode)
-        pdf_error("setup",
-                  "\\pdfoutput can only be changed before anything is written to the output");
+        pdf_error("setup", "\\pdfoutput can only be changed before anything is written to the output");
 }
 
 @ This ensures that |pdfminorversion| is set only before any bytes have
@@ -268,14 +267,9 @@ void fix_pdf_minorversion(PDF pdf)
 {
     if (pdf->minor_version < 0) {       /* unset */
         if ((pdf_minor_version < 0) || (pdf_minor_version > 9)) {
-            const char *hlp[] =
-                { "The pdfminorversion must be between 0 and 9.",
-                "I changed this to 4.", NULL
-            };
+            const char *hlp[] = { "The pdfminorversion must be between 0 and 9.", "I changed this to 4.", NULL };
             char msg[256];
-            (void) snprintf(msg, 255,
-                            "LuaTeX error (illegal pdfminorversion %d)",
-                            (int) pdf_minor_version);
+            (void) snprintf(msg, 255, "LuaTeX error (illegal pdfminorversion %d)", (int) pdf_minor_version);
             tex_error(msg, hlp);
             pdf_minor_version = 4;
         }
@@ -283,11 +277,9 @@ void fix_pdf_minorversion(PDF pdf)
     } else {
         /* Check that variables for \.{PDF} output are unchanged */
         if (pdf->minor_version != pdf_minor_version)
-            pdf_error("setup",
-                      "\\pdfminorversion cannot be changed after data is written to the PDF file");
+            pdf_error("setup", "\\pdfminorversion cannot be changed after data is written to the PDF file");
         if (pdf->draftmode != pdf_draftmode)
-            pdf_error("setup",
-                      "\\pdfdraftmode cannot be changed after data is written to the PDF file");
+            pdf_error("setup", "\\pdfdraftmode cannot be changed after data is written to the PDF file");
     }
     if (pdf->draftmode != 0) {
         pdf->compress_level = 0;        /* re-fix it, might have been changed inbetween */
@@ -300,7 +292,7 @@ void fix_pdf_minorversion(PDF pdf)
 
 #define check_err(f, fn)                        \
   if (f != Z_OK)                                \
-    pdftex_fail("zlib: %s() failed (error code %d)", fn, f)
+    luatex_fail("zlib: %s() failed (error code %d)", fn, f)
 
 @ @c
 static void write_zip(PDF pdf)
@@ -311,7 +303,7 @@ static void write_zip(PDF pdf)
     z_stream *s = pdf->c_stream;
     boolean finish = pdf->zip_write_state == ZIP_FINISH;
     assert(pdf->compress_level > 0);
-    /* This was just to suppress the filename report in |pdftex_fail|
+    /* This was just to suppress the filename report in |luatex_fail|
        but zlib errors are rare enough (especially now that the
        compress level is fixed) that I don't care about the slightly
        ugly error message that could result.
@@ -361,7 +353,7 @@ static void write_zip(PDF pdf)
         }
         err = deflate(s, flush);
         if (err != Z_OK && err != Z_STREAM_END)
-            pdftex_fail("zlib: deflate() failed (error code %d)", err);
+            luatex_fail("zlib: deflate() failed (error code %d)", err);
     }
     pdf->stream_length = (off_t) s->total_out;
 }
@@ -418,8 +410,7 @@ void pdf_flush(PDF pdf)
             pdf->zip_write_state = NO_ZIP;
         strbuf_seek(pdf->buf, 0);
         if (saved_pdf_gone > pdf->gone)
-            pdf_error("file size",
-                      "File size exceeds architectural limits (pdf_gone wraps around)");
+            pdf_error("file size", "File size exceeds architectural limits (pdf_gone wraps around)");
         break;
     case LUASTM_BUF:
         luaL_addsize(&(os->b), strbuf_offset(pdf->buf));
@@ -572,7 +563,7 @@ void pdf_print_int(PDF pdf, longinteger n)
 {
     char s[24];
     int w;
-    w = snprintf(s, 23, "%" LONGINTEGER_PRI "d", n);
+    w = snprintf(s, 23, "%" LONGINTEGER_PRI "d", (LONGINTEGER_TYPE) n);
     check_nprintf(w, 23);
     pdf_out_block(pdf, (const char *) s, (size_t) w);
 }
@@ -581,8 +572,8 @@ void pdf_print_int(PDF pdf, longinteger n)
 void print_pdffloat(PDF pdf, pdffloat f)
 {
     char a[24];
-    int e = f.e, i, j;
-    long l, m = f.m;
+    int e = f.e, i, j, l;
+    int64_t m = f.m;
     if (m < 0) {
         pdf_out(pdf, '-');
         m *= -1;
@@ -592,7 +583,7 @@ void print_pdffloat(PDF pdf, pdffloat f)
     l = m % ten_pow[e];
     if (l != 0) {
         pdf_out(pdf, '.');
-        j = snprintf(a, 23, "%ld", l + ten_pow[e]);
+        j = snprintf(a, 23, "%d", l + ten_pow[e]);
         assert(j < 23);
         for (i = e; i > 0; i--) {
             if (a[i] != '0')
@@ -712,14 +703,13 @@ void pdf_end_stream(PDF pdf)
     assert(pdf->buf == os->buf[os->curbuf]);
     pdf->stream_deflate = false;
     pdf->stream_writing = false;
-    if (pdf->last_byte != '\n')
-        pdf_out(pdf, '\n');     /* doesn't really belong to the stream */
+    pdf_out(pdf, '\n');     /* doesn't really belong to the stream */
     pdf_puts(pdf, "endstream");
     /* write stream /Length */
     if (pdf->seek_write_length && pdf->draftmode == 0) {
         xfseeko(pdf->file, (off_t)pdf->stream_length_offset, SEEK_SET,
                 pdf->job_name);
-        fprintf(pdf->file, "%" LONGINTEGER_PRI "i", pdf->stream_length);
+        fprintf(pdf->file, "%" LONGINTEGER_PRI "i", (LONGINTEGER_TYPE) pdf->stream_length);
         xfseeko(pdf->file, 0, SEEK_END, pdf->job_name);
     }
     pdf->seek_write_length = false;
@@ -769,9 +759,9 @@ scaled round_xn_over_d(scaled x, int n, unsigned int d)
         x = -(x);
         positive = false;
     }
-    t = (unsigned) ((x % 0100000) * n);
-    u = (unsigned) (((unsigned) (x) / 0100000) * (unsigned) n + (t / 0100000));
-    v = (u % d) * 0100000 + (t % 0100000);
+    t = (unsigned) ((x % 0100000) * n);//printf("t=%d\n",t);
+    u = (unsigned) (((unsigned) (x) / 0100000) * (unsigned) n + (t / 0100000));//printf("u=%d\n",u);
+    v = (u % d) * 0100000 + (t % 0100000);//printf("v=%d\n",v);
     if (u / d >= 0100000)
         arith_error = true;
     else
@@ -785,13 +775,14 @@ scaled round_xn_over_d(scaled x, int n, unsigned int d)
         return (-(scaled) u);
 }
 
+
 @ @c
 void pdf_add_bp(PDF pdf, scaled s)
 {                               /* print scaled as |bp| */
     pdffloat a;
     pdfstructure *p = pdf->pstruct;
     assert(p != NULL);
-    a.m = lround(s * p->k1);
+    a.m = i64round(s * p->k1);
     a.e = pdf->decimal_digits;
     if (pdf->cave > 0)
         pdf_out(pdf, ' ');
@@ -805,9 +796,9 @@ void pdf_add_mag_bp(PDF pdf, scaled s)
     pdfstructure *p = pdf->pstruct;
     prepare_mag();
     if (int_par(mag_code) != 1000)
-        a.m = lround(s * (double) int_par(mag_code) / 1000.0 * p->k1);
+        a.m = i64round(s * (double) int_par(mag_code) / 1000.0 * p->k1);
     else
-        a.m = lround(s * p->k1);
+        a.m = i64round(s * p->k1);
     a.e = pdf->decimal_digits;
     if (pdf->cave > 0)
         pdf_out(pdf, ' ');
@@ -852,7 +843,7 @@ void addto_page_resources(PDF pdf, pdf_obj_type t, int k)
         re->resources_tree =
             avl_create(comp_page_resources, NULL, &avl_xallocator);
         if (re->resources_tree == NULL)
-            pdftex_fail
+            luatex_fail
                 ("addto_page_resources(): avl_create() page_resource_tree failed");
     }
     tmp.obj_type = t;
@@ -863,7 +854,7 @@ void addto_page_resources(PDF pdf, pdf_obj_type t, int k)
         pr->list = NULL;
         pp = avl_probe(re->resources_tree, pr);
         if (pp == NULL)
-            pdftex_fail
+            luatex_fail
                 ("addto_page_resources(): avl_probe() out of memory in insertion");
     }
     if (pr->list == NULL) {
@@ -1420,8 +1411,7 @@ char *convertStringToPDFString(const char *in, int len)
         check_buf((unsigned) j + sizeof(buf), MAX_PSTRING_LEN);
         if (((unsigned char) in[i] < '!') || ((unsigned char) in[i] > '~')) {
             /* convert control characters into oct */
-            k = snprintf(buf, sizeof(buf),
-                         "\\%03o", (unsigned int) (unsigned char) in[i]);
+            k = snprintf(buf, sizeof(buf), "\\%03o", (unsigned int) (unsigned char) in[i]);
             check_nprintf(k, sizeof(buf));
             out[j++] = buf[0];
             out[j++] = buf[1];
@@ -1455,8 +1445,7 @@ static void convertStringToHexString(const char *in, char *out, int lin)
     char buf[3];
     j = 0;
     for (i = 0; i < lin; i++) {
-        k = snprintf(buf, sizeof(buf),
-                     "%02X", (unsigned int) (unsigned char) in[i]);
+        k = snprintf(buf, sizeof(buf), "%02X", (unsigned int) (unsigned char) in[i]);
         check_nprintf(k, sizeof(buf));
         out[j++] = buf[0];
         out[j++] = buf[1];
@@ -1515,7 +1504,7 @@ static void print_ID(PDF pdf)
     md5_append(&state, (const md5_byte_t *) time_str, (int) size);
     /* get the file name */
     if (getcwd(pwd, sizeof(pwd)) == NULL)
-        pdftex_fail("getcwd() failed (%s), (path too long?)", strerror(errno));
+        luatex_fail("getcwd() failed (%s), (path too long?)", strerror(errno));
 #ifdef WIN32
     {
         char *p;
@@ -1895,9 +1884,10 @@ void print_pdf_table_string(PDF pdf, const char *s)
 {
     size_t len;
     const char *ls;
-    lua_getglobal(Luas, "pdf"); /* t ... */
+    lua_rawgeti(Luas, LUA_REGISTRYINDEX, lua_key_index(pdf_data));
+    lua_rawget(Luas, LUA_REGISTRYINDEX);
     lua_pushstring(Luas, s);    /* s t ... */
-    lua_gettable(Luas, -2);     /* s? t ... */
+    lua_rawget(Luas, -2);     /* s? t ... */
     if (lua_isstring(Luas, -1)) {       /* s t ... */
         ls = lua_tolstring(Luas, -1, &len);
         if (len > 0) {
@@ -1911,13 +1901,30 @@ void print_pdf_table_string(PDF pdf, const char *s)
 }
 
 @ @c
+static const char *get_pdf_table_string(const char *s)
+{
+    const_lstring ls;
+    lua_rawgeti(Luas, LUA_REGISTRYINDEX, lua_key_index(pdf_data));
+    lua_rawget(Luas, LUA_REGISTRYINDEX);
+    lua_pushstring(Luas, s);    /* s t ... */
+    lua_rawget(Luas, -2);     /* s? t ... */
+    if (lua_isstring(Luas, -1)) {       /* s t ... */
+        ls.s = lua_tolstring(Luas, -1, &ls.l);
+        lua_pop(Luas, 2);           /* ... */
+        return ls.s;
+    }
+    lua_pop(Luas, 2);           /* ... */
+    return NULL ;
+}
+
+@ @c
 #define pdf_page_attr equiv(pdf_page_attr_loc)
 #define pdf_page_resources equiv(pdf_page_resources_loc)
 
 void pdf_end_page(PDF pdf)
 {
     char s[64], *p;
-    int j, annots = 0, beads = 0;
+    int j, annots = 0, beads = 0, callback_id;
     pdf_resource_struct *res_p = pdf->page_resources;
     pdf_resource_struct local_page_resources;
     pdf_object_list *annot_list, *bead_list, *link_list, *ol, *ol1;
@@ -1928,7 +1935,7 @@ void pdf_end_page(PDF pdf)
     /* Finish stream of page/form contents */
     pdf_goto_pagemode(pdf);
     if (pos_stack_used > 0) {
-        pdftex_fail("%u unmatched \\pdfsave after %s shipout",
+        luatex_fail("%u unmatched \\pdfsave after %s shipout",
                     (unsigned int) pos_stack_used,
                     ((global_shipping_mode ==
                       SHIPPING_PAGE) ? "page" : "form"));
@@ -1936,7 +1943,13 @@ void pdf_end_page(PDF pdf)
     pdf_end_stream(pdf);
     pdf_end_obj(pdf);
 
+    /* hh-ls : new call back finish_pdfpage_callback */
+    callback_id = callback_defined(finish_pdfpage_callback);
+    if (callback_id > 0)
+      run_callback(callback_id, "b->",(global_shipping_mode == SHIPPING_PAGE));
+
     if (global_shipping_mode == SHIPPING_PAGE) {
+
         pdf->last_pages = pdf_do_page_divert(pdf, pdf->last_page, 0);
 
         /* Write out /Page object */
@@ -2252,6 +2265,7 @@ static int pdf_print_info(PDF pdf, int luatexversion,
     boolean creator_given, producer_given, creationdate_given, moddate_given,
         trapped_given;
     char *s = NULL;
+    const char *p = NULL;
     int k, len = 0;
     k = pdf_create_obj(pdf, obj_type_info, 0);
     pdf_begin_obj(pdf, k, 3);   /* keep Info readable unless explicitely forced */
@@ -2269,16 +2283,13 @@ static int pdf_print_info(PDF pdf, int luatexversion,
         moddate_given = substr_of_str("/ModDate", s);
         trapped_given = substr_of_str("/Trapped", s);
     }
-    if (!producer_given) {
-        /* Print the Producer key */
-        pdf_add_name(pdf, "Producer");
-        pdf_puts(pdf, " (LuaTeX-");
-        pdf_print_int(pdf, luatexversion / 100);
-        pdf_out(pdf, '.');
-        pdf_print_int(pdf, luatexversion % 100);
-        pdf_out(pdf, '.');
-        pdf_print(pdf, luatexrevision);
-        pdf_out(pdf, ')');
+    p = get_pdf_table_string("info");
+    if (p && strlen(p) > 0) {
+        creator_given = creator_given || substr_of_str("/Creator", p);
+        producer_given = producer_given || substr_of_str("/Producer", p);
+        creationdate_given = creationdate_given || substr_of_str("/CreationDate", p);
+        moddate_given = moddate_given || substr_of_str("/ModDate", p);
+        trapped_given = trapped_given || substr_of_str("/Trapped", p);
     }
     if (pdf_info_toks != null) {
         if (len > 0) {
@@ -2289,6 +2300,22 @@ static int pdf_print_info(PDF pdf, int luatexversion,
         }
         delete_token_ref(pdf_info_toks);
         pdf_info_toks = null;
+    }
+    if (p && strlen(p) > 0) {
+        pdf_out(pdf, '\n');
+        pdf_puts(pdf, p); /* no free, pointer */
+        pdf_out(pdf, '\n');
+    }
+    if (!producer_given) {
+        /* Print the Producer key */
+        pdf_add_name(pdf, "Producer");
+        pdf_puts(pdf, " (LuaTeX-");
+        pdf_print_int(pdf, luatexversion / 100);
+        pdf_out(pdf, '.');
+        pdf_print_int(pdf, luatexversion % 100);
+        pdf_out(pdf, '.');
+        pdf_print(pdf, luatexrevision);
+        pdf_out(pdf, ')');
     }
     if (!creator_given)
         pdf_dict_add_string(pdf, "Creator", "TeX");
@@ -2448,6 +2475,7 @@ void finish_pdf_file(PDF pdf, int luatexversion, str_number luatexrevision)
                 delete_token_ref(pdf_catalog_toks);
                 pdf_catalog_toks = null;
             }
+            print_pdf_table_string(pdf, "catalog");
             if (pdf_catalog_openaction != 0)
                 pdf_dict_add_ref(pdf, "OpenAction", pdf_catalog_openaction);
             pdf_end_dict(pdf);
@@ -2495,6 +2523,7 @@ void finish_pdf_file(PDF pdf, int luatexversion, str_number luatexrevision)
                     delete_token_ref(pdf_trailer_toks);
                     pdf_trailer_toks = null;
                 }
+                print_pdf_table_string(pdf, "trailer");
                 print_ID(pdf);
                 pdf_dict_add_streaminfo(pdf);
                 pdf_end_dict(pdf);

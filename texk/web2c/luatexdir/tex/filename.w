@@ -20,7 +20,7 @@
 @ @c
 static const char _svn_version[] =
     "$Id: filename.w 4442 2012-05-25 22:40:34Z hhenkel $"
-    "$URL: https://foundry.supelec.fr/svn/luatex/tags/beta-0.76.0/source/texk/web2c/luatexdir/tex/filename.w $";
+    "$URL: https://foundry.supelec.fr/svn/luatex/branches/ex-glyph/source/texk/web2c/luatexdir/tex/filename.w $";
 
 #include "ptexlib.h"
 
@@ -256,6 +256,8 @@ char *prompt_file_name(const char *s, const char *e)
     print_err(prompt);
     if ((strcmp(e, ".tex") == 0) || (strcmp(e, "") == 0))
         show_context();
+    if (strcmp(s, "input file name") == 0)
+        tprint_nl(promptfilenamehelpmsg ")");
     tprint_nl("Please type another ");
     tprint(s);
     if (interaction < scroll_mode)

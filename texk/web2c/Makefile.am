@@ -1,10 +1,8 @@
 ## Makefile.am for the TeX Live subdirectory texk/web2c/
 ##
-## Copyright (C) 2009-2013 Peter Breitenlohner <tex-live@tug.org>
+## Copyright (C) 2009-2014 Peter Breitenlohner <tex-live@tug.org>
 ## You may freely use, modify and/or distribute this file.
 ##
-ACLOCAL_AMFLAGS = -I ../../m4 -I m4
-
 AM_CPPFLAGS = $(KPATHSEA_INCLUDES)
 ## Not yet for C, C++, and ObjC++ (too many warnings or not yet implemented)
 AM_CFLAGS = $(WARNING_CFLAGS)
@@ -42,7 +40,7 @@ dist-hook:
 NEVER_DIST = `find . -name .svn`
 
 ## The sh script that does the conversion.
-web2c = $(SHELL) ./web2c-sh $@
+web2c = AM_V_P=$(AM_V_P) $(SHELL) ./web2c-sh $@
 
 ## We put this in the web2c directory because it runs on the build system, it
 ## is separate from (and simpler than) the actual web-to-C conversion programs.
@@ -83,8 +81,14 @@ $(proglib): ${srcdir}/lib/*.c
 	cd lib && $(MAKE) $(AM_MAKEFLAGS) lib.a
 ## Rebuild libkpathsea
 @KPATHSEA_RULE@
+## Rebuild libptexenc
+@PTEXENC_RULE@
 ## Rebuild libz
 @ZLIB_RULE@
+## Rebuild liblua52
+@LUA52_RULE@
+## Rebuild libluajit
+@LUAJIT_RULE@
 ## Rebuild libpng
 @LIBPNG_RULE@
 ## Rebuild libfreetype
@@ -202,9 +206,9 @@ include $(srcdir)/pdftexdir/am/ttf2afm.am
 include $(srcdir)/pdftexdir/am/pdftosrc.am
 
 ## luaTeX
-include $(srcdir)/luatexdir/am/liblua52.am
 include $(srcdir)/luatexdir/am/luasocket.am
 include $(srcdir)/luatexdir/am/luamisc.am
+include $(srcdir)/luatexdir/am/libunilib.am
 include $(srcdir)/luatexdir/am/luafontforge.am
 include $(srcdir)/luatexdir/am/libluatex.am
 include $(srcdir)/luatexdir/am/luatex.am
@@ -231,7 +235,7 @@ include $(srcdir)/synctexdir/am/synctex.am
 include $(srcdir)/libmd5/am/md5.am
 
 ## Symlinks within $(bindir)
-include $(srcdir)/../am/bin_links.am
+include $(srcdir)/../../am/bin_links.am
 install-exec-hook: install-bin-links $(install_exe_links)
 uninstall-hook: uninstall-bin-links $(uninstall_exe_links)
 

@@ -3,8 +3,6 @@
 ## Copyright (C) 2009-2013 Peter Breitenlohner <tex-live@tug.org>
 ## You may freely use, modify and/or distribute this file.
 ##
-ACLOCAL_AMFLAGS = -I ../../m4 -I m4
-
 AM_CFLAGS = $(WARNING_CFLAGS)
 
 SUBDIRS = squeeze . tests
@@ -220,7 +218,7 @@ install-data-hook:
 uninstall-hook:
 	@if grep "original config.xdvi --" "$(DESTDIR)$(dvipsconfdir)/config.xdvi" >/dev/null 2>&1 \
 	    || test ! -r "$(DESTDIR)$(dvipsconfdir)/config.xdvi"; then \
-	  echo " rm -f '$(DESTDIR)$(dvipsconfdir)/config.xdvi'"; \
+	  echo " rm -f '$(DESTDIR)$(dvipsconfdir)/config.xdvi'"; \
 	  rm -f "$(DESTDIR)$(dvipsconfdir)/config.xdvi"; \
 	else :; fi
 

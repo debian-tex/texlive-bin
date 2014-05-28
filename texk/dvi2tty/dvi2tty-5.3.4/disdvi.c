@@ -45,6 +45,15 @@ const char *disdvi = "@(#) disdvi.c  2.26 20101027 M.J.E. Mol (c) 1989-2010, mar
  * Include files
  */
 
+#if defined(KPATHSEA)
+# define NO_DEBUG 1
+# include <kpathsea/config.h>
+# include <kpathsea/lib.h>
+#if defined(WIN32)
+# include <kpathsea/variable.h>
+#endif
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #if defined(MSDOS) || defined(WIN32)
@@ -60,11 +69,9 @@ const char *disdvi = "@(#) disdvi.c  2.26 20101027 M.J.E. Mol (c) 1989-2010, mar
 #if defined(THINK_C)
 # include "macintosh.h"
 #endif
-
-#if defined(KPATHSEA)
-# define NO_DEBUG 1
-# include <kpathsea/config.h>
-# include <kpathsea/lib.h>
+#if defined(WIN32) && defined(KPATHSEA)
+#undef fopen
+#define fopen fsyscp_fopen
 #endif
 
 
@@ -152,6 +159,17 @@ int main(int argc, char **argv)
     register int opcode;                /* dvi opcode */
     register int i;
     unsigned long fontnum;
+
+#if defined(WIN32) && defined(KPATHSEA)
+    char **av, *enc;
+    int ac;
+    kpse_set_program_name(argv[0], "disdvi");
+    enc = kpse_var_value("command_line_encoding");
+    if (get_command_line_args_utf8(enc, &ac, &av)) {
+        argv = av;
+        argc = ac;
+    }
+#endif
 
 #if defined(THINK_C)
     argc = process_disdvi_command_line(&argv);

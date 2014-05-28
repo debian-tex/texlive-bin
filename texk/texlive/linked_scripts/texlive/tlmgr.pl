@@ -1,12 +1,12 @@
 #!/usr/bin/env perl
-# $Id: tlmgr.pl 30643 2013-05-22 23:55:59Z preining $
+# $Id: tlmgr.pl 34139 2014-05-20 01:40:43Z preining $
 #
-# Copyright 2008-2013 Norbert Preining
+# Copyright 2008-2014 Norbert Preining
 # This file is licensed under the GNU General Public License version 2
 # or any later version.
 
-my $svnrev = '$Revision: 30643 $';
-my $datrev = '$Date: 2013-05-23 01:55:59 +0200 (Thu, 23 May 2013) $';
+my $svnrev = '$Revision: 34139 $';
+my $datrev = '$Date: 2014-05-20 03:40:43 +0200 (Tue, 20 May 2014) $';
 my $tlmgrrevision;
 my $prg;
 if ($svnrev =~ m/: ([0-9]+) /) {
@@ -111,6 +111,10 @@ our $FLAG_AUTOINSTALL = "a";
 our $FLAG_INSTALL = "i";
 our $FLAG_REINSTALL = "I";
 
+# keep in sync with install-tl.
+our $common_fmtutil_args = 
+  "--no-error-if-no-engine=$TeXLive::TLConfig::PartialEngineSupport";
+
 # option variables
 $::gui_mode = 0;
 $::machinereadable = 0;
@@ -143,7 +147,8 @@ sub main {
   my %actionoptions = (
     "get-mirror"    => { },
     "option"        => { },
-    "conf"          => { },
+    "conf"          => { "conffile" => "=s", 
+                         "delete" => 1 },
     "version"       => { },
     "repository"    => { },
     "candidate"     => { },
@@ -281,11 +286,12 @@ sub main {
   }
 
   if ($opts{"help"} || $opts{"h"}) {
-    # perldoc does ASCII emphasis on the output, so it's nice to use it.
-    # But not all Unix platforms have it, and on Windows our Config.pm
-    # can apparently interfere, so always skip it there.
+    # perldoc does ASCII emphasis on the output, and runs it through
+    # $PAGER, so people want it.  But not all Unix platforms have it,
+    # and on Windows our Config.pm can apparently interfere, so always
+    # skip it there.  Or if users have NOPERLDOC set in the environment.
     my @noperldoc = ();
-    if (win32()) {
+    if (win32() || $ENV{"NOPERLDOC"}) {
       @noperldoc = ("-noperldoc", "1");
     } else {
       if (!TeXLive::TLUtils::which("perldoc")) {
@@ -304,9 +310,10 @@ sub main {
         }
       }
     }
-    # in some cases LESSPIPE of less breaks control characters
-    # and the output of pod2usage is broken.
-    # We add/set LESS=-R in the environment and unset LESSPIPE to be sure
+    # less can break control characters and thus the output of pod2usage
+    # is broken.  We add/set LESS=-R in the environment and unset
+    # LESSPIPE and LESSOPEN to try to help.
+    # 
     if (defined($ENV{'LESS'})) {
       $ENV{'LESS'} .= " -R";
     } else {
@@ -340,7 +347,7 @@ for the full story.\n";
 
   # unify arguments so that the $action contains paper in all cases
   # and push the first arg back to @ARGV for action_paper processing
-  if ($action =~ /^(paper|xdvi|pdftex|dvips|dvipdfmx?|context)$/) {
+  if ($action =~ /^(paper|xdvi|psutils|pdftex|dvips|dvipdfmx?|context)$/) {
     unshift(@ARGV, $action);
     $action = "paper";
   }
@@ -662,11 +669,11 @@ sub do_cmd_and_check
 # If the "map" key is specified, the value may be a reference to a list
 # of map command strings to pass to updmap, e.g., "enable Map=ascii.map".
 #
-sub handle_execute_actions
-{
+sub handle_execute_actions {
   my $errors = 0;
 
   my $sysmode = ($opts{"usermode"} ? "" : "-sys");
+  my $invoke_fmtutil = "fmtutil$sysmode $common_fmtutil_args";
 
   if ($::files_changed) {
     $errors += do_cmd_and_check("mktexlsr");
@@ -681,7 +688,6 @@ sub handle_execute_actions
   chomp(my $TEXMFLOCAL = `kpsewhich -var-value=TEXMFLOCAL`);
   chomp(my $TEXMFDIST = `kpsewhich -var-value=TEXMFDIST`);
 
-  #
   # maps handling
   {
     my $updmap_run_needed = 0;
@@ -691,8 +697,9 @@ sub handle_execute_actions
     for my $m (keys %{$::execute_actions{'disable'}{'maps'}}) {
       $updmap_run_needed = 1;
     }
+    my $dest = $opts{"usermode"} ? "$::maintree/web2c/updmap.cfg" 
+               : "$TEXMFDIST/web2c/updmap.cfg";
     if ($updmap_run_needed) {
-      my $dest = "$TEXMFDIST/web2c/updmap.cfg";
       TeXLive::TLUtils::create_updmap($localtlpdb, $dest);
     }
     $errors += do_cmd_and_check("updmap$sysmode") if $updmap_run_needed;
@@ -702,7 +709,6 @@ sub handle_execute_actions
   # we first have to check if the config files, that is fmtutil.cnf 
   # or one of the language* files have changed, regenerate them
   # if necessary, and then run the necessary fmtutil calls.
-
   {
     # first check for language* files
     my $regenerate_language = 0;
@@ -793,7 +799,8 @@ sub handle_execute_actions
       # first regenerate all formats --byengine 
       for my $e (keys %updated_engines) {
         log ("updating formats based on $e\n");
-        $errors += do_cmd_and_check("fmtutil$sysmode --no-error-if-no-format --byengine $e");
+        $errors += do_cmd_and_check
+                    ("$invoke_fmtutil --no-error-if-no-format --byengine $e");
       }
       # now rebuild all other formats
       for my $f (keys %do_enable) {
@@ -801,7 +808,7 @@ sub handle_execute_actions
         # ignore disabled formats
         next if !$::execute_actions{'enable'}{'formats'}{$f}{'mode'};
         log ("(re)creating format dump $f\n");
-        $errors += do_cmd_and_check("fmtutil$sysmode --byfmt $f");
+        $errors += do_cmd_and_check ("$invoke_fmtutil --byfmt $f");
         $done_formats{$f} = 1;
       }
     }
@@ -821,7 +828,7 @@ sub handle_execute_actions
         }
         if ($localtlpdb->option("create_formats")
             && !$::regenerate_all_formats) {
-          $errors += do_cmd_and_check("fmtutil$sysmode --byhyphen \"$lang\"");
+          $errors += do_cmd_and_check ("$invoke_fmtutil --byhyphen \"$lang\"");
         }
       }
     }
@@ -830,7 +837,7 @@ sub handle_execute_actions
   #
   if ($::regenerate_all_formats) {
     info("Regenerating all formats, this may take some time ...");
-    $errors += do_cmd_and_check("fmtutil$sysmode --all");
+    $errors += do_cmd_and_check("$invoke_fmtutil --all");
     info("done\n");
     $::regenerate_all_formats = 0;
   }
@@ -1842,6 +1849,7 @@ sub action_restore {
     }
   } else {
     print "revision $rev for $pkg is not present in $opts{'backupdir'}\n";
+    finish(1);
   }
 }
 
@@ -2015,6 +2023,9 @@ sub write_w32_updater {
       (undef, undef, $mediatlp, $maxtlpdb) = 
         $remotetlpdb->virtual_candidate($pkg);
       $repo = $maxtlpdb->root . "/$Archive";
+      # update the media type of the used tlpdb
+      # otherwise later on we stumble when preparing the updater
+      $media = $maxtlpdb->media;
     } else {
       $mediatlp = $remotetlpdb->get_package($pkg);
       $repo = $remotetlpdb->root . "/$Archive";
@@ -2811,6 +2822,15 @@ sub action_update {
             "/$totalnr] auto-remove: $p ... ");
         }
         if (!$opts{"dry-run"}) {
+          # older tlmgr forgot to clear the relocated bit when saving a tlpobj
+          # into the local tlpdb, although the paths were rewritten.
+          # We have to clear this bit otherwise the make_container calls below
+          # for creating the backup will create some rubbish!
+          # Same as further down in the update part!
+          if ($pkg->relocated) {
+            debug("tlmgr: warn, relocated bit set for $p, but that is wrong!\n");
+            $pkg->relocated(0);
+          }
           if ($opts{"backup"}) {
             $pkg->make_container("xz", $root,
                                  $opts{"backupdir"}, 
@@ -3362,6 +3382,14 @@ END_DISK_WARN
 sub action_install {
   init_local_db(1);
   return if !check_on_writable();
+
+  #
+  # installation from a .tar.xz
+  if ($opts{"file"}) {
+    return $localtlpdb->install_package_files(@ARGV);
+  }
+
+  # if we are still here, we are installing from some repository
   # initialize the TLPDB from $location
   $opts{"no-depends"} = 1 if $opts{"no-depends-at-all"};
   init_tlmedia_or_die();
@@ -3383,11 +3411,6 @@ sub action_install {
     }
   }
 
-  #
-  # installation from a .tar.xz
-  if ($opts{"file"}) {
-    return $localtlpdb->install_package_files(@ARGV);
-  }
 
   $opts{"no-depends"} = 1 if $opts{"no-depends-at-all"};
   info("install: dry run, no changes will be made\n") if $opts{"dry-run"};
@@ -3993,8 +4016,8 @@ sub action_option {
       }
     }
   } else {
-    if ($what eq "location") {
-      # rewrite location -> repository
+    if ($what eq "location" || $what eq "repo") {
+      # silently rewrite location|repo -> repository
       $what = "repository";
     }
     my $found = 0;
@@ -4333,9 +4356,10 @@ sub action_generate {
       debug("$prg: writing language.dat.lua data to $dest\n");
       TeXLive::TLUtils::create_language_lua($localtlpdb, $dest, $localcfg);
       if ($opts{"rebuild-sys"}) {
-        do_cmd_and_check("fmtutil-sys --byhyphen \"$dest\"");
+        do_cmd_and_check
+                     ("fmtutil-sys $common_fmtutil_args --byhyphen \"$dest\"");
       } else {
-        info("To make the newly-generated language.dat take effect,"
+        info("To make the newly-generated language.dat.lua take effect,"
              . " run fmtutil-sys --byhyphen $dest.\n"); 
       }
     }
@@ -4348,7 +4372,8 @@ sub action_generate {
       debug ("$prg: writing language.dat data to $dest\n");
       TeXLive::TLUtils::create_language_dat($localtlpdb, $dest, $localcfg);
       if ($opts{"rebuild-sys"}) {
-        do_cmd_and_check("fmtutil-sys --byhyphen \"$dest\"");
+        do_cmd_and_check
+                     ("fmtutil-sys $common_fmtutil_args --byhyphen \"$dest\"");
       } else {
         info("To make the newly-generated language.dat take effect,"
              . " run fmtutil-sys --byhyphen $dest.\n"); 
@@ -4363,7 +4388,8 @@ sub action_generate {
       debug("$prg: writing language.def data to $dest\n");
       TeXLive::TLUtils::create_language_def($localtlpdb, $dest, $localcfg);
       if ($opts{"rebuild-sys"}) {
-        do_cmd_and_check("fmtutil-sys --byhyphen \"$dest\"");
+        do_cmd_and_check
+                     ("fmtutil-sys $common_fmtutil_args --byhyphen \"$dest\"");
       } else {
         info("To make the newly-generated language.def take effect,"
              . " run fmtutil-sys --byhyphen $dest.\n");
@@ -4377,7 +4403,7 @@ sub action_generate {
     TeXLive::TLUtils::create_fmtutil($localtlpdb, $dest, $localcfg);
 
     if ($opts{"rebuild-sys"}) {
-      do_cmd_and_check("fmtutil-sys --all");
+      do_cmd_and_check("fmtutil-sys $common_fmtutil_args --all");
     } else {
       info("To make the newly-generated fmtutil.cnf take effect,"
            . " run fmtutil-sys --all.\n"); 
@@ -4603,7 +4629,14 @@ sub action_recreate_tlpdb {
 #  CHECK
 #
 sub init_tltree {
-  my $svn = shift;
+  my ($svn) = @_;
+
+  # if we are on W32, die (no find).  
+  my $arch = $localtlpdb->platform();
+  if ($arch eq "win32") {
+    tldie("$prg: sorry, cannot check this on Windows.\n");
+  }
+
   my $Master = $localtlpdb->root;
   my $tltree = TeXLive::TLTREE->new ("svnroot" => $Master);
   if ($svn) {
@@ -4700,11 +4733,6 @@ sub check_files {
     print "\n";
   }
 
-  # if we are on W32, return (no find).  We need -use-svn only for
-  # checking the live repository on tug, which is not w32.
-  my $arch = $localtlpdb->platform();
-  return $ret if $arch eq "win32";
-
   # check that all files in the trees are covered, along with
   # 00texlive.image, q.v.  The ones here are not included in the
   # archival source/ tarball;
@@ -4713,8 +4741,8 @@ sub check_files {
     texmf-dist/ls-R$ texmf-doc/ls-R$
     tlpkg/archive tlpkg/backups tlpkg/installer
     tlpkg/texlive.tlpdb tlpkg/tlpobj tlpkg/texlive.profile
-    texmf-var/ texmf-config/
-    texmf.cnf install-tl.log
+    texmf-config/ texmf-var/
+    texmf.cnf texmfcnf.lua install-tl.log
   !;
   my %tltreefiles = %{$tltree->{'_allfiles'}};
   my @tlpdbfiles = keys %filetopacks;
@@ -4750,10 +4778,11 @@ sub check_files {
 # 
 sub check_runfiles {
   my $Master = $localtlpdb->root;
+
   # build a list of all runtime files associated to 'normal' packages
-  #
   (my $non_normal = `ls "$Master/bin"`) =~ s/\n/\$|/g; # binaries
   $non_normal .= '^0+texlive|^bin-|^collection-|^scheme-|^texlive-|^texworks';
+  $non_normal .= '|^pgf$';  # has lots of intentionally duplicated .lua
   my @runtime_files = ();
   #
   foreach my $tlpn ($localtlpdb->list_packages) {
@@ -4774,8 +4803,7 @@ sub check_runfiles {
     push @runtime_files, @files;
   }
 
-  # build the duplicates list
-  #
+  # build the duplicates list.
   my @duplicates = (""); # just to use $duplicates[-1] freely
   my $prev = "";
   foreach my $f (sort map { TeXLive::TLUtils::basename($_) } @runtime_files) {
@@ -4784,10 +4812,7 @@ sub check_runfiles {
   }
   shift @duplicates; # get rid of the fake 1st value
 
-  # @duplicates = ('8r-base.map', 'aer.sty', 'lm-ec.map'); # for debugging
-
-  # check if duplicates are different files
-  #
+  # check if duplicates are different files.
   foreach my $f (@duplicates) {
     # assume tex4ht, xdy, afm stuff is ok, and don't worry about
     # Changes, README et al.  Other per-format versions.
@@ -4795,13 +4820,15 @@ sub check_runfiles {
     next if $f
       =~ /^((czech|slovak)\.sty
             |Changes
+            |Makefile
             |README
             |cid2code\.txt
+            |context\/stubs
             |etex\.src
             |kinsoku\.tex
             |language\.dat
             |language\.def
-            |libertine\.sty
+            |local\.mf
             |m-tex4ht\.tex
             |metatex\.tex
             |.*-noEmbed\.map
@@ -4956,7 +4983,48 @@ sub check_executes {
     # special case for cont-en ...
     next if ($name eq "cont-en");
     # we check that the name exist in bin/$arch
-    for my $a ($localtlpdb->available_architectures) {
+    my @archs_to_check = $localtlpdb->available_architectures;
+    if ($engine eq "luajittex") {
+      # luajittex is special since it is not available on all architectures
+      # due to inherent reasons (machine code)
+      # We do not want to have error messages here, so we do the following:
+      # * if tlpkg/tlpsrc/luatex.tlpsrc is available, then load it
+      #   and filter away those archs that are excluded with f/!...
+      # * if tlpkg/tlpsrc/luatex.tlpsrc is *not* available (user installation)
+      #   we just ignore it completely.
+      my $tlpsrc_file = $localtlpdb->root . "/tlpkg/tlpsrc/luatex.tlpsrc";
+      if (-r $tlpsrc_file) {
+        require TeXLive::TLPSRC;
+        my $tlpsrc = new TeXLive::TLPSRC;
+        $tlpsrc->from_file($tlpsrc_file);
+        my @binpats = $tlpsrc->binpatterns;
+        my @negarchs;
+        for my $p (@binpats) {
+          if ($p =~ m%^(\w+)/(!?[-_a-z0-9,]+)\s+(.*)$%) {
+            my $pt = $1;
+            my $aa = $2;
+            my $pr = $3;
+            if ($pr =~ m!/luajittex$!) {
+              # bingo, get the negative patterns
+              if ($aa =~ m/^!(.*)$/) {
+                @negarchs = split(/,/,$1);
+              }
+            }
+          }
+        }
+        my %foo;
+        for my $a (@archs_to_check) {
+          $foo{$a} = 1;
+        }
+        for my $a (@negarchs) {
+          delete $foo{$a} if defined($foo{$a});
+        }
+        @archs_to_check = keys %foo;
+      } else {
+        @archs_to_check = ();
+      }
+    }
+    for my $a (@archs_to_check) {
       my $f = "$Master/bin/$a/$name";
       if (!check_file($a, $f)) {
         push @{$missingbins{$_}}, "bin/$a/$name" if $mode;
@@ -5005,8 +5073,8 @@ sub check_file {
   if (-r $f) {
     return 1;
   } else {
-    # not -r, so check for the extensions .bat and .exe on w32 and cygwin
-    if (($a eq "win32") || ($a eq "i386-cygwin")) {
+    # not -r, so check for the extensions .bat and .exe on windoze-ish.
+    if ($a =~ /win[0-9]|.*-cygwin/) {
       if (-r "$f.exe" || -r "$f.bat") {
         return 1;
       }
@@ -5026,7 +5094,8 @@ sub check_depends {
   }
   # list of collections.
   my @colls = $localtlpdb->collections;
-  my @coll_deps = $localtlpdb->expand_dependencies("-no-collections",$localtlpdb,@colls);
+  my @coll_deps
+    = $localtlpdb->expand_dependencies("-no-collections", $localtlpdb, @colls);
   my %coll_deps;
   @coll_deps{@coll_deps} = ();  # initialize hash with keys from list
 
@@ -5036,9 +5105,8 @@ sub check_depends {
     next if $pkg =~ m/^00texlive/;
 
     # For each package, check that it is a dependency of some collection.
-    # Whatever is left in %coll_deps after this loop will be the problem
     if (! exists $coll_deps{$pkg}) {
-      # Except that schemes and our special .win32 packages are ok.
+      # Except that schemes and our ugly Windows packages are ok.
       push (@no_dep, $pkg) unless $pkg =~/^scheme-|\.win32$/;
     }
 
@@ -5048,6 +5116,21 @@ sub check_depends {
       if (!defined($presentpkg{$d})) {
         push (@{$wrong_dep{$d}}, $pkg);
       }
+    }
+  }
+
+  # check whether packages are included more than one time in a collection
+  my %pkg2mother;
+  for my $c (@colls) {
+    for my $p ($localtlpdb->get_package($c)->depends) {
+      next if ($p =~ /^collection-/);
+      push @{$pkg2mother{$p}}, $c;
+    }
+  }
+  my @double_inc_pkgs;
+  for my $k (keys %pkg2mother) {
+    if (@{$pkg2mother{$k}} > 1) {
+      push @double_inc_pkgs, $k;
     }
   }
 
@@ -5062,6 +5145,11 @@ sub check_depends {
   if (@no_dep) {
     $ret++;
     print "\f PACKAGES NOT IN ANY COLLECTION: @no_dep\n";
+  }
+
+  if (@double_inc_pkgs) {
+    $ret++;
+    print "\f PACKAGES IN MORE THAN ONE COLLECTION: @double_inc_pkgs\n";
   }
 
   return $ret;
@@ -5178,7 +5266,8 @@ sub action_postaction {
 #  INIT USER TREE
 # sets up the user tree for tlmgr in user mode
 sub action_init_usertree {
-  init_local_db();
+  # init_local_db but do not die if localtlpdb is not found!
+  init_local_db(2);
   my $tlpdb = TeXLive::TLPDB->new;
   my $usertree;
   if ($opts{"usertree"}) {
@@ -5191,11 +5280,20 @@ sub action_init_usertree {
   }
   $tlpdb->root($usertree);
   # copy values from main installation over
-  my $maininsttlp = $localtlpdb->get_package("00texlive.installation");
-  my $inst = $maininsttlp->copy;
+  my $maininsttlp;
+  my $inst;
+  if (defined($localtlpdb)) {
+    $maininsttlp = $localtlpdb->get_package("00texlive.installation");
+    $inst = $maininsttlp->copy;
+  } else {
+    $inst = TeXLive::TLPOBJ->new;
+    $inst->name("00texlive.installation");
+    $inst->category("TLCore");
+  }
   $tlpdb->add_tlpobj($inst);
   # remove all available architectures
   $tlpdb->setting( "available_architectures", "");
+  $tlpdb->option( "location", $TeXLive::TLConfig::TeXLiveURL);
   # specify that we are in user mode
   $tlpdb->setting( "usertree", 1 );
   $tlpdb->save;
@@ -5216,15 +5314,23 @@ sub action_conf {
     texconfig_conf_mimic();
     return;
   }
-  if ($arg eq "tlmgr" || $arg eq "texmf") {
+  if ($arg eq "tlmgr" || $arg eq "texmf" || $arg eq "updmap") {
     my ($fn,$cf);
+    if ($opts{'conffile'}) {
+      $fn = $opts{'conffile'} ;
+    }
     if ($arg eq "tlmgr") {
       chomp (my $TEXMFCONFIG = `kpsewhich -var-value=TEXMFCONFIG`);
-      $fn = "$TEXMFCONFIG/tlmgr/config";
+      $fn || ( $fn = "$TEXMFCONFIG/tlmgr/config" ) ;
       $cf = TeXLive::TLConfFile->new($fn, "#", "=");
-    } else {
-      $fn = "$Master/texmf.cnf";
+    } elsif ($arg eq "texmf") {
+      $fn || ( $fn = "$Master/texmf.cnf" ) ;
       $cf = TeXLive::TLConfFile->new($fn, "[%#]", "=");
+    } elsif ($arg eq "updmap") {
+      $fn || ( chomp ($fn = `kpsewhich updmap.cfg`) ) ;
+      $cf = TeXLive::TLConfFile->new($fn, '(#|(Mixed)?Map)', ' ');
+    } else {
+      die "Should not happen, conf arg=$arg";
     }
     my ($key,$val) = @ARGV;
     if (!defined($key)) {
@@ -5239,31 +5345,44 @@ sub action_conf {
       }
     } else {
       if (!defined($val)) {
-        if (defined($cf->value($key))) {
-          info("$arg $key value: " . $cf->value($key) . " ($fn)\n");
+        if (defined($opts{'delete'})) {
+          if (defined($cf->value($key))) {
+            info("removing setting $arg $key value: " . $cf->value($key) . "from $fn\n");
+            $cf->delete_key($key);
+          } else {
+            info("$arg $key not defined, cannot remove ($fn)\n");
+          }
         } else {
-          info("$key not defined in $arg config file ($fn)\n");
-          if ($arg eq "texmf") {
-            # not in user-specific file, show anything kpsewhich gives us.
-            chomp (my $defval = `kpsewhich -var-value $key`);
-            if ($? != 0) {
-              info("$arg $key default value is unknown");
-            } else {
-              info("$arg $key default value: $defval");
+          if (defined($cf->value($key))) {
+            info("$arg $key value: " . $cf->value($key) . " ($fn)\n");
+          } else {
+            info("$key not defined in $arg config file ($fn)\n");
+            if ($arg eq "texmf") {
+              # not in user-specific file, show anything kpsewhich gives us.
+              chomp (my $defval = `kpsewhich -var-value $key`);
+              if ($? != 0) {
+                info("$arg $key default value is unknown");
+              } else {
+                info("$arg $key default value: $defval");
+              }
+              info(" (kpsewhich -var-value)\n");
             }
-            info(" (kpsewhich -var-value)\n");
           }
         }
       } else {
-        info("setting $arg $key to $val (in $fn)\n");
-        $cf->value($key, $val);
+        if (defined($opts{'delete'})) {
+          warning("$arg --delete and value for key $key given, don't know what to do!\n");
+        } else {
+          info("setting $arg $key to $val (in $fn)\n");
+          $cf->value($key, $val);
+        }
       }
     }
     if ($cf->is_changed) {
       $cf->save;
     }
   } else {
-    warn "$prg: unknown conf arg: $arg (try tlmgr or texmf)\n";
+    warn "$prg: unknown conf arg: $arg (try tlmgr or texmf or updmap)\n";
   }
 }
 
@@ -5279,15 +5398,19 @@ sub texconfig_conf_mimic {
     info("$cmd: " . TeXLive::TLUtils::which($cmd) . "\n");
   }
   info("=========================== active config files ==========================\n");
-  for my $m (qw/texmf.cnf updmap.cfg fmtutil.cnf config.ps mktex.cnf
-                pdftexconfig.tex/) {
+  for my $m (qw/texmf.cnf updmap.cfg/) {
+    for my $f (`kpsewhich -all $m`) {
+      info("$m: $f");
+    }
+  }
+  for my $m (qw/fmtutil.cnf config.ps mktex.cnf pdftexconfig.tex/) {
     info("$m: " . `kpsewhich $m`);
   }
 
   #tlwarn("missing finding of XDvi, config!\n");
 
   info("============================= font map files =============================\n");
-  for my $m (qw/psfonts.map pdftex.map ps2pk.map dvipdfm.map/) {
+  for my $m (qw/psfonts.map pdftex.map ps2pk.map kanjix.map/) {
     info("$m: " . `kpsewhich $m`);
   }
 
@@ -5318,6 +5441,14 @@ sub texconfig_conf_mimic {
 # Subroutines galore.
 #
 # set global $location variable.
+#
+# argument $should_i_die specifies what is requried
+# to suceed during initialization.
+#
+# undef or false: TLPDB needs to be found and initialized, but
+#                 support programs need not be found
+# 1             : TLPDB initialized and support programs must work
+# 2             : not even TLPDB needs to be found
 # if we cannot read tlpdb, die if arg SHOULD_I_DIE is true.
 #
 # if an argument is given and is true init_local_db will die if
@@ -5325,12 +5456,19 @@ sub texconfig_conf_mimic {
 #
 sub init_local_db {
   my ($should_i_die) = @_;
+  defined($should_i_die) or ($should_i_die = 0);
   # if the localtlpdb is already defined do simply return here already
   # to make sure that the settings in the local tlpdb do not overwrite
   # stuff changed via the GUI
   return if defined $localtlpdb;
   $localtlpdb = TeXLive::TLPDB->new ( root => $::maintree );
-  die("cannot setup TLPDB in $::maintree") unless (defined($localtlpdb));
+  if (!defined($localtlpdb)) {
+    if ($should_i_die == 2) {
+      return undef;
+    } else {
+      die("cannot setup TLPDB in $::maintree");
+    }
+  }
   # setup the programs, for w32 we need the shipped wget/xz etc, so we
   # pass the location of these files to setup_programs.
   if (!setup_programs("$Master/tlpkg/installer", $localtlpdb->platform)) {
@@ -5855,14 +5993,14 @@ sub check_for_critical_updates
 
 sub critical_updates_warning {
   tlwarn("=" x 79, "\n");
-  tlwarn("Updates for tlmgr itself are present.\n");
-  tlwarn("So, please update the package manager first, via either\n");
+  tlwarn("tlmgr itself needs to be updated.\n");
+  tlwarn("Please do this via either\n");
   tlwarn("  tlmgr update --self\n");
   tlwarn("or by getting the latest updater for Unix-ish systems:\n");
   tlwarn("  $TeXLiveURL/update-tlmgr-latest.sh\n");
   tlwarn("and/or Windows systems:\n");
   tlwarn("  $TeXLiveURL/update-tlmgr-latest.exe\n");
-  tlwarn("Then continue with other updates.\n");
+  tlwarn("Then continue with other updates as usual.\n");
   tlwarn("=" x 79, "\n");
 }
 
@@ -6029,8 +6167,8 @@ language code (based on ISO 639-1).  Currently supported (but not
 necessarily completely translated) are: English (en, default), Czech
 (cs), German (de), French (fr), Italian (it), Japanese (ja), Dutch (nl),
 Polish (pl), Brazilian Portuguese (pt_BR), Russian (ru), Slovak (sk),
-Slovenian (sl), Serbian (sr), Vietnamese (vi), simplified Chinese
-(zh_CN), and traditional Chinese (zh_TW).
+Slovenian (sl), Serbian (sr), Ukrainian (uk), Vietnamese (vi),
+simplified Chinese (zh_CN), and traditional Chinese (zh_TW).
 
 =item B<--debug-translation>
 
@@ -6042,7 +6180,7 @@ what remains to be done.
 
 Instead of the normal output intended for human consumption, write (to
 standard output) a fixed format more suitable for machine parsing.  See
-the L</"MACHINE-READABLE OUTPUT"> section below.
+the L</MACHINE-READABLE OUTPUT> section below.
 
 =item B<--no-execute-actions>
 
@@ -6105,7 +6243,12 @@ revision number for the loaded TeX Live Perl modules are shown, too.
 
 =head2 help
 
-Gives this help information (same as C<--help>).
+Display this help information and exit (same as C<--help>, and on the
+web at L<http://tug.org/texlive/doc/tlmgr.html>).  Sometimes the
+C<perldoc> and/or C<PAGER> programs on the system have problems,
+resulting in control characters being literally output.  This can't
+always be detected, but you can set the C<NOPERLDOC> environment
+variable and C<perldoc> will not be used.
 
 =head2 version
 
@@ -6160,14 +6303,14 @@ performed are written to the terminal.
 =back
 
 
-=head2 candidates
+=head2 candidates I<pkg>
 
 =over 4
 
 =item B<candidates I<pkg>>
 
 Shows the available candidate repositories for package I<pkg>.
-See L</"MULTIPLE REPOSITORIES"> below.
+See L</MULTIPLE REPOSITORIES> below.
 
 
 =back
@@ -6215,21 +6358,26 @@ checking the TL development repository.
 =back
 
 
-=head2 conf [texmf|tlmgr [I<key> [I<value>]]]
+=head2 conf [texmf|tlmgr|updmap [--conffile I<file>] [--delete] [I<key> [I<value>]]]
 
 With only C<conf>, show general configuration information for TeX Live,
 including active configuration files, path settings, and more.  This is
 like the C<texconfig conf> call, but works on all supported platforms.
 
-With either C<conf texmf> or C<conf tlmgr> given in addition, shows all
-key/value pairs (i.e., all settings) as saved in C<ROOT/texmf.cnf> or
-the tlmgr configuration file (see below), respectively.
+With either C<conf texmf>, C<conf tlmgr>, or C<conf updmap> given in
+addition, shows all key/value pairs (i.e., all settings) as saved in
+C<ROOT/texmf.cnf>, the tlmgr configuration file (see below), or the
+first found (via kpsewhich) C<updmap.cfg> file, respectively.
 
-If I<key> is given in addition, shows the value of only that given
-I<key> in the respective file.
+If I<key> is given in addition, shows the value of only that I<key> in
+the respective file.  If option I<--delete> is also given, the
+configuration file -- it is removed, not just commented out!
 
 If I<value> is given in addition, I<key> is set to I<value> in the 
 respective file.  I<No error checking is done!>
+
+In all cases the file used can be explicitly specified via the option
+C<--conffile I<file>>, in case one wants to operate on a different file.
 
 Practical application: if the execution of (some or all) system commands
 via C<\write18> was left enabled during installation, you can disable
@@ -6237,9 +6385,16 @@ it afterwards:
   
   tlmgr conf texmf shell_escape 0
 
+A more complicated example: the C<TEXMFHOME> tree (see the main TeX Live
+guide, L<http://tug.org/texlive/doc.html>) can be set to multiple
+directories, but they must be enclosed in braces and separated by
+commas, so quoting the value to the shell is a good idea.  Thus:
+
+  tlmgr conf texmf TEXMFHOME "{~/texmf,~/texmfbis}"
+
 Warning: The general facility is here, but tinkering with settings in
-this way is very strongly discouraged.  Again, no error checking is
-done, so any sort of breakage is possible.
+this way is very strongly discouraged.  Again, no error checking on
+either keys or values is done, so any sort of breakage is possible.
 
 
 =head2 dump-tlpdb [--local|--remote]
@@ -6444,7 +6599,7 @@ are listed.
 
 In addition to the normal data displayed, also display information for
 given packages from the corresponding taxonomy (or all of them).  See
-L</"TAXONOMIES"> below for details.
+L</TAXONOMIES> below for details.
 
 =back
 
@@ -6466,17 +6621,17 @@ all packages on which the given I<pkg>s are dependent, also.  Options:
 =item B<--file>
 
 Instead of fetching a package from the installation repository, use
-the packages files given on the command line. These files need
-to be proper TeX Live package files (with contained tlpobj file).
+the package files given on the command line.  These files must
+be standard TeX Live package files (with contained tlpobj file).
 
 =item B<--reinstall>
 
 Reinstall a package (including dependencies for collections) even if it
-seems to be already installed (i.e, is present in the TLPDB).  This is
+already seems to be installed (i.e, is present in the TLPDB).  This is
 useful to recover from accidental removal of files in the hierarchy.
 
 When re-installing, only dependencies on normal packages are followed
-(not those of category Scheme or Collection).
+(i.e., not those of category Scheme or Collection).
 
 =item B<--no-depends>
 
@@ -6485,12 +6640,12 @@ that all dependencies of this package are fulfilled.)
 
 =item B<--no-depends-at-all>
 
-When you install a package which ships binary files the respective
-binary package will also be installed.  That is, for a package C<foo>,
-the package C<foo.i386-linux> will also be installed on an C<i386-linux>
-system.  This switch suppresses this behavior, and also implies
-C<--no-depends>.  Don't use it unless you are sure of what you are
-doing.
+Normally, when you install a package which ships binary files the
+respective binary package will also be installed.  That is, for a
+package C<foo>, the package C<foo.i386-linux> will also be installed on
+an C<i386-linux> system.  This option suppresses this behavior, and also
+implies C<--no-depends>.  Don't use it unless you are sure of what you
+are doing.
 
 =item B<--dry-run>
 
@@ -6580,11 +6735,7 @@ number of backups to keep.  Thus, backups are disabled if the value is
 0.  In the C<--clean> mode of the C<backup> action this option also
 specifies the number to be kept.
 
-To setup C<autobackup> to C<-1> on the command line, use either:
-
-  tlmgr option autobackup infty
-
-or:
+To setup C<autobackup> to C<-1> on the command line, use:
 
   tlmgr option -- autobackup -1
 
@@ -6611,7 +6762,7 @@ instead of only the current user.  All three options are on by default.
 
 =item B<paper [a4|letter]>
 
-=item B<S<[xdvi|pdftex|dvips|dvipdfmx|dvipdfm|context] paper [I<papersize>|--list]>>
+=item B<S<[xdvi|pdftex|dvips|dvipdfmx|context|psutils] paper [I<papersize>|--list]>>
 
 =back
 
@@ -6634,10 +6785,10 @@ last argument (e.g., C<tlmgr dvips paper --list>), shows all valid paper
 sizes for that program.  The first size shown is the default.
 
 Incidentally, this syntax of having a specific program name before the
-C<paper> keyword may seem strange.  It is inherited from the
-longstanding C<texconfig> script, which supports other configuration
-settings for some programs, notably C<dvips>.  C<tlmgr> does not support
-those extra settings at present.
+C<paper> keyword is unusual.  It is inherited from the longstanding
+C<texconfig> script, which supports other configuration settings for
+some programs, notably C<dvips>.  C<tlmgr> does not support those extra
+settings.
 
 
 =head2 path [--w32mode=user|admin] [add|remove]
@@ -6862,8 +7013,8 @@ written to the terminal.
 
 =item B<repository set I<path>[#I<tag>] [I<path>[#I<tag>] ...]>
 
-This action manages the list of repositories.  See L</"MULTIPLE
-REPOSITORIES"> below for detailed explanations.
+This action manages the list of repositories.  See L</MULTIPLE
+REPOSITORIES> below for detailed explanations.
 
 The first form (C<list>) lists all configured repositories and the
 respective tags if set. If a path, url, or tag is given after the
@@ -6923,7 +7074,7 @@ word C<tables> (unless they also contain the word C<table> on its own).
 If a search for any (or all) taxonomies is done, by specifying one of
 the taxonomy options below, then instead of searching for packages, list
 the entire corresponding taxonomy (or all of them).  See
-L</"TAXONOMIES"> below.
+L</TAXONOMIES> below.
 
 =back
 
@@ -6944,7 +7095,7 @@ List all filenames containing I<what>.
 =item B<--characterization>
 
 Search in the corresponding taxonomy (or all) instead of the package
-descriptions.  See L</"TAXONOMIES"> below.
+descriptions.  See L</TAXONOMIES> below.
 
 =item B<--all>
 
@@ -7149,11 +7300,7 @@ If the package on the server is older than the package already installed
 downgrade.  Also, packages for uninstalled platforms are not installed.
 
 
-  
 =head1 USER MODE
-
-B<WARNING:> This is new work in TL 2013.  Expect breakage, and the need
-to reinstall your user tree.
 
 C<tlmgr> provides a restricted way, called ``user mode'', to manage
 arbitrary texmf trees in the same way as the main installation.  For
@@ -7206,7 +7353,7 @@ installed into a user tree.
 
 Description of changes of actions in user mode:
 
-=head3 install
+=head2 user mode install
 
 In user mode, the C<install> action checks that the package and all
 dependencies are all either relocated or already installed in the system
@@ -7222,23 +7369,20 @@ collection-context> would install C<collection-basic> and other
 collections, while in user mode, I<only> the packages mentioned in
 C<collection-context> are installed.
 
-=head2 backup, restore, remove, update
+=head2 user mode backup; restore; remove; update
 
 In user mode, these actions check that all packages to be acted on are
 installed in the user tree before proceeding; otherwise, they behave
 just as in normal mode.
  
-=head2 generate, option, paper
+=head2 user mode generate; option; paper
 
 In user mode, these actions operate only on the user tree's
 configuration files and/or C<texlive.tlpdb>.
 creates configuration files in user tree
 
-B<WARNING> repeated: this is still has to be considered experimental!
-Please report bugs to C<tex-live@tug.org> as usual
 
-
-=head1 TLMGR CONFIGURATION FILE
+=head1 CONFIGURATION FILE FOR TLMGR
 
 A small subset of the command line options can be set in a config file
 for C<tlmgr> which resides in C<TEXMFCONFIG/tlmgr/config>.  By default, the
@@ -7442,7 +7586,7 @@ only those I<not> installed, or only those with update available.
 =item Category
 
 Select which categories are shown: packages, collections, and/or
-schemes.  These are briefly explained in the L</"DESCRIPTION"> section
+schemes.  These are briefly explained in the L</DESCRIPTION> section
 above.
 
 =item Match
@@ -7572,7 +7716,7 @@ Several toggles are also here.  The first is C<Expert options>, which is
 set by default.  If you turn this off, the next time you start the GUI a
 simplified screen will be shown that display only the most important
 functionality.  This setting is saved in the configuration file of
-C<tlmgr>; see L<CONFIGURATION FILE> for details.
+C<tlmgr>; see L<CONFIGURATION FILE FOR TLMGR> for details.
 
 The other toggles are all off by default: for debugging output, to
 disable the automatic installation of new packages, and to disable the
@@ -7608,12 +7752,12 @@ written to stdout).  The idea is that a program can get all the
 information it needs by reading stdout.
 
 Currently this option only applies to the 
-L<update|/"update [I<option>]... [I<pkg>]...">, the
-L<install|"install [I<option>]... I<pkg>...">, and the
+L<update|/update [I<option>]... [I<pkg>]...>,
+L<install|/install [I<option>]... I<pkg>...>, and
 L</option> actions.  
 
 
-=head3 update, install
+=head2 Machine-readable C<update> and C<install> output
 
 The output format is as follows:
 
@@ -7735,7 +7879,7 @@ The estimated total time.
 
 =back
 
-=head3 option
+=head2 Machine-readable C<option> output
 
 The output format is as follows:
 

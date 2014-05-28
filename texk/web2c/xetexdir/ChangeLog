@@ -1,3 +1,83 @@
+2014-05-10  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* image/bmpimage.c: Error exit instead of crashing for unsupported
+	bmp in bmp_scan_file().
+
+2014-04-28  TANAKA Takuji  <KXD02663@nifty.ne.jp>
+
+	* XeTeX_ext.c: Accept Ctrl+Z as EOF in console (keyboard).
+	(Windows only)
+
+2014-03-17  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* XeTeXFontInst.cpp, XeTeXFontInst_Mac.cpp, XeTeXFontMgr.cpp,
+	XeTeXFontMgr_FC.cpp, XeTeXLayoutInterface.cpp, XeTeXOTMath.cpp,
+	hz.cpp, pdfimage.cpp: <w2c/config.h> is now C++ safe.
+
+	* XeTeXFontMgr.cpp, XeTeXLayoutInterface.cpp, XeTeXOTMath.cpp,
+	hz.cpp: Move extern declarations from the Pascal/WEB side ...
+	* XeTeX_web.h (new): ... to here.
+	* am/xetex.am: Add the new file.
+
+2014-02-08  TANAKA Takuji  <KXD02663@nifty.ne.jp>
+
+	* XeTeX_ext.h: Display output of Unicode characters
+	on console. (Windows only)
+
+2014-01-20  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	TeX tuneup of 2014.
+	* xetex.web: Adapt to TeX Version 3.14159265.
+
+2014-01-17  TANAKA Takuji  <KXD02663@nifty.ne.jp>
+
+	* XeTeX_ext.c, xetex.h: Accept Unicode characters from STDIN
+	on console. (Windows only)
+
+2013-12-06  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* XeTeX_ext.c: Remove unused variables.
+	'i' in read_tag_with_param(const char* cp, int* param), and
+	'x', 'y' in a block if (fontarea[f] == OTGR_FONT_FLAG) {
+	in measure_native_node(void* pNode, int use_glyph_metrics).
+
+2013-12-05  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* XeTeX_ext.c: Rewrite command line for popen(). Windows only.
+
+2013-09-25  Karl Berry  <karl@tug.org>
+
+	* xetexextra.h (BANNER),
+	* am/xetex.am (xetex_cppflags): remove XETEX_BUILD_DATE,
+	so we have reproducible binaries again.  (Change already made
+	upstream.)
+
+2013-07-02  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* XeTeX_ext.c: Undefine timezone before reading time.h for MSVC.
+
+2013-07-02  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* XeTeXFontInst.cpp, XeTeXFontInst_Mac.cpp, XeTeXFontMgr.cpp,
+	XeTeXFontMgr_FC.cpp, XeTeXFontMgr_Mac.mm,
+	XeTeXLayoutInterface.cpp, XeTeXOTMath.cpp, XeTeX_ext.c,
+	hz.cpp, pdfimage.cpp: Always first include <w2c/config.h>.
+	* XeTeX_ext.h: Do not include <w2c/config.h>.
+	* image/bmpimage.[ch], image/jpegimage.[ch]: First include
+	<w2c/config.h> in C files and not in headers.
+
+2013-06-28  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* XeTeXFontInst.h: Include "XeTeXFontMgr.h" before <stdio.h>.
+	* XeTeX_ext.h: Include <w2c/c-auto.h> before <unicode/utypes.h>.
+	* pdfimage.cpp: Include "XeTeX_ext.h" before "pdfimage.h".
+
+2013-05-30  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* pdfimage.cpp [MINGW]: Include kpathsea/mingw32.h (via
+	XeTeX_ext.h) before PDFDoc.h etc to avoid conflicting typedef of
+	boolean from rpcndr.h.
+
 2013-03-27  Khaled Hosny  <khaledhosny@eglug.org>
 
 	XeTeX 0.9999.2

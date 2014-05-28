@@ -31,8 +31,8 @@
   http://xdvi.sourceforge.net/gui.html#file-logs
 */
 
-#include <string.h>
 #include "xdvi-config.h"
+#include <string.h>
 #include "xdvi.h"
 
 #include "xdvi-debug.h"
@@ -716,7 +716,6 @@ static void
 printlog_act_cancel_or_destroy(Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
     void *ptr;
-    struct save_or_print_info *info;
     
     UNUSED(w);
     UNUSED(event);
@@ -726,7 +725,6 @@ printlog_act_cancel_or_destroy(Widget w, XEvent *event, String *params, Cardinal
 	return;
     }
     sscanf(*params, "%p", &ptr);
-    info = (struct save_or_print_info *)ptr;
 
     cb_printlog_act_cancel_or_destroy(w, (XtPointer)ptr, NULL);
     

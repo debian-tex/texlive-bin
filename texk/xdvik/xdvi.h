@@ -1,6 +1,6 @@
 /*========================================================================*\
 
-Copyright (c) 1990-2013  Paul Vojta
+Copyright (c) 1990-2014  Paul Vojta
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to
@@ -32,8 +32,6 @@ in xdvi.c.
 
 #ifndef	XDVI_H_
 #define	XDVI_H_
-
-#include "xdvi-config.h"
 
 /* headers used by all modules */
 #include "xdvi-debug.h"
@@ -167,6 +165,10 @@ in xdvi.c.
 #include <X11/Xfuncs.h>
 #include <X11/Intrinsic.h>
 
+#if HAVE_XI21
+# include <X11/extensions/XInput2.h>	/* for hi-res (smooth) scrolling */
+#endif
+
 #ifndef MAXPATHLEN
 #  ifdef PATH_MAX
 #    define MAXPATHLEN PATH_MAX
@@ -200,13 +202,6 @@ extern unsigned long time_start, time_end;
 #endif
 
 #include <string.h>
-
-#ifdef	VMS
-#  define index	strchr
-#  define rindex strrchr
-#  define bzero(a, b) (void) memset ((void *) (a), 0, (size_t) (b))
-#  define bcopy(a, b, c)  (void) memmove ((void *) (b), (void *) (a), (size_t) (c))
-#endif
 
 #include <stdio.h>
 #include <setjmp.h>
@@ -488,6 +483,9 @@ extern struct x_resources {
     char       *prefs_editor_list;
 #endif
     Boolean	freetype;
+#if HAVE_XI21
+    Boolean	xi2scrolling;
+#endif
     const char *src_pos;
     const char *find_string;
     const char *text_encoding;
@@ -956,6 +954,51 @@ extern unsigned int color_list_max;	/* allocated size */
 /* Whether the color situation has been warned about.  */
 extern Boolean color_warned;
 #endif /* COLOR */
+
+
+#if HAVE_XI21
+struct xi2_valinfo {
+	int		number;
+	double		increment;
+	double		lastval;
+	double		lastexact;
+	double		factor;
+	unsigned long	serial;
+};
+
+struct xi2_slave {
+	int		id;			/* slave device id */
+	unsigned int	flags;
+	unsigned char	enabled;
+	unsigned char	btn_mask;	/* buttons corresponding to valuators */
+	struct xi2_valinfo vert, horiz;
+	struct xi2_slave *next;
+};
+
+	/* flag bits */
+# define XI2_SLAVE_VERT			(1<<0)	/* if vert. valuator present */
+# define XI2_SLAVE_HORIZ		(1<<1)	/* if horiz. valuator present */
+
+struct xi2_master {
+	int		id;			/* master device id */
+	struct xi2_slave *slave;		/* currently active slave dev */
+	struct xi2_master *next;
+};
+
+
+extern	int		xi2_opcode;
+extern	Boolean		xi2_active;
+extern	struct xi2_master *xi2_masters;		/* linked list of master devs */
+extern	struct xi2_master *xi2_current;		/* current master device */
+extern	struct xi2_slave *xi2_slaves;		/* linked list of slave devs */
+
+extern	struct xi2_slave xi2_no_slave;		/* if no slave assigned yet */
+
+extern	void	xi2_init_valuators(struct xi2_slave *, XIAnyClassInfo **, int);
+extern	void	xi2_activate(void);
+
+#endif /* HAVE_XI21 */
+
 
 extern Boolean dvi_file_corrupted;
 

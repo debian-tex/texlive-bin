@@ -1,4 +1,4 @@
-% $Id: mpost.w 1916 2013-06-13 10:19:49Z taco $
+% $Id: mpost.w 1955 2014-03-10 10:30:30Z taco $
 %
 % This file is part of MetaPost;
 % the MetaPost program is in the public domain.
@@ -546,7 +546,7 @@ static char *mpost_find_file(MP mp, const char *fname, const char *fmode, int ft
   char *s;
   (void)mp;
   s = NULL;
-  if ((fmode[0]=='r' &&  !kpse_in_name_ok(fname)) ||
+  if (fname == NULL || (fmode[0]=='r' &&  !kpse_in_name_ok(fname)) ||
       (fmode[0]=='w' &&  !kpse_out_name_ok(fname)))
     return NULL;  /* disallowed filename */
   if (fmode[0]=='r') {
@@ -802,7 +802,6 @@ static struct option mpost_options[]
       break;
 
     if (g == '?') { /* Unknown option.  */
-      fprintf(stdout,"fatal error: %s: unknown option %s\n", argv[0], argv[optind]);
       exit(EXIT_FAILURE);
     }
 
@@ -942,9 +941,9 @@ static struct option dvitomp_options[]
 {
 char *s = mp_metapost_version();
 if (dvitomp_only)
-  fprintf(stdout, "This is dvitomp %s" WEB2CVERSION "\n", s);
+  fprintf(stdout, "This is dvitomp %s" WEB2CVERSION " (%s)\n", s, kpathsea_version_string);
 else
-  fprintf(stdout, "This is MetaPost %s" WEB2CVERSION "\n", s);
+  fprintf(stdout, "This is MetaPost %s" WEB2CVERSION " (%s)\n", s, kpathsea_version_string);
 mpost_xfree(s);
 fprintf(stdout,
 "\n"
@@ -989,9 +988,9 @@ fprintf(stdout,
 {
 char *s = mp_metapost_version();
 if (dvitomp_only)
-  fprintf(stdout, "This is dvitomp %s" WEB2CVERSION "\n", s);
+  fprintf(stdout, "This is dvitomp %s" WEB2CVERSION " (%s)\n", s, kpathsea_version_string);
 else
-  fprintf(stdout, "This is MetaPost %s" WEB2CVERSION "\n", s);
+  fprintf(stdout, "This is MetaPost %s" WEB2CVERSION " (%s)\n", s, kpathsea_version_string);
 mpost_xfree(s);
 fprintf(stdout,
 "\n"
@@ -1016,9 +1015,9 @@ fprintf(stdout,
 {
   char *s = mp_metapost_version();
 if (dvitomp_only)
-  fprintf(stdout, "dvitomp (MetaPost) %s" WEB2CVERSION "\n", s);
+  fprintf(stdout, "dvitomp (MetaPost) %s" WEB2CVERSION " (%s)\n", s, kpathsea_version_string);
 else
-  fprintf(stdout, "MetaPost %s" WEB2CVERSION "\n", s);
+  fprintf(stdout, "MetaPost %s" WEB2CVERSION " (%s)\n", s, kpathsea_version_string);
 fprintf(stdout, 
 "The MetaPost source code in the public domain.\n"
 "MetaPost also uses code available under the\n"
@@ -1028,9 +1027,12 @@ fprintf(stdout,
 "For more information about these matters, see the file\n"
 "COPYING.LESSER or <http://gnu.org/licenses/lgpl.html>.\n"
 "Original author of MetaPost: John Hobby.\n"
-"Author of the CWEB MetaPost: Taco Hoekwater.\n"
+"Author of the CWEB MetaPost: Taco Hoekwater.\n\n"
 );
   mpost_xfree(s);
+  if (!dvitomp_only) {
+     mp_show_library_versions();
+  }
   exit(EXIT_SUCCESS);
 }
 
@@ -1092,11 +1094,13 @@ static int setup_var (int def, const char *var_name, boolean nokpse) {
   mpost_xfree(options->banner);
   options->banner = mpost_xmalloc(strlen(banner)+
                             strlen(mpversion)+
+                            strlen(WEB2CVERSION)+
                             strlen(kpsebanner_start)+
                             strlen(kpathsea_version_string)+
                             strlen(kpsebanner_stop)+1);
   strcpy (options->banner, banner);
   strcat (options->banner, mpversion);
+  strcat (options->banner, WEB2CVERSION);
   strcat (options->banner, kpsebanner_start);
   strcat (options->banner, kpathsea_version_string);
   strcat (options->banner, kpsebanner_stop);

@@ -12,6 +12,13 @@
 #include <ptexenc/ptexenc.h>
 #endif
 
+#ifdef WIN32
+#undef fopen
+#undef xfopen
+#define fopen fsyscp_fopen
+#define xfopen fsyscp_xfopen
+#endif
+
 /* The globals we use to communicate.  */
 extern string nameoffile;
 extern unsigned namelength;
@@ -101,7 +108,7 @@ recorder_change_filename (string new_name)
 
    /* reopen the recorder file by FOPEN_A_MODE. */
 #if defined(WIN32)
-   recorder_file = fopen (recorder_name, FOPEN_A_MODE);
+   recorder_file = fsyscp_xfopen (recorder_name, FOPEN_A_MODE);
 #endif
 
    if (temp)

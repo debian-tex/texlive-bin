@@ -18,8 +18,8 @@
    with LuaTeX; if not, see <http://www.gnu.org/licenses/>. */
 
 static const char _svn_version[] =
-    "$Id: lstatslib.c 4524 2012-12-20 15:38:02Z taco $ "
-    "$URL: https://foundry.supelec.fr/svn/luatex/tags/beta-0.76.0/source/texk/web2c/luatexdir/lua/lstatslib.c $";
+    "$Id: lstatslib.c 4956 2014-03-28 12:12:17Z luigi $ "
+    "$URL: https://foundry.supelec.fr/svn/luatex/trunk/source/texk/web2c/luatexdir/lua/lstatslib.c $";
 
 #include "ptexlib.h"
 #include "lua/luatex-api.h"
@@ -33,6 +33,8 @@ typedef struct statistic {
 typedef const char *(*charfunc) (void);
 typedef lua_Number(*numfunc) (void);
 typedef int (*intfunc) (void);
+
+const char *last_lua_error;
 
 static const char *getbanner(void)
 {
@@ -73,10 +75,36 @@ static const char *getlasterror(void)
     return last_error;
 }
 
+static const char *getlastluaerror(void)
+{
+    return last_lua_error;
+}
+
+
+
 static const char *luatexrevision(void)
 {
     return (const char *) (strrchr(luatex_version_string, '.') + 1);
 }
+
+static lua_Number get_luatexhashchars(void) 
+{
+#ifdef LuajitTeX
+  return (lua_Number) LUAJITTEX_HASHCHARS;
+#else
+  return (lua_Number) LUATEX_HASHCHARS;
+#endif
+}
+
+static const char *get_luatexhashtype(void) 
+{
+#ifdef LuajitTeX
+     return (const char *)jithash_hashname; 
+#else
+  return "lua";
+#endif
+}
+
 
 static lua_Number get_pdf_gone(void)
 {
@@ -172,6 +200,10 @@ static struct statistic stats[] = {
     {"luatex_svn", 'G', &get_luatexsvn},
     {"luatex_version", 'G', &get_luatexversion},
     {"luatex_revision", 'S', (void *) &luatexrevision},
+    {"luatex_hashtype", 'S', (void *) &get_luatexhashtype},
+    {"luatex_hashchars", 'N',  &get_luatexhashchars},
+
+
     {"ini_version", 'b', &ini_version},
     /*
      * mem stat
@@ -222,6 +254,7 @@ static struct statistic stats[] = {
     {"inputid", 'g', &(iname)},
     {"linenumber", 'g', &line},
     {"lasterrorstring", 'S', (void *) &getlasterror},
+    {"lastluaerrorstring", 'S', (void *) &getlastluaerror},
 
     {"luabytecodes", 'g', &luabytecode_max},
     {"luabytecode_bytes", 'g', &luabytecode_bytes},
@@ -344,7 +377,7 @@ static const struct luaL_Reg statslib[] = {
 int luaopen_stats(lua_State * L)
 {
     luaL_register(L, "status", statslib);
-    luaL_newmetatable(L, "stats_meta");
+    luaL_newmetatable(L, "tex.stats");
     lua_pushstring(L, "__index");
     lua_pushcfunction(L, getstats);
     lua_settable(L, -3);

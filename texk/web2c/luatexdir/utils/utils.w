@@ -20,10 +20,12 @@
 
 @ @c
 static const char _svn_version[] =
-    "$Id: utils.w 4612 2013-03-25 09:15:18Z taco $"
-    "$URL: https://foundry.supelec.fr/svn/luatex/tags/beta-0.76.0/source/texk/web2c/luatexdir/utils/utils.w $";
+    "$Id: utils.w 4903 2014-03-15 12:18:10Z taco $"
+    "$URL: https://foundry.supelec.fr/svn/luatex/trunk/source/texk/web2c/luatexdir/utils/utils.w $";
 
 @ @c
+#include "ptexlib.h"
+
 #include <kpathsea/config.h> /* this is a trick to load mingw32's io.h early,
 				using a macro redefinition of |eof()|. */
 #include "sys/types.h"
@@ -33,12 +35,12 @@ static const char _svn_version[] =
 #include <time.h>
 #include <float.h>              /* for |DBL_EPSILON| */
 #include "zlib.h"
-#include "ptexlib.h"
 #include "md5.h"
 
 #include "lua/luatex-api.h"     /* for ptexbanner */
 
 #include "png.h"
+#include "mplib.h"
 
 /* POPPLER_VERSION is defined in poppler-config.h for poppler from
  * the TeX Live tree, or in the Makefile for an installed version.  */
@@ -47,7 +49,7 @@ static const char _svn_version[] =
 @ @c
 #define check_nprintf(size_get, size_want) \
     if ((unsigned)(size_get) >= (unsigned)(size_want)) \
-        pdftex_fail ("snprintf failed: file %s, line %d", __FILE__, __LINE__);
+        luatex_fail ("snprintf failed: file %s, line %d", __FILE__, __LINE__);
 
 char *cur_file_name = NULL;
 static char print_buf[PRINTF_BUF_SIZE];
@@ -113,7 +115,7 @@ void make_subset_tag(fd_entry * fd)
     aa = avl_probe(st_tree, fd->subset_tag);
     assert(aa != NULL);
     if (j > 2)
-        pdftex_warn
+        luatex_warn
             ("\nmake_subset_tag(): subset-tag collision, resolved in round %d.\n",
              j);
 }
@@ -130,7 +132,7 @@ void tex_printf(const char *fmt, ...)
     va_end(args);
 }
 
-@ |pdftex_fail| may be called when a buffer overflow has happened/is
+@ |luatex_fail| may be called when a buffer overflow has happened/is
    happening, therefore may not call mktexstring.  However, with the
    current implementation it appears that error messages are misleading,
    possibly because pool overflows are detected too late.
@@ -140,7 +142,7 @@ void tex_printf(const char *fmt, ...)
 
 @c
 __attribute__ ((noreturn, format(printf, 1, 2)))
-void pdftex_fail(const char *fmt, ...)
+void luatex_fail(const char *fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
@@ -170,7 +172,7 @@ void pdftex_fail(const char *fmt, ...)
    pdftex.web!
 @c
 __attribute__ ((format(printf, 1, 2)))
-void pdftex_warn(const char *fmt, ...)
+void luatex_warn(const char *fmt, ...)
 {
     int old_selector = selector;
     va_list args;
@@ -191,7 +193,7 @@ void pdftex_warn(const char *fmt, ...)
 @ @c
 void garbage_warning(void)
 {
-    pdftex_warn("dangling objects discarded, no output file produced.");
+    luatex_warn("dangling objects discarded, no output file produced.");
     remove_pdffile(static_pdf);
 }
 
@@ -224,7 +226,7 @@ void make_pdftex_banner(void)
 size_t xfwrite(void *ptr, size_t size, size_t nmemb, FILE * stream)
 {
     if (fwrite(ptr, size, nmemb, stream) != nmemb)
-        pdftex_fail("fwrite() failed");
+        luatex_fail("fwrite() failed");
     return nmemb;
 }
 
@@ -232,7 +234,7 @@ size_t xfwrite(void *ptr, size_t size, size_t nmemb, FILE * stream)
 int xfflush(FILE * stream)
 {
     if (fflush(stream) != 0)
-        pdftex_fail("fflush() failed (%s)", strerror(errno));
+        luatex_fail("fflush() failed (%s)", strerror(errno));
     return 0;
 }
 
@@ -241,7 +243,7 @@ int xgetc(FILE * stream)
 {
     int c = getc(stream);
     if (c < 0 && c != EOF)
-        pdftex_fail("getc() failed (%s)", strerror(errno));
+        luatex_fail("getc() failed (%s)", strerror(errno));
     return c;
 }
 
@@ -250,7 +252,7 @@ int xputc(int c, FILE * stream)
 {
     int i = putc(c, stream);
     if (i < 0)
-        pdftex_fail("putc() failed (%s)", strerror(errno));
+        luatex_fail("putc() failed (%s)", strerror(errno));
     return i;
 }
 
@@ -263,7 +265,7 @@ scaled ext_xn_over_d(scaled x, scaled n, scaled d)
     else
         r -= 0.5;
     if (r >= (double) max_integer || r <= -(double) max_integer)
-        pdftex_warn("arithmetic: number too big");
+        luatex_warn("arithmetic: number too big");
     return (scaled) r;
 }
 
@@ -343,13 +345,15 @@ char *stripzeros(char *a)
 void initversionstring(char **versions)
 {
     const_string fmt =
-                    "Compiled with libpng %s; using libpng %s\n"
-                    "Compiled with zlib %s; using zlib %s\n"
-                    "Compiled with poppler version %s\n";
+                    "Compiled with libpng %s; using %s\n"
+                    "Compiled with zlib %s; using %s\n"
+                    "Compiled with poppler version %s\n"
+                    "Compiled with mplib version %s\n";
     size_t len = strlen(fmt)
                     + strlen(PNG_LIBPNG_VER_STRING) + strlen(png_libpng_ver)
                     + strlen(ZLIB_VERSION) + strlen(zlib_version)
                     + strlen(POPPLER_VERSION)
+                    + strlen(mp_metapost_version())
                     + 1;
 
     /* len will be more than enough, because of the placeholder chars in fmt
@@ -357,7 +361,7 @@ void initversionstring(char **versions)
     *versions = xmalloc(len);
     sprintf(*versions, fmt,
                     PNG_LIBPNG_VER_STRING, png_libpng_ver,
-                    ZLIB_VERSION, zlib_version, POPPLER_VERSION);
+                    ZLIB_VERSION, zlib_version, POPPLER_VERSION, mp_metapost_version());
 }
 
 @ @c
@@ -443,23 +447,14 @@ int do_zround(double r)
 }
 
 
-@ MSVC doesn't have |rind|.
+@ MSVC doesn't have |rint|.
 @c
-#ifdef MSVC
+#ifdef _MSC_VER
 
 #  include <math.h>
 double rint(double x)
 {
-    double c, f, d1, d2;
-
-    c = ceil(x);
-    f = floor(x);
-    d1 = fabs(c - x);
-    d2 = fabs(x - f);
-    if (d1 > d2)
-        return f;
-    else
-        return c;
+    return floor(x+0.5);
 }
 
 #endif

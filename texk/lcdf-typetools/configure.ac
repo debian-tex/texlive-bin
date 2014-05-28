@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
 dnl
-dnl   Copyright (C) 2009-2013 Peter Breitenlohner <tex-live@tug.org>
+dnl   Copyright (C) 2009-2014 Peter Breitenlohner <tex-live@tug.org>
 dnl
 dnl   This file is free software; the copyright holder
 dnl   gives unlimited permission to copy and/or distribute it,
@@ -14,17 +14,16 @@ dnl
 dnl *********************************************************************
 dnl
 m4_include([version.ac])[] dnl define lcdf_typetools_version
-AC_INIT([LCDF typetools for TeX Live], lcdf_typetools_version, [tex-k@tug.org])
+AC_INIT([LCDF typetools (TeX Live)], lcdf_typetools_version, [tex-k@tug.org])
 AC_PREREQ([2.65])
 AC_CONFIG_SRCDIR([lcdf-typetools-]lcdf_typetools_version[/NEWS])
 AC_CONFIG_AUX_DIR([../../build-aux])
-AC_CONFIG_MACRO_DIR([../../m4])
+AC_CONFIG_MACRO_DIRS([../../m4 m4])
 
 dnl Common code for all programs using libkpathsea.
 KPSE_COMMON([lcdf-typetools])
 
-LCDF_TYPETOOLS_VERSION=lcdf_typetools_version
-AC_SUBST([LCDF_TYPETOOLS_VERSION])
+AC_SUBST([LCDF_TYPETOOLS_VERSION], lcdf_typetools_version)
 
 AC_CONFIG_HEADERS([autoconf.h])
 
@@ -75,8 +74,8 @@ dnl
 dnl endianness
 dnl
 
-AC_C_BIGENDIAN(, [AC_DEFINE([WORDS_LITTLEENDIAN], 1, [Define to 1 if your processor stores words with the least significant byte
-   first (like Intel and VAX, unlike Motorola and SPARC).])])
+AC_DEFINE([WORDS_BIGENDIAN_SET], [1], [Define if WORDS_BIGENDIAN has been set.])
+AC_C_BIGENDIAN()
 
 
 dnl
@@ -233,6 +232,7 @@ Cannot find a definition for ntohs and/or ntohl!
   fi
 fi
 AC_LANG_C
+AC_SEARCH_LIBS([ntohs], [-lnet -lwinsock32])
 
 KPSE_CHECK_WIN32
 if test "x$kpse_cv_have_win32" != xno; then
@@ -344,6 +344,7 @@ if test "x$enable_selfauto_set" = xyes -a "x$kpathsea" != xno -a "x$enable_texli
     SELFAUTOLOC=`$kpsewhich --expand-var='$SELFAUTOLOC' 2>/dev/null`
     SELFAUTODIR=`$kpsewhich --expand-var='$SELFAUTODIR' 2>/dev/null`
     SELFAUTOPARENT=`$kpsewhich --expand-var='$SELFAUTOPARENT' 2>/dev/null`
+    SELFAUTOGRANDPARENT=`$kpsewhich --expand-var='$SELFAUTOGRANDPARENT' 2>/dev/null`
     if test -z "$SELFAUTODIR"; then
 	AC_MSG_WARN([
 =========================================
@@ -357,6 +358,9 @@ Either supply the correct PREFIX to --with-kpathsea, or supply
     AC_DEFINE_UNQUOTED([SELFAUTOLOC], "$SELFAUTOLOC", [kpsewhich's $SELFAUTOLOC variable])
     AC_DEFINE_UNQUOTED([SELFAUTODIR], "$SELFAUTODIR", [kpsewhich's $SELFAUTODIR variable])
     AC_DEFINE_UNQUOTED([SELFAUTOPARENT], "$SELFAUTOPARENT", [kpsewhich's $SELFAUTOPARENT variable])
+    if test -n "$SELFAUTOGRANDPARENT"; then
+	AC_DEFINE_UNQUOTED([SELFAUTOGRANDPARENT], "$SELFAUTOGRANDPARENT", [kpsewhich's $SELFAUTOGRANDPARENT variable])
+    fi
 fi
 
 

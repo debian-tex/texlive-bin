@@ -8,6 +8,10 @@
  *     Werner Lemberg <wl@gnu.org>
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -255,8 +259,6 @@ TTFget_first_glyphs(Font *fnt, long *array)
     for (i = 0; i <= 0x16FFFF; i++)
     {
       Num = FT_Get_Char_Index(face, i);
-      if (Num < 0)
-        oops("cmap mapping failure.");
       if (Num == 0)
         continue;
       if (Num <= 256)

@@ -21,15 +21,42 @@
 #include <kpathsea/variable.h>
 #include <kpathsea/c-stat.h>
 
+static int is_include_space(const char *s)
+{
+  char *p;
+  p = strchr(s, ' ');
+  if(p) return 1;
+  p = strchr(s, '\t');
+  if(p) return 1;
+  return 0;
+}
+
 FILE * win32_popen (const char *cmd, const char *fmode)
 {
   char mode[3];
+  char *p, *q;
+  const char *cmd2;
+  FILE *ret;
 
   mode[0] = fmode[0];
   mode[1] = 'b';
   mode[2] = '\0';
 
-  return _popen (cmd, mode);
+  if (is_include_space (cmd)) {
+    cmd2 = xmalloc (strlen (cmd) + 3);
+    q = (char *)cmd2;
+    p = (char *)cmd;
+    *q++= '\"';
+    while(*p)
+      *q++ = *p++;
+    *q++ = '\"';
+    *q = '\0';
+    ret = _popen (cmd2, mode);
+    free ((char *)cmd2);
+    return ret;
+  } else {
+    return _popen (cmd, mode);
+  }
 }
 
 int win32_pclose (FILE *f)
@@ -42,6 +69,12 @@ int win32_pclose (FILE *f)
 __int64
 xftell64 (FILE *f, const char *filename)
 {
+#if _MSC_VER > 1200
+    __int64 where;
+    where = _ftelli64(f);
+    if (where < (__int64)0)
+        FATAL_PERROR(filename);
+#else
   __int64 where, filepos;
   int fd;
 
@@ -56,12 +89,17 @@ xftell64 (FILE *f, const char *filename)
     where = (__int64)(f->_ptr - f->_base);
   else
     where = filepos - f->_cnt;
+#endif
   return where;
 }
 
 void
 xfseek64 (FILE *f, __int64 offset, int wherefrom,  const char *filename)
 {
+#if _MSC_VER > 1200
+    if (_fseeki64(f, offset, wherefrom) < (__int64)0)
+        FATAL_PERROR(filename);
+#else
   if(wherefrom == SEEK_CUR) {
     offset += xftell64(f, filename);
     wherefrom = SEEK_SET;
@@ -69,6 +107,7 @@ xfseek64 (FILE *f, __int64 offset, int wherefrom,  const char *filename)
   fflush(f);
   if (_lseeki64(fileno(f), offset, wherefrom) < (__int64)0)
     FATAL_PERROR(filename);
+#endif
 }
 
 
@@ -90,27 +129,34 @@ void texlive_gs_init(void)
   char *nptr, *path;
   char tlgsbindir[512];
   char tlgslibdir[512];
-  nptr = kpse_var_value("SELFAUTOPARENT");
-  if (nptr) {
-    strcpy(tlgsbindir, nptr);
-    strcat(tlgsbindir,"/tlpkg/tlgs");
-    if(is_dir(tlgsbindir)) {
-      strcpy(tlgslibdir, tlgsbindir);
-      strcat(tlgslibdir, "/lib;");
-      strcat(tlgslibdir, tlgsbindir);
-      strcat(tlgslibdir, "/fonts");
-      strcat(tlgsbindir, "/bin;");
-      free(nptr);
-      for(nptr = tlgsbindir; *nptr; nptr++) {
-        if(*nptr == '/') *nptr = '\\';
+  nptr = kpse_var_value("TEXLIVE_WINDOWS_EXTERNAL_GS");
+  if (nptr == NULL || !strcmp(nptr, "0") || !strcmp(nptr, "n") || !strcmp(nptr, "f")) {
+    if (nptr)
+      free (nptr);
+    nptr = kpse_var_value("SELFAUTOPARENT");
+    if (nptr) {
+      strcpy(tlgsbindir, nptr);
+      strcat(tlgsbindir,"/tlpkg/tlgs");
+      if(is_dir(tlgsbindir)) {
+        strcpy(tlgslibdir, tlgsbindir);
+        strcat(tlgslibdir, "/lib;");
+        strcat(tlgslibdir, tlgsbindir);
+        strcat(tlgslibdir, "/fonts");
+        strcat(tlgsbindir, "/bin;");
+        free(nptr);
+        for(nptr = tlgsbindir; *nptr; nptr++) {
+          if(*nptr == '/') *nptr = '\\';
+        }
+        nptr = getenv("PATH");
+        path = (char *)malloc(strlen(nptr) + strlen(tlgsbindir) + 6);
+        strcpy(path, tlgsbindir);
+        strcat(path, nptr);
+        xputenv("PATH", path);
+        xputenv("GS_LIB", tlgslibdir);
       }
-      nptr = getenv("PATH");
-      path = (char *)malloc(strlen(nptr) + strlen(tlgsbindir) + 6);
-      strcpy(path, tlgsbindir);
-      strcat(path, nptr);
-      xputenv("PATH", path);
-      xputenv("GS_LIB", tlgslibdir);
     }
+  } else {
+    free (nptr);
   }
 }
 
@@ -325,16 +371,6 @@ kpathsea_init_user_info (kpathsea kpse)
 }
 
 /* win32_system */
-static int is_include_space(const char *s)
-{
-  char *p;
-  p = strchr(s, ' ');
-  if(p) return 1;
-  p = strchr(s, '\t');
-  if(p) return 1;
-  return 0;
-}
-
 int win32_system(const char *cmd)
 {
   const char *p;

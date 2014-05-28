@@ -1,9 +1,10 @@
-# $Id: Makefile 30418 2013-05-12 17:54:12Z karl $
+# $Id: Makefile 32701 2014-01-17 18:09:54Z karl $
 # This file is public domain.  (Originally written by Karl Berry, 2009.)
 
-e2p = ./epstopdf.pl #--debug
-re2p = ./repstopdf --restricted
-re2p_script = ./repstopdf
+prg = epstopdf
+e2p = ./$(prg).pl #--debug
+re2p = ./r$(prg) --restricted
+re2p_script = ./r$(prg)
 
 default: check
 
@@ -13,9 +14,11 @@ check: check-help check-version \
        check-help-r \
        check-nogs \
        check-restricted-gscmd \
+       check-gscmd check-gsopt check-gsopts \
        check-filter check-filter-outfile check-write-error check-gscmd \
        check-simple check-atend check-binary check-bin2 \
        check-binhdr-lf check-binhdr-cr check-binhdr-crlf \
+       check-tn5002 #check-floral
 
 # needs new kpsewhich: check-restricted-safe-in check-restricted-safe-out
 check-help:
@@ -33,7 +36,7 @@ check-nogs:
 	cmp -s test-simple.eps test-simple.out || exit 0
 	
 $(re2p_script):
-	ln -s epstopdf.pl $@
+	ln -s $(prg).pl $@
 
 check-restricted-gscmd:
 	! $(re2p) --gscmd=/bin/unsafe test-simple.eps
@@ -63,6 +66,15 @@ check-write-error:
 
 check-gscmd:
 	-$(e2p) --gscmd=true test-simple.eps
+	-$(e2p) --gscmd='foo bar' test-simple.eps # fails
+
+check-gsopt:
+	-$(e2p) --gscmd=echo --gsopt=foo --gsopt=bar test-simple.eps
+	-$(e2p) --restricted --gsopt=bar test-simple.eps # fails
+
+check-gsopts:
+	-$(e2p) --gscmd=echo --gsopts='foo bar' test-simple.eps
+	-$(e2p) --restricted --gsopts=bar test-simple.eps # fails
 
 check-simple:
 	$(MAKE) file=test-simple check1
@@ -85,21 +97,39 @@ check-binhdr-cr:
 check-binhdr-crlf:
 	$(MAKE) file=test-binhdr-crlf check1
 
+check-tn5002:
+	$(MAKE) file=test-tn5002-cr check1
+	$(MAKE) file=test-tn5002-crlf check1
+	$(MAKE) file=test-tn5002-lf check1
+
+# complicated, from http://www.vectorfloral.com/floral-swirly-flowers-with-butterflies-vector-graphic-174.html
+# another, even bigger, is at http://www.backgroundvector.com/abstract-colorful-background-vector-image-94.html
+# both are CC-BY 3.0.
+check-floral:
+	$(MAKE) file=test-floral check1
+
 check1:
 	$(e2p) $(file).eps 
 	pdfinfo $(file).pdf | grep "Page size"
 
-dist: epstopdf.tar.gz epstopdf.html
-epstopdf.tar.gz: README epstopdf.pl epstopdf.1 repstopdf.1 epstopdf.man1.pdf
-	tar czf epstopdf.tar.gz $^
-	# upload .tar.gz to ctan.org/upload, move .html to ~www/epstopdf.
+# put tar contents in a directory for CTAN.
+dist: $(prg).tar.gz $(prg).html
+.PHONY: dist
+$(prg).tar.gz: README $(prg).pl $(prg).1 r$(prg).1 $(prg).man1.pdf
+	rm -rf $(prg); mkdir $(prg)
+	cp $^ $(prg)
+	tar cvzf $(prg).tar.gz $(prg)
+	rm -rf $(prg)
+	# upload .tar.gz to ctan.org/upload, move .html to ~www/$(prg).
 
 groff = groff
 groff_opts = -man -t
-pdfopts = $(groff_opts)
-htmlopts = $(groff_opts) -Thtml
 pspdf = ps2pdf -sPAPERSIZE=a4
-epstopdf.man1.pdf: epstopdf.1
-	$(groff) $(pdfopts) $< | $(pspdf) - $@
-epstopdf.html: epstopdf.1
-	$(groff) $(htmlopts) $< >$@
+$(prg).man1.pdf: $(prg).1
+	$(groff) $(groff_opts) $< | $(pspdf) - $@
+$(prg).html: $(prg).1
+	$(groff) $(groff_opts) -Thtml $< >$@
+show-man:
+	man ./$(prg).1 | col -b
+#	$(groff) $(groff_opts) -Tascii -M. -mraggedright -P-cbouU $(prg).1
+# -P-c... avoids ANSI color sequences and backspaces in the output.

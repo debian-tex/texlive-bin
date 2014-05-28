@@ -4,7 +4,7 @@
    that C cannot express iterators very well, and I don't want to change
    all the for loops.
 
-   Copyright 1993, 1994, 2008, 2010 Karl Berry.
+   Copyright 1993, 1994, 2008, 2010, 2014 Karl Berry.
 
    This library is free software; you can redistribute it and/or
    modify it under the terms of the GNU Lesser General Public
@@ -23,8 +23,11 @@
 #define STR_LLIST_H
 
 #include <kpathsea/c-proto.h>
-#include <kpathsea/types.h>
+#include <kpathsea/simpletypes.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* It's a little bizarre to be using the same type for the list and the
    elements of the list, but no reason not to in this case, I think --
@@ -54,5 +57,9 @@ extern void str_llist_add (str_llist_type *l, string e);
 extern void str_llist_float (str_llist_type *l, str_llist_elt_type *e);
 
 #endif /* MAKE_KPSE_DLL */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* not STR_LLIST_H */

@@ -24,7 +24,6 @@
 #define UTIL_H_
 
 #include <stdio.h>
-#include "xdvi-config.h"
 #include "version.h"
 #include "kpathsea/c-stat.h"
 #include "kpathsea/hash.h"
@@ -150,7 +149,6 @@ typedef hash_table_type hashTableT; /* from kpathsea */
 extern Boolean find_str_int_hash(hashTableT *hashtable, const char *key, size_t *val);
 extern void put_str_int_hash(hashTableT *hashtable, const char *key, size_t val);
 
-#if FREETYPE || PS
 
 /*
  *	AVL tree structures.
@@ -168,8 +166,6 @@ struct avl {		/* generic data structure */
 };
 
 extern struct avl *avladd(const char *, size_t, struct avl **, size_t);
-
-#endif /* FREETYPE || PS */
 
 
 extern Boolean copy_file(const char *from, const char *to);

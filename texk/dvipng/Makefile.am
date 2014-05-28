@@ -10,8 +10,6 @@
 #
 #************************************************************************
 ##
-ACLOCAL_AMFLAGS = -I ../../m4 -I m4
-
 ## We want to re-distribute the whole original dvipng source tree.
 ##
 ## With current automake (1.10.2) 'make distcheck' fails when
@@ -29,7 +27,7 @@ dist-hook:
 
 AM_CPPFLAGS = -I$(top_srcdir)/$(DVIPNG_TREE)
 AM_CPPFLAGS += $(KPATHSEA_INCLUDES) $(FREETYPE2_INCLUDES) $(GD_INCLUDES)
-AM_CPPFLAGS +=  $(T1LIB_INCLUDES) $(LIBPNG_INCLUDES) $(ZLIB_INCLUDES)
+AM_CPPFLAGS += $(LIBPNG_INCLUDES) $(ZLIB_INCLUDES)
 AM_CFLAGS = $(WARNING_CFLAGS)
 
 DVIPS = dvips -Ppdf
@@ -57,25 +55,16 @@ nodist_dvipng_SOURCES = \
 	@DVIPNG_TREE@/special.c \
 	@DVIPNG_TREE@/vf.c
 
-if have_t1
-nodist_dvipng_SOURCES += \
-	@DVIPNG_TREE@/t1.c
-endif have_t1
-
 if have_ft2
-nodist_dvipng_SOURCES += \
-	@DVIPNG_TREE@/ft.c \
-	@DVIPNG_TREE@/sfd.c
-endif have_ft2
-
-if have_ft2_or_t1
 nodist_dvipng_SOURCES += \
 	@DVIPNG_TREE@/enc.c \
 	@DVIPNG_TREE@/fontmap.c \
+	@DVIPNG_TREE@/ft.c \
+	@DVIPNG_TREE@/sfd.c \
 	@DVIPNG_TREE@/tfm.c
-endif have_ft2_or_t1
+endif have_ft2
 
-dvipng_dependencies = $(KPATHSEA_DEPEND) $(T1LIB_DEPEND) $(GD_DEPEND)
+dvipng_dependencies = $(KPATHSEA_DEPEND) $(GD_DEPEND)
 
 $(dvipng_OBJECTS): config.force
 
@@ -87,7 +76,7 @@ config.force: $(dvipng_dependencies)
 DISTCLEANFILES = config.force
 
 LDADD = $(KPATHSEA_LIBS) $(GD_LIBS) $(FREETYPE2_LIBS)
-LDADD += $(T1LIB_LIBS) $(LIBPNG_LIBS) $(ZLIB_LIBS)
+LDADD += $(LIBPNG_LIBS) $(ZLIB_LIBS)
 
 dvigif_CPPFLAGS = -DEXEPROG=\"dvipng.exe\"
 nodist_dvigif_SOURCES = callexe.c
@@ -95,12 +84,10 @@ dvigif_LDADD =
 
 ## Rebuild libkpathsea
 @KPATHSEA_RULE@
-## Rebuild libgd
+## Rebuild gd
 @GD_RULE@
-## Rebuild libt1
-@T1LIB_RULE@
 
-include $(srcdir)/../am/bin_links.am
+include $(srcdir)/../../am/bin_links.am
 
 bin_links = dvipng$(EXEEXT):dvigif
 
@@ -117,5 +104,5 @@ TESTS = dvipng.test
 
 EXTRA_DIST += dvipng.test dvipng-test.dvi
 
-CLEANFILES = dvipng-test*.png
+CLEANFILES = dvipng-test*.gif dvipng-test*.png
 

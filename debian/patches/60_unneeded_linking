@@ -1,7 +1,6 @@
 ---
  texk/web2c/am/texmf.am |    2 +-
- texk/xdvik/common.am   |    4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 --- texlive-bin.orig/texk/web2c/am/texmf.am
 +++ texlive-bin/texk/web2c/am/texmf.am
@@ -14,16 +13,3 @@
  endif !WIN32
  
  ## mf and mf-nowin compile mfextra.c with different CPPFLAGS.
---- texlive-bin.orig/texk/xdvik/common.am
-+++ texlive-bin/texk/xdvik/common.am
-@@ -16,8 +16,8 @@
- ## libXmu needs to come before Xt and after the toolkit libs.
- x_ldflags = $(X_LIBS) $(x_linker_options) $(iconv_libpath)
- x_extra_libs = $(X_EXTRA_LIBS) $(iconv_libs)
--xdvi_x_libs = $(x_ldflags) $(x_tool_libs) $(x_xmu_lib) -lXt $(X_PRE_LIBS)
--xdvi_x_libs += $(x_ext_lib) $(x_xpm_libs) -lX11 $(x_extra_libs)
-+xdvi_x_libs = $(x_ldflags) $(x_tool_libs) $(x_xmu_lib) -lXt
-+xdvi_x_libs += $(x_xpm_libs) -lX11 $(x_extra_libs)
- 
- common_ldadd = $(KPATHSEA_LIBS) $(FREETYPE2_LIBS) $(xdvi_x_libs)
- 

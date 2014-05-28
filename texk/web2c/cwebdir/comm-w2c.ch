@@ -66,6 +66,18 @@ common_init (void)
   @<Set up |PROGNAME| feature and initialize the search path mechanism@>;
 @z
 
+Section 5.
+
+@x l.103
+#include <ctype.h>
+@y
+#define CWEB
+#include "cpascal.h"
+#include <ctype.h>
+@z
+
+Section 7.
+
 @x l.153
 @d buf_size 100 /* for \.{CWEAVE} and \.{CTANGLE} */
 @y
@@ -79,6 +91,12 @@ int input_ln(fp) /* copies a line into |buffer| or returns 0 */
 FILE *fp; /* what file to read from */
 @y
 int input_ln (FILE *fp) /* copies a line into |buffer| or returns 0 */
+@z
+
+@x l.181
+    if ((*(k++) = c) != ' ') limit = k;
+@y
+    if ((*(k++) = c) != ' ' && c!='\r') limit = k;
 @z
 
 Section 10.
@@ -172,10 +190,8 @@ Section 22.
 @x l.472
 #include <stdlib.h> /* declaration of |getenv| and |exit| */
 @y
-#include <stdlib.h> /* declaration of |getenv| and |exit| */
-#define CWEB
-#include "cpascal.h"
 #include <kpathsea/kpathsea.h> /* include every \Kpathsea/ header */
+#include <stdlib.h> /* declaration of |getenv| and |exit| */
 #include "help.h"
 
 @ The \.{ctangle} and \.{cweave} programs from the original \.{CWEB}

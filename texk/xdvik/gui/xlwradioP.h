@@ -36,8 +36,6 @@ Boston, MA 02111-1307, USA.  */
 #ifndef _XawRadioP_h
 #define _XawRadioP_h
 
-#include "xdvi-config.h"
-
 #include "xlwradio.h"
 
 #ifndef MOTIF
@@ -51,6 +49,7 @@ Boston, MA 02111-1307, USA.  */
 #include <X11/Xaw/AsciiText.h>
 
 #include <X11/Xaw/ToggleP.h>
+#include <X11/Xaw/XawInit.h>
 
 /***********************************************************************
  *

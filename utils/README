@@ -1,10 +1,10 @@
-$Id: README 30590 2013-05-20 21:56:42Z karl $
+$Id: README 34082 2014-05-17 18:38:56Z mojca $
 Public domain.  Originally written 2005 by Karl Berry.
 
 Extra utilities we (optionally) compile for TeX Live.
 See comments in ../texk/README.
 
-asymptote 2.23 - checked 20may13
+asymptote 2.31 - checked 17may14
   update to TL from CTAN, to include prebuilt doc.
   see http://tug.org/texlive/build.html#asymptote
   and tlpkg/bin/tl-update-asy
@@ -18,14 +18,7 @@ pmx 2.7.0 - checked 11apr13
 ps2eps 1.68 - checked 10may12
   http://tm.uka.de/~bless/ps2eps
 
-psutils p17 - checked 10may12
-  http://www.tardis.ed.ac.uk/~ajcd/psutils/index.html
-  -> http://mirror.ctan.org/support/psutils/
-  https://savannah.nongnu.org/bugs/?30782
-  -> http://www.connochaetos.org/misc/psutils-libre-1.17.tar.gz
-  (Fabrice made small modifications for Windows, it seems)
-
-t1utils 1.37 - checked 10may12
+t1utils 1.38 - checked 3oct13
   http://www.lcdf.org/type/
 
 texdoctk - reluctantly maintained here in TL
@@ -39,14 +32,13 @@ vlna 1.5 - checked 10may12
 
 xindy - see just below
 
-xpdfopen 0.83 - checked 10may12
+xpdfopen 0.84 - checked 17may14
   http://mirror.ctan.org/support/xpdfopen/
   http://cs.acadiau.ca/~jdiamond/xpdfopen/
 
 
-xindy 2.4 - checked 13may10
-  (with adaptations for TL)
-  http://www.ctan.org/indexing/xindy/
+xindy 2.5.0 - checked 28apr14
+  http://www.ctan.org/tex-archive/indexing/xindy/base/
 
 After building clisp as described below, run the TL
   Build --enable-xindy CLISP=$clisp_builddir/clisp

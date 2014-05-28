@@ -1,6 +1,6 @@
 ## Makefile.am for the TeX Live subdirectory texk/devnag/
 ##
-## Copyright (C) 2009-2013 Peter Breitenlohner <tex-live@tug.org>
+## Copyright 2009-2014 Peter Breitenlohner <tex-live@tug.org>
 ## You may freely use, modify and/or distribute this file.
 ##
 ACLOCAL_AMFLAGS = -I ../../m4
@@ -10,6 +10,14 @@ AM_CFLAGS = $(WARNING_CFLAGS)
 bin_PROGRAMS = devnag
 
 devnag_SOURCES = src/devnag.c
+
+$(devnag_OBJECTS): config.force
+
+config.force: $(KPATHSEA_DEPEND)
+	echo timestamp >config.force
+	$(SHELL) ./config.status --recheck
+
+DISTCLEANFILES = config.force
 
 ## Tests.
 ##
@@ -22,5 +30,5 @@ EXTRA_DIST += \
 	tests/misspaal.dn tests/misspaal.tex \
 	tests/vedasample.dn tests/vedasample.tex
 
-DISTCLEANFILES = captions.dn examples.dn *.tex
+DISTCLEANFILES += captions.dn examples.dn *.tex
 

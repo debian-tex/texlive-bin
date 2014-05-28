@@ -49,14 +49,15 @@
 % (2011-08-18) PB  Bug fix by Hironori Kitagawa.
 % (2012-05-11) PB  pTeX p3.3
 % (2013-04-09) PB  pTeX p3.4 (TL 2013)
+% (2014-04-17) KB  pTeX p3.5 (TL 2014)
 %
 @x [1.2] l.200 - pTeX:
 @d banner==TeX_banner
 @d banner_k==TeX_banner_k
 @y
-@d pTeX_version_string=='-p3.4' {current p\TeX\ version}
+@d pTeX_version_string=='-p3.5' {current p\TeX\ version}
 @#
-@d pTeX_banner=='This is pTeX, Version 3.1415926',pTeX_version_string
+@d pTeX_banner=='This is pTeX, Version 3.14159265',pTeX_version_string
 @d pTeX_banner_k==pTeX_banner
   {printed when p\TeX\ starts}
 @#
@@ -114,6 +115,7 @@ var k,@!l:KANJI_code; {small indices or counters}
   pseudoprinting}
 @!trick_buf2:array[0..ssup_error_line] of 0..2; {pTeX: buffer for KANJI}
 @!kcode_pos: 0..2; {pTeX: denotes whether first byte or second byte of KANJI}
+@!prev_char: ASCII_code;
 @z
 
 @x [5.55] l.1519 - pTeX: Initialize the kcode_pos
@@ -2406,6 +2408,37 @@ else if (cur_cmd>active_char)or(cur_chr>255) then
   end;
 @z
 
+@x pTeX for Windows, treat filename with 0x5c
+@p procedure begin_name;
+begin area_delimiter:=0; ext_delimiter:=0; quoted_filename:=false;
+end;
+@y
+@p procedure begin_name;
+begin area_delimiter:=0; ext_delimiter:=0; quoted_filename:=false; prev_char:=0;
+end;
+@z
+
+@x pTeX for Windows, treat filename with 0x5c
+else  begin str_room(1); append_char(c); {contribute |c| to the current string}
+  if IS_DIR_SEP(c) then
+    begin area_delimiter:=cur_length; ext_delimiter:=0;
+    end
+  else if c="." then ext_delimiter:=cur_length;
+  more_name:=true;
+  end;
+end;
+@y
+else  begin str_room(1); append_char(c); {contribute |c| to the current string}
+  if (IS_DIR_SEP(c)and(not_kanji_char_seq(prev_char,c))) then
+    begin area_delimiter:=cur_length; ext_delimiter:=0;
+    end
+  else if c="." then ext_delimiter:=cur_length;
+  more_name:=true;
+  end;
+  prev_char:=c;
+end;
+@z
+
 @x [29.526] l.10668 - pTeX: scan file name
 loop@+begin if (cur_cmd>other_char)or(cur_chr>255) then {not a character}
     begin back_input; goto done;
@@ -4214,18 +4247,16 @@ loop@+  begin if is_char_node(s) then
 
 @x [44.968] l.19535 - pTeX: dir_node
   hlist_node,vlist_node,rule_node:@<Insert glue for |split_top_skip|
-    and set~|p:=null|@>;
 @y
-  hlist_node,vlist_node,dir_node,rule_node:
-    @<Insert glue for |split_top_skip| and set~|p:=null|@>;
+  dir_node,
+  hlist_node,vlist_node,rule_node:@<Insert glue for |split_top_skip|
 @z
 
 @x [44.973] l.19626 - pTeX: dir_node
 hlist_node,vlist_node,rule_node: begin@t@>@;@/
-  cur_height:=cur_height+prev_dp+height(p); prev_dp:=depth(p);
 @y
-hlist_node,vlist_node,dir_node,rule_node: begin@t@>@;@/
-  cur_height:=cur_height+prev_dp+height(p); prev_dp:=depth(p);
+dir_node,
+hlist_node,vlist_node,rule_node: begin@t@>@;@/
 @z
 
 @x [44.977] l.19710 - pTeX: free box node
@@ -4440,7 +4471,8 @@ main_loop:@<Append character |cur_chr| and the following characters (if~any)
 main_loop_j:@<Append KANJI-character |cur_chr|
   to the current hlist in the current font; |goto reswitch| when
   a non-character has been fetched@>;
-main_loop:@<Append character |cur_chr| and the following characters (if~any)
+main_loop: inhibit_glue_flag:=false;
+@<Append character |cur_chr| and the following characters (if~any)
   to the current hlist in the current font; |goto reswitch| when
   a non-character has been fetched@>;
 @z
@@ -4532,6 +4564,7 @@ if cur_cmd=inhibit_glue then
 if cur_cmd=no_boundary then bchar:=non_char;
 cur_r:=bchar; lig_stack:=null; goto main_lig_loop;
 main_loop_lookahead+1: adjust_space_factor;
+inhibit_glue_flag:=false;
 fast_get_avail(lig_stack); font(lig_stack):=main_f;
 cur_r:=qi(cur_chr); character(lig_stack):=cur_r;
 if cur_r=false_bchar then cur_r:=non_char {this prevents spurious ligatures}
@@ -4567,12 +4600,24 @@ else begin link(tail):=q; tail:=q;
   end
 @z
 
+@x [47.1060] pTeX: append_glue, inhibit_glue_flag
+end; {now |cur_val| points to the glue specification}
+tail_append(new_glue(cur_val));
+if s>=skip_code then
+@y
+end; {now |cur_val| points to the glue specification}
+tail_append(new_glue(cur_val));
+inhibit_glue_flag := false;
+if s>=skip_code then
+@z
+
 @x [47.1061] l.21277 - pTeX: append kern
 begin s:=cur_chr; scan_dimen(s=mu_glue,false,false);
 tail_append(new_kern(cur_val)); subtype(tail):=s;
 end;
 @y
 begin s:=cur_chr; scan_dimen(s=mu_glue,false,false);
+inhibit_glue_flag := false;
 if not is_char_node(tail)and(type(tail)=disp_node) then
   begin prev_append(new_kern(cur_val)); subtype(prev_node):=s;
   end
@@ -4880,6 +4925,7 @@ vmode+letter,vmode+other_char,vmode+char_num,vmode+char_given,
 @x [47.1091] l.21096 - pTeX: new_graf, adjust direction
 push_nest; mode:=hmode; space_factor:=1000; set_cur_lang; clang:=cur_lang;
 @y
+inhibit_glue_flag := false;
 push_nest; adjust_dir:=abs(direction);
 mode:=hmode; space_factor:=1000; set_cur_lang; clang:=cur_lang;
 @z
@@ -5401,7 +5447,8 @@ mmode+char_num: begin scan_char_num; cur_chr:=cur_val;
     print_err("Not one-byte family");
     help1("IGNORE.");@/
     error;
-  end
+  end;
+  inhibit_glue_flag:=false;
 @z
 
 @x [48.1158] l.22690 - pTeX: scan_math
@@ -5423,6 +5470,14 @@ scan_math(nucleus(tail));
 scan_math(nucleus(tail),kcode_noad(tail));
 @z
 
+@x [48.1167] pTeX: vcenter, inhibit_glue_flag
+mmode+vcenter: begin scan_spec(vcenter_group,false); normal_paragraph;
+@y
+mmode+vcenter: begin 
+  scan_spec(vcenter_group,false); normal_paragraph;
+  inhibit_glue_flag:=false;
+@z
+
 @x [48.1164] l.22790 - pTeX: vcenter : dir
 vcenter_group: begin end_graf; unsave; save_ptr:=save_ptr-2;
   p:=vpack(link(head),saved(1),saved(0)); pop_nest;
@@ -5439,10 +5494,29 @@ vcenter_group: begin end_graf; unsave; save_ptr:=save_ptr-2;
   end;
 @z
 
+@x [48.1176] pTeX: sub_sup, inhibit_glue_flag
+procedure sub_sup;
+var t:small_number; {type of previous sub/superscript}
+@!p:pointer; {field to be filled by |scan_math|}
+begin t:=empty; p:=null;
+@y
+procedure sub_sup;
+var t:small_number; {type of previous sub/superscript}
+@!p:pointer; {field to be filled by |scan_math|}
+begin t:=empty; p:=null;
+inhibit_glue_flag:=false;
+@z
+
 @x [48.1176] l.22864 - pTeX: scan_math
 scan_math(p);
 @y
 scan_math(p,null);
+@z
+
+@x [48.1181] pTeX: math_fraction, inhibit_glue_flag
+begin c:=cur_chr;
+@y
+begin c:=cur_chr; inhibit_glue_flag:=false;
 @z
 
 @x [48.1186] l.23006 - pTeX: copy kanji code
@@ -5451,6 +5525,12 @@ scan_math(p,null);
 @y
      if ((math_type(supscr(p))=empty)and(math_kcode(p)=null)) then
       begin mem[saved(0)].hh:=mem[nucleus(p)].hh;
+@z
+
+@x [48.1191] pTeX: math_left_right, inhibit_glue_flag
+begin t:=cur_chr;
+@y
+begin t:=cur_chr; inhibit_glue_flag:=false;
 @z
 
 @x [48.1194] l.23078 - pTeX: set cur_kanji_skip, cur_xkanji_skip
@@ -6686,6 +6766,7 @@ written in section 48.
 procedure set_math_kchar(@!c:integer);
 var p:pointer; {the new noad}
 begin p:=new_noad; math_type(nucleus(p)):=math_jchar;
+inhibit_glue_flag:=false;
 character(nucleus(p)):=qi(0);
 math_kcode(p):=c; fam(nucleus(p)):=cur_jfam;
 if font_dir[fam_fnt(fam(nucleus(p))+cur_size)]=dir_default then

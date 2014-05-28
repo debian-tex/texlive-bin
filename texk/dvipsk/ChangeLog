@@ -1,3 +1,38 @@
+2014-04-17  Karl Berry  <karl@tug.org>
+
+	* version 5.994 for TL'14.
+
+2014-01-27  TANAKA Takuji  <KXD02663@nifty.ne.jp>
+
+	* dvips.c: Revise procedure of reading command line arguments.
+	(Windows only)
+
+2014-01-13  TANAKA Takuji  <KXD02663@nifty.ne.jp>
+
+	* dvips.c, resident.c: Allow multibyte string with 0x5c
+	in CP932-like system. (Windows only)
+	* dvips.c, output.c, search.c: Allow Unicode file names.
+	(Windows only)
+
+2013-09-16  Karl Berry  <karl@tug.org>
+
+	* writet1.c: formatting tweaks.
+
+2013-08-31  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* writet1.c (t1_subset_ascii_part): Remove UniqueID.
+	Report from Christian Zietz (czietz/gmx/net),
+	tex-k 01 Sep 2013 11:25:47 and previous.
+
+2013-08-05  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* bbox.c: Fix a bug in bbdopage() to obtain correct BoundingBox in
+	vertical mode of pTeX.
+
+2013-05-30  Karl Berry  <karl@tug.org>
+	
+	* version 5.993 for TL'13.
+
 2013-04-07  Karl Berry  <karl@tug.org>
 
 	* resident.c (getdefaults) <m>: if <= 0, set to INT_MAX.

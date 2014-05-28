@@ -277,7 +277,7 @@ if #<>0 then begin
 if #<>0 then begin
   j:=str_start_macro(#);
   while ((not must_quote) or (quote_char=0)) and (j<str_start_macro(#+1)) do begin
-    if (str_pool[j]=" ") then must_quote:=true
+    if str_pool[j]=" " then must_quote:=true
     else if (str_pool[j]="""") or (str_pool[j]="'") then begin
       must_quote:=true;
       quote_char:="""" + "'" - str_pool[j];
@@ -397,6 +397,15 @@ for j:=1 to n do append_to_name(TEX_format_default[j]);
   wlog(' (WARNING: translate-file "');
   fputs(translate_filename, log_file);
   wlog('" ignored)');
+@z
+
+@x [29.537] l.10338 - start_input
+var temp_str: str_number;
+begin scan_file_name; {set |cur_name| to desired file name}
+@y
+var temp_str: str_number;
+@!k:0..file_name_size; {index into |name_of_file16|}
+begin scan_file_name; {set |cur_name| to desired file name}
 @z
 
 @x [29.537] l.10338 - start_input
@@ -550,6 +559,15 @@ for k:=0 to biggest_lang do trie_used[k]:=min_trie_op;
 else begin n:=cur_chr; get_r_token; p:=cur_cs; define(p,relax,256);
 @y
 else begin n:=cur_chr; get_r_token; p:=cur_cs; define(p,relax,too_big_usv);
+@z
+
+@x [49.1275] l.23441 - Same stuff as for \input, this time for \openin.
+var c:0..1; {1 for \.{\\openin}, 0 for \.{\\closein}}
+@!n:0..15; {stream number}
+@y
+var c:0..1; {1 for \.{\\openin}, 0 for \.{\\closein}}
+@!n:0..15; {stream number}
+@!k:0..file_name_size; {index into |name_of_file16|}
 @z
 
 @x [49.1275] l.23441 - Same stuff as for \input, this time for \openin.
@@ -773,7 +791,7 @@ var i,@!j,@!k:integer; {all-purpose integers}
 @x [53a.1379] l.??? -etex command line switch
   incr(loc); eTeX_mode:=1; {enter extended mode}
 @y
-  if (buffer[loc]="*") then incr(loc);
+  if buffer[loc]="*" then incr(loc);
   eTeX_mode:=1; {enter extended mode}
 @z
 

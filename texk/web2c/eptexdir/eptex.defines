@@ -26,6 +26,7 @@
 @define function UCStoUTF8 ();
 @define function toUCS ();
 
+@define function notkanjicharseq ();
 @define function checkkanji ();
 @define function ischarascii ();
 @define function ischarkanji ();
@@ -35,3 +36,8 @@
 
 @define function getintone ();
 @define procedure setintone ();
+
+@define procedure getcreationdate;
+@define procedure getfilemoddate();
+@define procedure getfilesize();
+@define procedure getfiledump();

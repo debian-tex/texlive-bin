@@ -1,5 +1,12 @@
+#line 4 "web2c-lexer.l"
+/* web2c-lexer.l -- lexical analysis for Tangle output.  Public domain. */
 
-#line 3 "web2c-lexer.c"
+#include "web2c.h"
+#include "web2c-parser.h"
+
+
+
+#line 10 "web2c-lexer.c"
 
 #define  YY_INT_ALIGNED short int
 
@@ -8,7 +15,7 @@
 #define FLEX_SCANNER
 #define YY_FLEX_MAJOR_VERSION 2
 #define YY_FLEX_MINOR_VERSION 5
-#define YY_FLEX_SUBMINOR_VERSION 37
+#define YY_FLEX_SUBMINOR_VERSION 39
 #if YY_FLEX_SUBMINOR_VERSION > 0
 #define FLEX_BETA
 #endif
@@ -178,6 +185,13 @@ extern FILE *yyin, *yyout;
                 int yyl;\
                 for ( yyl = n; yyl < yyleng; ++yyl )\
                     if ( yytext[yyl] == '\n' )\
+                        --yylineno;\
+            }while(0)
+    #define YY_LINENO_REWIND_TO(dst) \
+            do {\
+                const char *p;\
+                for ( p = yy_cp-1; p >= (dst); --p)\
+                    if ( *p == '\n' )\
                         --yylineno;\
             }while(0)
     
@@ -371,12 +385,9 @@ static void yy_fatal_error (yyconst char msg[]  );
 	yyleng = (size_t) (yy_cp - yy_bp); \
 	(yy_hold_char) = *yy_cp; \
 	*yy_cp = '\0'; \
-	if ( yyleng + (yy_more_offset) >= YYLMAX ) \
+	if ( yyleng >= YYLMAX ) \
 		YY_FATAL_ERROR( "token too large, exceeds YYLMAX" ); \
-	yy_flex_strncpy( &yytext[(yy_more_offset)], (yytext_ptr), yyleng + 1 ); \
-	yyleng += (yy_more_offset); \
-	(yy_prev_more_offset) = (yy_more_offset); \
-	(yy_more_offset) = 0; \
+	yy_flex_strncpy( yytext, (yytext_ptr), yyleng + 1 ); \
 	(yy_c_buf_p) = yy_cp;
 
 #define YY_NUM_RULES 74
@@ -388,77 +399,38 @@ struct yy_trans_info
 	flex_int32_t yy_verify;
 	flex_int32_t yy_nxt;
 	};
-static yyconst flex_int16_t yy_acclist[319] =
+static yyconst flex_int16_t yy_accept[278] =
     {   0,
-       75,   73,   74,    1,   73,   74,    1,   74,    3,   73,
-       74,   73,   74,   61,   73,   74,   62,   73,   74,   53,
-       73,   74,   51,   73,   74,   68,   73,   74,   52,   73,
-       74,   67,   73,   74,   54,   73,   74,   48,   73,   74,
-       70,   73,   74,   69,   73,   74,   57,   73,   74,   55,
-       73,   74,   58,   73,   74,   73,   74,   72,   73,   74,
-       63,   73,   74,   64,   73,   74,   71,   73,   74,   72,
-       73,   74,   72,   73,   74,   72,   73,   74,   72,   73,
-       74,   72,   73,   74,   72,   73,   74,   72,   73,   74,
-       72,   73,   74,   72,   73,   74,   72,   73,   74,   72,
+        0,    0,   75,   73,    1,    1,    3,   73,   61,   62,
+       53,   51,   68,   52,   67,   54,   48,   70,   69,   57,
+       55,   58,   73,   72,   63,   64,   71,   72,   72,   72,
+       72,   72,   72,   72,   72,   72,   72,   72,   72,   72,
+       72,   72,   72,   72,   72,   72,    2,    1,    0,    0,
+       50,   66,    0,   48,    0,   65,   59,   56,   60,    0,
+        0,   72,   72,   72,   72,   72,   72,   72,   72,   19,
+       72,   72,   72,   72,   72,   72,   72,   27,   72,   72,
+       72,   32,   33,   72,   72,   72,   72,   72,   41,   72,
+       72,   72,   72,    0,    0,   49,   47,    0,   47,    0,
 
-       73,   74,   72,   73,   74,   72,   73,   74,   72,   73,
-       74,   72,   73,   74,   72,   73,   74,   72,   73,   74,
-       72,   73,   74,   72,   73,   74,    2,   73,   74,    1,
-       50,   66,   48,   65,   59,   56,   60,   72,   72,   72,
-       72,   72,   72,   72,   72,   19,   72,   72,   72,   72,
-       72,   72,   72,   72,   27,   72,   72,   72,   72,   32,
-       72,   33,   72,   72,   72,   72,   72,   72,   41,   72,
-       72,   72,   72,   72,   49,   50,   47,   47,   12,   72,
-       72,   72,   72,   72,   72,   17,   72,   72,   72,   22,
-       72,   72,   24,   72,   72,   72,   72,   72,   72,   72,
+        0,   12,   72,   72,   72,   72,   72,   17,   72,   72,
+       22,   72,   24,   72,   72,    0,    0,    0,   72,    0,
+       72,   72,   72,   29,   72,   31,   72,   72,   72,   72,
+       72,   72,   72,   72,   44,   72,    0,   50,    0,    0,
+        0,   72,   72,   72,   15,   72,   72,   21,   72,   23,
+       72,   26,    0,    0,    0,    0,    0,    0,    0,   72,
+        0,    0,   72,   72,   72,   72,   72,   72,   72,   72,
+       72,   72,   40,   42,   72,   72,    0,    0,   47,    0,
+        0,   13,   14,   18,   16,   72,   72,   72,    0,    0,
+        0,    0,   38,   39,    0,    0,    0,   72,   72,   72,
 
-       29,   72,   72,   31,   72,   72,   72,   72,   72,   72,
-       72,   72,   72,   44,   72,   72,   50,   72,   72,   72,
-       15,   72,   72,   72,   21,   72,   72,   23,   72,   72,
-       26,   72,   72,   72,   72,   72,   72,   72,   72,   72,
-       72,   72,   72,   40,   72,   42,   72,   72,   72,   47,
-       13,   72,   14,   72,   18,   72,   16,   72,   72,   72,
-       72,   38,   39,   72,   72,   72,   28,   72,   72,   72,
-       72,   72,   72,   72,   72,   43,   72,   45,   72,   11,
-       20,   72,    5,   72,   72,   72,    4,   72,   72,   46,
-       72,   72,   72,   72,   36,   72,   37,   72,   10,    7,
-
-       72,   72,    6,   72,    1,   72,   35,   72,   25,   72,
-       72,   30,   72,   72,   34,   72,    9,    8
-    } ;
-
-static yyconst flex_int16_t yy_accept[279] =
-    {   0,
-        1,    1,    1,    2,    4,    7,    9,   12,   14,   17,
-       20,   23,   26,   29,   32,   35,   38,   41,   44,   47,
-       50,   53,   56,   58,   61,   64,   67,   70,   73,   76,
-       79,   82,   85,   88,   91,   94,   97,  100,  103,  106,
-      109,  112,  115,  118,  121,  124,  127,  130,  131,  131,
-      131,  132,  133,  133,  134,  134,  135,  136,  137,  138,
-      138,  138,  139,  140,  141,  142,  143,  144,  145,  146,
-      148,  149,  150,  151,  152,  153,  154,  155,  157,  158,
-      159,  160,  162,  164,  165,  166,  167,  168,  169,  171,
-      172,  173,  174,  175,  175,  175,  177,  178,  178,  179,
-
-      179,  179,  181,  182,  183,  184,  185,  186,  188,  189,
-      190,  192,  193,  195,  196,  197,  197,  197,  197,  198,
-      198,  199,  200,  201,  203,  204,  206,  207,  208,  209,
-      210,  211,  212,  213,  214,  216,  217,  217,  218,  218,
-      218,  218,  219,  220,  221,  223,  224,  225,  227,  228,
-      230,  231,  233,  233,  233,  233,  233,  233,  233,  233,
-      234,  234,  234,  235,  236,  237,  238,  239,  240,  241,
-      242,  243,  244,  246,  248,  249,  250,  250,  250,  251,
-      251,  251,  253,  255,  257,  259,  260,  261,  262,  262,
-      262,  262,  262,  263,  264,  264,  264,  264,  265,  266,
-
-      267,  269,  270,  271,  272,  273,  274,  275,  276,  278,
-      280,  280,  280,  281,  283,  284,  285,  286,  286,  286,
-      286,  286,  287,  288,  289,  290,  292,  293,  294,  295,
-      297,  299,  299,  300,  301,  302,  302,  302,  303,  304,
-      305,  306,  307,  309,  311,  311,  311,  312,  314,  315,
-      315,  315,  315,  317,  317,  317,  317,  317,  317,  317,
-      317,  317,  317,  317,  317,  317,  317,  317,  317,  317,
-      317,  317,  317,  317,  318,  318,  319,  319
+       28,   72,   72,   72,   72,   72,   72,   72,   43,   45,
+        0,    0,   11,   20,    5,   72,   72,    0,    0,    0,
+        0,   72,    4,   72,   72,   46,   72,   72,   72,   36,
+       37,    0,   10,    7,   72,    0,    0,   72,    6,   72,
+        1,   72,   35,   25,    0,    0,   72,   30,   72,    0,
+        0,    0,   34,    0,    0,    0,    0,    0,    0,    0,
+        0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+        0,    0,    0,    9,    0,    8,    0
     } ;
 
 static yyconst flex_int32_t yy_ec[256] =
@@ -689,30 +661,19 @@ static yyconst flex_int32_t yy_rule_can_match_eol[75] =
     0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,     };
 
+static yy_state_type yy_last_accepting_state;
+static char *yy_last_accepting_cpos;
+
 extern int yy_flex_debug;
 int yy_flex_debug = 0;
 
-static yy_state_type *yy_state_buf=0, *yy_state_ptr=0;
-static char *yy_full_match;
-static int yy_lp;
-#define REJECT \
-{ \
-*yy_cp = (yy_hold_char); /* undo effects of setting up yytext */ \
-yy_cp = (yy_full_match); /* restore poss. backed-over text */ \
-++(yy_lp); \
-goto find_rule; \
-}
-
-static int yy_more_offset = 0;
-static int yy_prev_more_offset = 0;
-#define yymore() ((yy_more_offset) = yy_flex_strlen( yytext ))
-#define YY_NEED_STRLEN
+/* The intent behind this definition is that it'll catch
+ * any uses of REJECT which flex missed.
+ */
+#define REJECT reject_used_but_not_detected
+#define yymore() yymore_used_but_not_detected
 #define YY_MORE_ADJ 0
-#define YY_RESTORE_YY_MORE_OFFSET \
-	{ \
-	(yy_more_offset) = (yy_prev_more_offset); \
-	yyleng -= (yy_more_offset); \
-	}
+#define YY_RESTORE_YY_MORE_OFFSET
 #ifndef YYLMAX
 #define YYLMAX 8192
 #endif
@@ -720,12 +681,8 @@ static int yy_prev_more_offset = 0;
 char yytext[YYLMAX];
 char *yytext_ptr;
 #line 1 "web2c-lexer.l"
-#line 4 "web2c-lexer.l"
-/* web2c-lexer.l -- lexical analysis for Tangle output.  Public domain. */
 
-#include "web2c.h"
-#include "web2c-parser.h"
-
+#line 11 "web2c-lexer.l"
 /* Hack to make it possible to compile the generated code with C++
    Required if you use flex. */
 #ifdef __cplusplus
@@ -752,7 +709,7 @@ yywrap (void)
   return 1;
 }
 #define YY_SKIP_YYWRAP /* not that it matters */
-#line 756 "web2c-lexer.c"
+#line 713 "web2c-lexer.c"
 
 #define INITIAL 0
 
@@ -934,10 +891,6 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
     
-#line 51 "web2c-lexer.l"
-
-#line 940 "web2c-lexer.c"
-
 	if ( !(yy_init) )
 		{
 		(yy_init) = 1;
@@ -945,12 +898,6 @@ YY_DECL
 #ifdef YY_USER_INIT
 		YY_USER_INIT;
 #endif
-
-        /* Create the reject buffer large enough to save one state per allowed character. */
-        if ( ! (yy_state_buf) )
-            (yy_state_buf) = (yy_state_type *)yyalloc(YY_STATE_BUF_SIZE  );
-            if ( ! (yy_state_buf) )
-                YY_FATAL_ERROR( "out of dynamic memory in yylex()" );
 
 		if ( ! (yy_start) )
 			(yy_start) = 1;	/* first start state */
@@ -970,6 +917,11 @@ YY_DECL
 		yy_load_buffer_state( );
 		}
 
+	{
+#line 53 "web2c-lexer.l"
+
+#line 924 "web2c-lexer.c"
+
 	while ( 1 )		/* loops until end-of-file is reached */
 		{
 		yy_cp = (yy_c_buf_p);
@@ -983,14 +935,15 @@ YY_DECL
 		yy_bp = yy_cp;
 
 		yy_current_state = (yy_start);
-
-		(yy_state_ptr) = (yy_state_buf);
-		*(yy_state_ptr)++ = yy_current_state;
-
 yy_match:
 		do
 			{
-			register YY_CHAR yy_c = yy_ec[YY_SC_TO_UI(*yy_cp)];
+			register YY_CHAR yy_c = yy_ec[YY_SC_TO_UI(*yy_cp)] ;
+			if ( yy_accept[yy_current_state] )
+				{
+				(yy_last_accepting_state) = yy_current_state;
+				(yy_last_accepting_cpos) = yy_cp;
+				}
 			while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 				{
 				yy_current_state = (int) yy_def[yy_current_state];
@@ -998,36 +951,21 @@ yy_match:
 					yy_c = yy_meta[(unsigned int) yy_c];
 				}
 			yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
-			*(yy_state_ptr)++ = yy_current_state;
 			++yy_cp;
 			}
 		while ( yy_current_state != 277 );
+		yy_cp = (yy_last_accepting_cpos);
+		yy_current_state = (yy_last_accepting_state);
 
 yy_find_action:
-		yy_current_state = *--(yy_state_ptr);
-		(yy_lp) = yy_accept[yy_current_state];
-find_rule: /* we branch to this label when backing up */
-		for ( ; ; ) /* until we find what rule we matched */
-			{
-			if ( (yy_lp) && (yy_lp) < yy_accept[yy_current_state + 1] )
-				{
-				yy_act = yy_acclist[(yy_lp)];
-					{
-					(yy_full_match) = yy_cp;
-					break;
-					}
-				}
-			--yy_cp;
-			yy_current_state = *--(yy_state_ptr);
-			(yy_lp) = yy_accept[yy_current_state];
-			}
+		yy_act = yy_accept[yy_current_state];
 
 		YY_DO_BEFORE_ACTION;
 
 		if ( yy_act != YY_END_OF_BUFFER && yy_rule_can_match_eol[yy_act] )
 			{
-			int yyl;
-			for ( yyl = (yy_prev_more_offset); yyl < yyleng; ++yyl )
+			yy_size_t yyl;
+			for ( yyl = 0; yyl < yyleng; ++yyl )
 				if ( yytext[yyl] == '\n' )
 					   
     yylineno++;
@@ -1038,20 +976,27 @@ do_action:	/* This label is used only to access EOF actions. */
 
 		switch ( yy_act )
 	{ /* beginning of action switch */
+			case 0: /* must back up */
+			/* undo the effects of YY_DO_BEFORE_ACTION */
+			*yy_cp = (yy_hold_char);
+			yy_cp = (yy_last_accepting_cpos);
+			yy_current_state = (yy_last_accepting_state);
+			goto yy_find_action;
+
 case 1:
 /* rule 1 can match eol */
 YY_RULE_SETUP
-#line 52 "web2c-lexer.l"
+#line 54 "web2c-lexer.l"
 ;
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 53 "web2c-lexer.l"
+#line 55 "web2c-lexer.l"
 { while (webinput() != '}'); }
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 55 "web2c-lexer.l"
+#line 57 "web2c-lexer.l"
 {
 		    register int c;
 		    putc('#', out);
@@ -1062,7 +1007,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 63 "web2c-lexer.l"
+#line 65 "web2c-lexer.l"
 {register int c;
 		 register char *cp=conditional;
 		 new_line();
@@ -1078,7 +1023,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 76 "web2c-lexer.l"
+#line 78 "web2c-lexer.l"
 {register int c;
 		 new_line();
 		 fputs("#endif /* ", out);
@@ -1093,7 +1038,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 88 "web2c-lexer.l"
+#line 90 "web2c-lexer.l"
 {register int c;
 		 register char *cp=conditional;
 		 new_line();
@@ -1109,7 +1054,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 101 "web2c-lexer.l"
+#line 103 "web2c-lexer.l"
 {register int c;
 		 new_line();
 		 fputs("#endif /* not ", out);
@@ -1125,205 +1070,205 @@ YY_RULE_SETUP
 case 8:
 /* rule 8 can match eol */
 YY_RULE_SETUP
-#line 114 "web2c-lexer.l"
+#line 116 "web2c-lexer.l"
 ;
 	YY_BREAK
 case 9:
 /* rule 9 can match eol */
 YY_RULE_SETUP
-#line 116 "web2c-lexer.l"
+#line 118 "web2c-lexer.l"
 ;
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 118 "web2c-lexer.l"
+#line 120 "web2c-lexer.l"
 return last_tok=define_tok;
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 119 "web2c-lexer.l"
+#line 121 "web2c-lexer.l"
 return last_tok=field_tok;
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 120 "web2c-lexer.l"
+#line 122 "web2c-lexer.l"
 return last_tok=and_tok;
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 121 "web2c-lexer.l"
+#line 123 "web2c-lexer.l"
 return last_tok=array_tok;
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 122 "web2c-lexer.l"
+#line 124 "web2c-lexer.l"
 return last_tok=begin_tok;
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 123 "web2c-lexer.l"
+#line 125 "web2c-lexer.l"
 return last_tok=case_tok;
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 124 "web2c-lexer.l"
+#line 126 "web2c-lexer.l"
 return last_tok=const_tok;
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 125 "web2c-lexer.l"
+#line 127 "web2c-lexer.l"
 return last_tok=div_tok;
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 126 "web2c-lexer.l"
+#line 128 "web2c-lexer.l"
 return last_tok=break_tok;
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 127 "web2c-lexer.l"
+#line 129 "web2c-lexer.l"
 return last_tok=do_tok;
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 128 "web2c-lexer.l"
+#line 130 "web2c-lexer.l"
 return last_tok=downto_tok;
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 129 "web2c-lexer.l"
+#line 131 "web2c-lexer.l"
 return last_tok=else_tok;
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 130 "web2c-lexer.l"
+#line 132 "web2c-lexer.l"
 return last_tok=end_tok;
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 131 "web2c-lexer.l"
+#line 133 "web2c-lexer.l"
 return last_tok=file_tok;
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 132 "web2c-lexer.l"
+#line 134 "web2c-lexer.l"
 return last_tok=for_tok;
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 133 "web2c-lexer.l"
+#line 135 "web2c-lexer.l"
 return last_tok=function_tok;
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 134 "web2c-lexer.l"
+#line 136 "web2c-lexer.l"
 return last_tok=goto_tok;
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 135 "web2c-lexer.l"
+#line 137 "web2c-lexer.l"
 return last_tok=if_tok;
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 136 "web2c-lexer.l"
+#line 138 "web2c-lexer.l"
 return last_tok=label_tok;
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 137 "web2c-lexer.l"
+#line 139 "web2c-lexer.l"
 return last_tok=mod_tok;
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 138 "web2c-lexer.l"
+#line 140 "web2c-lexer.l"
 return last_tok=noreturn_tok;
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 139 "web2c-lexer.l"
+#line 141 "web2c-lexer.l"
 return last_tok=not_tok;
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 140 "web2c-lexer.l"
+#line 142 "web2c-lexer.l"
 return last_tok=of_tok;
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 141 "web2c-lexer.l"
+#line 143 "web2c-lexer.l"
 return last_tok=or_tok;
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 142 "web2c-lexer.l"
+#line 144 "web2c-lexer.l"
 return last_tok=procedure_tok;
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 143 "web2c-lexer.l"
+#line 145 "web2c-lexer.l"
 return last_tok=program_tok;
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 144 "web2c-lexer.l"
+#line 146 "web2c-lexer.l"
 return last_tok=record_tok;
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 145 "web2c-lexer.l"
+#line 147 "web2c-lexer.l"
 return last_tok=repeat_tok;
 	YY_BREAK
 case 38:
 /* rule 38 can match eol */
 YY_RULE_SETUP
-#line 146 "web2c-lexer.l"
+#line 148 "web2c-lexer.l"
 return last_tok=hhb0_tok;
 	YY_BREAK
 case 39:
 /* rule 39 can match eol */
 YY_RULE_SETUP
-#line 147 "web2c-lexer.l"
+#line 149 "web2c-lexer.l"
 return last_tok=hhb1_tok;
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 148 "web2c-lexer.l"
+#line 150 "web2c-lexer.l"
 return last_tok=then_tok;
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
-#line 149 "web2c-lexer.l"
+#line 151 "web2c-lexer.l"
 return last_tok=to_tok;
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
-#line 150 "web2c-lexer.l"
+#line 152 "web2c-lexer.l"
 return last_tok=type_tok;
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
-#line 151 "web2c-lexer.l"
+#line 153 "web2c-lexer.l"
 return last_tok=until_tok;
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
-#line 152 "web2c-lexer.l"
+#line 154 "web2c-lexer.l"
 return last_tok=var_tok;
 	YY_BREAK
 case 45:
 YY_RULE_SETUP
-#line 153 "web2c-lexer.l"
+#line 155 "web2c-lexer.l"
 return last_tok=while_tok;
 	YY_BREAK
 case 46:
 YY_RULE_SETUP
-#line 154 "web2c-lexer.l"
+#line 156 "web2c-lexer.l"
 return last_tok=others_tok;
 	YY_BREAK
 case 47:
 YY_RULE_SETUP
-#line 156 "web2c-lexer.l"
+#line 158 "web2c-lexer.l"
 {
 		  sprintf (temp, "%s%s", negbuf, yytext);
 		  negbuf[0] = '\0';
@@ -1332,7 +1277,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 48:
 YY_RULE_SETUP
-#line 162 "web2c-lexer.l"
+#line 164 "web2c-lexer.l"
 {
 		  sprintf (temp, "%s%s", negbuf, yytext);
 		  negbuf[0] = '\0';
@@ -1342,18 +1287,18 @@ YY_RULE_SETUP
 case 49:
 /* rule 49 can match eol */
 YY_RULE_SETUP
-#line 168 "web2c-lexer.l"
+#line 170 "web2c-lexer.l"
 return last_tok=single_char_tok;
 	YY_BREAK
 case 50:
 /* rule 50 can match eol */
 YY_RULE_SETUP
-#line 170 "web2c-lexer.l"
+#line 172 "web2c-lexer.l"
 return last_tok=string_literal_tok;
 	YY_BREAK
 case 51:
 YY_RULE_SETUP
-#line 172 "web2c-lexer.l"
+#line 174 "web2c-lexer.l"
 { if ((last_tok>=undef_id_tok &&
 		      last_tok<=field_id_tok) ||
 		      last_tok==i_num_tok ||
@@ -1365,7 +1310,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 52:
 YY_RULE_SETUP
-#line 181 "web2c-lexer.l"
+#line 183 "web2c-lexer.l"
 { if ((last_tok>=undef_id_tok &&
 		      last_tok<=field_id_tok) ||
 		      last_tok==i_num_tok ||
@@ -1386,102 +1331,102 @@ YY_RULE_SETUP
 	YY_BREAK
 case 53:
 YY_RULE_SETUP
-#line 199 "web2c-lexer.l"
+#line 201 "web2c-lexer.l"
 return last_tok='*';
 	YY_BREAK
 case 54:
 YY_RULE_SETUP
-#line 200 "web2c-lexer.l"
+#line 202 "web2c-lexer.l"
 return last_tok='/';
 	YY_BREAK
 case 55:
 YY_RULE_SETUP
-#line 201 "web2c-lexer.l"
+#line 203 "web2c-lexer.l"
 return last_tok='=';
 	YY_BREAK
 case 56:
 YY_RULE_SETUP
-#line 202 "web2c-lexer.l"
+#line 204 "web2c-lexer.l"
 return last_tok=not_eq_tok;
 	YY_BREAK
 case 57:
 YY_RULE_SETUP
-#line 203 "web2c-lexer.l"
+#line 205 "web2c-lexer.l"
 return last_tok='<';
 	YY_BREAK
 case 58:
 YY_RULE_SETUP
-#line 204 "web2c-lexer.l"
+#line 206 "web2c-lexer.l"
 return last_tok='>';
 	YY_BREAK
 case 59:
 YY_RULE_SETUP
-#line 205 "web2c-lexer.l"
+#line 207 "web2c-lexer.l"
 return last_tok=less_eq_tok;
 	YY_BREAK
 case 60:
 YY_RULE_SETUP
-#line 206 "web2c-lexer.l"
+#line 208 "web2c-lexer.l"
 return last_tok=great_eq_tok;
 	YY_BREAK
 case 61:
 YY_RULE_SETUP
-#line 207 "web2c-lexer.l"
+#line 209 "web2c-lexer.l"
 return last_tok='(';
 	YY_BREAK
 case 62:
 YY_RULE_SETUP
-#line 208 "web2c-lexer.l"
+#line 210 "web2c-lexer.l"
 return last_tok=')';
 	YY_BREAK
 case 63:
 YY_RULE_SETUP
-#line 209 "web2c-lexer.l"
+#line 211 "web2c-lexer.l"
 return last_tok='[';
 	YY_BREAK
 case 64:
 YY_RULE_SETUP
-#line 210 "web2c-lexer.l"
+#line 212 "web2c-lexer.l"
 return last_tok=']';
 	YY_BREAK
 case 65:
 YY_RULE_SETUP
-#line 211 "web2c-lexer.l"
+#line 213 "web2c-lexer.l"
 return last_tok=assign_tok;
 	YY_BREAK
 case 66:
 YY_RULE_SETUP
-#line 212 "web2c-lexer.l"
+#line 214 "web2c-lexer.l"
 return last_tok=two_dots_tok;
 	YY_BREAK
 case 67:
 YY_RULE_SETUP
-#line 213 "web2c-lexer.l"
+#line 215 "web2c-lexer.l"
 return last_tok='.';
 	YY_BREAK
 case 68:
 YY_RULE_SETUP
-#line 214 "web2c-lexer.l"
+#line 216 "web2c-lexer.l"
 return last_tok=',';
 	YY_BREAK
 case 69:
 YY_RULE_SETUP
-#line 215 "web2c-lexer.l"
+#line 217 "web2c-lexer.l"
 return last_tok=';';
 	YY_BREAK
 case 70:
 YY_RULE_SETUP
-#line 216 "web2c-lexer.l"
+#line 218 "web2c-lexer.l"
 return last_tok=':';
 	YY_BREAK
 case 71:
 YY_RULE_SETUP
-#line 217 "web2c-lexer.l"
+#line 219 "web2c-lexer.l"
 return last_tok='^';
 	YY_BREAK
 case 72:
 YY_RULE_SETUP
-#line 219 "web2c-lexer.l"
+#line 221 "web2c-lexer.l"
 { strcpy (last_id, yytext);
 		  l_s = search_table (last_id);
 		  return
@@ -1490,18 +1435,18 @@ YY_RULE_SETUP
 	YY_BREAK
 case 73:
 YY_RULE_SETUP
-#line 226 "web2c-lexer.l"
+#line 228 "web2c-lexer.l"
 { /* Any bizarre token will do.  */
 		  return last_tok = two_dots_tok; }
 	YY_BREAK
 case 74:
 YY_RULE_SETUP
-#line 228 "web2c-lexer.l"
+#line 230 "web2c-lexer.l"
 ECHO;
 	YY_BREAK
-#line 1503 "web2c-lexer.c"
-			case YY_STATE_EOF(INITIAL):
-				yyterminate();
+#line 1448 "web2c-lexer.c"
+case YY_STATE_EOF(INITIAL):
+	yyterminate();
 
 	case YY_END_OF_BUFFER:
 		{
@@ -1566,7 +1511,8 @@ ECHO;
 
 			else
 				{
-				yy_cp = (yy_c_buf_p);
+				yy_cp = (yy_last_accepting_cpos);
+				yy_current_state = (yy_last_accepting_state);
 				goto yy_find_action;
 				}
 			}
@@ -1630,6 +1576,7 @@ ECHO;
 			"fatal flex scanner internal error--no action found" );
 	} /* end of action switch */
 		} /* end of scanning one token */
+	} /* end of user's declarations */
 } /* end of yylex */
 
 /* yy_get_next_buffer - try to read in a new buffer
@@ -1691,8 +1638,37 @@ static int yy_get_next_buffer (void)
 		while ( num_to_read <= 0 )
 			{ /* Not enough room in the buffer - grow it. */
 
-			YY_FATAL_ERROR(
-"input buffer overflow, can't enlarge buffer because scanner uses REJECT" );
+			/* just a shorter name for the current buffer */
+			YY_BUFFER_STATE b = YY_CURRENT_BUFFER_LVALUE;
+
+			int yy_c_buf_p_offset =
+				(int) ((yy_c_buf_p) - b->yy_ch_buf);
+
+			if ( b->yy_is_our_buffer )
+				{
+				yy_size_t new_size = b->yy_buf_size * 2;
+
+				if ( new_size <= 0 )
+					b->yy_buf_size += b->yy_buf_size / 8;
+				else
+					b->yy_buf_size *= 2;
+
+				b->yy_ch_buf = (char *)
+					/* Include room in for 2 EOB chars. */
+					yyrealloc((void *) b->yy_ch_buf,b->yy_buf_size + 2  );
+				}
+			else
+				/* Can't grow it, we don't own it. */
+				b->yy_ch_buf = 0;
+
+			if ( ! b->yy_ch_buf )
+				YY_FATAL_ERROR(
+				"fatal error - scanner input buffer overflow" );
+
+			(yy_c_buf_p) = &b->yy_ch_buf[yy_c_buf_p_offset];
+
+			num_to_read = YY_CURRENT_BUFFER_LVALUE->yy_buf_size -
+						number_to_move - 1;
 
 			}
 
@@ -1751,12 +1727,14 @@ static int yy_get_next_buffer (void)
     
 	yy_current_state = (yy_start);
 
-	(yy_state_ptr) = (yy_state_buf);
-	*(yy_state_ptr)++ = yy_current_state;
-
 	for ( yy_cp = (yytext_ptr) + YY_MORE_ADJ; yy_cp < (yy_c_buf_p); ++yy_cp )
 		{
 		register YY_CHAR yy_c = (*yy_cp ? yy_ec[YY_SC_TO_UI(*yy_cp)] : 1);
+		if ( yy_accept[yy_current_state] )
+			{
+			(yy_last_accepting_state) = yy_current_state;
+			(yy_last_accepting_cpos) = yy_cp;
+			}
 		while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 			{
 			yy_current_state = (int) yy_def[yy_current_state];
@@ -1764,7 +1742,6 @@ static int yy_get_next_buffer (void)
 				yy_c = yy_meta[(unsigned int) yy_c];
 			}
 		yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
-		*(yy_state_ptr)++ = yy_current_state;
 		}
 
 	return yy_current_state;
@@ -1778,8 +1755,14 @@ static int yy_get_next_buffer (void)
     static yy_state_type yy_try_NUL_trans  (yy_state_type yy_current_state )
 {
 	register int yy_is_jam;
-    
+    	register char *yy_cp = (yy_c_buf_p);
+
 	register YY_CHAR yy_c = 1;
+	if ( yy_accept[yy_current_state] )
+		{
+		(yy_last_accepting_state) = yy_current_state;
+		(yy_last_accepting_cpos) = yy_cp;
+		}
 	while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 		{
 		yy_current_state = (int) yy_def[yy_current_state];
@@ -1788,8 +1771,6 @@ static int yy_get_next_buffer (void)
 		}
 	yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
 	yy_is_jam = (yy_current_state == 277);
-	if ( ! yy_is_jam )
-		*(yy_state_ptr)++ = yy_current_state;
 
 		return yy_is_jam ? 0 : yy_current_state;
 }
@@ -2238,7 +2219,7 @@ YY_BUFFER_STATE yy_scan_bytes  (yyconst char * yybytes, yy_size_t  _yybytes_len 
 	YY_BUFFER_STATE b;
 	char *buf;
 	yy_size_t n;
-	int i;
+	yy_size_t i;
     
 	/* Get memory for full buffer, including space for trailing EOB's. */
 	n = _yybytes_len + 2;
@@ -2386,11 +2367,6 @@ static int yy_init_globals (void)
     (yy_init) = 0;
     (yy_start) = 0;
 
-    (yy_state_buf) = 0;
-    (yy_state_ptr) = 0;
-    (yy_full_match) = 0;
-    (yy_lp) = 0;
-
 /* Defined in main.c */
 #ifdef YY_STDINIT
     yyin = stdin;
@@ -2420,9 +2396,6 @@ int yylex_destroy  (void)
 	/* Destroy the stack itself. */
 	yyfree((yy_buffer_stack) );
 	(yy_buffer_stack) = NULL;
-
-    yyfree ( (yy_state_buf) );
-    (yy_state_buf)  = NULL;
 
     /* Reset the globals. This is important in a non-reentrant scanner so the next time
      * yylex() is called, initialization will occur. */
@@ -2479,7 +2452,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 228 "web2c-lexer.l"
+#line 230 "web2c-lexer.l"
 
 
 /* Some helper routines.  Defining these here means we don't have references
@@ -2578,3 +2551,4 @@ yyerror (const_string s)
   /* Avoid silly warnings.  */
   return 0;
 }
+

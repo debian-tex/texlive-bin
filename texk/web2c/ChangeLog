@@ -1,3 +1,172 @@
+2014-05-20  Karl Berry  <karl@tug.org>
+
+	* doc/web2c.texi (Languages and hyphenation): consistent
+	ordering in menu vs. sectioning.
+
+2014-05-06  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	Update to e-pTeX and e-upTeX from Akira Kakuto.
+	* texmfmp.h (getfiledump): Move declaration from
+	pdftexdir/ptexlib.h to here.
+
+2014-05-05  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* dvicopy.ch, dvicopy.web: Fixed a non-Web2C bug and several
+	typos, mostly from Udo Wermuth <u.wermuth@icloud.com>.
+
+2014-05-02  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* mftraptest: Separate generic and capsule diffs.
+	* triptest: Separate generic and glue rounding diffs.
+	* triptrap/{mftrap,mptrap,trip}.diffs: Updated for TL14.
+
+2014-03-13  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* configure.ac: Use LUAJIT_LDEXTRA instead of luajittex_extra.
+
+2014-02-23  Karl Berry  <karl@tug.org>
+
+	* mftraptest,
+	* triptest,
+	* triptrap/README: a bit more discussion of acceptable diffs,
+	and use *** more emphatic text if the tests fail.
+
+2014-02-05  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* Makefile.am: Add @LUAJIT_RULE@.
+	* ac/web2c.ac: Add LuaJITTeX.
+	* configure.ac: Add KPSE_LUAJIT_DEFINES and KPSE_LUAJIT_FLAGS.
+	Compute and substitute luajittex_extra for darwin64.
+
+2014-01-22  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* triptrap/trip.diffs: Updated for TeX 3.14159265.
+
+2014-01-20  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	TeX tuneup of 2014.
+	* gftopk.web, mf.web, pltotf.web, tex.web, tftopl.web,
+	vftovp.web, vptovf.web: Import new versions from Knuth and
+	remove some trailing white space.
+	* gftopk.ch, pltotf.ch, tex.ch, tftopl.ch, vftovp.ch, vptovf.ch,
+	mftraptest: Adapted.
+	* triptrap/{mftrap.fot,mftrap.log,mftrapin.log,trap.typ},
+	triptrap/{trip.fot,trip.log, trip.typ,tripin.log}: New versions
+	from Knuth.
+
+2014-01-19  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* mftraptest: Stricter checking.
+
+2014-01-18  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* triptest: Stricter checking.
+	* triptrap-sh: Adapted.
+
+2014-01-17  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* trap.test (removed): Renamed ...
+	* mftraptest (new): ... into this.
+	* trp.test (removed): Renamed ...
+	* triptest (new): ... into this.
+	* am/texmf.am, triptrap-sh: Adapted.
+
+2014-01-14  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* mf.ch, tex.ch: Write dump_name to the terminal.
+	* texmfmp.h: Define dumpname => dump_name.
+
+2014-01-13  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	Request from Knuth.
+	* mf.ch: Restore the word `preloaded' for base_idents.
+	* tex.ch: Restore the word `preloaded' for format_idents.
+
+2014-01-09  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	Introduce a genuine 64-bit integer type, in case of 32-bit off_t.
+	* cpascal.h: Define int64cast().
+	* w2c/config.h: Define integer64 as new type.
+
+2014-01-06  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* pltotf.ch, vptovf.ch: Consistent white space.
+
+2014-01-02  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* ac/web2c.ac, configure.ac: Use X toolkit for METAFONT only if
+	requested explicitly.
+
+	* Makefile.am, web2c-sh.in: Output from convert is (non)verbose.
+
+2013-12-06  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* vptovf.ch: Use make_suffix() for implied tfm_name.
+	* cpascal.h (makesuffix): Add this to the underscore list.
+	* pltotf.test, tftopl.test, vftovp.test: Verify output files.
+	* vptovf.test: Add test for 'vptovf foo.vpl bar.vf' and verify
+	output files.
+	* tests/cmr10.pl: Add SEVENBITSAFEFLAG.
+	* am/web.am (DISTCLEANFILES): Additional files for vptovf.test.
+
+2013-09-20  Karl Berry  <karl@tug.org>
+
+	* configure.ac (NATIVE_TEXLIVE_BUILD): new AC_DEFINE,
+	following --enable-texlive-build.  Used in LuaTeX and MetaPost.
+
+2013-09-02  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* Makefile.am: Drop ACLOCAL_AMFLAGS.
+	* configure.ac: Use AC_CONFIG_MACRO_DIRS.
+
+2013-07-12  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* tests/B.pdf (new):
+	More test data for {lua,pdf}texdir/{lua,pdf}image.test.
+
+2013-07-05  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* Makefile.am, man/Makefile.am, omegafonts/Makefile.am:
+	Moved Makefile fragments to ../../am/.
+
+2013-07-04  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* tests/1-4.jpg, tests/basic.tex, tests/lily-ledger-broken.png:
+	Test data for {lua,pdf}texdir/{lua,pdf}image.test.
+
+2013-06-29  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* w2c/config.h: Adapt to C++, i.e., when compiling C++ surround
+	all declarations by 'extern "C" {' ... '}'.
+
+2013-06-27  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* ac/web2c.ac (kpse_tex_progs): Drop explicit XeTeX dependencies
+	on icu and graphite2, already implied by harfbuzz.
+
+2013-06-20  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* am/web2c.ac (kpse_tex_progs): LuaTeX requires libs/lua52.
+	* Makefile.am: Drop luatexdir/am/liblua52.am.
+
+2013-06-18  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* configure.ac: Add KPSE_LUA52_FLAGS.
+	* Makefile.am: Add PTEXENC_RULE and LUA52_RULE.
+
+2013-06-12  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	Update to e-pTeX and e-upTeX 130605 from Hironori Kitagawa.
+	* texmfmp.h (pdftex_fail): Copy declaration from
+	pdftexdir/pdftex-common.h to here.
+	(initstarttime, makecstring, makecfilename, getcreationdate,
+	getfilemoddate, getfilesize): Move declarations from
+	pdftexdir/ptexlib.h to here.
+
+2013-05-30  Karl Berry  <karl@tug.org>
+	
+	* TeX Live 2013 release.
+
 2013-04-09  Peter Breitenlohner  <peb@mppmu.mpg.de>
 
 	* triptrap/mftrap.diffs, triptrap/trip.diffs: Update for TL 2013.

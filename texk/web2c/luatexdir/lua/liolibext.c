@@ -1,6 +1,6 @@
 /* liolibext.c
    
-   Copyright 2012 Taco Hoekwater <taco@luatex.org>
+   Copyright 2014 Taco Hoekwater <taco@luatex.org>
 
    This file is part of LuaTeX.
 
@@ -29,8 +29,12 @@
 #include "lauxlib.h"
 #include "lualib.h"
 
+#ifdef LuajitTeX
+#include "lauxlib_bridge.h"
+#endif
+
 static const char _svn_version[] =
-    "$Id: liolibext.c 4546 2013-01-02 14:52:28Z taco $ $URL: https://foundry.supelec.fr/svn/luatex/tags/beta-0.76.0/source/texk/web2c/luatexdir/lua/liolibext.c $";
+    "$Id: liolibext.c 4781 2014-02-10 11:05:24Z taco $ $URL: https://foundry.supelec.fr/svn/luatex/trunk/source/texk/web2c/luatexdir/lua/liolibext.c $";
 
 
 /*
@@ -60,9 +64,33 @@ static const char _svn_version[] =
 /* }====================================================== */
 
 
+#if defined(LUA_USE_POSIX)
+
+#define l_fseek(f,o,w)		fseeko(f,o,w)
+#define l_ftell(f)		ftello(f)
+#define l_seeknum		off_t
+
+#elif defined(LUA_WIN) && !defined(_CRTIMP_TYPEINFO) \
+   && defined(_MSC_VER) && (_MSC_VER >= 1400)
+/* Windows (but not DDK) and Visual C++ 2005 or higher */
+
+#define l_fseek(f,o,w)		_fseeki64(f,o,w)
+#define l_ftell(f)		_ftelli64(f)
+#define l_seeknum		__int64
+
+#elif defined(__MINGW32__)
+
+#define l_fseek(f,o,w)          fseeko64(f,o,w)
+#define l_ftell(f)              ftello64(f)
+#define l_seeknum               int64_t 
+
+#else
+
 #define l_fseek(f,o,w)		fseek(f,o,w)
 #define l_ftell(f)		ftell(f)
 #define l_seeknum		long
+
+#endif
 
 #define IO_PREFIX	"_IO_"
 #define IO_INPUT	(IO_PREFIX "input")
@@ -163,8 +191,14 @@ static LStream *newfile (lua_State *L) {
 static void opencheck (lua_State *L, const char *fname, const char *mode) {
   LStream *p = newfile(L);
   p->f = fopen(fname, mode);
-  if (p->f == NULL)
+  if (p->f == NULL) {
     luaL_error(L, "cannot open file " LUA_QS " (%s)", fname, strerror(errno));
+  } else {
+    if (mode[0]=='r') 
+       recorder_record_input(fname);
+    else
+       recorder_record_output(fname);
+  }
 }
 
 
@@ -181,7 +215,15 @@ static int io_open (lua_State *L) {
     return luaL_error(L, "invalid mode " LUA_QS
                          " (should match " LUA_QL("[rwa]%%+?b?") ")", mode);
   p->f = fopen(filename, mode);
-  return (p->f == NULL) ? luaL_fileresult(L, 0, filename) : 1;
+  if (p->f == NULL) {
+      return luaL_fileresult(L, 0, filename) ;
+  } else {
+      if (mode[0]=='r') 
+	  recorder_record_input(filename);
+      else
+	  recorder_record_output(filename);
+      return 1;
+  }
 }
 
 /*
@@ -387,16 +429,16 @@ static int read_line(lua_State * L, FILE * f, int chop)
 
 static void read_all (lua_State *L, FILE *f) {
   size_t rlen = LUAL_BUFFERSIZE;  /* how much to read in each cycle */
-  size_t old, nrlen = 0;  /* for testing file size */
+  l_seeknum old, nrlen = 0;  /* for testing file size */
   luaL_Buffer b;
   luaL_buffinit(L, &b);
   /* speed up loading of not too large files: */
-  old = ftell(f);
-  if ((fseek(f, 0, SEEK_END) >= 0) && 
-      ((nrlen = ftell(f)) > 0) && nrlen < 1000 * 1000 * 100) {
+  old = l_ftell(f);
+  if ((l_fseek(f, 0, SEEK_END) >= 0) && 
+      ((nrlen = l_ftell(f)) > 0) && nrlen < 1000 * 1000 * 100) {
       rlen = nrlen;
   }
-  fseek(f, old, SEEK_SET);
+  l_fseek(f, old, SEEK_SET);
   for (;;) {
     char *p = luaL_prepbuffsize(&b, rlen);
     size_t nr = fread(p, sizeof(char), rlen, f);
@@ -624,6 +666,7 @@ static const luaL_Reg flib[] = {
 };
 
 
+#ifndef LuajitTeX
 static void createmeta (lua_State *L) {
   luaL_newmetatable(L, LUA_FILEHANDLE);  /* create metatable for file handles */
   lua_pushvalue(L, -1);  /* push metatable */
@@ -656,8 +699,12 @@ static void createstdfile (lua_State *L, FILE *f, const char *k,
   }
   lua_setfield(L, -2, fname);  /* add file to module */
 }
+#endif
 
 int open_iolibext (lua_State *L) {
+#ifdef LuajitTeX
+  return luaopen_io(L);
+#else
   luaL_newlib(L, iolib);  /* new module */
   createmeta(L);
   /* create (and set) default files */
@@ -665,4 +712,5 @@ int open_iolibext (lua_State *L) {
   createstdfile(L, stdout, IO_OUTPUT, "stdout");
   createstdfile(L, stderr, NULL, "stderr");
   return 1;
+#endif
 }

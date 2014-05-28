@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
 dnl
-dnl   Copyright (C) 2009-2013 Peter Breitenlohner <tex-live@tug.org>
+dnl   Copyright (C) 2009-2014 Peter Breitenlohner <tex-live@tug.org>
 dnl
 dnl   This file is free software; the copyright holder
 dnl   gives unlimited permission to copy and/or distribute it,
@@ -13,12 +13,12 @@ dnl  Copyright (C) 2002-2008 Jan-Åke Larsson
 dnl
 dnl *********************************************************************
 dnl
-m4_define([dvipng_version], [1.14])[]dnl using unmodified dvipng source tree
-AC_INIT([dvipng], dvipng_version, [tex-k@tug.org])
+m4_include([version.ac])[] dnl define dvipng_version
+AC_INIT([dvipng (TeX Live)], dvipng_version, [tex-k@tug.org])
 AC_PREREQ([2.65])
 AC_CONFIG_SRCDIR([dvipng-]dvipng_version[/dvipng.c])
 AC_CONFIG_AUX_DIR([../../build-aux])
-AC_CONFIG_MACRO_DIR([../../m4])
+AC_CONFIG_MACRO_DIRS([../../m4 m4])
 
 # Common code for all programs using libkpathsea.
 KPSE_COMMON([dvipng])
@@ -67,9 +67,6 @@ AC_C_CONST
 AC_TYPE_PID_T
 
 # Checks for library functions.
-AC_FUNC_ALLOCA
-AC_FUNC_FORK
-AC_FUNC_MALLOC
 AC_FUNC_MMAP
 AC_FUNC_STRTOD
 AC_FUNC_VPRINTF
@@ -93,12 +90,10 @@ AC_PATH_PROG([INSTALL_INFO], [install-info], [:], [$PATH /usr/sbin /sbin])
 KPSE_KPATHSEA_FLAGS
 KPSE_ZLIB_FLAGS
 KPSE_LIBPNG_FLAGS
-KPSE_T1LIB_FLAGS
 KPSE_FREETYPE2_FLAGS
 KPSE_GD_FLAGS
 
-# Assume we have t1lib and freetype2.
-have_t1=yes
+# Assume we have freetype2.
 have_ft2=yes
 
 if test "x$enable_build" != xno || test -f config.force; then
@@ -115,12 +110,6 @@ AC_CHECK_FUNC([png_read_image],
                          [Define to 1 if you have the `png' library (-lpng).])],
               [AC_MSG_ERROR([cannot find/use libpng])])
 
-KPSE_ADD_FLAGS([t1lib])
-AC_CHECK_FUNC([T1_InitLib],
-              [AC_DEFINE([HAVE_LIBT1], 1,
-                         [Define to 1 if you have the `t1' library (-lt1).])],
-              [have_t1=no])
-
 KPSE_ADD_FLAGS([freetype2])
 AC_CHECK_FUNC([FT_Init_FreeType],
               [AC_DEFINE([HAVE_FT2], 1,
@@ -131,7 +120,7 @@ KPSE_ADD_FLAGS([gd])
 AC_CHECK_FUNC([gdImageCreate],
               [AC_DEFINE([HAVE_LIBGD], 1,
                          [Define to 1 if you have the `gd' library (-lgd).])],
-              [AC_MSG_ERROR([cannot find/use libgd
+              [AC_MSG_ERROR([cannot find/use gd
 This drawing library can be downloaded at http://www.boutell.com/gd])])
 
 KPSE_ADD_FLAGS([kpathsea])
@@ -139,6 +128,8 @@ AC_CHECK_FUNC([kpse_set_program_name],
               [AC_DEFINE([HAVE_LIBKPATHSEA], 1,
                          [Define to 1 if you have the `kpathsea' library (-lkpathsea).])],
               [AC_MSG_ERROR([cannot find/use libkpathsea])])
+
+AC_CHECK_FUNCS([kpse_program_basename])
 
 # We need enc, cmap, and sfd formats.
 # Introduced together with opentype format (Dec 2003).
@@ -149,7 +140,6 @@ KPSE_CHECK_KPSE_FORMAT([opentype],
 # Checks for more header files.
 AC_CHECK_HEADERS([gd.h png.h kpathsea/kpathsea.h], ,
                  [AC_MSG_ERROR([cannot find/use $ac_header])])
-AC_CHECK_HEADERS([t1lib.h])
 
 # Checks for more library functions.
 AC_CHECK_FUNCS([gdImageCreateTrueColor gdImageCreateFromJpeg gdImagePngEx gdImageCreateFromPngPtr gdImageGif FT_Library_Version])
@@ -160,9 +150,7 @@ echo timestamp >config.force
 
 fi
 
-AM_CONDITIONAL([have_t1], [test "x$have_t1" = xyes])
 AM_CONDITIONAL([have_ft2], [test "x$have_ft2" = xyes])
-AM_CONDITIONAL([have_ft2_or_t1], [test "x$have_ft2:$have_t1" != xno:no])
 AM_CONDITIONAL([have_gif], [test "x$ac_cv_func_gdImageGif" = xyes])
 
 AC_MSG_RESULT([
@@ -185,7 +173,6 @@ AC_MSG_RESULT([
      (dvigif):                              $ac_cv_func_gdImageGif
    FreeType font rendering available:       $ac_cv_func_FT_Init_FreeType
    Support for subfonts (CJK-LaTeX):        $ac_cv_func_FT_Init_FreeType
-   T1lib font rendering available:          $ac_cv_func_T1_InitLib
 ])
 
 AC_CONFIG_HEADERS([config.h])

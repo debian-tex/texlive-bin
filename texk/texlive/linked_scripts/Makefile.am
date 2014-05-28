@@ -1,6 +1,6 @@
 ## Makefile.am for the TeX Live subdirectory texk/texlive/linked_scripts/
 ##
-## Copyright (C) 2009-2013 Peter Breitenlohner <tex-live@tug.org>
+## Copyright (C) 2009-2014 Peter Breitenlohner <tex-live@tug.org>
 ## You may freely use, modify and/or distribute this file.
 ##
 ## TeX Live's extra scripts.
@@ -106,12 +106,21 @@ texmf_other_scripts = \
 	jfontmaps/kanji-fontmap-creator.pl \
 	jfontmaps/kanji-config-updmap.pl \
 	jfontmaps/kanji-config-updmap-sys.sh \
+	kotex-utils/jamo-normalize.pl \
+	kotex-utils/komkindex.pl \
+	kotex-utils/ttf2kotexfont.pl \
+	latex-git-log/latex-git-log \
 	latex2man/latex2man \
 	latexdiff/latexdiff.pl \
 	latexdiff/latexdiff-vc.pl \
 	latexdiff/latexrevise.pl \
+	latexindent/latexindent.pl \
 	latexmk/latexmk.pl \
 	latexpand/latexpand \
+	lilyglyphs/lily-glyph-commands.py \
+	lilyglyphs/lily-image-commands.py \
+	lilyglyphs/lily-rebuild-pdfs.py \
+	ltximg/ltximg.pl \
 	luaotfload/luaotfload-tool.lua \
 	m-tx/m-tx.lua \
 	match_parens/match_parens \
@@ -119,6 +128,7 @@ texmf_other_scripts = \
 	mf2pt1/mf2pt1.pl \
 	mkjobtexmf/mkjobtexmf.pl \
 	mkgrkindex/mkgrkindex \
+	mkpic/mkpic \
 	multibibliography/multibibliography.pl \
 	musixtex/musixflx.lua \
 	musixtex/musixtex.lua \
@@ -132,9 +142,13 @@ texmf_other_scripts = \
 	pkfix/pkfix.pl \
 	pkfix-helper/pkfix-helper \
 	pmx/pmx2pdf.lua \
+	pmxchords/pmxchords.lua \
 	pst2pdf/pst2pdf.pl \
 	ptex2pdf/ptex2pdf.lua \
 	purifyeps/purifyeps \
+	pythontex/pythontex.py \
+	pythontex/depythontex.py \
+	rubik/rubikrotation.pl \
 	splitindex/splitindex.pl \
 	sty2dtx/sty2dtx.pl \
 	svn-multi/svn-multi.pl \
@@ -143,6 +157,7 @@ texmf_other_scripts = \
 	texdef/texdef.pl \
 	texdiff/texdiff \
 	texdirflatten/texdirflatten \
+	texfot/texfot.pl \
 	texlive/rungs.tlu \
 	texlive/tlmgr.pl \
 	texlive/updmap.pl \
@@ -154,12 +169,16 @@ texmf_other_scripts = \
 	vpe/vpe.pl
 texmf_context_scripts = \
 	context/stubs/unix/context \
-	context/stubs/unix/ctxtools \
+	context/stubs/unix/contextjit \
 	context/stubs/unix/luatools \
 	context/stubs/unix/mtxrun \
-	context/stubs/unix/pstopdf \
+	context/stubs/unix/mtxrunjit \
 	context/stubs/unix/texexec \
 	context/stubs/unix/texmfstart
+
+EXTRA_DIST += \
+	context/stubs/unix/ctxtools \
+	context/stubs/unix/pstopdf
 
 nobase_dist_texmf_scripts_SCRIPTS = \
 	$(texmf_shell_scripts) \

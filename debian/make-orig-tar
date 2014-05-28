@@ -4,7 +4,7 @@ if [ -n "$1" ] ; then
 else
   svnroot=/src/TeX/texlive-svn/Build/source
 fi
-baseyear=2013
+baseyear=2014
 
 svni=$(cd $svnroot ; svn info | grep "^Last Changed Rev" | awk '{print$4}')
 verstr=texlive-bin-$baseyear.`date +%Y%m%d`.$svni
@@ -18,10 +18,35 @@ echo "copying"
 cp -a $svnroot $verstr
 rm -rf $verstr/inst
 rm -rf $verstr/Work
-rm -rf $verstr/utils/biber/bin
+# packaged separately:
+rm -rf $verstr/utils/biber
+rm -rf $verstr/utils/asymptote
+rm -rf $verstr/utils/pmx
+rm -rf $verstr/utils/m-tx
+rm -rf $verstr/utils/xindy
+rm -rf $verstr/utils/ps2eps
+rm -rf $verstr/utils/t1utils
 #
-# remove system libraries, keep only teckit
-for i in harfbuzz cairo freetype freetype2 gd graphite2 icu libpng pixman poppler t1lib xpdf zlib zziplib ; do
+# remove system libraries, keep only teckit and lua52 and libpng
+# teckit: not in Debian
+# lua52: system usage not supported in TeX Live
+# libpng >= 1.4 is not available in Debian/unstable
+# and depending libs are not compiled against it, 
+# as bad as it is, we have to keep 
+#	cairo freetype2 gd libpng
+
+for i in \
+	graphite2	\
+	harfbuzz	\
+	icu		\
+	libpaper	\
+	pixman		\
+	poppler		\
+	potrace		\
+	xpdf		\
+	zlib		\
+	zziplib		\
+	; do
   rm -rf $verstr/libs/$i
 done
 find $verstr -name \.svn -exec rm -rf '{}' \;

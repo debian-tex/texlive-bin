@@ -1,3 +1,50 @@
+2014-05-05  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+2014-05-06  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* pdfutils.ch, eptex.defines: Add a primitive \pdffiledump for
+	eptex.
+
+2014-05-02  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* eptrip/eptrip.diffs: Updated for TL14.
+
+2014-01-22  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* eptrip/etrip.{log,tex} (removed): Renamed ...
+	* eptrip/eptrip.{log,tex} (new): ... into these.
+	* eptriptest, am/eptex.am: Adapted.
+	* eptrip/eptrip.{diffs,log}: Updated for e-pTeX 3.14159265.
+
+2014-01-20  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	TeX tuneup of 2014.
+	* eptex.ech: Adapt to TeX Version 3.14159265.
+
+2014-01-17  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* eptrip.test (removed): Renamed ...
+	* eptriptest (new): ... into this.
+	* am/eptex.am: Adapted.
+
+2013-11-21  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* eptrip/eptrip.diffs, eptrip/etrip.log: Update for etrip.tex
+	Version 2.6 [2013-11-21].
+
+2013-08-12  TANAKA Takuji <KXD02663@nifty.ne.jp>
+
+	* eptex.defines: Allow file names with 0x5c in (e)pTeX on Windows.
+
+2013-06-11  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	Update to e-pTeX 130605 from Hironori Kitagawa.
+	* eptex.ech (epTeX_version_string): 110825 => 130605.
+	* pdfsavepos.ch, pdfstrcmp.ch (removed): Merged ...
+	* pdfutils.ch (new): ... into this, adding some functions from
+	../pdftexdir/utils.c.
+	* eptex.defines: Declare the new functions.
+	* am/eptex.am: Adapt.
+
 2013-04-09  Peter Breitenlohner  <peb@mppmu.mpg.de>
 
 	* eptrip/eptrip.diffs, eptrip/etrip.log: Update for TL 2013.

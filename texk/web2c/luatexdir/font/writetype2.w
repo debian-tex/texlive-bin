@@ -19,8 +19,8 @@
 
 @ @c
 static const char _svn_version[] =
-    "$Id: writetype2.w 4457 2012-07-13 13:16:19Z taco $"
-    "$URL: https://foundry.supelec.fr/svn/luatex/tags/beta-0.76.0/source/texk/web2c/luatexdir/font/writetype2.w $";
+    "$Id: writetype2.w 4956 2014-03-28 12:12:17Z luigi $"
+    "$URL: https://foundry.supelec.fr/svn/luatex/trunk/source/texk/web2c/luatexdir/font/writetype2.w $";
 
 #include "ptexlib.h"
 #include "font/writettf.h"
@@ -37,7 +37,7 @@ void make_tt_subset(PDF pdf, fd_entry * fd, unsigned char *buff, int buflen);
 @ @c
 unsigned long cidtogid_obj = 0;
 
-@ low-level helpers 
+@ low-level helpers
 @c
 #define test_loc(l)                                  \
     if ((f->loc + l) > f->buflen) {                  \
@@ -153,7 +153,7 @@ void writetype2(PDF pdf, fd_entry * fd)
     cur_file_name =
         luatex_find_file(fd_cur->fm->ff_name, find_opentype_file_callback);
     if (cur_file_name == NULL) {
-        pdftex_fail("cannot find OpenType font file for reading (%s)", fd_cur->fm->ff_name);
+        luatex_fail("cannot find OpenType font file for reading (%s)", fd_cur->fm->ff_name);
     }
     callback_id = callback_defined(read_opentype_file_callback);
     if (callback_id > 0) {
@@ -161,11 +161,11 @@ void writetype2(PDF pdf, fd_entry * fd)
                          &file_opened, &ttf_buffer, &ttf_size) &&
             file_opened && ttf_size > 0) {
         } else {
-            pdftex_fail("cannot open OpenType font file for reading (%s)", cur_file_name);
+            luatex_fail("cannot open OpenType font file for reading (%s)", cur_file_name);
         }
     } else {
         if (!otf_open(cur_file_name)) {
-            pdftex_fail("cannot open OpenType font file for reading (%s)", cur_file_name);
+            luatex_fail("cannot open OpenType font file for reading (%s)", cur_file_name);
         }
         ttf_read_file();
         ttf_close();
@@ -173,47 +173,43 @@ void writetype2(PDF pdf, fd_entry * fd)
 
     fd_cur->ff_found = true;
 
-    if (tracefilenames) {
-        if (is_subsetted(fd_cur->fm))
-            tex_printf("<%s", cur_file_name);
-        else
-            tex_printf("<<%s", cur_file_name);
-    }
-
+    if (is_subsetted(fd_cur->fm)) 
+        report_start_file(filetype_subset,cur_file_name);
+     else 
+        report_start_file(filetype_font,cur_file_name);
+    
     /* here is the real work */
 
     make_tt_subset(pdf, fd, ttf_buffer, ttf_size);
 #if 0
-    xfree (dir_tab); 
+    xfree (dir_tab);
 #endif
     xfree(ttf_buffer);
-    if (tracefilenames) {
-        if (is_subsetted(fd_cur->fm))
-            tex_printf(">");
-        else
-            tex_printf(">>");
-    }
+    if (is_subsetted(fd_cur->fm)) 
+        report_stop_file(filetype_subset);
+     else 
+        report_stop_file(filetype_font);
     cur_file_name = NULL;
 }
 
 @ PDF viewer applications use following tables (CIDFontType 2)
- 
+
 \.{head, hhea, loca, maxp, glyf, hmtx, fpgm, cvt\_, prep}
- 
+
 \rightline{from PDF Ref. v.1.3, 2nd ed.}
- 
+
  The \.{fpgm}, \.{cvt\_} and \.{prep} tables appears only when TrueType instructions
  requires them. Those tables must be preserved if they exist.
  We use |must_exist| flag to indicate `preserve it if present'
  and to make sure not to cause an error when it does not exist.
- 
+
  \.{post} and \.{name} table must exist in ordinary TrueType font file,
  but when a TrueType font is converted to CIDFontType 2 font, those tables
  are no longer required.
- 
+
  The OS/2 table (required for TrueType font for Windows and OS/2) contains
  liscencing information, but PDF viewers seems not using them.
- 
+
  The \.{name} table added. See comments in \.{writettf.w}.
 
 @c
@@ -400,7 +396,7 @@ void make_tt_subset(PDF pdf, fd_entry * fd, unsigned char *buff, int buflen)
 
     pdf_release_obj(fontfile);
 
-    /* CIDSet: a table of bits indexed by cid, bytes with high order bit first, 
+    /* CIDSet: a table of bits indexed by cid, bytes with high order bit first,
        each (set) bit is a (present) CID. */
     if (is_subsetted(fd->fm)) {
         cidset = pdf_create_obj(pdf, obj_type_others, 0);

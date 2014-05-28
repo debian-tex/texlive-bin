@@ -7,9 +7,8 @@ texlive-bin (2013.20130729.30972-3) UNRELEASED; urgency=low
     PDF/A-1b verification), mendex (svn 32155, 32156), seetex (svn
     32175, 32191), omegaware (svn 32351, 32369, 32388), and 
     (x)dvipdfmx (svn 32268)
-  * fix segfaults in synctex (Closes: #734939), thanks Sebastian Ramacher
 
- -- Norbert Preining <preining@debian.org>  Tue, 14 Jan 2014 07:31:59 +0900
+ -- Norbert Preining <preining@debian.org>  Wed, 18 Dec 2013 15:27:39 +0900
 
 texlive-bin (2013.20130729.30972-2) unstable; urgency=low
 

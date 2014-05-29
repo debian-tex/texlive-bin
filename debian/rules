@@ -4,6 +4,8 @@
 export SHELL=/bin/bash
 export CONFIG_SHELL=/bin/sh
 
+LUAJIT_FAIL_ARCHS="s390x"
+
 # In case one wants to build with old automake (<< 1.13.1), the following
 # variable has to be set. By default the debian/control requires high
 # enough versions of automake and friends
@@ -13,6 +15,9 @@ DEB_HOST_ARCH     ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
 
 ifeq ($(DEB_HOST_ARCH), alpha)
   export LDFLAGS = -Wl,--no-relax
+endif
+ifneq (,$(filter $(DEB_HOST_ARCH), $(LUAJIT_FAIL_ARCHS)))
+  DISABLE_JIT=--disable-luajittex
 endif
 
 #
@@ -73,6 +78,7 @@ override_dh_auto_configure:
 	--with-x				\
 	--with-mf-x-toolkit			\
 	--with-xdvi-x-toolkit=xaw		\
+	$(DISABLE_JIT)				\
 	--disable-lcdf-typetools		\
 	--disable-biber				\
 	--disable-dvipng			\

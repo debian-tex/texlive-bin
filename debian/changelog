@@ -1,3 +1,9 @@
+texlive-bin (2014.20140528.34243-2) unstable; urgency=medium
+
+  * disable building of luajittex on s390x (Closes: #749718)
+
+ -- Norbert Preining <preining@debian.org>  Thu, 29 May 2014 21:54:28 +0900
+
 texlive-bin (2014.20140528.34243-1) unstable; urgency=medium
 
   * upload to unstable

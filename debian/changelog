@@ -2,7 +2,7 @@ texlive-bin (2014.20140528.34243-2) unstable; urgency=medium
 
   * disable building of luajittex on s390x, hppa (Closes: #749718)
 
- -- Norbert Preining <preining@debian.org>  Fri, 30 May 2014 11:16:30 +0900
+ -- Norbert Preining <preining@debian.org>  Fri, 30 May 2014 12:37:11 +0900
 
 texlive-bin (2014.20140528.34243-1) unstable; urgency=medium
 

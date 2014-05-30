@@ -11,7 +11,7 @@ Vcs-Browser: http://anonscm.debian.org/gitweb/?p=debian-tex/texlive-bin.git
 
 Package: texlive-binaries
 Architecture: any
-Depends: libptexenc1 (>= ${source:Version}), libptexenc1 (<< ${source:Version}.1~), libkpathsea6 (>= ${source:Version}), libkpathsea6 (<< ${source:Version}.1~), ${shlibs:Depends}, ${misc:Depends}, tex-common (>= 3), perl, dpkg (>= 1.15.4) | install-info
+Depends: libptexenc1 (>= ${source:Version}), libptexenc1 (<< ${source:Version}.1~), libkpathsea6 (>= ${source:Version}), libkpathsea6 (<< ${source:Version}.1~), ${shlibs:Depends}, ${misc:Depends}, tex-common (>= 5.02), perl, dpkg (>= 1.15.4) | install-info
 Recommends: texlive-base, python, ruby, wish
 Replaces: texlive-metapost (<< 2010), texlive-base (<< 2010), ptex-bin, mendexk, jmpost, luatex (<< 2014)
 Conflicts: mendexk, makejvf, jmpost

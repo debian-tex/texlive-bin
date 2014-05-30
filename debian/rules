@@ -4,7 +4,7 @@
 export SHELL=/bin/bash
 export CONFIG_SHELL=/bin/sh
 
-LUAJIT_FAIL_ARCHS="s390x"
+LUAJIT_FAIL_ARCHS="s390x hppa"
 
 # In case one wants to build with old automake (<< 1.13.1), the following
 # variable has to be set. By default the debian/control requires high

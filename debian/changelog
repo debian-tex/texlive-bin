@@ -1,3 +1,9 @@
+texlive-bin (2014.20140528.34243-3) UNRELEASED; urgency=medium
+
+  * import two patches from luatex upupstream
+
+ -- Norbert Preining <preining@debian.org>  Sat, 07 Jun 2014 21:25:42 +0900
+
 texlive-bin (2014.20140528.34243-2) unstable; urgency=medium
 
   * disable building of luajittex on s390x, hppa (Closes: #749718)

@@ -1,10 +1,10 @@
 texlive-bin (2014.20140528.34243-3~1) UNRELEASED; urgency=medium
 
-  * import two patches from luatex upupstream
+  * import three patches from luatex upupstream
   * add more luajit exception (x32, mips64, mips64el) 
     (Closes: #751150, #752041, #752065)
 
- -- Norbert Preining <preining@debian.org>  Thu, 19 Jun 2014 17:33:00 +0900
+ -- Norbert Preining <preining@debian.org>  Thu, 19 Jun 2014 18:03:21 +0900
 
 texlive-bin (2014.20140528.34243-2) unstable; urgency=medium
 

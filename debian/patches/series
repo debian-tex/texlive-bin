@@ -8,6 +8,7 @@ relax-zlib-version-check
 pmpost-mp1.902
 upmpost-mp1.902
 ac-ctie
+syntex-lib.patch
 upupstream-fix-pdf_h-query-svn5018
 upupstream-fix-math-list-crash-svn5019
 upupstream-bug907-svn5024

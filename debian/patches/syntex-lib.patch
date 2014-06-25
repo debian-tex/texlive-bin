@@ -1,0 +1,89 @@
+Description: Build syntex_parser as shared library
+ Also provide a file for pkg-config.
+Author: Sebastian Ramacher <sramacher@debian.org>
+Last-Update: 204-06-25
+
+Index: texlive-bin-2014.20140528.34243/texk/web2c/synctexdir/am/synctex.am
+===================================================================
+--- texlive-bin-2014.20140528.34243.orig/texk/web2c/synctexdir/am/synctex.am
++++ texlive-bin-2014.20140528.34243/texk/web2c/synctexdir/am/synctex.am
+@@ -7,19 +7,35 @@
+ 
+ bin_PROGRAMS += synctex
+ 
+-synctex_SOURCES = \
+-	synctexdir/synctex_main.c \
++lib_LTLIBRARIES = libsynctex_parser.la
++
++libsynctex_parser_la_SOURCES = \
+ 	synctexdir/synctex_parser.c \
+-	synctexdir/synctex_parser.h \
+ 	synctexdir/synctex_parser_local.h \
+-	synctexdir/synctex_parser_utils.h \
+ 	synctexdir/synctex_parser_utils.c
+ 
+-synctex_CPPFLAGS = -I$(srcdir)/synctexdir $(ZLIB_INCLUDES) -DSYNCTEX_USE_LOCAL_HEADER
++libsynctex_parser_la_CPPFLAGS = -I$(srcdir)/synctexdir $(ZLIB_INCLUDES) -DSYNCTEX_USE_LOCAL_HEADER
++
++libsynctex_parser_la_LIBADD = $(ZLIB_LIBS)
++
++libsynctex_parser_la_LDFLAGS = \
++	-version-info 1:17:0
++
++$(libsynctex_parser_la_OBJECTS): $(ZLIB_DEPEND)
++
++include_HEADERS = \
++	synctexdir/synctex_parser.h \
++	synctexdir/synctex_parser_utils.h
++
++pkgconfigdir = $(libdir)/pkgconfig
++pkgconfig_DATA = synctexdir/synctex-parser.pc
++
++synctex_SOURCES = \
++	synctexdir/synctex_main.c
+ 
+-synctex_LDADD = $(ZLIB_LIBS)
++synctex_CPPFLAGS = -I$(srcdir)/synctexdir
+ 
+-$(synctex_OBJECTS): $(ZLIB_DEPEND)
++synctex_LDADD = libsynctex_parser.la
+ 
+ dist_man_MANS += synctexdir/man1/synctex.1 synctexdir/man5/synctex.5
+ 
+@@ -28,6 +44,7 @@ EXTRA_DIST += \
+ 	synctexdir/README.txt \
+ 	synctexdir/synctex_parser_readme.txt \
+ 	synctexdir/synctex_parser_version.txt \
++	synctexdir/synctex-parser.pc.in \
+ 	synctexdir/tests
+ 
+ ## SyncTeX infrastructure: common for all engines
+Index: texlive-bin-2014.20140528.34243/texk/web2c/synctexdir/synctex-parser.pc.in
+===================================================================
+--- /dev/null
++++ texlive-bin-2014.20140528.34243/texk/web2c/synctexdir/synctex-parser.pc.in
+@@ -0,0 +1,12 @@
++prefix=@prefix@
++exec_prefix=@exec_prefix@
++libdir=@libdir@
++includedir=@includedir@
++
++Name: synctex-parser
++Description: SyncTeX parser library
++Version: 1.17
++Requires.private: zlib
++Libs: -L${libdir} -lsynctex_parser
++Cflags: -I${includedir}
++
+Index: texlive-bin-2014.20140528.34243/texk/web2c/configure.ac
+===================================================================
+--- texlive-bin-2014.20140528.34243.orig/texk/web2c/configure.ac
++++ texlive-bin-2014.20140528.34243/texk/web2c/configure.ac
+@@ -392,6 +392,7 @@ AC_CONFIG_FILES([web2c-sh], [chmod +x we
+ AC_CONFIG_FILES([tangle-sh], [chmod +x tangle-sh])
+ AC_CONFIG_FILES([ctangleboot-sh], [chmod +x ctangleboot-sh])
+ AC_CONFIG_FILES([silent-sh], [chmod +x silent-sh])
++AC_CONFIG_FILES([synctexdir/synctex-parser.pc])
+ 
+ dnl The subdirectory web2c must be configured for the build system.
+ dnl When cross compiling, can not share the cache file with the subdirectory!

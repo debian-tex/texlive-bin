@@ -148,11 +148,13 @@ override_dh_compress:
 override_dh_makeshlibs:
 	dh_makeshlibs -plibkpathsea6
 	dh_makeshlibs -plibptexenc1
+	dh_makeshlibs -plibsynctex-parser1
 
 override_dh_shlibdeps:
 	dh_shlibdeps \
 		-l debian/libkpathsea6/usr/lib \
-		-l debian/libptexenc1/usr/lib
+		-l debian/libptexenc1/usr/lib \
+		-l debian/libsynctex-parser1/usr/lib
 
 override_dh_clean:
 	dh_clean -X.orig

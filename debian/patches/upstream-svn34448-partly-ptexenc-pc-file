@@ -1,0 +1,44 @@
+---
+ texk/ptexenc/Makefile.am   |    4 ++++
+ texk/ptexenc/configure.ac  |    2 +-
+ texk/ptexenc/ptexenc.pc.in |   12 ++++++++++++
+ 3 files changed, 17 insertions(+), 1 deletion(-)
+
+--- texlive-bin.orig/texk/ptexenc/Makefile.am
++++ texlive-bin/texk/ptexenc/Makefile.am
+@@ -36,6 +36,10 @@
+ 	ptexenc/ptexenc.h \
+ 	ptexenc/unicode.h
+ 
++pkgconfigdir = ${libdir}/pkgconfig
++
++pkgconfig_DATA = ptexenc.pc
++
+ EXTRA_DIST = COPYRIGHT ChangeLog.jp
+ 
+ # Rebuild
+--- texlive-bin.orig/texk/ptexenc/configure.ac
++++ texlive-bin/texk/ptexenc/configure.ac
+@@ -50,6 +50,6 @@
+ #define PTEXENCVERSION "ptexenc version] ptexenc_version["])
+ AH_BOTTOM([#endif /* !PTEXENC_C_AUTO_H */])
+ 
+-AC_CONFIG_FILES([Makefile])
++AC_CONFIG_FILES([Makefile ptexenc.pc])
+ 
+ AC_OUTPUT
+--- /dev/null
++++ texlive-bin/texk/ptexenc/ptexenc.pc.in
+@@ -0,0 +1,12 @@
++prefix=@prefix@
++exec_prefix=@exec_prefix@
++libdir=@libdir@
++includedir=@includedir@
++
++Name: ptexenc
++Description: Ptexenc library
++Version: @PTEXENCVERSION@
++Requires.private: kpathsea
++Libs: -L${libdir} -lptexenc
++Cflags: -I${includedir}
++

@@ -60,17 +60,17 @@ Description: TeX Live: ptex encoding library (development part)
  ptexenc library, a library for encoding support in pTeX, a Japanese
  TeX engine.
 
-Package: libsynctex-parser1
+Package: libsynctex1
 Section: libs
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Description: TeX Live: SyncTeX parser library
  Library for SyncTeX parsing support.
 
-Package: libsynctex-parser-dev
+Package: libsynctex-dev
 Section: libdevel
 Architecture: any
-Depends: ${misc:Depends}, libsynctex-parser1 (= ${binary:Version})
+Depends: ${misc:Depends}, libsynctex1 (= ${binary:Version})
 Description: Tex Live: SyncTeX parser library (development part)
  This package contains the static library and header files for the SyncTex
  parser library.

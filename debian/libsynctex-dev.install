@@ -1,2 +1,4 @@
+usr/lib/libsynctex.a
 usr/lib/libsynctex.so
-usr/include/synctex_parser.h
+usr/lib/pkgconfig/synctex.pc
+usr/include/synctex/*

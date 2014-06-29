@@ -1,3 +1,4 @@
 usr/lib/libptexenc.a
 usr/lib/libptexenc.so
+usr/lib/pkgconfig/ptexenc.pc
 usr/include/ptexenc/*

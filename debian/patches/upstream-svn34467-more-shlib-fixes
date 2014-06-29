@@ -1,0 +1,90 @@
+---
+ texk/kpathsea/kpathsea.pc.in        |    2 +-
+ texk/ptexenc/ptexenc.pc.in          |    2 +-
+ texk/web2c/configure.ac             |    8 ++++++++
+ texk/web2c/synctexdir/am/synctex.am |   10 ++++------
+ texk/web2c/synctexdir/synctex.pc.in |    2 +-
+ 5 files changed, 15 insertions(+), 9 deletions(-)
+
+--- texlive-bin.orig/texk/kpathsea/kpathsea.pc.in
++++ texlive-bin/texk/kpathsea/kpathsea.pc.in
+@@ -4,7 +4,7 @@
+ includedir=@includedir@
+ 
+ Name: kpathsea
+-Description: Kpathsea library
++Description: Kpathsea filename lookup library
+ Version: @KPSEVERSION@
+ Libs: -L${libdir} -lkpathsea
+ Cflags: -I${includedir}
+--- texlive-bin.orig/texk/ptexenc/ptexenc.pc.in
++++ texlive-bin/texk/ptexenc/ptexenc.pc.in
+@@ -4,7 +4,7 @@
+ includedir=@includedir@
+ 
+ Name: ptexenc
+-Description: Ptexenc library
++Description: Ptexenc pTeX encoding library
+ Version: @PTEXENCVERSION@
+ Requires.private: kpathsea
+ Libs: -L${libdir} -lptexenc
+--- texlive-bin.orig/texk/web2c/configure.ac
++++ texlive-bin/texk/web2c/configure.ac
+@@ -33,6 +33,12 @@
+ WEB2CVERSION=tex_live_version()
+ AC_SUBST([WEB2CVERSION])
+ 
++dnl Building a shared libsynctex requires a system zlib
++if test "x$enable_shared:$with_system_zlib" = xyes:no; then
++  enable_shared=no
++  ac_configure_args="$ac_configure_args '--disable-shared'"
++fi
++
+ dnl Common code for all programs using libkpathsea.
+ KPSE_COMMON([web2c programs])
+ KPSE_CANONICAL_HOST
+@@ -398,6 +404,8 @@
+ m4_define([synctex_version], m4_chomp(m4_include([synctexdir/synctex_parser_version.txt]))[.0])
+ AC_SUBST([SYNCTEXVERSION], [synctex_version])
+ KPSE_LT_VERSION([synctex])
++AS_IF([test "x$enable_synctex" != xno],
++      [AC_SUBST([WANTEDLIBS], [libsynctex.la])])
+ 
+ AC_CONFIG_FILES([synctexdir/synctex.pc])
+ 
+--- texlive-bin.orig/texk/web2c/synctexdir/am/synctex.am
++++ texlive-bin/texk/web2c/synctexdir/am/synctex.am
+@@ -22,6 +22,7 @@
+ ## The SyncTeX parser library
+ 
+ EXTRA_LTLIBRARIES = libsynctex.la
++lib_LTLIBRARIES = $(WANTEDLIBS)
+ 
+ libsynctex_la_CPPFLAGS = -I$(srcdir)/synctexdir $(ZLIB_INCLUDES) -DSYNCTEX_USE_LOCAL_HEADER
+ 
+@@ -36,13 +37,10 @@
+ 
+ $(libsynctex_la_OBJECTS): $(ZLIB_DEPEND)
+ 
+-if SYNCTEX
+-install-exec-local: libsynctex.la
+-	$(MKDIR_P) "$(DESTDIR)$(libdir)"
+-	$(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(INSTALL) $(INSTALL_STRIP_FLAG) \
+-	  libsynctex.la "$(DESTDIR)$(libdir)"
++syncincludedir = ${includedir}/synctex
+ 
+-nobase_include_HEADERS = \
++if SYNCTEX
++syncinclude_HEADERS = \
+ 	synctexdir/synctex_parser.h \
+ 	synctexdir/synctex_parser_utils.h
+ endif SYNCTEX
+--- texlive-bin.orig/texk/web2c/synctexdir/synctex.pc.in
++++ texlive-bin/texk/web2c/synctexdir/synctex.pc.in
+@@ -8,5 +8,5 @@
+ Version: @SYNCTEXVERSION@
+ Requires.private: zlib
+ Libs: -L${libdir} -lsynctex
+-Cflags: -I${includedir}
++Cflags: -I${includedir}/synctex
+ 

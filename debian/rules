@@ -4,7 +4,13 @@
 export SHELL=/bin/bash
 export CONFIG_SHELL=/bin/sh
 
+#
+# the configure code already checks a lot, but it does not catch
+# all cases. We have now two ways to test for where to build.
+# One by disabling on the other platforms, one by whitelisting
+# and building only on some platforms.
 LUAJIT_FAIL_ARCHS := s390x hppa arm64 ppc64 ppc64el x32 mips64 mips64el m68k
+LUAJIT_GOOD_ARCHS := amd64 armel armhf hurd-i386 i386 kfreebsd-amd64 kfreebsd-i386 mips mipsel powerpc 
 
 # In case one wants to build with old automake (<< 1.13.1), the following
 # variable has to be set. By default the debian/control requires high
@@ -16,8 +22,19 @@ DEB_HOST_ARCH     ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
 ifeq ($(DEB_HOST_ARCH), alpha)
   export LDFLAGS = -Wl,--no-relax
 endif
-ifneq (,$(filter $(DEB_HOST_ARCH), $(LUAJIT_FAIL_ARCHS)))
-  DISABLE_JIT=--disable-luajittex
+
+# for blacklisting bad archs
+#ifneq (,$(filter $(DEB_HOST_ARCH), $(LUAJIT_FAIL_ARCHS)))
+#  DISABLE_JIT=--disable-luajittex
+#endif
+
+# for whitelisting good archs
+ifeq (,$(filter $(DEB_HOST_ARCH), $(LUAJIT_GOOD_ARCHS)))
+  # it is not in the list of good archs -> disable luajittex
+  BUILDLUAJITTEX=--disable-luajittex
+else
+  # not necessary, but for completeness
+  BUILDLUAJITTEX=--enable-luajittex
 endif
 
 #
@@ -78,7 +95,7 @@ override_dh_auto_configure:
 	--with-x				\
 	--with-mf-x-toolkit			\
 	--with-xdvi-x-toolkit=xaw		\
-	$(DISABLE_JIT)				\
+	$(BUILDLUAJITTEX)			\
 	--disable-lcdf-typetools		\
 	--disable-biber				\
 	--disable-dvipng			\

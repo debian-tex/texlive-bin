@@ -1,8 +1,8 @@
-texlive-bin (2014.20140528.34243-3~2) UNRELEASED; urgency=medium
+texlive-bin (2014.20140528.34243-3) unstable; urgency=medium
 
   [ Norbert Preining ]
   * import three patches from luatex upupstream
-  * add more luajit exception (x32, mips64, mips64el) 
+  * build luajittex based on whitelisting good archs
     (Closes: #751150, #752041, #752065)
   * Include upstream changes to support building synctex as shared
     library, based on a patch by Sebastian Ramacher.
@@ -13,7 +13,7 @@ texlive-bin (2014.20140528.34243-3~2) UNRELEASED; urgency=medium
       files.
     - debian/rules: Adopt for new binary packages.
 
- -- Norbert Preining <preining@debian.org>  Sun, 29 Jun 2014 10:24:55 +0900
+ -- Norbert Preining <preining@debian.org>  Sun, 29 Jun 2014 12:10:53 +0900
 
 texlive-bin (2014.20140528.34243-2) unstable; urgency=medium
 

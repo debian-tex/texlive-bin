@@ -23,6 +23,15 @@ ifeq ($(DEB_HOST_ARCH), alpha)
   export LDFLAGS = -Wl,--no-relax
 endif
 
+#
+# gcc-4.9 creates broken binaries on s390x, see #753575
+# debian/control contains conditional build-deps on the
+# gcc/g++ 4.8 version on s390x
+ifeq ($(DEB_HOST_ARCH), s390x)
+  export CC = gcc-4.8
+  export CXX = g++-4.8
+endif
+
 # for blacklisting bad archs
 #ifneq (,$(filter $(DEB_HOST_ARCH), $(LUAJIT_FAIL_ARCHS)))
 #  DISABLE_JIT=--disable-luajittex

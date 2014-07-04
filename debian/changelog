@@ -1,3 +1,10 @@
+texlive-bin (2014.20140528.34243-4) unstable; urgency=medium
+
+  * include more upstream fixes for synctex shlib
+  * fix FTBFS on s390x due to gcc 4.9 (Closes: #753575)
+
+ -- Norbert Preining <preining@debian.org>  Fri, 04 Jul 2014 15:25:55 +0900
+
 texlive-bin (2014.20140528.34243-3) unstable; urgency=medium
 
   [ Norbert Preining ]

@@ -24,12 +24,11 @@ ifeq ($(DEB_HOST_ARCH), alpha)
 endif
 
 #
-# gcc-4.9 creates broken binaries on s390x, see #753575
-# debian/control contains conditional build-deps on the
-# gcc/g++ 4.8 version on s390x
+# gcc-4.9 creates broken binaries on s390x, see #753575,
+# fix is to use -O1
 ifeq ($(DEB_HOST_ARCH), s390x)
-  export CC = gcc-4.8
-  export CXX = g++-4.8
+  export CFLAGS = -O1
+  export CXXFLAGS = -O1
 endif
 
 # for blacklisting bad archs

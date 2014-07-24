@@ -1,3 +1,9 @@
+texlive-bin (2014.20140528.34243-6) UNRELEASED; urgency=medium
+
+  * cherrypick support CID-keyed OTF fonts in dvipdfmx from upstream
+
+ -- Norbert Preining <preining@debian.org>  Thu, 24 Jul 2014 13:57:26 +0900
+
 texlive-bin (2014.20140528.34243-5) unstable; urgency=medium
 
   * s390x: switch back to use standard gcc (4.9), but build with -O1 

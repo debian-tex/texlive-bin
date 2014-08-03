@@ -21,3 +21,4 @@ upstream-svn34690-91-xetex-RTL
 upstream-svn34700-cid-keyed-opentype-support
 upstream-svn34711-avoid-compiler-warnings -p2
 memleak-in-synctex_parser.patch
+upstream-svn34797-fix-cff-encoding

@@ -2,8 +2,9 @@ texlive-bin (2014.20140528.34243-6) UNRELEASED; urgency=medium
 
   * cherrypick support CID-keyed OTF fonts in xdvipdfmx from upstream
   * cherrypick compiler warning fix for above patch
+  * fix memleak in synctex (Closes: #756761), thanks Sebastian Ramacher
 
- -- Norbert Preining <preining@debian.org>  Fri, 25 Jul 2014 11:00:59 +0900
+ -- Norbert Preining <preining@debian.org>  Mon, 04 Aug 2014 07:58:35 +0900
 
 texlive-bin (2014.20140528.34243-5) unstable; urgency=medium
 

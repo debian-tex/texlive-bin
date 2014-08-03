@@ -1,6 +1,10 @@
---- texlive-bin-2014.20140528.34243.orig/texk/web2c/synctexdir/synctex_parser.c
-+++ texlive-bin-2014.20140528.34243/texk/web2c/synctexdir/synctex_parser.c
-@@ -2878,6 +2878,7 @@ int _synctex_open(const char * output, c
+---
+ texk/web2c/synctexdir/synctex_parser.c |    8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+--- texlive-bin.orig/texk/web2c/synctexdir/synctex_parser.c
++++ texlive-bin/texk/web2c/synctexdir/synctex_parser.c
+@@ -2878,6 +2878,7 @@
  				build_output[0] = '\0';
  			} else {
  				if (build_output != strcpy(build_output,output)) {
@@ -8,7 +12,7 @@
  					return -4;
  				}
  				build_output[lpc-output]='\0';
-@@ -2886,15 +2887,20 @@ int _synctex_open(const char * output, c
+@@ -2886,15 +2887,20 @@
  				/*	Append a path separator if necessary. */
  				if (!SYNCTEX_IS_PATH_SEPARATOR(build_output[strlen(build_directory)-1])) {
  					if (build_output != strcat(build_output,"/")) {

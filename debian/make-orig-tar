@@ -37,9 +37,11 @@ rm -rf $verstr/utils/t1utils
 
 for i in \
 	graphite2	\
+	gmp		\
 	harfbuzz	\
 	icu		\
 	libpaper	\
+	mpfr		\
 	pixman		\
 	poppler		\
 	potrace		\

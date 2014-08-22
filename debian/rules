@@ -103,6 +103,8 @@ override_dh_auto_configure:
 	--with-system-libpaper			\
 	--with-system-zziplib			\
 	--with-system-icu			\
+	--with-system-gmp			\
+	--with-system-mpfr			\
 	--with-x				\
 	--with-mf-x-toolkit			\
 	--with-xdvi-x-toolkit=xaw		\

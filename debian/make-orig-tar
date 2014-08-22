@@ -14,6 +14,14 @@ if [ -r $verstr ] ; then
   echo "already existing: $verstr, exit!"
   exit 1
 fi
+
+svnstat=$(cd $svnroot ; svn status --no-ignore)
+if [ -n "$svnstat" ] ; then
+  echo "Strange files present, stopping!"
+  echo $svnstat
+  exit 1
+fi
+
 echo "copying"
 cp -a $svnroot $verstr
 rm -rf $verstr/inst

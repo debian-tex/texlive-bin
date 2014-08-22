@@ -10,8 +10,6 @@
 #
 #************************************************************************
 ##
-ACLOCAL_AMFLAGS = -I ../../m4
-
 ## We want to re-distribute the whole original dvisvgm source tree.
 ##
 EXTRA_DIST = $(DVISVGM_TREE)
@@ -24,7 +22,7 @@ EXTRA_DIST += $(DVISVGM_TREE)-PATCHES
 dist-hook:
 	rm -rf `find $(distdir) -name .svn -o -name .deps -o -name .dirstamp -o -name '*.$(OBJEXT)'`
 
-AM_CPPFLAGS = -I$(top_srcdir)/$(DVISVGM_TREE)/src
+AM_CPPFLAGS = -I$(top_srcdir)/$(DVISVGM_TREE)/clipper -I$(top_srcdir)/$(DVISVGM_TREE)/src
 AM_CPPFLAGS += $(KPATHSEA_INCLUDES) $(POTRACE_INCLUDES) $(FREETYPE2_INCLUDES)
 AM_CPPFLAGS += $(ZLIB_INCLUDES) $(LIBGS_INCLUDES)
 if WIN32
@@ -44,14 +42,16 @@ nodist_dvisvgm_SOURCES = \
 
 dvisvgm_dependencies = $(KPATHSEA_DEPEND) $(ZLIB_DEPEND) $(FREETYPE2_DEPEND)
 
-$(dvisvgm_OBJECTS): libdvisvgm.a
+$(dvisvgm_OBJECTS): $(noinst_LIBRARIES)
 
 LDADD = $(noinst_LIBRARIES) $(KPATHSEA_LIBS) $(POTRACE_LIBS) $(FREETYPE2_LIBS)
 LDADD += $(ZLIB_LIBS) $(LIBGS_LIBS)
 
-noinst_LIBRARIES = libdvisvgm.a
+noinst_LIBRARIES = libdvisvgm.a libclipper.a
 
 nodist_libdvisvgm_a_SOURCES = \
+	@DVISVGM_TREE@/src/BasicDVIReader.cpp \
+	@DVISVGM_TREE@/src/Bezier.cpp \
 	@DVISVGM_TREE@/src/BgColorSpecialHandler.cpp \
 	@DVISVGM_TREE@/src/Bitmap.cpp \
 	@DVISVGM_TREE@/src/BoundingBox.cpp \
@@ -60,7 +60,6 @@ nodist_libdvisvgm_a_SOURCES = \
 	@DVISVGM_TREE@/src/CMapReader.cpp \
 	@DVISVGM_TREE@/src/CRC32.cpp \
 	@DVISVGM_TREE@/src/Calculator.cpp \
-	@DVISVGM_TREE@/src/CharMap.cpp \
 	@DVISVGM_TREE@/src/CharMapID.cpp \
 	@DVISVGM_TREE@/src/CmdLineParserBase.cpp \
 	@DVISVGM_TREE@/src/Color.cpp \
@@ -105,9 +104,12 @@ nodist_libdvisvgm_a_SOURCES = \
 	@DVISVGM_TREE@/src/PdfSpecialHandler.cpp \
 	@DVISVGM_TREE@/src/PageRanges.cpp \
 	@DVISVGM_TREE@/src/PageSize.cpp \
+	@DVISVGM_TREE@/src/PathClipper.cpp \
+	@DVISVGM_TREE@/src/PreScanDVIReader.cpp \
 	@DVISVGM_TREE@/src/Process.cpp \
 	@DVISVGM_TREE@/src/PsSpecialHandler.cpp \
 	@DVISVGM_TREE@/src/psdefs.cpp \
+	@DVISVGM_TREE@/src/RangeMap.cpp \
 	@DVISVGM_TREE@/src/SVGTree.cpp \
 	@DVISVGM_TREE@/src/SignalHandler.cpp \
 	@DVISVGM_TREE@/src/SpecialManager.cpp \
@@ -117,7 +119,9 @@ nodist_libdvisvgm_a_SOURCES = \
 	@DVISVGM_TREE@/src/System.cpp \
 	@DVISVGM_TREE@/src/TFM.cpp \
 	@DVISVGM_TREE@/src/Terminal.cpp \
+	@DVISVGM_TREE@/src/ToUnicodeMap.cpp \
 	@DVISVGM_TREE@/src/TpicSpecialHandler.cpp \
+	@DVISVGM_TREE@/src/Unicode.cpp \
 	@DVISVGM_TREE@/src/VFReader.cpp \
 	@DVISVGM_TREE@/src/XMLDocument.cpp \
 	@DVISVGM_TREE@/src/XMLNode.cpp \
@@ -129,6 +133,9 @@ nodist_libdvisvgm_a_SOURCES += \
 endif dlloader
 
 $(libdvisvgm_a_OBJECTS): $(POTRACE_DEPEND)
+
+nodist_libclipper_a_SOURCES = \
+	@DVISVGM_TREE@/clipper/clipper.cpp
 
 config.force: $(dvisvgm_dependencies)
 	echo timestamp >config.force

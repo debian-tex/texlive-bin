@@ -134,7 +134,7 @@ static pdf_obj *strip_soft_mask    (png_structp png_ptr, png_infop info_ptr,
 				    png_uint_32 width, png_uint_32 height);
 
 /* Read image body */
-static void read_image_data (png_structp png_ptr, png_infop info_ptr,
+static void read_image_data (png_structp png_ptr,
 			     png_bytep dest_ptr,
 			     png_uint_32 height, png_uint_32 rowbytes);
 
@@ -150,6 +150,11 @@ check_for_png (FILE *png_file)
     return 0;
   else
     return 1;
+}
+
+static void warn(png_structp png_ptr, png_const_charp msg)
+{
+  (void)png_ptr; (void)msg; /* Make compiler happy */
 }
 
 int
@@ -174,7 +179,7 @@ png_include_image (pdf_ximage *ximage, FILE *png_file)
   colorspace  = mask = intent = NULL;
 
   rewind (png_file);
-  png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+  png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, warn);
   if (png_ptr == NULL || 
       (png_info_ptr = png_create_info_struct (png_ptr)) == NULL) {
     WARN("%s: Creating Libpng read/info struct failed.", PNG_DEBUG_STR);
@@ -231,7 +236,7 @@ png_include_image (pdf_ximage *ximage, FILE *png_file)
   stream_dict = pdf_stream_dict(stream);
 
   stream_data_ptr = (png_bytep) NEW(rowbytes*height, png_byte);
-  read_image_data(png_ptr, png_info_ptr, stream_data_ptr, height, rowbytes);
+  read_image_data(png_ptr, stream_data_ptr, height, rowbytes);
 
   /* Non-NULL intent means there is valid sRGB chunk. */
   intent = get_rendering_intent(png_ptr, png_info_ptr);
@@ -1009,8 +1014,8 @@ strip_soft_mask (png_structp png_ptr, png_infop info_ptr,
 }
 
 static void
-read_image_data (png_structp png_ptr, png_infop info_ptr, /* info_ptr unused */
-		 png_bytep dest_ptr, png_uint_32 height, png_uint_32 rowbytes)
+read_image_data (png_structp png_ptr, png_bytep dest_ptr,
+                 png_uint_32 height, png_uint_32 rowbytes)
 {
   png_bytepp  rows_p;
   png_uint_32 i;
@@ -1030,7 +1035,7 @@ png_get_bbox (FILE *png_file, long *width, long *height,
   png_infop   png_info_ptr;
 
   rewind (png_file);
-  png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+  png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, warn);
   if (png_ptr == NULL || 
       (png_info_ptr = png_create_info_struct (png_ptr)) == NULL) {
     WARN("%s: Creating Libpng read/info struct failed.", PNG_DEBUG_STR);

@@ -1,4 +1,4 @@
-/*   $Id: afm2tfm.c 33523 2014-04-18 23:22:17Z karl $  */
+/*   $Id: afm2tfm.c 34310 2014-06-19 11:14:35Z peter $  */
 
 /*   Public domain, originally written by Tom Rokicki.
  *   This program converts AFM files to TeX TFM files, and optionally
@@ -826,7 +826,7 @@ upmap(void) { /* Compute uppercase mapping, when making a small caps font */
    Looks like we should use isupper to me --karl.  */
    for (Ai=adobechars; Ai; Ai=Ai->next) {
       p = Ai->adobename;
-      if (isupper (*p)) {
+      if (isupper ((unsigned char)*p)) {
          q = lwr;
          for (; *p; p++)
             *q++ = TOLOWER (*p);

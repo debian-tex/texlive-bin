@@ -1,10 +1,8 @@
 ## Makefile.am for the TeX Live subdirectory texk/ptexenc/
 ##
-## Copyright (C) 2010-2013 Peter Breitenlohner <tex-live@tug.org>
+## Copyright (C) 2010-2014 Peter Breitenlohner <tex-live@tug.org>
 ## You may freely use, modify and/or distribute this file.
 ##
-ACLOCAL_AMFLAGS = -I ../../m4
-
 AM_CPPFLAGS = $(KPATHSEA_INCLUDES)
 AM_CFLAGS = $(WARNING_CFLAGS)
 
@@ -35,6 +33,10 @@ libptexenc_la_LIBADD = $(KPATHSEA_LIBS)
 nobase_include_HEADERS = \
 	ptexenc/ptexenc.h \
 	ptexenc/unicode.h
+
+pkgconfigdir = ${libdir}/pkgconfig
+
+pkgconfig_DATA = ptexenc.pc
 
 EXTRA_DIST = COPYRIGHT ChangeLog.jp
 

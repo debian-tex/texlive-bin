@@ -58,7 +58,7 @@ printable_key (const char *key, int keylen)
 
   for (i = 0, len = 0;
        i < keylen && len < MAX_KEY; i++) {
-    if (isprint(key[i])) {
+    if (isprint((unsigned char)key[i])) {
       pkey[len++] = key[i];
     } else {
       hi = (key[i] >> 4) & 0xff;
@@ -415,12 +415,8 @@ pdf_names_create_tree (struct ht_table *names, long *count,
   if (!flat)
     name_tree = NULL;
   else {
-    if (is_xetex && *count < 1)
-      name_tree = NULL;
-    else {
-      qsort(flat, *count, sizeof(struct named_object), cmp_key);
-      name_tree = build_name_tree(flat, *count, 1);
-    }
+    qsort(flat, *count, sizeof(struct named_object), cmp_key);
+    name_tree = build_name_tree(flat, *count, 1);
     RELEASE(flat);
   }
 

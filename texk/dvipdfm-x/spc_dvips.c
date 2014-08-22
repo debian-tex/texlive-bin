@@ -438,7 +438,7 @@ spc_handler_ps_tricks_brotate (struct spc_env *spe, struct spc_arg *args)
   char *cmd, *RotBegin;
   int i, l = args->endptr - args->curptr;
 
-  static const char *pre = "tx@Dict begin /RAngle { %f } def\n";
+  static const char pre[] = "tx@Dict begin /RAngle { %f } def\n";
   static const char *post = "= end";
 
   if (!(++RAngleCount & 0x0f))
@@ -526,13 +526,11 @@ check_next_obj(const unsigned char * buffer)
 }
 
 static int
-spc_handler_ps_tricks_parse_path (struct spc_env *spe, struct spc_arg *args,
-			      int flag)
+spc_handler_ps_tricks_parse_path (struct spc_env *spe, struct spc_arg *args)
 {
   FILE* fp;
   int k;
   pdf_tmatrix M;
-  char *distiller_template = get_distiller_template();
   char *gs_out;
   const char *clip;
   int error;
@@ -658,7 +656,6 @@ spc_handler_ps_tricks_render (struct spc_env *spe, struct spc_arg *args)
   if (check_next_obj((const unsigned char*)args->endptr)) {
     fclose(fp);
   } else {
-    char *distiller_template = get_distiller_template();
     char *gs_out;
     int error, form_id;
     transform_info p;
@@ -786,7 +783,7 @@ spc_handler_ps_trickscmd (struct spc_env *spe, struct spc_arg *args)
   if (f_exec & render)
     error |= spc_handler_ps_tricks_render(spe, args);
   if (f_exec & parse)
-    error |= spc_handler_ps_tricks_parse_path(spe, args, f_exec);
+    error |= spc_handler_ps_tricks_parse_path(spe, args);
   if (f_exec & begin_put)
     error |= spc_handler_ps_tricks_bput(spe, args, (f_exec & add_temp), (f_exec & req_ref));
   if (f_exec & end_put)
@@ -963,7 +960,7 @@ spc_dvips_setup_handler (struct spc_handler *handle,
 
   key = args->curptr;
   while (args->curptr < args->endptr &&
-	 isalpha(args->curptr[0])) {
+	 isalpha((unsigned char)args->curptr[0])) {
     args->curptr++;
   }
   /* Test for "ps:". The "ps::" special is subsumed under this case.  */
@@ -1007,7 +1004,7 @@ spc_dvips_setup_handler (struct spc_handler *handle,
 #ifdef __EMX__
 #define GS_CALCULATOR "gsos2 -q -dNOPAUSE -dBATCH -sDEVICE=nullpage -f "
 #elif defined(WIN32)
-#define GS_CALCULATOR "gswin32c -q -dNOPAUSE -dBATCH -sDEVICE=nullpage -f "
+#define GS_CALCULATOR "rungs -q -dNOPAUSE -dBATCH -sDEVICE=nullpage -f "
 #else
 #define GS_CALCULATOR "gs -q -dNOPAUSE -dBATCH -sDEVICE=nullpage -f "
 #endif

@@ -1,3 +1,17 @@
+2014-07-16  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* configure.ac: Check for <StructTreeRoot.h> (poppler 0.25 or
+	better) and define HAVE_STRUCTTREEROOT_H if found.
+	
+2014-07-09  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* ac/web2c.ac: Drop configure option --disable-omfonts.
+	* configure.ac: Drop Automake conditional OMFONTS.
+
+2014-06-16  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* configure.ac: Drop the obsolete NATIVE_TEXLIVE_BUILD.
+
 2014-05-20  Karl Berry  <karl@tug.org>
 
 	* doc/web2c.texi (Languages and hyphenation): consistent

@@ -1,3 +1,52 @@
+2014-07-22  Karl Berry  <karl@tug.org>
+
+	* tex-file.h,
+	* tex-file.c (kpathsea_init_format_return_varlist): new fn
+	to expose list of environment/config variable names considered.
+	* kpsewhich.c (help_message): use it.
+
+2014-07-18  Karl Berry  <karl@tug.org>
+
+	* mktex.opt: don't basename-ify the program name, that's
+	potentially useful information.
+	
+	* mktexdir,
+	* mktexlsr, 
+	* mktexmf,
+	* mktexnam,
+	* mktexpk,
+	* mktextfm,
+	* mktexupd: prepend to PATH via a simple method for Unix
+	(but leave the complicated DOS version in mktexlsr).
+
+2014-07-15  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* tex-make.c, win32lib.c: Replace the deprecated spawnvp() by
+	_spawnvp(), they differ for 64-bit MinGW.
+
+2014-07-13  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* debug.c, hash.c, knj.c, tex-make.c: [WIN64] Avoid cast from
+	pointer to integer of different size.
+
+2014-06-20  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* mingw32.h: Require WINVER >= 0x0500.
+
+2014-06-20  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* win32lib.c: Fix a potential bug (w32 only).
+
+2014-06-18  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* c-ctype.h: Avoid useless char subscript warnings.
+
+2014-06-16  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* Makefile.am (kpathsea.h): Drop c-auto.h, c-ctype.h, c-errno.h,
+	and more from the list of files; they are included via others.
+	* version.ac: Update version number 6.2.0 => 6.2.1dev.
+
 2014-05-07  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
 
 	* win32lib.c: Update win32_popen() (w32 only).

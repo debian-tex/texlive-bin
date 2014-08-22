@@ -51,6 +51,7 @@ fontools/afm2afm
 fontools/autoinst
 fontools/ot2kpx
 fragmaster/fragmaster.pl
+getmap/getmapdl.lua
 glossaries/makeglossaries
 jfontmaps/kanji-fontmap-creator.pl
 jfontmaps/kanji-config-updmap.pl
@@ -95,6 +96,7 @@ pmxchords/pmxchords.lua
 pst2pdf/pst2pdf.pl
 ptex2pdf/ptex2pdf.lua
 purifyeps/purifyeps
+pygmentex/pygmentex.py
 pythontex/pythontex.py
 pythontex/depythontex.py
 rubik/rubikrotation.pl
@@ -116,6 +118,7 @@ thumbpdf/thumbpdf.pl
 ulqda/ulqda.pl
 urlbst/urlbst
 vpe/vpe.pl
+yplan/yplan
 context/stubs/unix/context
 context/stubs/unix/contextjit
 context/stubs/unix/luatools

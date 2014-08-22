@@ -1,3 +1,26 @@
+2014-08-19  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* writepng.c: Avoid PNG warnings.
+
+2014-06-26  Thanh Han The  <thanh@river-valley.org>
+
+	* pdftoepdf.cc: Put a line-ending character after writing a group dict.
+	(Report from Ross Moore on pdftex list,
+	http://tug.org/pipermail/pdftex/2014-June/008911.html)
+
+2014-06-19  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* mapfile.c, tounicode.c, writet1.c, writettf: Avoid undefined
+	behaviour when char is signed.
+
+2014-06-18  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* ttf2afm.c: Avoid undefined behaviour when char is signed.
+
+2014-06-16  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* pdftosrc.cc: Adapt to xpdf-3.04.
+
 2012-05-20  Thanh Han The  <thanh@river-valley.org>
 
 	* pdftex.web: do not try to avoid printing 0 0 Td.

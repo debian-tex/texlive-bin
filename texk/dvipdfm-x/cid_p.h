@@ -42,6 +42,7 @@ typedef struct
   int         style;
   int         embed;
   int         stemv;
+  void       *cff_charsets;
 } cid_opt;
 
 struct CIDFont
@@ -49,10 +50,6 @@ struct CIDFont
   char       *ident;      /* Map record entry */
   char       *name;       /* Fontname or filename */
   char       *fontname;   /* PostScript font name */
-#ifdef XETEX
-  FT_Face     ft_face;
-  unsigned short *ft_to_gid;
-#endif
   /*
    * CIDFont Specific
    */

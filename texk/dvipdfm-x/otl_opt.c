@@ -154,7 +154,6 @@ parse_expr (const char **pp, const char *endptr)
       break;
     case ')':
       return root;
-      break;
     case '|': case '&':
       if (*pp >= endptr) {
         WARN("Syntax error: %s\n", *pp);
@@ -184,7 +183,7 @@ parse_expr (const char **pp, const char *endptr)
 
         for (i = 0; i < 4; i++) {
             if (**pp == ' '   || **pp == '?' ||
-                isalpha(**pp) || isdigit(**pp))
+                isalpha((unsigned char)**pp) || isdigit((unsigned char)**pp))
                 curr->data[i] = **pp;
             else if (**pp == '_')
                 curr->data[i] = ' ';

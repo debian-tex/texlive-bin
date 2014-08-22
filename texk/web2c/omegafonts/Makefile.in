@@ -79,9 +79,8 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = $(am__EXEEXT_1)
-@OMFONTS_TRUE@@OTANGLE_TRUE@am__append_1 = omfonts
-@OMFONTS_TRUE@@OTANGLE_TRUE@@WIN32_TRUE@noinst_PROGRAMS =  \
-@OMFONTS_TRUE@@OTANGLE_TRUE@@WIN32_TRUE@	call_omfonts$(EXEEXT)
+@OTANGLE_TRUE@am__append_1 = omfonts
+@OTANGLE_TRUE@@WIN32_TRUE@noinst_PROGRAMS = call_omfonts$(EXEEXT)
 EXTRA_PROGRAMS = omfonts$(EXEEXT)
 DIST_COMMON = $(top_srcdir)/../../am/bin_links.am \
 	$(srcdir)/Makefile.in $(srcdir)/Makefile.am pl-parser.h \
@@ -98,16 +97,19 @@ am__aclocal_m4_deps = $(top_srcdir)/m4/web2c-disable.m4 \
 	$(top_srcdir)/../../m4/kpse-cxx-hack.m4 \
 	$(top_srcdir)/../../m4/kpse-fontconfig-flags.m4 \
 	$(top_srcdir)/../../m4/kpse-freetype2-flags.m4 \
+	$(top_srcdir)/../../m4/kpse-gmp-flags.m4 \
 	$(top_srcdir)/../../m4/kpse-graphite2-flags.m4 \
 	$(top_srcdir)/../../m4/kpse-harfbuzz-flags.m4 \
 	$(top_srcdir)/../../m4/kpse-icu-flags.m4 \
 	$(top_srcdir)/../../m4/kpse-kpathsea-flags.m4 \
 	$(top_srcdir)/../../m4/kpse-lex.m4 \
+	$(top_srcdir)/../../m4/kpse-lib-version.m4 \
 	$(top_srcdir)/../../m4/kpse-libpng-flags.m4 \
 	$(top_srcdir)/../../m4/kpse-lt-hack.m4 \
 	$(top_srcdir)/../../m4/kpse-lua52-flags.m4 \
 	$(top_srcdir)/../../m4/kpse-luajit-flags.m4 \
 	$(top_srcdir)/../../m4/kpse-macos-framework.m4 \
+	$(top_srcdir)/../../m4/kpse-mpfr-flags.m4 \
 	$(top_srcdir)/../../m4/kpse-pixman-flags.m4 \
 	$(top_srcdir)/../../m4/kpse-poppler-flags.m4 \
 	$(top_srcdir)/../../m4/kpse-ptexenc-flags.m4 \
@@ -125,6 +127,8 @@ am__aclocal_m4_deps = $(top_srcdir)/m4/web2c-disable.m4 \
 	$(top_srcdir)/../../m4/ltversion.m4 \
 	$(top_srcdir)/../../m4/lt~obsolete.m4 \
 	$(top_srcdir)/../../version.ac $(top_srcdir)/ac/web2c.ac \
+	$(top_srcdir)/synctexdir/ac/synctex.ac \
+	$(top_srcdir)/synctexdir/synctex_parser_version.txt \
 	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
@@ -133,7 +137,7 @@ CONFIG_HEADER = $(top_builddir)/w2c/c-auto.h \
 	$(top_builddir)/ff-config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
-@OMFONTS_TRUE@@OTANGLE_TRUE@am__EXEEXT_1 = omfonts$(EXEEXT)
+@OTANGLE_TRUE@am__EXEEXT_1 = omfonts$(EXEEXT)
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS) $(noinst_PROGRAMS)
 am__dirstamp = $(am__leading_dot)dirstamp
@@ -479,6 +483,9 @@ FREETYPE2_DEPEND = @FREETYPE2_DEPEND@
 FREETYPE2_INCLUDES = @FREETYPE2_INCLUDES@
 FREETYPE2_LIBS = @FREETYPE2_LIBS@
 FT2_CONFIG = @FT2_CONFIG@
+GMP_DEPEND = @GMP_DEPEND@
+GMP_INCLUDES = @GMP_INCLUDES@
+GMP_LIBS = @GMP_LIBS@
 GRAPHITE2_DEPEND = @GRAPHITE2_DEPEND@
 GRAPHITE2_INCLUDES = @GRAPHITE2_INCLUDES@
 GRAPHITE2_LIBS = @GRAPHITE2_LIBS@
@@ -527,6 +534,9 @@ MAINT = @MAINT@
 MAKEINFO = @MAKEINFO@
 MANIFEST_TOOL = @MANIFEST_TOOL@
 MKDIR_P = @MKDIR_P@
+MPFR_DEPEND = @MPFR_DEPEND@
+MPFR_INCLUDES = @MPFR_INCLUDES@
+MPFR_LIBS = @MPFR_LIBS@
 NM = @NM@
 NMEDIT = @NMEDIT@
 OBJCXX = @OBJCXX@
@@ -560,6 +570,8 @@ SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
+SYNCTEXVERSION = @SYNCTEXVERSION@
+SYNCTEX_LT_VERSINFO = @SYNCTEX_LT_VERSINFO@
 TANGLE = @TANGLE@
 TANGLEBOOT = @TANGLEBOOT@
 TECKIT_DEPEND = @TECKIT_DEPEND@
@@ -567,6 +579,7 @@ TECKIT_INCLUDES = @TECKIT_INCLUDES@
 TECKIT_LIBS = @TECKIT_LIBS@
 TIE = @TIE@
 VERSION = @VERSION@
+WANTEDLIBS = @WANTEDLIBS@
 WARNING_CFLAGS = @WARNING_CFLAGS@
 WARNING_CXXFLAGS = @WARNING_CXXFLAGS@
 WARNING_OBJCXXFLAGS = @WARNING_OBJCXXFLAGS@
@@ -692,12 +705,14 @@ call_omfonts_CPPFLAGS = -DEXEPROG=\"omfonts.exe\"
 nodist_call_omfonts_SOURCES = ../callexe.c
 call_omfonts_LDADD = 
 DISTCLEANFILES = pl-parser.output tests/charwdr.* tests/charwdv.* \
-	tests/xlevel1.ofm tests/xlevel1.opl tests/Cherokee.tfm \
-	tests/OCherokee.ofm tests/OCherokee.opl tests/OCherokee.ovf \
-	tests/xCherokee.* tests/xOCherokee.* tests/realnum.* \
+	tests/xcheck* tests/xlevel1.* tests/xlig*.* tests/xofont* \
+	tests/Cherokee.tfm tests/OCherokee.ofm tests/OCherokee.opl \
+	tests/OCherokee.ovf tests/xCherokee.* tests/xOCherokee.* \
+	tests/xinbmp* tests/xoverbmp* tests/realnum.* \
 	tests/xrepeated.* tests/sample*.ofm tests/sample*.ovf \
-	tests/sample1-h.opl tests/xsample*.out tests/specialhex.ofm \
-	tests/specialhex.opl tests/specialhex.ovf tests/xspecialhex.*
+	tests/sample1-h.opl tests/xsample*.out tests/shortend.* \
+	tests/specialhex.ofm tests/specialhex.opl tests/specialhex.ovf \
+	tests/xspecialhex.* tests/*yarabic*
 linked_programs = ofm2opl opl2ofm ovf2ovp ovp2ovf
 bin_links = \
 	omfonts$(EXEEXT):ofm2opl \
@@ -705,15 +720,27 @@ bin_links = \
 	omfonts$(EXEEXT):ovf2ovp \
 	omfonts$(EXEEXT):ovp2ovf
 
-OMFONTS_tests = charwd.test level1.test omfonts.test realnum.test \
-	repeat.test selectfont.test specialhex.test
+OMFONTS_tests = charwd.test check.test level1.test ligkern.test ofonts.test \
+	omfonts.test overbmp.test realnum.test repeat.test selectfont.test \
+	shorten.test specialhex.test yannis.test
 
-@OMFONTS_TRUE@@OTANGLE_TRUE@TESTS = $(OMFONTS_tests)
+@OTANGLE_TRUE@TESTS = $(OMFONTS_tests)
 EXTRA_DIST = $(OMFONTS_tests) tests/charwd-r.pl tests/charwd-v.vpl \
-	tests/level1.opl tests/Cherokee.pl tests/OCherokee.ovp \
-	tests/realnum.opl tests/realnum.out tests/repeat.opl \
-	tests/repeated.opl tests/sample.out tests/sample.ovp \
-	tests/sample0-h.opl tests/specialhex.ovp
+	tests/check.ofm tests/check.opl tests/checked.opl \
+	tests/level1.opl tests/ligall.opl tests/ligbch.opl \
+	tests/ligbdy.opl tests/ligblb.opl tests/ligblv.opl \
+	tests/ligblv.ovp tests/ligloop1.ofm tests/ligloop1.opl \
+	tests/ligloop2.opl tests/liguse.opl tests/liguse1.opl \
+	tests/liguse2.opl tests/ofontr0.pl tests/ofontr1.pl \
+	tests/ofontr1.vpl tests/ofontr2.opl tests/ofontr2.ovp \
+	tests/ofontr3.opl tests/ofontr3.ovp tests/ofontv4.pl \
+	tests/ofontv4.vpl tests/ofontv5.opl tests/ofontv5.ovp \
+	tests/ofontv6.opl tests/ofontv6.ovp tests/Cherokee.pl \
+	tests/OCherokee.ovp tests/inbmp.opl tests/overbmp.opl \
+	tests/overbmp.ovp tests/realnum.opl tests/realnum.out \
+	tests/repeat.opl tests/repeated.opl tests/sample.out \
+	tests/sample.ovp tests/sample0-h.opl tests/shorten.opl \
+	tests/specialhex.ovp tests/arabicr.pl tests/arabic.ovp
 all: all-am
 
 .SUFFIXES:
@@ -1187,9 +1214,7 @@ maintainer-clean-generic:
 	-rm -f pl-lexer.c
 	-rm -f pl-parser.c
 	-rm -f pl-parser.h
-@OMFONTS_FALSE@install-exec-hook:
 @OTANGLE_FALSE@install-exec-hook:
-@OMFONTS_FALSE@uninstall-hook:
 @OTANGLE_FALSE@uninstall-hook:
 clean: clean-am
 
@@ -1306,14 +1331,14 @@ uninstall-bin-links:
 @WIN32_FALSE@	  rm -f $(DESTDIR)$(bindir)/$$link; \
 @WIN32_FALSE@	done
 
-@OMFONTS_TRUE@@OTANGLE_TRUE@install-exec-hook: install-bin-links
-@OMFONTS_TRUE@@OTANGLE_TRUE@@WIN32_TRUE@	for f in $(linked_programs); do \
-@OMFONTS_TRUE@@OTANGLE_TRUE@@WIN32_TRUE@	  $(INSTALL_PROGRAM) call_omfonts$(EXEEXT) $(DESTDIR)$(bindir)/$$f$(EXEEXT) || exit 1; \
-@OMFONTS_TRUE@@OTANGLE_TRUE@@WIN32_TRUE@	done
-@OMFONTS_TRUE@@OTANGLE_TRUE@uninstall-hook: uninstall-bin-links
-@OMFONTS_TRUE@@OTANGLE_TRUE@@WIN32_TRUE@	for f in $(linked_programs); do \
-@OMFONTS_TRUE@@OTANGLE_TRUE@@WIN32_TRUE@	  rm -f $(DESTDIR)$(bindir)/$$f$(EXEEXT); \
-@OMFONTS_TRUE@@OTANGLE_TRUE@@WIN32_TRUE@	done
+@OTANGLE_TRUE@install-exec-hook: install-bin-links
+@OTANGLE_TRUE@@WIN32_TRUE@	for f in $(linked_programs); do \
+@OTANGLE_TRUE@@WIN32_TRUE@	  $(INSTALL_PROGRAM) call_omfonts$(EXEEXT) $(DESTDIR)$(bindir)/$$f$(EXEEXT) || exit 1; \
+@OTANGLE_TRUE@@WIN32_TRUE@	done
+@OTANGLE_TRUE@uninstall-hook: uninstall-bin-links
+@OTANGLE_TRUE@@WIN32_TRUE@	for f in $(linked_programs); do \
+@OTANGLE_TRUE@@WIN32_TRUE@	  rm -f $(DESTDIR)$(bindir)/$$f$(EXEEXT); \
+@OTANGLE_TRUE@@WIN32_TRUE@	done
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

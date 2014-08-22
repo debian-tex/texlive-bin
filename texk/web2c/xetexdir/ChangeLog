@@ -1,3 +1,38 @@
+2014-08-19  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* image/pngimage.c: Avoid PNG warnings.
+
+2014-07-22  Khaled Hosny  <khaledhosny@eglug.org>
+
+	* xetex.web, xetex.ch, tex.ch0: Switch right-to-left support from
+	e-TeX's TeX--XeT to Knuth's original TeX-XeT code (with some fixes and
+	slight modification to the DVI opcode) to fix TeX--XeT paired specials
+	issue.
+
+2014-07-15  Khaled Hosny  <khaledhosny@eglug.org>
+            Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* xetex-bug73.test: Shell script for a new test.
+	* tests/bug73.{log,tex} (new): Test input and expected output.
+	* am/xetex.am: Adjusted.
+
+2014-07-15  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* xetex_version.h: 0.99992
+
+2014-07-04  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* xetex.web: Remove unused variables k,and l in function
+	get_strings_started, and q, and r in procedure set_math_char().
+	* image/mfileio.c: Change type of a variable i in mfgets() in order to
+	suppress warnings.
+	* image/bmpimage.c: Remove an unused variable i in bmp_scan_file().
+	* image/jpegimage.c: Remove an unused variable rational_value in
+	read_APP1_Exif().
+	* image/pngimage.c: Remove unused variables stream_data_ptr,
+	trans_type, and rowbytes in png_scan_file().
+	* XeTeXFontMgr_FC.cpp: Remove an unused label restart.
+
 2014-05-10  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
 
 	* image/bmpimage.c: Error exit instead of crashing for unsupported

@@ -72,9 +72,8 @@ files must always be <2GB, due to the file format specifications.
 
    With LFS, there is no fixed limit on the size of PDF files created by
 'pdftex' or PostScript files created by 'dvips'.  The size of PDF images
-included by 'pdftex' must, however, be <4GB when using 'xpdf' and <2GB
-when using older versions of 'poppler' (even on 64-bit systems with
-LFS), whereas 'poppler' versions 0.23 and later impose no such limit.
+included by 'pdftex' or 'luatex' must, however, be <2GB when using
+'poppler' version 0.22 or before (even on 64-bit systems with LFS).
 
 7.1.4 '--disable-missing'
 -------------------------
@@ -210,11 +209,6 @@ Disable TeX's '--ipc' option.
 '--disable-mf-nowin'
 Do not build a separate non-graphically-capable Metafont ('mf-nowin').
 
-'--disable-omfonts'
-Build the WEB versions of the Omega font utilities 'ofm2opl', 'opl2ofm',
-'ovf2ovp', and 'ovp2ovf' instead of the C version 'omfonts'.  The WEB
-and C versions should be roughly equivalent.
-
 '--disable-tex', '--enable-etex', ...
 Do not or do build the various TeX, Metafont, and MetaPost engines
 (defaults are defined in the fragment 'texk/web2c/ac/web2c.ac').
@@ -328,11 +322,6 @@ the value 'system' (not allowed for a native TL build, but the default
 for a non-native one) indicates that 'xindy' will use the installed
 version of 'clisp' (which must be identical to the one used to build
 'xindy').
-
-'--with-recode'
-Use 'recode' instead of 'iconv' to build the 'xindy' rules and
-documentation, required for some systems where 'iconv' is missing or
-broken.
 
 7.3 Library-specific configure options
 ======================================

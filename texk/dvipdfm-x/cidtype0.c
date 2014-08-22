@@ -82,7 +82,7 @@ CIDFont_type0_set_flags (long flags)
 #endif
 
 static void
-add_CIDHMetrics (sfnt *sfont, pdf_obj *fontdict,
+add_CIDHMetrics (pdf_obj *fontdict,
 		 unsigned char *CIDToGIDMap, unsigned short last_cid,
 		 struct tt_maxp_table *maxp,
 		 struct tt_head_table *head, struct tt_longMetrics *hmtx)
@@ -318,7 +318,7 @@ add_CIDMetrics (sfnt *sfont, pdf_obj *fontdict,
   sfnt_locate_table(sfont, "hmtx");
   hmtx = tt_read_longMetrics(sfont, maxp->numGlyphs, hhea->numOfLongHorMetrics, hhea->numOfExSideBearings);
 
-  add_CIDHMetrics(sfont, fontdict, CIDToGIDMap, last_cid, maxp, head, hmtx);
+  add_CIDHMetrics(fontdict, CIDToGIDMap, last_cid, maxp, head, hmtx);
   if (need_vmetrics)
     add_CIDVMetrics(sfont, fontdict, CIDToGIDMap, last_cid, maxp, head, hmtx);
 
@@ -509,29 +509,21 @@ CIDFont_type0_dofont (CIDFont *font)
   if (!used_chars)
     ERROR("Unexpected error: Font not actually used???");
 
-#ifdef XETEX
-  sfont = sfnt_open(font->ft_face, SFNT_TYPE_POSTSCRIPT);
-#else
   fp = DPXFOPEN(font->ident, DPX_RES_TYPE_OTFONT);
   if (!fp)
     ERROR("Could not open OpenType font file: %s", font->ident);
   sfont = sfnt_open(fp);
-#endif
   if (!sfont)
     ERROR("Could not open OpenType font file: %s", font->ident);
 
   if (sfnt_read_table_directory(sfont, 0) < 0 ||
       sfont->type != SFNT_TYPE_POSTSCRIPT)
-    ERROR("Not a CFF/OpenType font ?");
+    ERROR("Not a CFF/OpenType font (1)?");
   offset = sfnt_find_table_pos(sfont, "CFF ");
   if (offset == 0)
-    ERROR("Not a CFF/OpenType font ?");
+    ERROR("Not a CFF/OpenType font (2)?");
 
-#ifdef XETEX
-  cffont = cff_open(sfont, offset, font->options->index);
-#else
   cffont = cff_open(fp, offset, font->options->index);
-#endif
   if (!cffont)
     ERROR("Could not open CFF font.");
   if (!(cffont->flag & FONTTYPE_CIDFONT))
@@ -734,31 +726,21 @@ CIDFont_type0_open (CIDFont *font, const char *name,
 
   ASSERT(font);
 
-#ifdef XETEX
-  sfont = sfnt_open(font->ft_face, SFNT_TYPE_POSTSCRIPT);
-  if (!sfont)
-    return -1;
-#else
   fp = DPXFOPEN(name, DPX_RES_TYPE_OTFONT);
   if (!fp)
     return -1;
 
   sfont = sfnt_open(fp);
   if (!sfont) {
-    ERROR("Not a CFF/OpenType font?");
+    ERROR("Not a CFF/OpenType font (3)?");
   }
-#endif
   if (sfont->type != SFNT_TYPE_POSTSCRIPT     ||
       sfnt_read_table_directory(sfont, 0) < 0 ||
       (offset = sfnt_find_table_pos(sfont, "CFF ")) == 0) {
-    ERROR("Not a CFF/OpenType font?");
+    ERROR("Not a CFF/OpenType font (4)?");
   }
 
-#ifdef XETEX
-  cffont = cff_open(sfont, offset, opt->index);
-#else
   cffont = cff_open(sfont->stream, offset, opt->index);
-#endif
   if (!cffont) {
     ERROR("Cannot read CFF font data");
   }
@@ -770,6 +752,10 @@ CIDFont_type0_open (CIDFont *font, const char *name,
       DPXFCLOSE(fp);
     return -1;
   }
+
+  cff_read_charsets(cffont);
+  opt->cff_charsets = cffont->charsets;
+  cffont->charsets = NULL;
 
   csi = NEW(1, CIDSysInfo);
   csi->registry =
@@ -912,30 +898,22 @@ CIDFont_type0_t1cdofont (CIDFont *font)
   if (!used_chars)
     ERROR("Unexpected error: Font not actually used???");
 
-#ifdef XETEX
-  sfont = sfnt_open(font->ft_face, SFNT_TYPE_POSTSCRIPT);
-#else
   fp = DPXFOPEN(font->ident, DPX_RES_TYPE_OTFONT);
   if (!fp)
     ERROR("Could not open OpenType font file: %s", font->ident);
 
   sfont = sfnt_open(fp);
-#endif
   if (!sfont)
     ERROR("Could not open OpenType font file: %s", font->ident);
 
   if (sfnt_read_table_directory(sfont, 0) < 0 ||
       sfont->type != SFNT_TYPE_POSTSCRIPT)
-    ERROR("Not a CFF/OpenType font ?");
+    ERROR("Not a CFF/OpenType font (5)?");
   offset = sfnt_find_table_pos(sfont, "CFF ");
   if (offset == 0)
-    ERROR("Not a CFF/OpenType font ?");
+    ERROR("Not a CFF/OpenType font (6)?");
 
-#ifdef XETEX
-  cffont = cff_open(sfont, offset, font->options->index);
-#else
   cffont = cff_open(fp, offset, font->options->index);
-#endif
   if (!cffont)
     ERROR("Could not open CFF font.");
   if (cffont->flag & FONTTYPE_CIDFONT)
@@ -1168,31 +1146,21 @@ CIDFont_type0_t1copen (CIDFont *font, const char *name,
 
   ASSERT(font);
 
-#ifdef XETEX
-  sfont = sfnt_open(font->ft_face, SFNT_TYPE_POSTSCRIPT);
-  if (!sfont)
-    return -1;
-#else
   fp = DPXFOPEN(name, DPX_RES_TYPE_OTFONT);
   if (!fp)
     return -1;
 
   sfont = sfnt_open(fp);
-#endif
   if (!sfont) {
-    ERROR("Not a CFF/OpenType font?");
+    ERROR("Not a CFF/OpenType font (7)?");
   }
   if (sfont->type != SFNT_TYPE_POSTSCRIPT     ||
       sfnt_read_table_directory(sfont, 0) < 0 ||
       (offset = sfnt_find_table_pos(sfont, "CFF ")) == 0) {
-    ERROR("Not a CFF/OpenType font?");
+    ERROR("Not a CFF/OpenType font (8)?");
   }
 
-#ifdef XETEX
-  cffont = cff_open(sfont, offset, opt->index);
-#else
   cffont = cff_open(fp, offset, opt->index);
-#endif
   if (!cffont) {
     ERROR("Cannot read CFF font data");
   }
@@ -1509,7 +1477,7 @@ create_ToUnicode_stream (cff_font *cffont,
 	 total_fail_count, glyph_count);
     WARN("ToUnicode CMap \"%s-UTF16\" removed.", font_name);
   } else {
-    stream = CMap_create_stream(cmap, 0);
+    stream = CMap_create_stream(cmap);
   }
   CMap_release(cmap);
 
@@ -1550,11 +1518,6 @@ CIDFont_type0_t1open (CIDFont *font, const char *name,
   memset(fontname, 0, strlen(shortname) + 8);
   strcpy(fontname, shortname);
   RELEASE(shortname);
-
-#ifdef XETEX
-  font->ft_to_gid = cff_get_ft_to_gid(cffont);
-  cffont->ft_to_gid = NULL;
-#endif
 
   cff_close(cffont);
 
@@ -2076,15 +2039,5 @@ CIDFont_type0_t1dofont (CIDFont *font)
   }
 
 
-  return;
-}
-
-void
-CIDFont_type0_release(CIDFont *font)
-{
-#ifdef XETEX
-  if (font->ft_to_gid)
-    RELEASE(font->ft_to_gid);
-#endif
   return;
 }

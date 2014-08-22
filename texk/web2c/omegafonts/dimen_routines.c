@@ -35,15 +35,15 @@ along with Omega; if not, write to the Free Software Foundation, Inc.,
 
 int *measure_max_entries;
 int  TFM_measure_max_entries[] =
-    {256,16,16,64, 0,0,0,0,
+    {255,15,15,63, 0,0,0,0,
      0,0,0,0,      0,0,0,0,
      0,0,0,0,      0,0,0,0};
 int  OFM0_measure_max_entries[] =
-    {65536,256,256,256, 0,0,0,0,
+    {65535,255,255,255, 0,0,0,0,
      0,0,0,0,           0,0,0,0,
      0,0,0,0,           0,0,0,0};
 int  OFM2_measure_max_entries[] =
-    {256,256,256,256, 256,256,256,256,
+    {255,255,255,255, 256,256,256,256,
      256,256,256,256, 256,256,256,0,
      256,256,256,256, 256,256,256,0};
 
@@ -76,6 +76,8 @@ set_character_measure(int index, int val)
         internal_error_1("set_character_measure (index=%d)", index);
         return;
     }
+    if ((val == 0) && (index > C_WD) && (index <= C_IC))
+        return;
     the_list = measure_list+index;
     L1 = *the_list;
     if (L1 == NULL) {
@@ -103,33 +105,7 @@ set_character_measure(int index, int val)
             current_character->indices[index] = L2;
         }
     }
-    /* print_measures(); */
 }
-
-void
-print_measures(void)
-{
-    in_list L;
-    register int i,j;
-
-    for (i=C_MIN; i<=C_MAX; i++) {
-	L = measure_list[i];
-        if (L!=NULL) {
-	    j=0;
-	    out_character_measure(i);
-	    fprintf(stdout, ":\n");
-            while (L != NULL) {
-		fprintf(stdout, "   %d: ", j++);
-		out_fix(lval(L));
-		fprintf(stdout, "\n");
-	        L = L->ptr;
-            }
-	    fprintf(stdout, "\n");
-        }
-    }
-    fprintf(stdout, "--------------------------------\n");
-}
-
 
 int next_d;
 int excess;
@@ -192,21 +168,21 @@ set_indices(int h, int d)
     L1 = measure_list[h]; m = 0;
     while (lval(L1) != WEB_INFINITY) {
         L2 = L1;
-        m++; l = lval(L1); 
-	L1->index = m;
+        m++; l = lval(L1);
         while (lval(L1->ptr) <= (l+d)) {
             L1 = L1->ptr; excess--;
             if (excess==0) d = 0;
         }
         lprime = l + (lval(L1)-l) / 2;
 	lval(L1) = lprime;
+	L1->index = m;
 	while (L2 != L1) {
 	   lval(L2) = lprime;
 	   L2->actual = L1;
 	   L2->index = m;
 	   L2 = L2->ptr;
 	}
-        L1 = L1->ptr; L2 = L1; 
+        L1 = L1->ptr;
     }
     measure_max[h] = m;
 }
@@ -288,7 +264,7 @@ print_dimen_tables(void)
         if (measure_max[i] != 0) {
             left(); out("COMMENT"); out_ln();
             for (j=0; j<measure_max[i]; j++) {
-                left(); 
+                left();
                 out_character_measure(i); out("_ENTRY");
                 out(" "); out_int(j,10);
                 out(" "); out_fix(dimen_tables[i][j]);

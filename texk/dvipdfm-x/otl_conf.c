@@ -65,7 +65,6 @@ parse_uc_coverage (pdf_obj *gclass, const char **pp, const char *endptr)
     case ']': case ';':
       (*pp)++;
       return coverage;
-      break;
     case ',':
       (*pp)++;
       break;
@@ -367,7 +366,7 @@ parse_block (pdf_obj *gclass, const char **pp, const char *endptr)
 	tmp = NEW(len+1, char);
 	memset(tmp, 0, len+1);
 	for (i = 0; i < len; i++) {
-	  if (!isspace(**pp))
+	  if (!isspace((unsigned char)**pp))
 	    tmp[i] = **pp;
 	  (*pp)++;
 	}

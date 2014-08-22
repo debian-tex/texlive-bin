@@ -1,3 +1,281 @@
+2014-08-21  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* numbers.[ch]: New function skip_bytes().
+	* vf.[ch]: Simplify VF reading. Replace, e.g., long => int32_t.
+
+2014-08-20  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* configure.ac: Add AC_TYPE_INT32_T for int32_t.
+	* numbers.c: Drop unused code.
+	* numbers.h: Drop unused code.
+	Include <inttypes.h> and <stdint.h> for int32_t and uint32_t.
+	Clarify signed vs unsigned four byte numbers from binary files.
+	* dvi.c: Simplify handling of DVI commands.
+	* vf.c: Replace 'Ubyte' => 'unsigned char'.
+
+2014-08-19  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* pngimage.c: Avoid PNG warnings.
+
+2014-08-16  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* dvi.c: Drop unused variable. Use "%lu" for unsigned long vars.
+
+2014-08-16  Khaled Hosny  <khaledhosny@eglug.org>
+
+	* dvi.c, dvicodes.h, fontmap.c, fontmap.h: Switch to XDV version 6
+	used by latest XeTeX.
+
+2014-08-16  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* dvipdfmx.c, pdflimits.h: Set PDF_VERSION_DEFAULT = 5 to be
+	consistent with dvipdfmx.cfg.
+
+2014-08-15  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* pdfobj.c: Avoid unconstifying casts. Drop unused variable.
+	Avoid possibly uninitialized use of variable filter_name.
+
+2014-08-14  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* pdfobj.c: Return 1 even if the PDF version of included file is
+	newer than the assumed version in check_for_pdf(), because
+	load_image() in pdfximage.c needs very long time if format ==
+	IMAGE_TYPE_UNKNOWN and the file size is very large.
+	Anyway the inclusion of the PDF file fails.
+
+2014-08-14  Shunsaku Hirata  <shunsaku.hirata74@gmail.com>
+
+	* epdf.c, pdfobj.c: Support streams with DecodeParms.
+
+2014-08-12  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* dvipdfm-bb.test, xdvipdfm-bb.test: Also test .bmp and .jp2.
+	* tests/image.{bmp,dvi,jp2,tex}: Additional test input.
+	* tests/{img,pic}{bmp,jp2}.{bb,xbb}: Expected test output.
+	* Makefile.am (EXTRA_DIST): Add the new files.
+
+2014-08-11  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* jp2image.c: Declare scan_file() as static. Drop variables
+	that are set but not used [-Wunused-but-set-variable].
+
+2014-08-11  Shunsaku Hirata  <shunsaku.hirata74@gmail.com>
+
+	* bmpimage.[ch], jp2image.[ch] (new), pdfximage.c, xbb.c:
+	Add support for JPEG 2000 (JP2 and JPX baseline subset) and
+	BMP support for extractbb.
+
+2014-08-11  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* Makefile.am: Drop libutil.a, i.e., compile all files once for
+	dvipdfmx and once for xdvipdfmx.
+
+2014-08-05  Jiang Jiang  <gzjjgod@gmail.com>
+
+	* tt_cmap.c (otf_create_ToUnicode_stream, create_ToUnicode_cmap):
+	Only load CMAP_TYPE_CODE_TO_CID cmap to do reverse lookup when
+	constructing ToUnicode streams for PDF.
+
+	* type0.c, type0.h, pdffont.c: Remove redundant pdf_font_findfont()
+	function.
+
+2014-08-05  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* pst_obj.c, t1_char.c: ANSI C function protos and definitions,
+	i.e., FOO(void) instead of FOO().
+
+2014-08-04  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* tt_cmap.c (create_ToUnicode_cmap): Drop unused variables.
+
+2014-08-04  Jiang Jiang  <gzjjgod@gmail.com>
+
+	* cff.c (cff_get_glyphname): Remove duplicated cff_read_charsets()
+	call.
+
+	* tt_cmap.c (sfnt_get_glyphname, create_ToUnicode_cmap): Make sure
+	we only do glyph name lookup for CFF fonts when they are not CID
+	fonts.
+
+	* cmap_read.c: Fix warnings when comparing size_t with negative
+	value (< 0).
+
+2014-08-03  Jiang Jiang  <gzjjgod@gmail.com>
+
+	* tt_cmap.c (sfnt_get_glyphname, handle_subst_glyphs): Fix error on
+	glyph name lookup.
+
+	* cff.c (cff_glyph_lookup), pdfdev.c (pdf_dev_set_string): Correctly
+	handles the dvi file when Unicode to CID mapping file is specified,
+	where pdf_dev_set_string() got string of cids instead of glyphs.
+
+	* cmap.c: Add reverse lookup from CID to Unicode codepoints.
+
+	* tt_cmap.c, type0.c: Refactor create_ToUnicode_cmap{4, 12}(), use
+	  reverse CMap lookup to construct ToUnicode streams.
+
+2014-08-03  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* pdfobj.c: Fix a typo in check_for_pdf().
+
+2014-08-02  Shunsaku Hirata  <shunsaku.hirata74@gmail.com>
+
+	* tt_cmap.c: Fix a bug in unicode encoding in CFF/OpenType fonts.
+
+2014-08-01  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* type0.c: Fix a bug in Type0Font_clean (Type0Font *font).
+
+2014-07-30  Khaled Hosny  <khaledhosny@eglug.org>
+
+	* dvi.c, dvicodes.h: Support TeX-XeT's begin_reflect and end_reclect
+	opcodes in dvipdfmx.
+
+	* dvi.c (dvi_set, do_glyph_array): Use dvi_right to ensure
+	consistency.
+
+2014-07-29  Khaled Hosny  <khaledhosny@eglug.org>
+
+	* spc_pdfm.c: remove the #ifdef ENABLE_TOUNICODE as it is always true.
+	* spc_pdfm.c: rename my_parse_pdf_dict to
+	parse_pdf_dict_with_tounicode.
+
+	* dvipdfmx.c, dvi.c: Always accept .xdv file extension.
+	* dvipdfmx.c: Remove some unnecessary is_xetex checks.
+	* dvipdfmx.c: Allow DVIPDFM emulation mode even with xdvipdfmx, there
+	is no much gain from not doing so.
+	* pdfnames.c: Remove wrong is_xetex check.
+
+	* dvi.c, dvipdfmx.c, dvipdfmx.h, spc_pdfm.c: Rename is_xetex to is_xdv
+	and set it to 1 when DVI id equals XDV_ID.
+
+	* pdfdev.c (pdf_dev_locate_font): Don't crash if mrec is None.
+	* dvipdfm.test, xdvipdfm.test, Makefile.am: Test the above bug.
+	* tests/xbmc.{dvi,tex}, tests/xbmc10.{600pk,tfm}: New test data.
+
+2014-07-28  Jiang Jiang  <gzjjgod@gmail.com>
+
+	* dpxfile.c (qcheck_filetype): Skip opening non-existent file.
+
+	* tt_cmap.c (lookup_cmap12): Fix a compiler warning when trying to
+	  compare unsigned value with 0.
+
+2014-07-28  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* type0.c (Type0Font_*_ToUnicode_stream): Declare once as static
+	(once again!).
+
+2014-07-28  Khaled Hosny  <khaledhosny@eglug.org>
+
+	* dvi.c (do_pic_file): Don't insert the pic file while skimming
+	reflected segments.
+
+	* tt_cmap.c (handle_subst_glyphs): Don't try to added invalid CMap
+	entries (regression from r34718).
+
+	* cff.c, cff.h: Add cff_get_glyphname convenience function.
+	* tt_cmap.c (sfnt_get_glyphname): Support getting glyph names from
+	OpenType/CFF fonts (regression from r34718).
+
+2014-07-28  Jiang Jiang  <gzjjgod@gmail.com>
+
+	* cid.c, pdfdev.c: Correct release of retained cff_charsets.
+
+2014-07-27  Jiang Jiang  <gzjjgod@gmail.com>
+
+	* cff.c, cff.h, cid.c, cid_p.h, cidtype0.c, fontmap.c, fontmap.h,
+	pdfdev.c: Fix CID-keyed fonts glyph lookup with XeTeX.
+
+	* pdfdev.c, pdffont.c, pdffont.h, tt_cmap.c, type0.c, type0.h: Fix
+	reverse CMap lookup for ToUnicode map generation.
+
+	* cff.c: Avoid read past 65536 glyphs.
+
+2014-07-26  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* dpxfile.c: Add a default case to avoid compiler warnings.
+
+2014-07-25  Khaled Hosny  <khaledhosny@eglug.org>
+
+	* dpxfile.c, dpxfile.h: Use an enum for resource type instead of
+	preprocessor macros (easier to view in a debugger).
+
+	* dvi.c, vf.c: Remove unnecessary is_xetex checks; there is no reason
+	not to support SET3 and PUT3 in xdvipdfmx (XeTeX does not use them
+	anyway).
+
+2014-07-24  Khaled Hosny  <khaledhosny@eglug.org>
+
+	* cff.c. cff.h, cid.c, cid.h, cid_p.h, cidtype0.c, cidtype2.c,
+	pdffont.c, pdffont.h, sfnt.c, sfnt.h, t1_load.c, truetype.c, tt_aux.c,
+	tt_cmap.c, tt_cmap.h, tt_glyf.c, tt_gsub.c, tt_post.c, tt_post.h,
+	tt_table.c, type0.c, type1c.c: These files are now identical for
+	dvipdfmx and xdvipdfmx and are part of libutil.a.
+	* type0.h (Type0Font_get_ft_to_gid): Removed.
+	* Makefile.am: Adapted.
+
+	* pdfdev.c: Reduced dvipdfmx/xdvipdfmx diffs.
+
+	* dvi.c: Use dvi_is_tracking_boxes when applicable.
+
+2014-07-22  Khaled Hosny  <khaledhosny@eglug.org>
+
+	 * src/dvi.c, src/dvicodes.h: Support DVI-IVD inspired text reflection
+	 for XeTeX.
+	 * src/vf.c: Adapt
+
+2014-07-22  Karl Berry  <karl@tug.org>
+
+	* Makefile.am (check-libutil-source-list): new target for manual
+	checking of #ifdef XETEX list.
+	(libutil_a_SOURCES): move type1c.c (containing #ifdef XETEX) from here
+	(dvipdfmx_SOURCES): to here.
+
+	* cidtype0,
+	* type1c.c: add disambiguating numbers to the repeated
+	"Not a CFF/OpenType font?" message.  (Many other repeated msgs remain.)
+
+2014-07-21  Karl Berry  <karl@tug.org>
+
+	* fontmap.c (fontmap_parse_mapdef_dps): ignore the second <
+	in << in a map file line (just like the [ in <[ has always been
+	ignored).
+	* Makefile.am (EXTRA_DIST): add fullmap.tex and .dvi,
+        just for documentation/future purposes, not executed as a new test.
+       Report from Ulrike Fischer, 4 Jun 2014 11:15:06 +0200,
+       http://tug.org/pipermail/tex-live/2014-June/035486.html
+
+2014-07-15  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* cmap_read.c: Avoid cast from pointer to integer of different
+	size on 64-bit Windows.
+
+2014-06-22  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* spc_dvips.c: Use rungs instead of gswin32c in order to support
+	both of gswin32c and gswin64c (Windows only).
+
+2014-06-21  Khaled Hosny  <khaledhosny@eglug.org>
+
+	* pdfdoc.c: Set PDF Docinfo's /Producer string from pdf:docinfo if
+	supplied (http://sourceforge.net/p/xetex/bugs/93/).
+
+2014-06-20  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* agl.c, cid.c, dpxfile.c, dpxutil.c, dvipdfmx.c, epdf.c,
+	fontmap.c, mpost.c, otl_conf.c, otl_opt.c, pdfnames.c,
+	pdfparse.c, spc_dvips.c, spc_html.c, spc_misc.c, specials.c,
+	subfont.c: Avoid undefined behaviour when char is signed.
+
+2014-06-20  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* xbb.c: Check kpse_in_name_ok and kpse_out_name_ok in extractbb.
+
+2014-06-16  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* Makefile.am: Drop the obsolete ACLOCAL_AMFLAGS.
+
 2014-05-22  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
 
 	* dvipdfmx.c: disable warnings in the case of -q option.

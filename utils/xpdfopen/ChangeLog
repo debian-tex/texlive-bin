@@ -1,14 +1,13 @@
-2014-05-16  Jim Diamond <jim.diamond@acadiau.ca>
+2014-05-28  Peter Breitenlohner  <peb@mppmu.mpg.de>
 
-	* pdfopen.c:  add -p option, update for externs.h
-	* pdfclose.c: update for externs.h
-	* utils.c:    update for externs.h
-        * externs.h:  add this for cleanliness
-	* pdfopen.1:  update man page accordingly.
-	* xpdfopen.tex: remove from distribution, since it is now redundant
-	* configure.ac: update for V 0.84.
-	* README:     update for V 0.84.
-	* Makefile.am update for externs.h, remove archaic pdfopen-AR-7-and-8.c
+	Import xpdfopen-0.86 (into versioned subdirectory).
+	* version.ac: New file defining the xpdfopen version.
+	* Makefile.am, configure.ac: Adapted.
+
+2014-05-17  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	Import xpdfopen-0.84.
+	* configure.ac: Adapted.
 
 2013-07-05  Peter Breitenlohner  <peb@mppmu.mpg.de>
 
@@ -27,77 +26,20 @@
 	* utils.c: Move extern decl from here ...
 	* utils.h: ... to here.
 
-2012-01-28  Jim Diamond <jim.diamond@acadiau.ca>
+2012-01-28  Peter Breitenlohner  <peb@mppmu.mpg.de>
 
-	* sendx.c:    fix (kludgily?) reset_focus() so that it actually works.
-	* pdfopen.c:  add -r and -reset_focus options.
-	* pdfopen.1:  update man page accordingly.
-	* xpdfopen.tex: update (ConTeXt) document accordingly.
-	* configure.ac: update for V 0.83.
-	* README:     update for V 0.83.
+	Import xpdfopen-0.83.
+	* configure.ac: Adapted.
 
-2011-05-28  Jim Diamond <jim.diamond@acadiau.ca>
+2011-05-28  Peter Breitenlohner  <peb@mppmu.mpg.de>
 
-	* pdfopen.c:  add -v and --version options.
-	* pdfopen.1:  create man page: thanks to Karl Berry for numerous
-	  	      suggestions and improvements.
-	* pdfclose.1: add version number to usage information.
-	* configure.ac: update for V 0.82.
+	Import xpdfopen-0.82.
+	* configure.ac: Adapted.
 
-2011-05-17  Jim Diamond <jim.diamond@acadiau.ca>
+2011-05-17  Peter Breitenlohner  <peb@mppmu.mpg.de>
 
-	* pdfopen.c:  add -h and --help options.
-	  	      Reformat usage information.
-		      Add support for evince.
-		      Replace '-openInNewWindow' with '-openInNewInstance'
-		      since AR9 claims the former is deprecated.
-	* xpdfopen.h: add support for evince.
-	* pdfclose.c: add support for evince.
-	* configure.ac: update for V 0.81.
-		      
-
-2010-05-03  Jim Diamond <jim.diamond@acadiau.ca>
-
-	* pdfclose.c: make it work with all of AR{5,7,8,9} and xpdf.
-	* pdfopen.c:  add ability to parse and send function-keys.
-		      Add code (commented out) in an attempt to
-		      support okular (see code comments).
-	* sendx.c:    add code (commented out) in an attempt to
-		      support okular (see code comments).
-	* configure.ac: add changes suggested by Peter Breitenlohner.
-
-
-2010-04-24  Jim Diamond <jim.diamond@acadiau.ca>
-
-	* utils.[ch]: put a function to create window titles there
-	* xpdfopen.h: put constants related to the titles of various
-	              PDF viewers there
-	* pdfclose.c: modify to use utils.c and xpdfopen.h
-	* pdfopen.c:  major modifications so it works with AR7, AR8, AR9
-	              xpdf and maybe AR5, and so that it might be
-		      relatively straightforward to add other PDF viewers.
-		      The default viewer is AR9, this can be overridden
-		      by an environment variable and a command-line
-		      argument.
-	* sendx.c:    Reset the error status in open_channel() so that an
-		      error return doesn't become permanent.
-		      Fixed mask param in XSendEvent().
-	 
-
-2010-04-21  Jim Diamond <jim.diamond@acadiau.ca>
-
-	* pdfopen.c: Fold in some changes submitted by
-		     Peter Breitenlohner <tex-live@tug.org>
-	* pdfopen.c: Fold in some changes submitted by
-		     Peter Breitenlohner <tex-live@tug.org>
-		     and reformat the code.
-
-
-2010-04-11  Jim Diamond <jim.diamond@acadiau.ca>
-
-	* pdfopen.c: Update (in a non-backward-compatible way) to
-		     work with AR 9.  Save old version in pdfopen-AR-7-and-8.c.
-
+	Import xpdfopen-0.81.
+	* configure.ac: Adapted.
 
 2009-08-22  Peter Breitenlohner  <peb@mppmu.mpg.de>
 

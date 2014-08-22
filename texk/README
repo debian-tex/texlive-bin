@@ -1,4 +1,4 @@
-$Id: README 33742 2014-04-29 06:58:25Z peter $
+$Id: README 34783 2014-07-31 07:10:42Z peter $
 Copyright 2006-2012 TeX Users Group.
 You may freely use, modify and/or distribute this file.
 
@@ -61,7 +61,7 @@ dvipos - ?
 
 dvipsk - maintained here, by us
 
-dvisvgm 1.6 - checked 29apr14
+dvisvgm 1.8 - checked 31jul14
   http://downloads.sourceforge.net/dvisvgm/
 
 gsftopk - from Paul Vojta's xdvi?
@@ -71,8 +71,8 @@ kpathsea - maintained here, by us
 lacheck - checked 25apr11
   http://mirror.ctan.org/support/lacheck/lacheck-1.26.tar.gz
 
-lcdf-typetools 2.100 - checked 9jan14
-  http://www.lcdf.org/type/lcdf-typetools-2.100.tar.gz
+lcdf-typetools 2.104 - checked 8jul14
+  http://www.lcdf.org/type/
 
 makeindexk - maintained here, by us
 

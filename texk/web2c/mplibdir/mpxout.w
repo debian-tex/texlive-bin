@@ -2751,9 +2751,9 @@ used anyway - thus just skip the value,
 @c 
 static float mpx_get_float_map(MPX mpx, char *s) {
     if (s != NULL) {
-	while (isspace(*s))
+	while (isspace((unsigned char)*s))
 	    s++;
-	while (!isspace(*s) && *s)
+	while (!isspace((unsigned char)*s) && *s)
 	    s++;
     }
     mpx->arg_tail = s;
@@ -3989,7 +3989,7 @@ static int do_spawn (MPX mpx, char *icmd, char **options) {
     }  
   }
 #else
-  retcode = spawnvp(_P_WAIT, cmd, (const char* const*)options);
+  retcode = _spawnvp(_P_WAIT, cmd, (const char* const*)options);
 #endif
   xfree(cmd);
   return retcode;

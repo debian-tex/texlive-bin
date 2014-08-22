@@ -119,6 +119,9 @@ print_parameters(void)
 {
     av_list L = param_list;
 
+    if (L == NULL)
+        return;
+
     print_font_dimension();
     while (L != NULL) {
 	print_parameter(lattr(L), lval(L));
@@ -127,6 +130,12 @@ print_parameters(void)
     right();
 }
 
+static void
+output_ofm_one_parameter(unsigned i, fix param)
+{
+    if (i==P_SLANT) out_ofm_4(param);
+    else out_ofm_scaled(param);
+}
 
 void
 output_ofm_parameter(void)
@@ -144,11 +153,4 @@ output_ofm_parameter(void)
        output_ofm_one_parameter(i, lval(L));
        L = L->ptr; i++;
     }
-}
-
-void
-output_ofm_one_parameter(unsigned i, fix param)
-{
-    if (i==P_SLANT) out_ofm_4(param);
-    else out_ofm_scaled(param);
 }

@@ -92,7 +92,8 @@ parse_key_val (const char **pp, const char *endptr, char **kp, char **vp)
   char  *k, *v;
   int    n, error = 0;
 
-  for (p = *pp ; p < endptr && isspace(*p); p++);
+  for (p = *pp ; p < endptr && isspace((unsigned char)*p); p++)
+    ;
 #if  0
   while (!error && p < endptr &&
          ((*p >= 'a' && *p <= 'z') ||
@@ -161,18 +162,18 @@ read_html_tag (char *name, pdf_obj *attr, int *type, const char **pp, const char
   const char *p = *pp;
   int    n = 0, error = 0;
 
-  for ( ; p < endptr && isspace(*p); p++);
+  for ( ; p < endptr && isspace((unsigned char)*p); p++);
   if (p >= endptr || *p != '<')
     return  -1;
 
   *type = HTML_TAG_TYPE_OPEN;
-  for (++p; p < endptr && isspace(*p); p++);
+  for (++p; p < endptr && isspace((unsigned char)*p); p++);
   if (p < endptr && *p == '/') {
     *type = HTML_TAG_TYPE_CLOSE;
-    for (++p; p < endptr && isspace(*p); p++);
+    for (++p; p < endptr && isspace((unsigned char)*p); p++);
   }
 
-#define ISDELIM(c) ((c) == '>' || (c) == '/' || isspace(c))
+#define ISDELIM(c) ((c) == '>' || (c) == '/' || isspace((unsigned char)c))
   for (n = 0; p < endptr && n < HTML_TAG_NAME_MAX && !ISDELIM(*p); n++, p++) {
     name[n] = *p;
   } 
@@ -182,7 +183,7 @@ read_html_tag (char *name, pdf_obj *attr, int *type, const char **pp, const char
     return  -1;
   }
 
-  for ( ; p < endptr && isspace(*p); p++);
+  for ( ; p < endptr && isspace((unsigned char)*p); p++);
   while (p < endptr && !error && *p != '/' && *p != '>') {
     char  *kp = NULL, *vp = NULL;
     error = parse_key_val(&p, endptr, &kp, &vp);
@@ -194,7 +195,7 @@ read_html_tag (char *name, pdf_obj *attr, int *type, const char **pp, const char
       RELEASE(kp);
       RELEASE(vp);
     }
-    for ( ; p < endptr && isspace(*p); p++);
+    for ( ; p < endptr && isspace((unsigned char)*p); p++);
   }
   if (error) {
     *pp = p;
@@ -203,7 +204,7 @@ read_html_tag (char *name, pdf_obj *attr, int *type, const char **pp, const char
 
   if (p < endptr && *p == '/') {
     *type = HTML_TAG_TYPE_EMPTY;
-    for (++p; p < endptr && isspace(*p); p++);
+    for (++p; p < endptr && isspace((unsigned char)*p); p++);
   }
   if (p == endptr || *p != '>') {
     *pp = p;
@@ -218,7 +219,7 @@ read_html_tag (char *name, pdf_obj *attr, int *type, const char **pp, const char
 
 
 static int
-spc_handler_html__init (struct spc_env *spe, struct spc_arg *ap, void *dp)
+spc_handler_html__init (void *dp)
 {
   struct spc_html_ *sd = dp;
 
@@ -230,7 +231,7 @@ spc_handler_html__init (struct spc_env *spe, struct spc_arg *ap, void *dp)
 }
 
 static int
-spc_handler_html__clean (struct spc_env *spe, struct spc_arg *ap, void *dp)
+spc_handler_html__clean (struct spc_env *spe, void *dp)
 {
   struct spc_html_ *sd = dp;
 
@@ -252,7 +253,7 @@ spc_handler_html__clean (struct spc_env *spe, struct spc_arg *ap, void *dp)
 
 
 static int
-spc_handler_html__bophook (struct spc_env *spe, struct spc_arg *ap, void *dp)
+spc_handler_html__bophook (struct spc_env *spe, void *dp)
 {
   struct spc_html_ *sd = dp;
 
@@ -264,7 +265,7 @@ spc_handler_html__bophook (struct spc_env *spe, struct spc_arg *ap, void *dp)
 }
 
 static int
-spc_handler_html__eophook (struct spc_env *spe, struct spc_arg *ap, void *dp)
+spc_handler_html__eophook (struct spc_env *spe, void *dp)
 {
   struct spc_html_ *sd = dp;
 
@@ -417,7 +418,7 @@ spc_html__anchor_open (struct spc_env *spe, pdf_obj *attr, struct spc_html_ *sd)
 }
 
 static int
-spc_html__anchor_close (struct spc_env *spe, pdf_obj *attr, struct spc_html_ *sd)
+spc_html__anchor_close (struct spc_env *spe, struct spc_html_ *sd)
 {
   int  error = 0;
 
@@ -565,7 +566,7 @@ check_resourcestatus (const char *category, const char *resname)
 #endif /* ENABLE_HTML_SVG_OPACITY */
 
 static int
-spc_html__img_empty (struct spc_env *spe, pdf_obj *attr, struct spc_html_ *sd)
+spc_html__img_empty (struct spc_env *spe, pdf_obj *attr)
 {
   pdf_obj       *src, *obj;
   transform_info ti;
@@ -615,16 +616,16 @@ spc_html__img_empty (struct spc_env *spe, pdf_obj *attr, struct spc_html_ *sd)
   if (obj) {
     const char *p = pdf_string_value(obj);
     pdf_tmatrix  N;
-    for ( ; *p && isspace(*p); p++);
+    for ( ; *p && isspace((unsigned char)*p); p++);
     while (*p && !error) {
       pdf_setmatrix(&N, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0);
       error = cvt_a_to_tmatrix(&N, p, &p);
       if (!error) {
         N.f = -N.f;
         pdf_concatmatrix(&M, &N);
-        for ( ; *p && isspace(*p); p++);
+        for ( ; *p && isspace((unsigned char)*p); p++);
         if (*p == ',')
-          for (++p; *p && isspace(*p); p++);
+          for (++p; *p && isspace((unsigned char)*p); p++);
       }
     }
   }
@@ -696,7 +697,7 @@ spc_html__img_empty (struct spc_env *spe, pdf_obj *attr, struct spc_html_ *sd)
 }
 #else
 static int
-spc_html__img_empty (struct spc_env *spe, pdf_obj *attr, struct spc_html_ *sd)
+spc_html__img_empty (struct spc_env *spe, pdf_obj *attr)
 {
   spc_warn(spe, "IMG tag not yet supported yet...");
   return  -1;
@@ -727,7 +728,7 @@ spc_handler_html_default (struct spc_env *spe, struct spc_arg *ap)
       error = spc_html__anchor_open (spe, attr, sd);
       break;
     case  HTML_TAG_TYPE_CLOSE:
-      error = spc_html__anchor_close(spe, attr, sd);
+      error = spc_html__anchor_close(spe, sd);
       break;
     default:
       spc_warn(spe, "Empty html anchor tag???");
@@ -746,12 +747,12 @@ spc_handler_html_default (struct spc_env *spe, struct spc_arg *ap)
       spc_warn(spe, "Close tag for \"img\"???");
       error = -1;
     } else { /* treat "open" same as "empty" */
-      error = spc_html__img_empty(spe, attr, sd);
+      error = spc_html__img_empty(spe, attr);
     }
   }
   pdf_release_obj(attr);
 
-  for ( ; ap->curptr < ap->endptr && isspace(ap->curptr[0]); ap->curptr++);
+  for ( ; ap->curptr < ap->endptr && isspace((unsigned char)ap->curptr[0]); ap->curptr++);
 
   return  error;
 }
@@ -783,7 +784,7 @@ cvt_a_to_tmatrix (pdf_tmatrix *M, const char *ptr, const char **nextptr)
   };
   int          k;
 
-  for ( ; *p && isspace(*p); p++);
+  for ( ; *p && isspace((unsigned char)*p); p++);
 
   q = parse_c_ident(&p, p + strlen(p));
   if (!q)
@@ -793,10 +794,10 @@ cvt_a_to_tmatrix (pdf_tmatrix *M, const char *ptr, const char **nextptr)
   RELEASE(q);
 
   /* handle args */
-  for ( ; *p && isspace(*p); p++);
+  for ( ; *p && isspace((unsigned char)*p); p++);
   if (*p != '(' || *(p + 1) == 0)
     return  -1;
-  for (++p; *p && isspace(*p); p++);
+  for (++p; *p && isspace((unsigned char)*p); p++);
   for (n = 0; n < 6 && *p && *p != ')'; n++) {
     q = parse_float_decimal(&p, p + strlen(p));
     if (!q)
@@ -805,9 +806,9 @@ cvt_a_to_tmatrix (pdf_tmatrix *M, const char *ptr, const char **nextptr)
       v[n] = atof(q);
       if (*p == ',')
         p++;
-      for ( ; *p && isspace(*p); p++);
+      for ( ; *p && isspace((unsigned char)*p); p++);
       if (*p == ',')
-        for (++p; *p && isspace(*p); p++);
+        for (++p; *p && isspace((unsigned char)*p); p++);
       RELEASE(q);
     }
   }
@@ -872,28 +873,28 @@ int
 spc_html_at_begin_document (void)
 {
   struct spc_html_ *sd = &_html_state;
-  return  spc_handler_html__init(NULL, NULL, sd);
+  return  spc_handler_html__init(sd);
 }
 
 int
 spc_html_at_begin_page (void)
 {
   struct spc_html_ *sd = &_html_state;
-  return  spc_handler_html__bophook(NULL, NULL, sd);
+  return  spc_handler_html__bophook(NULL, sd);
 }
 
 int
 spc_html_at_end_page (void)
 {
   struct spc_html_ *sd = &_html_state;
-  return  spc_handler_html__eophook(NULL, NULL, sd);
+  return  spc_handler_html__eophook(NULL, sd);
 }
 
 int
 spc_html_at_end_document (void)
 {
   struct spc_html_ *sd = &_html_state;
-  return  spc_handler_html__clean(NULL, NULL, sd);
+  return  spc_handler_html__clean(NULL, sd);
 }
 
 
@@ -905,7 +906,7 @@ spc_html_check_special (const char *buffer, long size)
   p      = buffer;
   endptr = p + size;
 
-  for ( ; p < endptr && isspace(*p); p++);
+  for ( ; p < endptr && isspace((unsigned char)*p); p++);
   size   = (long) (endptr - p);
   if (size >= strlen("html:") &&
       !memcmp(p, "html:", strlen("html:"))) {
@@ -922,7 +923,7 @@ spc_html_setup_handler (struct spc_handler *sph,
 {
   ASSERT(sph && spe && ap);
 
-  for ( ; ap->curptr < ap->endptr && isspace(ap->curptr[0]); ap->curptr++);
+  for ( ; ap->curptr < ap->endptr && isspace((unsigned char)ap->curptr[0]); ap->curptr++);
   if (ap->curptr + strlen("html:") > ap->endptr ||
       memcmp(ap->curptr, "html:", strlen("html:"))) {
     return  -1;
@@ -934,7 +935,7 @@ spc_html_setup_handler (struct spc_handler *sph,
   sph->exec   = &spc_handler_html_default;
 
   ap->curptr += strlen("html:");
-  for ( ; ap->curptr < ap->endptr && isspace(ap->curptr[0]); ap->curptr++);
+  for ( ; ap->curptr < ap->endptr && isspace((unsigned char)ap->curptr[0]); ap->curptr++);
 
   return  0;
 }

@@ -70,7 +70,7 @@ dpx_file_set_verbose (void)
 
 
 /* Kpathsea library does not check file type. */
-static int qcheck_filetype (const char *fqpn, int type);
+static int qcheck_filetype (const char *fqpn, dpx_res_type type);
 
 /* For testing MIKTEX enabled compilation */
 #if defined(TESTCOMPILE) && !defined(MIKTEX)
@@ -405,7 +405,7 @@ static char *dpx_find_enc_file      (const char *filename);
 static char *dpx_find_iccp_file     (const char *filename);
 
 FILE *
-dpx_open_file (const char *filename, int type)
+dpx_open_file (const char *filename, dpx_res_type type)
 {
   FILE  *fp   = NULL;
   char  *fqpn = NULL;
@@ -450,9 +450,6 @@ dpx_open_file (const char *filename, int type)
     break;
   case DPX_RES_TYPE_TEXT:
     fqpn = dpx_find__app__xyz(filename, "", 1);
-    break;
-  default:
-    ERROR("Unknown resource type: %d", type);
     break;
   }
   if (fqpn) {
@@ -1125,7 +1122,7 @@ ispscmap (FILE *fp)
   p = mfgets(_sbuf, 128, fp); p[127] = '\0';
   if (!p || strlen(p) < 4 || memcmp(p, "%!PS", 4))
     return 0;
-  for (p += 4; *p && !isspace(*p); p++);
+  for (p += 4; *p && !isspace((unsigned char)*p); p++);
   for ( ; *p && (*p == ' ' || *p == '\t'); p++);
   if (*p == '\0' || strlen(p) < strlen("Resource-CMap"))
     return  0;
@@ -1157,13 +1154,17 @@ isdfont (FILE *fp)
       
 /* This actually opens files. */
 static int
-qcheck_filetype (const char *fqpn, int type)
+qcheck_filetype (const char *fqpn, dpx_res_type type)
 {
   int    r = 1;
   FILE  *fp;
+  struct stat sb;
 
   if (!fqpn)
     return  0;
+
+  if (stat(fqpn, &sb) != 0)
+    return 0;
 
   fp = MFOPEN(fqpn, FOPEN_RBIN_MODE);
   if (!fp) {
@@ -1185,6 +1186,8 @@ qcheck_filetype (const char *fqpn, int type)
     break;
   case DPX_RES_TYPE_DFONT:
     r = isdfont(fp);
+    break;
+  default:
     break;
   }
   MFCLOSE(fp);

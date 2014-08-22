@@ -29,7 +29,7 @@
  BIBINPUTS.pbibtex       = .;$TEXMF/{pbibtex,bibtex}/bib//
 --- texlive-bin.orig/texk/web2c/Makefile.am
 +++ texlive-bin/texk/web2c/Makefile.am
-@@ -181,8 +181,9 @@
+@@ -185,8 +185,9 @@
  ## MetaPost
  include $(srcdir)/mplibdir/am/mplib.am
  
@@ -42,9 +42,9 @@
  include $(srcdir)/mplibdir/am/libmplib.am
 --- texlive-bin.orig/texk/web2c/ac/web2c.ac
 +++ texlive-bin/texk/web2c/ac/web2c.ac
-@@ -43,6 +43,7 @@
- [[luajittex], [yes], [],    [LuaJITTeX], [poppler cairo libpng zziplib luajit]],
- [[mp],        [yes], [],    [MetaPost],  [cairo libpng]],
+@@ -39,6 +39,7 @@
+ [[luajittex], [yes], [],    [LuaJITTeX], [poppler mpfr cairo libpng zziplib luajit]],
+ [[mp],        [yes], [],    [MetaPost],  [mpfr cairo libpng]],
  [[pmp],       [yes], [],    [pMetaPost], [cairo libpng ptexenc]],
 +[[upmp],      [yes], [],    [upMetaPost],[cairo libpng ptexenc]],
  [[xetex],     [yes], [yes], [XeTeX],     [poppler libpng freetype2 teckit harfbuzz]],
@@ -52,7 +52,7 @@
  m4_foreach([Kpse_Prog], [kpse_tex_progs],
 --- texlive-bin.orig/texk/web2c/configure.ac
 +++ texlive-bin/texk/web2c/configure.ac
-@@ -206,6 +206,8 @@
+@@ -196,6 +196,8 @@
                       [KPSE_MFWIN_DEFINE(Kpse_Win)])])[]dnl
  
  AM_CONDITIONAL([MP], [test "x$enable_mp" != xno])

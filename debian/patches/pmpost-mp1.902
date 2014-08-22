@@ -23,7 +23,7 @@
  % interactive `e' option.  %d is replaced by the line number and %s by
 --- texlive-bin.orig/texk/web2c/Makefile.am
 +++ texlive-bin/texk/web2c/Makefile.am
-@@ -181,6 +181,9 @@
+@@ -185,6 +185,9 @@
  ## MetaPost
  include $(srcdir)/mplibdir/am/mplib.am
  
@@ -35,10 +35,10 @@
  
 --- texlive-bin.orig/texk/web2c/ac/web2c.ac
 +++ texlive-bin/texk/web2c/ac/web2c.ac
-@@ -42,6 +42,7 @@
- [[luatex],    [yes], [],    [LuaTeX],    [poppler cairo libpng zziplib lua52]],
- [[luajittex], [yes], [],    [LuaJITTeX], [poppler cairo libpng zziplib luajit]],
- [[mp],        [yes], [],    [MetaPost],  [cairo libpng]],
+@@ -38,6 +38,7 @@
+ [[luatex],    [yes], [],    [LuaTeX],    [poppler mpfr cairo libpng zziplib lua52]],
+ [[luajittex], [yes], [],    [LuaJITTeX], [poppler mpfr cairo libpng zziplib luajit]],
+ [[mp],        [yes], [],    [MetaPost],  [mpfr cairo libpng]],
 +[[pmp],       [yes], [],    [pMetaPost], [cairo libpng ptexenc]],
  [[xetex],     [yes], [yes], [XeTeX],     [poppler libpng freetype2 teckit harfbuzz]],
  ])[]dnl

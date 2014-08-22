@@ -4,7 +4,7 @@
 
 --- texlive-bin.orig/texk/web2c/configure.ac
 +++ texlive-bin/texk/web2c/configure.ac
-@@ -344,6 +344,7 @@
+@@ -356,6 +356,7 @@
  KPSE_CROSS_PATH_PROG([CTANGLEBOOT], [ctangle],   [./ctangleboot])
  KPSE_CROSS_PATH_PROG([CTANGLE],     [ctangle],   [./ctangle])
  KPSE_CROSS_PATH_PROG([TIE],         [tie],       [./tie])

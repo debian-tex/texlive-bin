@@ -1,3 +1,50 @@
+2014-08-19  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* image/writepng.w: Avoid PNG warnings.
+
+2014-07-15  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* image/epdf.h, lua/lepdflib.cc: Use code for poppler >= 0.25
+	with <StructTreeRoot.h> or code for poppler <= 0.24 without.
+	* fake/StructTreeRoot.h (removed): Obsolete.
+	* am/libluatex.am: Adapted.
+
+2014-07-12  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* luasocket/src/wsocket.h: Avoid redefinition of _WIN32_WINNT.
+
+2014-07-11  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* am/libluatex.am: Compiling liblua(jit)tex.a requires mplib.h;
+	add libmplib.a as dependency.
+
+2014-06-20  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* am/libluatex.am: Remove ../mplibdir/lmplib.c from sources and
+	dependency on libmplib.a.
+	* am/luatex.am: Add ../mplibdir/lmplib.c to sources, dependency
+	on libmplib.a, and -DpdfTeX to CPPFLAGS.
+
+	* am/luatex.am: Adapt to MetaPost 1.999 (libgmp and libmpfr).
+
+2014-06-19  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* font/mapfile.w, font/tounicode.w, font/writet1.w,
+	font/writettf.w, lang/texlang.w, pdf/pdfgen.w: Avoid undefined
+	behaviour when char is signed.
+
+2014-06-02  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* lua/luatex-api.h: Use '#define LUAI_HASHLIMIT 5' as default,
+	as in ../../libs/lua52/lua-5.2.3/src/lstring.c and in
+	../../libs/luajit/LuaJIT-2.0.3/src/lj_str.c.
+	* lua/lstatslib.c, tex/printing.w: Use LUAI_HASHLIMIT instead of
+	LUATEX_HASHCHARS and LUAJITTEX_HASHCHARS.
+
+	* lua/luatex-api.h: Define MyName as "LuajitTeX"/"LuaTeX" and
+	my_name as "luajittex"/"luatex".
+	* lua/luainit.w, luatex.c, tex/printing.w: Use MyName, my_name.
+
 2014-05-14  Peter Breitenlohner  <peb@mppmu.mpg.de>
 
 	* tex/filename.w: Avoid redefinition of promptfilenamehelpmsg,

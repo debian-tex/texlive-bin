@@ -77,22 +77,7 @@ unsigned font_type = FT_VANILLA;
 
 unsigned lh;
 
-void
-store_header_int(unsigned loc, unsigned val)
-{
-    header[loc]   = 0xff & (val >> 24) ;
-    header[loc+1] = 0xff & (val >> 16) ;
-    header[loc+2] = 0xff & (val >>  8) ;
-    header[loc+3] = 0xff & val ;
-}
-
-void
-store_header_byte(unsigned loc, unsigned val)
-{
-    header[loc] = 0xff & val ;
-}
-
-void
+static void
 retrieve_header_int(unsigned loc, unsigned *where)
 {
     string ptr = header+loc;
@@ -104,7 +89,7 @@ retrieve_header_int(unsigned loc, unsigned *where)
 
 }
 
-void
+static void
 retrieve_header_byte(unsigned loc, unsigned char *where)
 {
     *where = header[loc];
@@ -160,23 +145,6 @@ set_header_word(unsigned index, unsigned val)
 }
 
 static void
-store_header_word(void)
-{
-    av_list L = header_list;
-    unsigned ctr = HEADER_MIN;
-
-    header = (string) xmalloc(4*(header_max+1));
-    while (L != NULL) {
-	while (ctr<lattr(L)) {
-	    store_header_int(ctr*4,0);
-	    ctr++;
-	}
-	store_header_int(ctr*4,lval(L));
-	ctr++; L = L->ptr;
-    }
-}
-
-static void
 retrieve_header_word(void)
 {
     unsigned j = HEADER_MIN, value, header_no=lh;
@@ -191,26 +159,9 @@ retrieve_header_word(void)
     }
 }
 
-void
-print_header(void)
-{
-    av_list L = header_list;
-
-    print_check_sum();
-    print_design_size();
-    print_coding_scheme();
-    print_family();
-    print_face();
-    print_seven_bit_safe_flag();
-    while (L!=NULL) {
-	print_header_word(lattr(L),lval(L));
-	L = L->ptr;
-    }
-}
-
 /* CHECKSUM */
 
-void
+static void
 init_check_sum(void)
 {
     check_sum = 0;
@@ -220,38 +171,22 @@ init_check_sum(void)
 void
 set_check_sum(unsigned cs)
 {
+    if (check_sum_specified==TRUE)
+	warning_0("CHECKSUM previously defined; old value ignored");
     check_sum = cs;
     check_sum_specified = TRUE;
 }
 
-void
-store_check_sum(void)
-{
-
-    calculate_check_sum();
-    store_header_int(LOC_CHECK_SUM, check_sum);
-}
-
-void
+static void
 retrieve_check_sum(void)
 {
     retrieve_header_int(LOC_CHECK_SUM, &check_sum);
 }
 
-void
-calculate_check_sum(void)
-{
-/* 
-    if (check_sum_specified == FALSE) {
-	not_yet_done("checksum calculation");
-    }
-*/
-}
-
 
 /* DESIGNSIZE */
 
-void
+static void
 init_design_size(void)
 {
     design_size = 10*UNITY;
@@ -272,13 +207,7 @@ set_design_size(fix ds)
     design_size_specified = TRUE;
 }
 
-void
-store_design_size(void)
-{
-    store_header_int(LOC_DESIGN_SIZE, design_size);
-}
-
-void
+static void
 retrieve_design_size(void)
 {
     retrieve_header_int(LOC_DESIGN_SIZE, (unsigned *) &design_size);
@@ -287,7 +216,7 @@ retrieve_design_size(void)
 
 /* DESIGNUNITS */
 
-void
+static void
 init_design_units(void)
 {
     design_units = UNITY;
@@ -311,7 +240,7 @@ set_design_units(fix du)
 
 /* CODINGSCHEME */
 
-void
+static void
 init_coding_scheme(void)
 {
     coding_scheme = xstrdup("UNSPECIFIED");
@@ -338,19 +267,7 @@ set_coding_scheme(string sval)
     coding_scheme_specified = TRUE;
 }
 
-void
-store_coding_scheme(void)
-{
-    register unsigned i=0, j=LOC_CODING_SCHEME, len=strlen(coding_scheme);
-
-    header[j] = len;
-    for (j++; i<len; i++,j++) header[j] = coding_scheme[i];
-    for (; j<(LOC_CODING_SCHEME+LEN_CODING_SCHEME); j++)
-        header[j] = '\0';;
-}
-
-
-void
+static void
 retrieve_coding_scheme(void)
 {
     register unsigned i=0, j=LOC_CODING_SCHEME, len=header[LOC_CODING_SCHEME];
@@ -376,7 +293,7 @@ retrieve_coding_scheme(void)
 
 /* FAMILY */
 
-void
+static void
 init_family(void)
 {
     family = xstrdup("UNSPECIFIED");
@@ -394,20 +311,7 @@ set_family(string sval)
     family_specified = TRUE;
 }
 
-void
-store_family(void)
-{
-    register unsigned i=0, j=LOC_FAMILY, len=strlen(family);
-
-    if (len>LEN_FAMILY) internal_error_1("store_family (len=%d)", len);
-    header[j] = len;
-    for (j++; i<len; i++,j++) header[j] = family[i];
-    for (; j<=(LOC_FAMILY+LEN_FAMILY); j++)
-        header[j] = '\0';;
-}
-
-
-void
+static void
 retrieve_family(void)
 {
     register unsigned i=0, j=LOC_FAMILY, len=header[LOC_FAMILY];
@@ -446,13 +350,7 @@ set_face(unsigned f)
     face_specified = TRUE;
 }
 
-void
-store_face(void)
-{
-    store_header_byte(LOC_FACE, face);
-}
-
-void
+static void
 retrieve_face(void)
 {
     unsigned char face_byte;
@@ -484,16 +382,6 @@ set_ofm_level(unsigned level)
 }
 
 /* FONTDIR */
-
-#if 0
-/* Not yet used */
-static void
-init_font_dir(void)
-{
-    font_dir = DIR_ORD+DIR_TL;
-    font_dir_specified = FALSE;
-}
-#endif
 
 void
 set_font_dir(unsigned direction)
@@ -531,13 +419,7 @@ set_seven_bit_safe_flag(unsigned f)
     seven_bit_specified = TRUE;
 }
 
-void
-store_seven_bit_safe_flag(void)
-{
-    store_header_byte(LOC_SEVEN_FLAG, seven_bit ? 0x80 : 0);
-}
-
-void
+static void
 retrieve_seven_bit_safe_flag(void)
 {
     unsigned char seven_bit_byte;
@@ -571,42 +453,6 @@ init_header(void)
 }
 
 void
-store_header(void)
-{
-
-    store_header_word();
-    store_check_sum();
-    store_design_size();
-    store_coding_scheme();
-    store_family();
-    store_face();
-    store_seven_bit_safe_flag();
-
-/*
-    { int i;
-    for (i=0; i<(4*(header_max+1)); i++) {
-        if (!(i%4)) fprintf(stdout, "\n");
-	fprintf(stdout, "%d: %c (%d, %2x) ",
-                i, header[i], header[i], header[i]);
-    }
-    fprintf(stdout, "\n");
-*/
-    if (header_list!=NULL) {
-        av_list L1 = header_list, L2;
-        while (L1 != NULL) {
-            L2 = L1->ptr;
-            free(L1);
-            L1 = L2;
-        }
-    }
-    lh = header_max;
-    header_list = NULL;
-    header_max = HEADER_MIN-1;
-
-    retrieve_header();
-}
-
-void
 retrieve_header(void)
 {
     retrieve_header_word();
@@ -621,12 +467,12 @@ retrieve_header(void)
 void
 output_ofm_header(void)
 {
-    unsigned i=0, j, k1, k2;
+    unsigned i = 1 + LOC_SEVEN_FLAG / 4, j, k1, k2;
 
     av_list L = header_list;
 
-    out_ofm_4(check_sum); i++;
-    out_ofm_4(design_size); i++;
+    out_ofm_4(check_sum);
+    out_ofm_4(design_size);
     k1 = strlen(coding_scheme);
     out_ofm(k1);
     for (j=0; j<k1; j++) out_ofm(coding_scheme[j]);
@@ -635,12 +481,11 @@ output_ofm_header(void)
     out_ofm(k2);
     for (j=0; j<k2; j++) out_ofm(family[j]);
     for (j=k2; j<LEN_FAMILY; j++) out_ofm(0); 
-    if ((ofm_level==OFM_TFM) && (seven_bit_specified==TRUE))
+    if (ofm_level==OFM_TFM)
       out_ofm(seven_bit ? 0x80 : 0);
     else
       out_ofm(0);
     out_ofm(0); out_ofm(0); out_ofm(face);
-    i = 1 + LOC_SEVEN_FLAG / 4;
     lh = header_max + 1;
     while(L != NULL) {
        j=lattr(L);

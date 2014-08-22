@@ -105,16 +105,19 @@ am__aclocal_m4_deps = $(top_srcdir)/m4/web2c-disable.m4 \
 	$(top_srcdir)/../../m4/kpse-cxx-hack.m4 \
 	$(top_srcdir)/../../m4/kpse-fontconfig-flags.m4 \
 	$(top_srcdir)/../../m4/kpse-freetype2-flags.m4 \
+	$(top_srcdir)/../../m4/kpse-gmp-flags.m4 \
 	$(top_srcdir)/../../m4/kpse-graphite2-flags.m4 \
 	$(top_srcdir)/../../m4/kpse-harfbuzz-flags.m4 \
 	$(top_srcdir)/../../m4/kpse-icu-flags.m4 \
 	$(top_srcdir)/../../m4/kpse-kpathsea-flags.m4 \
 	$(top_srcdir)/../../m4/kpse-lex.m4 \
+	$(top_srcdir)/../../m4/kpse-lib-version.m4 \
 	$(top_srcdir)/../../m4/kpse-libpng-flags.m4 \
 	$(top_srcdir)/../../m4/kpse-lt-hack.m4 \
 	$(top_srcdir)/../../m4/kpse-lua52-flags.m4 \
 	$(top_srcdir)/../../m4/kpse-luajit-flags.m4 \
 	$(top_srcdir)/../../m4/kpse-macos-framework.m4 \
+	$(top_srcdir)/../../m4/kpse-mpfr-flags.m4 \
 	$(top_srcdir)/../../m4/kpse-pixman-flags.m4 \
 	$(top_srcdir)/../../m4/kpse-poppler-flags.m4 \
 	$(top_srcdir)/../../m4/kpse-ptexenc-flags.m4 \
@@ -132,6 +135,8 @@ am__aclocal_m4_deps = $(top_srcdir)/m4/web2c-disable.m4 \
 	$(top_srcdir)/../../m4/ltversion.m4 \
 	$(top_srcdir)/../../m4/lt~obsolete.m4 \
 	$(top_srcdir)/../../version.ac $(top_srcdir)/ac/web2c.ac \
+	$(top_srcdir)/synctexdir/ac/synctex.ac \
+	$(top_srcdir)/synctexdir/synctex_parser_version.txt \
 	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
@@ -234,6 +239,9 @@ FREETYPE2_DEPEND = @FREETYPE2_DEPEND@
 FREETYPE2_INCLUDES = @FREETYPE2_INCLUDES@
 FREETYPE2_LIBS = @FREETYPE2_LIBS@
 FT2_CONFIG = @FT2_CONFIG@
+GMP_DEPEND = @GMP_DEPEND@
+GMP_INCLUDES = @GMP_INCLUDES@
+GMP_LIBS = @GMP_LIBS@
 GRAPHITE2_DEPEND = @GRAPHITE2_DEPEND@
 GRAPHITE2_INCLUDES = @GRAPHITE2_INCLUDES@
 GRAPHITE2_LIBS = @GRAPHITE2_LIBS@
@@ -282,6 +290,9 @@ MAINT = @MAINT@
 MAKEINFO = @MAKEINFO@
 MANIFEST_TOOL = @MANIFEST_TOOL@
 MKDIR_P = @MKDIR_P@
+MPFR_DEPEND = @MPFR_DEPEND@
+MPFR_INCLUDES = @MPFR_INCLUDES@
+MPFR_LIBS = @MPFR_LIBS@
 NM = @NM@
 NMEDIT = @NMEDIT@
 OBJCXX = @OBJCXX@
@@ -315,6 +326,8 @@ SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
+SYNCTEXVERSION = @SYNCTEXVERSION@
+SYNCTEX_LT_VERSINFO = @SYNCTEX_LT_VERSINFO@
 TANGLE = @TANGLE@
 TANGLEBOOT = @TANGLEBOOT@
 TECKIT_DEPEND = @TECKIT_DEPEND@
@@ -322,6 +335,7 @@ TECKIT_INCLUDES = @TECKIT_INCLUDES@
 TECKIT_LIBS = @TECKIT_LIBS@
 TIE = @TIE@
 VERSION = @VERSION@
+WANTEDLIBS = @WANTEDLIBS@
 WARNING_CFLAGS = @WARNING_CFLAGS@
 WARNING_CXXFLAGS = @WARNING_CXXFLAGS@
 WARNING_OBJCXXFLAGS = @WARNING_OBJCXXFLAGS@

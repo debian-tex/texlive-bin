@@ -490,6 +490,40 @@ shell_cmd_is_allowed (const char *cmd, char **safecmd, char **cmdname)
 #ifdef WIN32
 #undef system
 #define system fsyscp_system
+static int is_include_space(const char *s)
+{
+  char *p;
+  p = strchr(s, ' ');
+  if(p) return 1;
+  p = strchr(s, '\t');
+  if(p) return 1;
+  return 0;
+}
+
+static FILE *wbinpopen(const char *cmd, const char *mode)
+{
+  assert(cmd && mode);
+  if (is_include_space (cmd)) {
+    FILE *ret;
+    const char *cmd2;
+    char *p, *q;
+    cmd2 = xmalloc (strlen (cmd) + 3);
+    q = (char *)cmd2;
+    p = (char *)cmd;
+    *q++= '\"';
+    while(*p)
+      *q++ = *p++;
+    *q++ = '\"';
+    *q = '\0';
+    ret = fsyscp_popen (cmd2, mode);
+    free ((char *)cmd2);
+    return ret;
+  } else {
+    return fsyscp_popen (cmd, mode);
+  }
+}
+#undef popen
+#define popen wbinpopen
 #endif
 
 int
@@ -619,9 +653,28 @@ const char *ptexbanner = BANNER;
 #endif
 
 #ifdef WIN32
+/* forward declaration */
 static string
 normalize_quotes (const_string name, const_string mesg);
+#ifndef TeX
+int srcspecialsp = 0;
 #endif
+/* Support of 8.3-name convention. If *buffer == NULL, nothing is done. */
+static void change_to_long_name (char **buffer)
+{
+  if (*buffer) {
+    char inbuf[260];
+    char outbuf[260];
+
+    memset (outbuf, 0, 260);
+    strcpy (inbuf, *buffer);
+    if (GetLongPathName (inbuf, outbuf, 260)) {
+      *buffer = (char *)realloc(*buffer, strlen(outbuf) + 1);
+      strcpy (*buffer, outbuf);
+    }
+  }
+}
+#endif /* WIN32 */
 
 /* The entry point: set up for reading the command line, which will
    happen in `topenin', then call the main body.  */
@@ -714,7 +767,9 @@ maininit (int ac, string *av)
 #ifdef WIN32
   if (main_input_file == NULL) {
     string name;
+#ifndef XeTeX
     boolean quoted;
+#endif
 
     name = argv[argc-1];
     if (name && name[0] != '-' && name[0] != '&' && name[0] != '\\') {
@@ -731,6 +786,11 @@ maininit (int ac, string *av)
 #ifdef XeTeX
       name = normalize_quotes(argv[argc-1], "argument");
       main_input_file = kpse_find_file(argv[argc-1], INPUT_FORMAT, false);
+      if (!srcspecialsp) {
+        change_to_long_name (&main_input_file);
+        if (main_input_file)
+          name = normalize_quotes(main_input_file, "argument");
+      }
       argv[argc-1] = name;
 #else
       name = normalize_quotes(argv[argc-1], "argument");
@@ -741,16 +801,22 @@ maininit (int ac, string *av)
         name++;
       }
       main_input_file = kpse_find_file(name, INPUT_FORMAT, false);
+      if (!srcspecialsp)
+        change_to_long_name (&main_input_file);
       if (quoted) {
         /* Undo modifications */
         name[strlen(name)] = '"';
         name--;
       }
+      if (!srcspecialsp) {
+        if (main_input_file)
+          name = normalize_quotes(main_input_file, "argument");
+      }
       argv[argc-1] = name;
 #endif
     }
   }
-#endif
+#endif /* WIN32 */
 
   /* Second chance to activate file:line:error style messages, this
      time from texmf.cnf. */
@@ -1467,6 +1533,10 @@ get_input_file_name (void)
     name = normalize_quotes(argv[optind], "argument");
 #ifdef XeTeX
     input_file_name = kpse_find_file(argv[optind], INPUT_FORMAT, false);
+#ifdef WIN32
+    if (!srcspecialsp)
+      change_to_long_name (&input_file_name);
+#endif
 #else
     quoted = (name[0] == '"');
     if (quoted) {
@@ -1475,10 +1545,20 @@ get_input_file_name (void)
         name++;
     }
     input_file_name = kpse_find_file(name, INPUT_FORMAT, false);
+#ifdef WIN32
+    if (!srcspecialsp)
+      change_to_long_name (&input_file_name);
+#endif
     if (quoted) {
         /* Undo modifications */
         name[strlen(name)] = '"';
         name--;
+    }
+#endif
+#ifdef WIN32
+    if (!srcspecialsp) {
+      if (input_file_name)
+        name = normalize_quotes (input_file_name, "argument");
     }
 #endif
     argv[optind] = name;
@@ -1645,7 +1725,7 @@ parse_options (int argc, string *argv)
       /* Try to start up the other end if it's not already.  */
       if (!ipc_is_open ()) {
 #ifdef WIN32
-        if (spawnlp (_P_NOWAIT, IPC_SERVER_CMD, IPC_SERVER_CMD, NULL) != -1) {
+        if (_spawnlp (_P_NOWAIT, IPC_SERVER_CMD, IPC_SERVER_CMD, NULL) != -1) {
 #else
         if (system (IPC_SERVER_CMD) == 0) {
 #endif
@@ -2555,7 +2635,12 @@ maketexstring(const_string s)
   UInt32 rval;
   const unsigned char *cp = (const unsigned char *)s;
 #endif
+#if defined(TeX)
+  if (s == NULL || *s == 0)
+    return getnullstr();
+#else
   assert (s != 0);
+#endif
   len = strlen(s);
   checkpoolpointer (poolptr, len); /* in the XeTeX case, this may be more than enough */
 #ifdef XeTeX

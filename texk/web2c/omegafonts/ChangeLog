@@ -1,3 +1,102 @@
+2014-08-20  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* char_routines.c: Move '#define check_range' to the top-level.
+
+2014-08-19  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* char_routines.c, ligkern_routines.c: More OFM checking.
+	* check.test, check.{ofm,opl}, checked.opl:
+	Shell script and data for a new test.
+	* Makefile.am: Add the new test.
+
+2014-08-18  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* ofonts.test: Fix parallel tests.
+
+2014-08-17  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* ligkern_routines.c, out_routines.h, ligkern.test: Detect
+	unused parts of OFM ligkern program.
+	* tests/arabic.ovp: Use more than 64k ligkern steps.
+	* tests/liguse{,1,2}.opl (new): Additional test data.
+	* Makefile.am: Add the new test data.
+
+2014-08-15  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* print_routines.c (print_ofm_level), tests/*.opl, tests/*.ovp:
+	Output OFMLEVEL in hex (as in Web2C version).
+
+	* char_routines.c, ligkern_routines.[ch], manifests.h,
+	print_routines.[ch]: Handle BOUNDARYCHAR.
+
+	* ligkern.test, tests/lig{all,bch,bdy,blb}.opl,
+	tests/ligblv.{opl,ovp}, tests/ligloop1.{ofm,opl},
+	tests/ligloop2.opl: Shell script and data for a new test.
+	* Makefile.am: Add the new test.
+
+2014-08-10  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* ligkern_routines.c (l_hash_input): Fixed another bug.
+
+2014-08-09  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* ligkern_routines.c (l_hash_lookup): Fixed a bug in checking
+	for infinite ligature loops.
+
+2014-08-08  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* char_routines.c: Compute checksum as in Web2C version.
+	* ligkern_routines.[ch], list_routines.[ch]: Handle very long
+	ligature programs.
+
+	* yannis.test, tests/arabicr.pl, tests/arabic.ovp (new):
+	Shell script and data for a new test.
+	* Makefile.am: Add the new test.
+
+2014-08-05  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	General cleanup.
+	* char_routines.[ch], dimen_routines.[ch], error_routines.[ch],
+	font_routines.[ch], header_routines.[ch], ligkern_routines.[ch],
+	list_routines.[ch], omfonts.[ch], out_ofm.[ch],
+	out_routines.[ch], param_routines.[ch], parse_ofm.[ch],
+	print_routines.[ch]: Drop unused code.
+	Declare functions with file scope as static.
+
+2014-08-04  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* char_routines.c: Compute checksum.
+	* header_routines.[ch]: Drop more unused code.
+	* shorten.test, tests/realnum.out, tests/repeat.opl,
+	tests/repeated.opl, tests/sample.{out,ovp}, tests/shorten.opl:
+	Always use computed checksum.
+
+2014-08-03  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* dimen_routines.c (set_indices): Fixed a dimen rounding bug.
+	* header_routines.[ch]: Drop unused code.
+	Always output SEVENBITSAFEFLAG for TFM files.
+	* shorten.test, tests/shorten.opl, (new): Shell script and data
+	for a new test.
+	* Makefile.am: Add the new test.
+
+2014-08-02  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* dimen_routines.c: Fixed a bug in the computation of nw, nh,
+	nd, and ni.
+
+2014-07-10  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* char_routines.c, ligkern_routines.c, omfonts.c,
+	param_routines.c, parse_ofm.c: Allow char codes 10000..10FFFF
+	from Supplementary Unicode Planes.
+
+2014-07-09  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* Makefile.am: Drop Automake conditional OMFONTS.
+	* ofonts.test, overbmp.test, tests/ofont*, tests/inbmp.opl,
+	tests/overbmp.* (new): Shell scripts and data for new tests.
+
 2013-12-06  Peter Breitenlohner  <peb@mppmu.mpg.de>
 
 	* omfonts.c (main): Use make_suffix() for implied ofm_name.

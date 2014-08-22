@@ -52,6 +52,8 @@
 
 #include "pdfdev.h"
 
+#include "cff.h"
+
 static int verbose = 0;
 
 void
@@ -455,9 +457,6 @@ struct dev_font {
    */
   int      font_id;
   int      enc_id;
-#ifdef XETEX
-  unsigned short *ft_to_gid;
-#endif
 
   /* if >= 0, index of a dev_font that really has the resource and used_chars */
   int      real_font_index;
@@ -496,6 +495,8 @@ struct dev_font {
   int      ucs_plane;
 
   int      is_unicode;
+
+  cff_charsets *cff_charsets;
 };
 static struct dev_font *dev_fonts = NULL;
 
@@ -957,28 +958,26 @@ handle_multibyte_string (struct dev_font *font,
   p      = *str_ptr;
   length = *str_len;
 
-#ifdef XETEX
-  if (ctype == -1) { /* freetype glyph indexes */
-    if (font->ft_to_gid) {
-      /* convert freetype glyph indexes to physical GID */
-      const unsigned char *inbuf = p;
-      unsigned char *outbuf = sbuf0;
-      for (i = 0; i < length; i += 2) {
-        unsigned int gid;
-        gid = *inbuf++ << 8;
-        gid += *inbuf++;
-        gid = font->ft_to_gid[gid];
-        *outbuf++ = gid >> 8;
-        *outbuf++ = gid & 0xff;
-      }
-      p = sbuf0;
-      length = outbuf - sbuf0;
+  if (ctype == -1 && font->cff_charsets) { /* freetype glyph indexes */
+    /* Convert freetype glyph indexes to CID. */
+    const unsigned char *inbuf = p;
+    unsigned char *outbuf = sbuf0;
+    for (i = 0; i < length; i += 2) {
+      unsigned int gid;
+      gid = *inbuf++ << 8;
+      gid += *inbuf++;
+
+      gid = cff_charsets_lookup_cid(font->cff_charsets, gid);
+
+      *outbuf++ = gid >> 8;
+      *outbuf++ = gid & 0xff;
     }
+
+    p = sbuf0;
+    length = outbuf - sbuf0;
   }
-  else
-#endif
   /* _FIXME_ */
-  if (font->is_unicode) { /* UCS-4 */
+  else if (font->is_unicode) { /* UCS-4 */
     if (ctype == 1) {
       if (length * 4 >= FORMAT_BUF_SIZE) {
         WARN("Too long string...");
@@ -1161,9 +1160,10 @@ pdf_dev_set_string (spt_t xpos, spt_t ypos,
       return;
     }
     if (real_font->used_chars != NULL) {
-      for (i = 0; i < length; i += 2)
-        add_to_used_chars2(real_font->used_chars,
-                           (unsigned short) (str_ptr[i] << 8)|str_ptr[i+1]);
+      for (i = 0; i < length; i += 2) {
+        unsigned short cid = (str_ptr[i] << 8) | str_ptr[i + 1];
+        add_to_used_chars2(real_font->used_chars, cid);
+      }
     }
   } else {
     if (real_font->used_chars != NULL) {
@@ -1316,6 +1316,7 @@ pdf_close_device (void)
         pdf_release_obj(dev_fonts[i].resource);
       dev_fonts[i].tex_name = NULL;
       dev_fonts[i].resource = NULL;
+      dev_fonts[i].cff_charsets = NULL;
     }
     RELEASE(dev_fonts);
   }
@@ -1497,6 +1498,9 @@ pdf_dev_locate_font (const char *font_name, spt_t ptsize)
   if (font->font_id < 0)
     return  -1;
 
+  if (mrec)
+    font->cff_charsets = mrec->opt.cff_charsets;
+
   /* We found device font here. */
   if (i < num_dev_fonts) {
     font->real_font_index = i;
@@ -1529,9 +1533,6 @@ pdf_dev_locate_font (const char *font_name, spt_t ptsize)
 
   font->wmode      = pdf_get_font_wmode   (font->font_id);
   font->enc_id     = pdf_get_font_encoding(font->font_id);
-#ifdef XETEX
-  font->ft_to_gid  = pdf_get_font_ft_to_gid(font->font_id);
-#endif
 
   font->resource   = NULL; /* Don't ref obj until font is actually used. */  
   font->used_chars = NULL;

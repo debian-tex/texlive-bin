@@ -259,11 +259,17 @@ static void Win32Error(const char *s)
   exit(EXIT_FAILURE);
 }
 
+#ifdef _WIN64
+#define GSDLLNAME "gsdll64.dll"
+#else
+#define GSDLLNAME "gsdll32.dll"
+#endif
+
 static HINSTANCE gs_locate(void)
 {
-  hgsdll = GetModuleHandle("GSDLL32.DLL");
+  hgsdll = GetModuleHandle(GSDLLNAME);
   if(hgsdll == NULL) {
-    hgsdll = LoadLibrary("GSDLL32.DLL");
+    hgsdll = LoadLibrary(GSDLLNAME);
   }
   return hgsdll;
 }
@@ -292,7 +298,7 @@ HANDLE hGsThread = NULL;
 HANDLE hGsDataIn = 0, hGsDataOut = 0; /* Events to synchronize threads */
 /* Arguments to gs dll */
 const
-char *gs_argv[] = { "gswin32c.exe",		/* 0, */
+char *gs_argv[] = { "rungs.exe",		/* 0, dummy */
 		    "-dNOGC",			/* 1, */
 		    "-dNODISPLAY",		/* 2, */
 		    NULL,			/* 3, substarg */
@@ -1380,7 +1386,7 @@ scan_map_file(FILE *f)
 {
 	while (fgets_long(f))
 	    if (memcmp(long_line, fontname, fontlen) == 0
-	      && (long_line[fontlen] == '\0' || isspace(long_line[fontlen]))) {
+	      && (long_line[fontlen] == '\0' || isspace((unsigned char)long_line[fontlen]))) {
 		fclose(f);
 		return True;
 	    }
@@ -1464,7 +1470,7 @@ whitespace(void)
 	    c = data_getc();
 	    if (c == '#')
 		do c = data_getc(); while (!data_eof && c != '\n');
-	    else if (!isspace(c)) {
+	    else if (!isspace((unsigned char)c)) {
 		data_ungetc(c);
 		break;
 	    }
@@ -1477,7 +1483,7 @@ getint(void)
 	char	c;
 	int	i	= 0;
 
-	do c = data_getc(); while (isspace(c));
+	do c = data_getc(); while (isspace((unsigned char)c));
 	if (c < '0' || c > '9') oops("digit expected");
 	do {
 	    i = i * 10 + (c - '0');
@@ -2317,7 +2323,7 @@ Author of gsftopk: Paul Vojta.");
 
 	if (mapline != NULL) {
 	    if (memcmp(mapline, fontname, fontlen) != 0
-	      || (mapline[fontlen] != '\0' && !isspace(mapline[fontlen])))
+	      || (mapline[fontlen] != '\0' && !isspace((unsigned char)mapline[fontlen])))
 		oops("font name does not match --mapline argument");
 	}
 	else {
@@ -2382,7 +2388,7 @@ Author of gsftopk: Paul Vojta.");
 	 * Parse the line from the map file.
 	 */
 	for (p = mapline + fontlen; *p != '\0'; ++p) {
-	    if (isspace(*p)) continue;
+	    if (isspace((unsigned char)*p)) continue;
 	    if (*p == '<') {
 		char	*q;
 		char	endc;
@@ -2395,7 +2401,7 @@ Author of gsftopk: Paul Vojta.");
 		/* ... and maybe a '[' */
 		if (*p == '[') ++p;
 		q = p;
-		while (*p != '\0' && !isspace(*p)) ++p;
+		while (*p != '\0' && !isspace((unsigned char)*p)) ++p;
 		endc = *p;
 		*p = '\0';
 #ifdef KPATHSEA
@@ -2434,7 +2440,7 @@ Author of gsftopk: Paul Vojta.");
 	    }
 	    else {
 		PSname = p;
-		while (*p != '\0' && !isspace(*p)) ++p;
+		while (*p != '\0' && !isspace((unsigned char)*p)) ++p;
 		if (*p == '\0') break;
 	    }
 	    *p = '\0';

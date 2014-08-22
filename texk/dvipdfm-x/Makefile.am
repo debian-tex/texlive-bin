@@ -3,8 +3,6 @@
 ## Copyright (C) 2009-2014 Peter Breitenlohner <tex-live@tug.org>
 ## You may freely use, modify and/or distribute this file.
 ##
-ACLOCAL_AMFLAGS = -I ../../m4
-
 bin_PROGRAMS =
 if DVIPDFMX
 bin_PROGRAMS += dvipdfmx
@@ -17,26 +15,34 @@ bin_PROGRAMS += xdvipdfmx
 endif XDVIPDFMX
 EXTRA_PROGRAMS = dvipdfmx xdvipdfmx
 
-EXTRA_LIBRARIES = libutil.a
-
 AM_CPPFLAGS = $(KPATHSEA_INCLUDES) $(LIBPNG_INCLUDES) $(ZLIB_INCLUDES) $(LIBPAPER_INCLUDES)
 xdvipdfmx_CPPFLAGS = -DXETEX $(FREETYPE2_INCLUDES) $(AM_CPPFLAGS)
 AM_CFLAGS = $(WARNING_CFLAGS)
 
-libutil_a_SOURCES = \
+dvipdfmx_SOURCES = \
 	agl.c \
 	agl.h \
 	bmpimage.c \
 	bmpimage.h \
+	cff.c \
+	cff.h \
+	cff_dict.c \
 	cff_dict.h \
 	cff_limits.h \
 	cff_stdstr.h \
 	cff_types.h \
 	cid_basefont.h \
+	cid.c \
+	cid.h \
+	cid_p.h \
+	cidtype0.c \
 	cidtype0.h \
+	cidtype2.c \
 	cidtype2.h \
+	cmap.c \
 	cmap.h \
 	cmap_p.h \
+	cmap_read.c \
 	cmap_read.h \
 	cmap_write.c \
 	cmap_write.h \
@@ -50,19 +56,26 @@ libutil_a_SOURCES = \
 	dpxfile.h \
 	dpxutil.c \
 	dpxutil.h \
+	dvi.c \
 	dvi.h \
 	dvicodes.h \
+	dvipdfmx.c \
 	dvipdfmx.h \
 	epdf.c \
 	epdf.h \
 	error.c \
 	error.h \
+	fontmap.c \
+	fontmap.h \
+	jp2image.c \
+	jp2image.h \
 	jpegimage.c \
 	jpegimage.h \
 	mem.c \
 	mem.h \
 	mfileio.c \
 	mfileio.h \
+	mpost.c \
 	mpost.h \
 	numbers.c \
 	numbers.h \
@@ -72,7 +85,9 @@ libutil_a_SOURCES = \
 	otl_opt.h \
 	pdfcolor.c \
 	pdfcolor.h \
+	pdfdev.c \
 	pdfdev.h \
+	pdfdoc.c \
 	pdfdoc.h \
 	pdfdraw.c \
 	pdfdraw.h \
@@ -80,7 +95,10 @@ libutil_a_SOURCES = \
 	pdfencrypt.h \
 	pdfencoding.c \
 	pdfencoding.h \
+	pdffont.c \
+	pdffont.h \
 	pdflimits.h \
+	pdfnames.c \
 	pdfnames.h \
 	pdfobj.c \
 	pdfobj.h \
@@ -90,6 +108,7 @@ libutil_a_SOURCES = \
 	pdfresource.h \
 	pdfximage.c \
 	pdfximage.h \
+	pkfont.c \
 	pkfont.h \
 	pngimage.c \
 	pngimage.h \
@@ -97,6 +116,8 @@ libutil_a_SOURCES = \
 	pst.h \
 	pst_obj.c \
 	pst_obj.h \
+	sfnt.c \
+	sfnt.h \
 	spc_color.c \
 	spc_color.h \
 	spc_dvips.c \
@@ -105,28 +126,42 @@ libutil_a_SOURCES = \
 	spc_html.h \
 	spc_misc.c \
 	spc_misc.h \
+	spc_pdfm.c \
 	spc_pdfm.h \
 	spc_tpic.c \
 	spc_tpic.h \
 	spc_util.h \
 	spc_util.c \
+	spc_xtx.c \
 	spc_xtx.h \
 	specials.c \
 	specials.h \
 	subfont.c \
 	subfont.h \
 	system.h \
+	t1_char.c \
 	t1_char.h \
+	t1_load.c \
 	t1_load.h \
 	tfm.c \
 	tfm.h \
+	truetype.c \
 	truetype.h \
+	tt_aux.c \
 	tt_aux.h \
+	tt_cmap.c \
+	tt_cmap.h \
+	tt_glyf.c \
 	tt_glyf.h \
+	tt_gsub.c \
 	tt_gsub.h \
+	tt_post.c \
 	tt_post.h \
+	tt_table.c \
 	tt_table.h \
+	type0.c \
 	type0.h \
+	type1.c \
 	type1.h \
 	type1c.c \
 	type1c.h \
@@ -136,48 +171,9 @@ libutil_a_SOURCES = \
 	vf.h \
 	xbb.c
 
-dvipdfmx_SOURCES = \
-	cff.c \
-	cff.h \
-	cff_dict.c \
-	cid.c \
-	cid.h \
-	cid_p.h \
-	cidtype0.c \
-	cidtype2.c \
-	cmap.c \
-	cmap_read.c \
-	dvi.c \
-	dvipdfmx.c \
-	fontmap.c \
-	fontmap.h \
-	mpost.c \
-	pdfdev.c \
-	pdfdoc.c \
-	pdffont.c \
-	pdffont.h \
-	pdfnames.c \
-	pkfont.c \
-	sfnt.c \
-	sfnt.h \
-	spc_pdfm.c \
-	spc_xtx.c \
-	t1_char.c \
-	t1_load.c \
-	truetype.c \
-	tt_aux.c \
-	tt_cmap.c \
-	tt_cmap.h \
-	tt_glyf.c \
-	tt_gsub.c \
-	tt_post.c \
-	tt_table.c \
-	type0.c \
-	type1.c
-
 nodist_xdvipdfmx_SOURCES = $(dvipdfmx_SOURCES)
 
-dvipdfmx_LDADD = libutil.a $(KPATHSEA_LIBS) $(LIBPNG_LIBS) $(ZLIB_LIBS) $(LIBPAPER_LIBS)
+dvipdfmx_LDADD = $(KPATHSEA_LIBS) $(LIBPNG_LIBS) $(ZLIB_LIBS) $(LIBPAPER_LIBS)
 xdvipdfmx_LDADD = $(FREETYPE2_LIBS) $(dvipdfmx_LDADD)
 
 $(dvipdfmx_OBJECTS) $(xdvipdfmx_OBJECTS): config.force
@@ -288,12 +284,15 @@ endif XDVIPDFMX
 EXTRA_DIST = $(dvipdfmx_tests) $(xdvipdfmx_tests)
 ## Test Data
 EXTRA_DIST += tests/dvipdfmx.cfg tests/psfonts.map
+EXTRA_DIST += tests/fullmap.dvi tests/fullmap.tex
+EXTRA_DIST += tests/image.bmp tests/imgbmp.bb tests/imgbmp.xbb tests/picbmp.bb tests/picbmp.xbb
+EXTRA_DIST += tests/image.jp2 tests/imgjp2.bb tests/imgjp2.xbb tests/picjp2.bb tests/picjp2.xbb
 EXTRA_DIST += tests/image.jpeg tests/imgjpeg.bb tests/imgjpeg.xbb tests/picjpeg.bb tests/picjpeg.xbb
-EXTRA_DIST += tests/image.pdf tests/imgpdf.bb tests/imgpdf.xbb tests/picpdf.bb tests/picpdf.xbb
 EXTRA_DIST += tests/image.png tests/imgpng.bb tests/imgpng.xbb tests/picpng.bb tests/picpng.xbb
+EXTRA_DIST += tests/image.pdf tests/imgpdf.bb tests/imgpdf.xbb tests/picpdf.bb tests/picpdf.xbb
 EXTRA_DIST += tests/image.dvi tests/image.tex
 EXTRA_DIST += tests/cmr10.pfb tests/cmr10.tfm tests/annot.dvi tests/annot.tex
 EXTRA_DIST += tests/bookm.dvi tests/bookm.tex tests/paper.dvi tests/paper.tex
 EXTRA_DIST += tests/resrc.dvi tests/resrc.tex
-DISTCLEANFILES += img*.* pic*.* image*.pdf annot*.pdf bookm*.pdf paper*.pdf resrc*.pdf
-
+EXTRA_DIST += tests/xbmc.dvi tests/xbmc.tex tests/xbmc10.600pk tests/xbmc10.tfm
+DISTCLEANFILES += img*.* pic*.* image*.pdf annot*.pdf bookm*.pdf paper*.pdf resrc*.pdf xbmc*.pdf

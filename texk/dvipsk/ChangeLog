@@ -1,3 +1,17 @@
+2014-07-15  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* t1part.c, t1part.h: Rename _HUGE => BORLAND_HUGE to avoid
+	conflicting names.
+
+2014-06-19  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* afm2tfm.c, dospecial.c, emspecial.c, resident.c, writet1.c:
+	Avoid undefined behaviour when char is signed.
+
+2014-06-16  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* {,squeeze/}Makefile.am: Drop the obsolete ACLOCAL_AMFLAGS.
+
 2014-04-17  Karl Berry  <karl@tug.org>
 
 	* version 5.994 for TL'14.

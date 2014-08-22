@@ -24,10 +24,6 @@
 #include "mfileio.h"
 #include "cff_types.h"
 
-#ifdef XETEX
-#include "sfnt.h"
-#endif
-
 /* Flag */
 #define FONTTYPE_CIDFONT  (1 << 0)
 #define FONTTYPE_FONT     (1 << 1)
@@ -75,12 +71,7 @@ typedef struct
    */
   cff_index  *_string;
 
-#ifdef XETEX
-  unsigned short *ft_to_gid;
-  sfnt         *sfont;
-#else
   FILE         *stream;
-#endif
 
   int           filter;   /* not used, ASCII Hex filter if needed */
 
@@ -88,19 +79,11 @@ typedef struct
   int           flag;     /* Flag: see above */
 } cff_font;
 
-#ifdef XETEX
-extern cff_font *cff_open  (sfnt *sfont, long offset, int idx);
-#define cff_seek_set(c, p) sfnt_seek_set (((c)->sfont), ((c)->offset) + (p));
-#define cff_read_data(d, l, c)   sfnt_read(d, l, (c)->sfont)
-#define cff_tell(c) (c)->sfont->loc
-#define cff_seek(c, p) sfnt_seek_set((c)->sfont, p)
-#else
 extern cff_font *cff_open  (FILE *file, long offset, int idx);
 #define cff_seek_set(c, p) seek_absolute (((c)->stream), ((c)->offset) + (p));
 #define cff_read_data(d, l, c)   fread(d, 1, l, (c)->stream)
 #define cff_tell(c) ftell((c)->stream)
 #define cff_seek(c, p) seek_absolute((c)->stream, p)
-#endif
 
 extern void      cff_close (cff_font *cff);
 
@@ -134,11 +117,15 @@ extern long   cff_pack_charsets    (cff_font *cff, card8 *dest, long destlen);
 
 /* Returns GID of PS name "glyph" */
 extern card16 cff_glyph_lookup     (cff_font *cff, const char *glyph);
+/* Return PS name of "gid" */
+extern char*  cff_get_glyphname    (cff_font *cff, card16 gid);
 /* Returns GID of glyph with SID/CID "cid" */
 extern card16 cff_charsets_lookup  (cff_font *cff, card16 cid);
+extern card16 cff_charsets_lookup_gid (cff_charsets *charset, card16 cid);
 extern void   cff_release_charsets (cff_charsets *charset);
 /* Returns SID or CID */
 extern card16 cff_charsets_lookup_inverse (cff_font *cff, card16 gid);
+extern card16 cff_charsets_lookup_cid(cff_charsets *charset, card16 gid);
 
 /* FDSelect */
 extern long  cff_read_fdselect    (cff_font *cff);
@@ -151,10 +138,6 @@ extern long  cff_read_fdarray (cff_font *cff);
 
 /* Private DICT(s) */
 extern long  cff_read_private (cff_font *cff);
-
-#ifdef XETEX
-extern unsigned short* cff_get_ft_to_gid(cff_font *cff);
-#endif
 
 /* String */
 extern int   cff_match_string  (cff_font *cff, const char *str, s_SID sid);

@@ -245,15 +245,25 @@ drive name
       }
       if(*p == '\\') {
          *p = '\0';
-         if((hnd = FindFirstFile(q, &ffd)) == INVALID_HANDLE_VALUE) {
-            return 0;
+         if((*(p-2) == '\\' || p-1 == q) && *(p-1) == '.') {
+            cnt += 2;
+            if(cnt > len) return 0;
+            strcat(buff, "./");
+         } else if((*(p-3) == '\\' || p-2 == q) && *(p-2) == '.' && *(p-1) == '.') {
+            cnt += 3;
+            if(cnt > len) return 0;
+            strcat(buff, "../");
+         } else {
+            if((hnd = FindFirstFile(q, &ffd)) == INVALID_HANDLE_VALUE) {
+               return 0;
+            }
+            FindClose(hnd);
+            cnt += strlen(ffd.cFileName);
+            cnt++;
+            if(cnt > len) return 0;
+            strcat(buff, ffd.cFileName);
+            strcat(buff, "/");
          }
-         FindClose(hnd);
-         cnt += strlen(ffd.cFileName);
-         cnt++;
-         if(cnt > len) return 0;
-         strcat(buff, ffd.cFileName);
-         strcat(buff, "/");
          *p = '\\';
       }
    }
@@ -401,7 +411,7 @@ int win32_system(const char *cmd)
     *q++ = '"';
   *q = '\0';
   av[3] = NULL;
-  ret = spawnvp(_P_WAIT, av[0], av);
+  ret = _spawnvp(_P_WAIT, av[0], av);
   free(av[0]);
   free(av[1]);
   free(av[2]);

@@ -42,6 +42,8 @@
 #include "cid_p.h"
 #include "cid.h"
 
+#include "cff.h"
+
 #define CIDFONT_DEBUG     3
 #define CIDFONT_DEBUG_STR "CIDFont"
 
@@ -136,11 +138,6 @@ CIDFont_new (void)
   font->fontname = NULL;
   font->ident    = NULL;
 
-#ifdef XETEX
-  font->ft_face = NULL;
-  font->ft_to_gid = NULL;
-#endif
-
   /*
    * CIDFont
    */
@@ -179,14 +176,6 @@ void
 CIDFont_release (CIDFont *font)
 {
   if (font) {
-    switch(font->subtype) {
-    case CIDFONT_TYPE0:
-      CIDFont_type0_release(font);
-      break;
-    case CIDFONT_TYPE2:
-      CIDFont_type2_release(font);
-      break;
-    }
     if (font->indirect)
       ERROR("%s: Object not flushed.", CIDFONT_DEBUG_STR);
     if (font->fontdict)
@@ -208,15 +197,6 @@ CIDFont_release (CIDFont *font)
       release_opt(font->options);
   }
 }
-
-#ifdef XETEX
-unsigned short *
-CIDFont_get_ft_to_gid(CIDFont *font)
-{
-  ASSERT(font);
-  return font->ft_to_gid;
-}
-#endif
 
 char *
 CIDFont_get_fontname (CIDFont *font)
@@ -247,15 +227,6 @@ CIDFont_get_opt_index (CIDFont *font)
 
   return opt_index;
 }
-
-#ifdef XETEX
-FT_Face
-CIDFont_get_ft_face(CIDFont *font)
-{
-  ASSERT(font);
-  return font->ft_face;
-}
-#endif
 
 int
 CIDFont_get_subtype (CIDFont *font)
@@ -592,6 +563,7 @@ CIDFont_cache_find (const char *map_name,
   opt->name  = NULL;
   opt->csi   = get_cidsysinfo(map_name, fmap_opt);
   opt->stemv = fmap_opt->stemv;
+  opt->cff_charsets = NULL;
 
   if (!opt->csi && cmap_csi) {
     /*
@@ -649,9 +621,6 @@ CIDFont_cache_find (const char *map_name,
 
   if (font_id == __cache->num) {
     font = CIDFont_new();
-#ifdef XETEX
-    font->ft_face = fmap_opt->ft_face;
-#endif
     if (CIDFont_type0_open(font, map_name, cmap_csi, opt)    < 0 &&
 	CIDFont_type2_open(font, map_name, cmap_csi, opt)    < 0 &&
 	CIDFont_type0_t1open(font, map_name, cmap_csi, opt)  < 0 &&
@@ -674,6 +643,8 @@ CIDFont_cache_find (const char *map_name,
       font->options = opt;
       __cache->fonts[font_id] = font;
       (__cache->num)++;
+
+      fmap_opt->cff_charsets = opt->cff_charsets;
     }
   } else if (opt) {
     release_opt(opt);
@@ -729,6 +700,8 @@ release_opt (cid_opt *opt)
     if (opt->csi->ordering)
       RELEASE(opt->csi->ordering);
     RELEASE(opt->csi);
+    if (opt->cff_charsets)
+      cff_release_charsets((cff_charsets *) opt->cff_charsets);
   }
   RELEASE(opt);
 }
@@ -783,7 +756,7 @@ get_cidsysinfo (const char *map_name, fontmap_opt *fmap_opt)
 	    CIDFONT_DEBUG_STR, fmap_opt->charcoll);
     q++;
 
-    if (!isdigit(q[0]))
+    if (!isdigit((unsigned char)q[0]))
       ERROR("%s: String can't be converted to REGISTRY-ORDERING-SUPPLEMENT: %s",
 	    CIDFONT_DEBUG_STR, fmap_opt->charcoll);
 

@@ -490,41 +490,11 @@ shell_cmd_is_allowed (const char *cmd, char **safecmd, char **cmdname)
 #ifdef WIN32
 #undef system
 #define system fsyscp_system
-static int is_include_space(const char *s)
-{
-  char *p;
-  p = strchr(s, ' ');
-  if(p) return 1;
-  p = strchr(s, '\t');
-  if(p) return 1;
-  return 0;
-}
-
-static FILE *wbinpopen(const char *cmd, const char *mode)
-{
-  assert(cmd && mode);
-  if (is_include_space (cmd)) {
-    FILE *ret;
-    const char *cmd2;
-    char *p, *q;
-    cmd2 = xmalloc (strlen (cmd) + 3);
-    q = (char *)cmd2;
-    p = (char *)cmd;
-    *q++= '\"';
-    while(*p)
-      *q++ = *p++;
-    *q++ = '\"';
-    *q = '\0';
-    ret = fsyscp_popen (cmd2, mode);
-    free ((char *)cmd2);
-    return ret;
-  } else {
-    return fsyscp_popen (cmd, mode);
-  }
-}
+#if ENABLE_PIPES
 #undef popen
-#define popen wbinpopen
-#endif
+#define popen fsyscp_popen
+#endif /* ENABLE_PIPES */
+#endif /* WIN32 */
 
 int
 runsystem (const char *cmd)

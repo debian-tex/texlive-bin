@@ -1,11 +1,10 @@
-texlive-bin (2014.20140822.35004-1) experimental; urgency=medium
+texlive-bin (2014.20140825.35035-1) experimental; urgency=medium
 
-  * UNRELEASED
-  * include current svn status targetting TL2015:
+  * include current svn status targeting TL2015:
     - fixes memleak in synctex (Closes: #756761)
     - fixes for support CID-keyed OTF fonts in xdvipdfmx
 
- -- Norbert Preining <preining@debian.org>  Fri, 22 Aug 2014 14:55:09 +0900
+ -- Norbert Preining <preining@debian.org>  Mon, 25 Aug 2014 10:57:04 +0900
 
 texlive-bin (2014.20140528.34243-6) UNRELEASED; urgency=medium
 

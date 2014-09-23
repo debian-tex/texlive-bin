@@ -1,8 +1,9 @@
-texlive-bin (2014.20140912.35100-1) UNRELEASED; urgency=medium
+texlive-bin (2014.20140923.35230-1) experimental; urgency=medium
 
-  * Imported Upstream version 2014.20140912.35100
+  * Imported Upstream version 2014.20140923.35230
+  * update patches, remove included (u)pmpost entries
 
- -- Norbert Preining <preining@debian.org>  Tue, 23 Sep 2014 11:03:40 +0900
+ -- Norbert Preining <preining@debian.org>  Tue, 23 Sep 2014 11:05:13 +0900
 
 texlive-bin (2014.20140825.35035-1) experimental; urgency=medium
 

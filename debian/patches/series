@@ -5,8 +5,8 @@ debian-no-tl-scripts
 61_path_max.diff
 fix-manpages
 relax-zlib-version-check
-pmpost-mp1.999
-upmpost-mp1.999
+#pmpost-mp1.999
+#upmpost-mp1.999
 ac-ctie
 upupstream-fix-pdf_h-query-svn5018
 upupstream-fix-math-list-crash-svn5019

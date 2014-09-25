@@ -78,6 +78,10 @@ override_dh_autoreconf:
 #	--with-system-cairo 			\
 #
 
+# disable-largefile seems to break omegafonts, as they core dump
+# leave it as is for now and see what else pops up
+#	--disable-largefile			\
+
 override_dh_auto_configure:
 	# we have to make sure that the mendex test case that is added
 	# by a patch is executable
@@ -86,7 +90,6 @@ override_dh_auto_configure:
 	dh_auto_configure -- -C --prefix=/usr 	\
 	--datarootdir=/usr/share/texlive	\
 	--disable-native-texlive-build		\
-	--disable-largefile			\
 	--disable-missing			\
 	--disable-linked-scripts		\
 	--with-banner-add=/Debian		\

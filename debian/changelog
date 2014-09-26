@@ -1,3 +1,10 @@
+texlive-bin (2014.20140926.35254-1) unstable; urgency=medium
+
+  * Imported Upstream version 2014.20140926.35254
+  * Upload to unstable
+
+ -- Norbert Preining <preining@debian.org>  Fri, 26 Sep 2014 13:59:57 +0900
+
 texlive-bin (2014.20140923.35230-2) experimental; urgency=medium
 
   * Remove --disable-largefile which breaks omegafonts on i386 archs

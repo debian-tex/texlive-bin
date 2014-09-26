@@ -59,17 +59,19 @@
 #define JPX_BOX_LBL_  0x6c626c20  /* Label */
 
 
-static unsigned long
-read_box_hdr (FILE *fp, unsigned long *lbox, unsigned long *tbox)
+static unsigned int
+read_box_hdr (FILE *fp, unsigned int *lbox, unsigned int *tbox)
 {
-  unsigned long bytesread = 0;
+  unsigned int bytesread = 0;
 
   *lbox = get_unsigned_quad(fp);
   *tbox = get_unsigned_quad(fp);
   bytesread += 8;
   if (*lbox == 1) {
+    if (get_unsigned_quad(fp) != 0)
+      ERROR("LBox value in JP2 file >32 bits.\nI can't handle this!");
     *lbox = get_unsigned_quad(fp);
-    bytesread += 4;
+    bytesread += 8;
   } else if (*lbox > 1 && *lbox < 8) {
     WARN("Unknown LBox value %lu in JP2 file!", lbox);
   }
@@ -95,10 +97,10 @@ check_jp___box (FILE *fp)
 }
 
 static int
-check_ftyp_data (FILE *fp, unsigned long size)
+check_ftyp_data (FILE *fp, unsigned int size)
 {
   int supported = 0;
-  unsigned long BR, CLi;
+  unsigned int BR, CLi;
 
   BR = get_unsigned_quad(fp);
   size -= 4;
@@ -129,8 +131,8 @@ check_ftyp_data (FILE *fp, unsigned long size)
 }
 
 
-static unsigned long
-read_res__data (ximage_info *info, FILE *fp, unsigned long size)
+static void
+read_res__data (ximage_info *info, FILE *fp, unsigned int size)
 {
   unsigned int  VR_N, VR_D, HR_N, HR_D;
   unsigned char VR_E, HR_E;
@@ -147,49 +149,47 @@ read_res__data (ximage_info *info, FILE *fp, unsigned long size)
     info->xdensity = 72.0/(((double) HR_N / HR_D) * pow(10.0, HR_E) * 0.0254);
     info->ydensity = 72.0/(((double) VR_N / VR_D) * pow(10.0, VR_E) * 0.0254);
   }
-
-  return 10;
 }
 
 static int
-scan_res_ (ximage_info *info, FILE *fp, unsigned long size)
+scan_res_ (ximage_info *info, FILE *fp, unsigned int size)
 {
-  unsigned long len, lbox, tbox;
+  unsigned int len, lbox, tbox;
   int have_resd = 0;
 
-    while (size > 0) {
+  while (size > 0) {
     len = read_box_hdr(fp, &lbox, &tbox);
     if (lbox == 0) {
       WARN("Unexpected lbox value 0 in JP2 Resolution box.");
       break;
     }
-        switch (tbox) {
-        case JP2_BOX_RESC:
-            if (!have_resd) {
-                read_res__data(info, fp, lbox - len);
-            } else {
+    switch (tbox) {
+    case JP2_BOX_RESC:
+      if (!have_resd) {
+        read_res__data(info, fp, lbox - len);
+      } else {
         seek_relative(fp, lbox - len);
       }
-            break;
-        case JP2_BOX_RESD:
-            read_res__data(info, fp, lbox - len);
+      break;
+    case JP2_BOX_RESD:
+      read_res__data(info, fp, lbox - len);
       have_resd = 1;
-            break;
-        default:
+      break;
+    default:
       WARN("Unknown JPEG 2000 box type in Resolution box.");
       seek_relative(fp, lbox - len);
-        }
-    size -= lbox;
     }
+    size -= lbox;
+  }
 
   return size == 0 ? 0 : -1;
 }
 
 static int
-scan_jp2h (ximage_info *info, FILE *fp, unsigned long size)
+scan_jp2h (ximage_info *info, FILE *fp, unsigned int size)
 {
   int error = 0, have_ihdr = 0;
-  unsigned long len, lbox, tbox;
+  unsigned int len, lbox, tbox;
 
   while (size > 0 && !error) {
     len = read_box_hdr(fp, &lbox, &tbox);
@@ -234,8 +234,8 @@ static int
 scan_file (ximage_info *info, FILE *fp)
 {
   int  error = 0, have_jp2h = 0;
-  long size;
-  unsigned long len, lbox, tbox;
+  int  size;
+  unsigned int len, lbox, tbox;
 
 
   size = file_size(fp);
@@ -290,7 +290,7 @@ scan_file (ximage_info *info, FILE *fp)
 int
 check_for_jp2 (FILE *fp)
 {
-  unsigned long len, lbox, tbox;
+  unsigned int len, lbox, tbox;
 
   if (!fp)
     return 0;
@@ -339,7 +339,7 @@ jp2_include_image (pdf_ximage *ximage, FILE *fp)
         pdf_new_name("Filter"), pdf_new_name("JPXDecode"));
   /* Read whole file */
   {
-    long nb_read;
+    size_t nb_read;
     rewind(fp);
     while ((nb_read =
         fread(work_buffer, sizeof(char), WORK_BUFFER_SIZE, fp)) > 0)
@@ -352,7 +352,7 @@ jp2_include_image (pdf_ximage *ximage, FILE *fp)
 }
 
 int
-jp2_get_bbox (FILE *fp, long *width, long *height,
+jp2_get_bbox (FILE *fp, int *width, int *height,
          double *xdensity, double *ydensity)
 {
   int r;

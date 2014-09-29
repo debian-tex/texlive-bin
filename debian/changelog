@@ -1,3 +1,10 @@
+texlive-bin (2014.20140926.35254-2) UNRELEASED; urgency=medium
+
+  * UNRELEASED
+  * remove libxp build dep (Closes: #763304)
+
+ -- Norbert Preining <preining@debian.org>  Mon, 29 Sep 2014 14:56:33 +0900
+
 texlive-bin (2014.20140926.35254-1) unstable; urgency=medium
 
   * Imported Upstream version 2014.20140926.35254

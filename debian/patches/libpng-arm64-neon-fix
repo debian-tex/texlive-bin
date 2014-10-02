@@ -1,0 +1,17 @@
+Description: Fix FTBFS on arm64
+ Use correct defines for selecting 32-bit neon assembler code in 
+ embedded libpng, so that it is not used on 64-bit armv8.
+Author: Wookey <wookey@debian.org>
+Last-Update: 2014-09-30
+
+--- texlive-bin-2014.20140926.35254.orig/libs/libpng/libpng-1.6.13/pngpriv.h
++++ texlive-bin-2014.20140926.35254/libs/libpng/libpng-1.6.13/pngpriv.h
+@@ -124,7 +124,7 @@
+     * check both variants.
+     */
+ #  if (defined(__ARM_NEON__) || defined(__ARM_NEON)) && \
+-   defined(PNG_ALIGNED_MEMORY_SUPPORTED)
++   defined(PNG_ALIGNED_MEMORY_SUPPORTED) && defined(__arm__)
+ #     define PNG_ARM_NEON_OPT 2
+ #  else
+ #     define PNG_ARM_NEON_OPT 0

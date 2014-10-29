@@ -1,3 +1,12 @@
+texlive-bin (2014.20140926.35254-3) UNRELEASED; urgency=medium
+
+  * UNRELEASED
+  * cherrypick two fixes from upstream svn:
+    - fix pk support in dvipdfmx
+    - fix enctex reading \^^ab control sequences
+
+ -- Norbert Preining <preining@debian.org>  Wed, 29 Oct 2014 12:02:27 +0900
+
 texlive-bin (2014.20140926.35254-2) unstable; urgency=medium
 
   * remove libxp build dep (Closes: #763304)

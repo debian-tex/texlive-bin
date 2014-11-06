@@ -1,0 +1,31 @@
+---
+ texk/dvipdfm-x/ChangeLog |    5 +++++
+ texk/dvipdfm-x/dpxfile.c |    6 ++++--
+ 2 files changed, 9 insertions(+), 2 deletions(-)
+
+--- texlive-bin.orig/texk/dvipdfm-x/ChangeLog
++++ texlive-bin/texk/dvipdfm-x/ChangeLog
+@@ -1,3 +1,8 @@
++2014-11-05  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
++
++	* dpxfile.c: Check if fqpn == NULL in dpx_open_file(), because
++	MESG (fqpn) crashes if fqpn == NULL.
++
+ 2014-10-29  Shunsaku Hirata  <shunsaku.hirata74@gmail.com>
+ 
+ 	* pkfont.c: Cast unsigned integers when they appear in subtractions
+--- texlive-bin.orig/texk/dvipdfm-x/dpxfile.c
++++ texlive-bin/texk/dvipdfm-x/dpxfile.c
+@@ -413,8 +413,10 @@
+   switch (type) {
+   case DPX_RES_TYPE_FONTMAP:
+     fqpn = dpx_find_fontmap_file(filename);
+-    if (verbose) 
+-      MESG(fqpn);
++    if (verbose) {
++      if (fqpn != NULL)
++        MESG(fqpn);
++    }
+     break;
+   case DPX_RES_TYPE_T1FONT:
+     fqpn = dpx_find_type1_file(filename);

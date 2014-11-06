@@ -11,9 +11,9 @@
 +	* pkfont.c: Cast unsigned integers when they appear in subtractions
 +	to obtain results in double.
 +
- 2014-09-25  Peter Breitenlohner  <peb@mppmu.mpg.de>
+ 2014-10-05  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
  
- 	* {bmp,jp2,jpeg,png}image.[ch], xbb.c: More cleanup (whitespace
+ 	* spc_dvips.c: Add " showpage\n" to a temporary file gs_in because
 --- texlive-bin.orig/texk/dvipdfm-x/pkfont.c
 +++ texlive-bin/texk/dvipdfm-x/pkfont.c
 @@ -613,8 +613,8 @@

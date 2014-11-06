@@ -12,6 +12,9 @@ upupstream-fix-pdf_h-query-svn5018
 upupstream-fix-math-list-crash-svn5019
 upupstream-bug907-svn5024
 libpng-arm64-neon-fix
-upstream-fix-dvipdfmx-pk-support-svn35461
-upstream-fix-enctex-svn35457
-upstream-fix-mpost-fontmap-warnings-svn35518
+upstream-svn35304-dvipdfmx-bug-spc-dvips-end-page
+upstream-svn35312-dvipdfmx-ghostscript-fix
+upstream-svn35457-enctex-chars
+upstream-svn35461-dvipdfmx-pk-support
+upstream-svn35516-dvipdfmx-fix-crash-missing-fontmap
+upstream-svn35518-mpost-fontmap-warnings

@@ -14,3 +14,4 @@ upupstream-bug907-svn5024
 libpng-arm64-neon-fix
 upstream-fix-dvipdfmx-pk-support-svn35461
 upstream-fix-enctex-svn35457
+upstream-fix-mpost-fontmap-warnings-svn35518

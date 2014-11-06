@@ -1,0 +1,46 @@
+---
+ texk/web2c/mplibdir/ChangeLog |    5 +++++
+ texk/web2c/mplibdir/psout.w   |   10 +++++++---
+ 2 files changed, 12 insertions(+), 3 deletions(-)
+
+--- texlive-bin.orig/texk/web2c/mplibdir/ChangeLog
++++ texlive-bin/texk/web2c/mplibdir/ChangeLog
+@@ -1,3 +1,8 @@
++2014-11-05  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
++
++	* psout.w: Sync with the trunk. Luigi fixes to avoid enormouos lines
++	of warnings.
++
+ 2014-09-22  Peter Breitenlohner  <peb@mppmu.mpg.de>
+ 
+ 	* mp.w: Fixed an error message typo.
+--- texlive-bin.orig/texk/web2c/mplibdir/psout.w
++++ texlive-bin/texk/web2c/mplibdir/psout.w
+@@ -1,4 +1,4 @@
+-% $Id: psout.w 2037 2014-09-02 14:59:07Z luigi $
++% $Id: psout.w 2045 2014-11-05 11:33:13Z luigi $
+ % This file is part of MetaPost;
+ % the MetaPost program is in the public domain.
+ % See the <Show version...> code in mpost.w for more info.
+@@ -1585,6 +1585,7 @@
+ void mp_read_psname_table (MP mp) {
+   font_number k;
+   char *s;
++  static boolean isread = false;
+   if (mp->ps->mitem == NULL) {
+     mp->ps->mitem = mp_xmalloc (mp,1,sizeof(mapitem));
+     mp->ps->mitem->mode = FM_DUPIGNORE;
+@@ -1592,8 +1593,11 @@
+     mp->ps->mitem->map_line = NULL;
+   }
+   s = mp_xstrdup (mp,ps_tab_name);
+-  mp->ps->mitem->map_line = s; 
+-  fm_read_info (mp);
++  mp->ps->mitem->map_line = s;
++  if (!isread) {
++    isread = true; 
++    fm_read_info (mp);
++  }
+   for (k=mp->last_ps_fnum+1;k<=mp->last_fnum;k++) {
+     if (mp_has_fm_entry(mp, k, NULL)) {
+       mp_xfree(mp->font_ps_name[k]);

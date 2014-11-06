@@ -9,8 +9,9 @@ texlive-bin (2014.20140926.35254-3) unstable; urgency=medium
       . fix crash when gqpn is unset
       . support for ghostscript 9.15
       . fix bug in spc_dvips_at_end_page (wrong logic)
+  * bump standards version, no changes necessary
 
- -- Norbert Preining <preining@debian.org>  Thu, 06 Nov 2014 09:33:21 +0900
+ -- Norbert Preining <preining@debian.org>  Thu, 06 Nov 2014 09:37:33 +0900
 
 texlive-bin (2014.20140926.35254-2) unstable; urgency=medium
 

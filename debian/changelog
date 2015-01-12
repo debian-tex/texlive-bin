@@ -1,3 +1,9 @@
+texlive-bin (2014.20140926.35254-5) unstable; urgency=high
+
+  * fix insecure temp file creation in mktexlsr (Closes: #775139)
+
+ -- Norbert Preining <preining@debian.org>  Tue, 13 Jan 2015 07:32:13 +0900
+
 texlive-bin (2014.20140926.35254-4) unstable; urgency=high
 
   * cherrypick security fix for libpng buffer overflow (Closes: #773824)

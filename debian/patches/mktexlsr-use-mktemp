@@ -1,0 +1,16 @@
+Don't use unsafe temp filename, use mktemp
+---
+ texk/kpathsea/mktexlsr |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+--- texlive-bin.orig/texk/kpathsea/mktexlsr
++++ texlive-bin/texk/kpathsea/mktexlsr
+@@ -73,7 +73,7 @@
+ dry_run=false
+ trees=
+ 
+-treefile="${TMPDIR-/tmp}/mktexlsrtrees$$.tmp"
++treefile=`mktemp --tmpdir mktexlsrtrees.XXXXXXXXXX` || exit 1
+ trap 'cd /; rm -f $treefile; test -z "$db_dir_tmp" || rm -rf "$db_dir_tmp"; 
+       exit' 0 1 2 3 7 13 15
+ 

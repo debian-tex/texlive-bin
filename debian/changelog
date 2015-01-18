@@ -7,6 +7,7 @@ texlive-bin (2014.20140926.35254-5) unstable; urgency=high
 texlive-bin (2014.20140926.35254-4) unstable; urgency=high
 
   * cherrypick security fix for libpng buffer overflow (Closes: #773824)
+    (CVE-2014-9495)
 
  -- Norbert Preining <preining@debian.org>  Wed, 24 Dec 2014 09:18:29 +0900
 

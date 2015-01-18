@@ -20,3 +20,4 @@ upstream-svn35516-dvipdfmx-fix-crash-missing-fontmap
 upstream-svn35518-mpost-fontmap-warnings
 cve-libpng-heap-overflow-fix
 mktexlsr-use-mktemp
+cve-2015-0973

@@ -1,3 +1,10 @@
+texlive-bin (2014.20140926.35254-6) unstable; urgency=high
+
+  * cherrypick security fix for libpng CVE-2015-0973 (Closes: #775673)
+    Restored a test on width that was removed from png.c at libpng-1.6.9
+
+ -- Norbert Preining <preining@debian.org>  Sun, 18 Jan 2015 23:45:42 +0900
+
 texlive-bin (2014.20140926.35254-5) unstable; urgency=high
 
   * fix insecure temp file creation in mktexlsr (Closes: #775139)

@@ -168,9 +168,11 @@ show_version (void)
 static void
 show_usage (void)
 {
-  printf ("\nUsage: %s [options] [dvifile[.dvi|.xdv]]\n", my_name);
-  printf ("       %s --extractbb|--xbb|--ebb [options]\tBe \"extractbb\"\n", my_name);
-  printf ("       %s --help|--version\n", my_name);
+  printf ("\nUsage: %s [OPTION]... [DVIFILE[.dvi|.xdv]]\n", my_name);
+  printf ("       %s --extractbb|--xbb|--ebb [OPTION]...\tBe \"extractbb\"\n",
+          my_name);
+  printf ("       %s --help|--showpaper|--version\n", my_name);
+  printf ("Convert DVI or XDV input to PDF; defaults given below.\n");
   printf ("\nOptions:\n"); 
   printf ("  -c \t\tIgnore color specials (for B&W printing)\n");
   printf ("  --dvipdfm\tEnable DVIPDFM emulation mode\n");
@@ -180,16 +182,17 @@ show_usage (void)
   printf ("  -h | --help \tShow this help message and exit\n");
   printf ("  -l \t\tLandscape mode\n");
   printf ("  -m number\tSet additional magnification [1.0]\n");
-  printf ("  -o filename\tSet output file name, \"-\" for stdout [dvifile.pdf]\n");
+  printf ("  -o filename\tSet output file name, \"-\" for stdout [DVIFILE.pdf]\n");
   printf ("  -p papersize\tSet papersize [a4]\n");
   printf ("  -q \t\tBe quiet\n");
   printf ("  -r resolution\tSet resolution (in DPI) for raster fonts [600]\n");
-  printf ("  -s pages\tSelect page ranges (-)\n");
-  printf ("  -t \t\tEmbed thumbnail images of PNG format [dvifile.1] \n");
+  printf ("  -s pages\tSelect page ranges [all pages]\n");
+  printf ("  --showpaper\tShow available paper formats and exit\n");
+  printf ("  -t \t\tEmbed thumbnail images of PNG format [DVIFILE.1] \n");
   printf ("  --version\tOutput version information and exit\n");
   printf ("  -v \t\tBe verbose\n");
   printf ("  -vv\t\tBe more verbose\n");
-  printf ("  --kpathsea-debug number\tSet kpathsearch debugging flags [0]\n");
+  printf ("  --kpathsea-debug number\tSet kpathsea debugging flags [0]\n");
   printf ("  -x dimension\tSet horizontal offset [1.0in]\n");
   printf ("  -y dimension\tSet vertical offset [1.0in]\n");
   printf ("  -z number  \tSet zlib compression level (0-9) [9]\n");
@@ -197,7 +200,7 @@ show_usage (void)
   printf ("  -C number\tSpecify miscellaneous option flags [0]:\n");
   printf ("\t\t  0x0001 reserved\n");
   printf ("\t\t  0x0002 Use semi-transparent filling for tpic shading command,\n");
-  printf ("\t\t\t instead of opaque gray color. (requires PDF 1.4)\n");
+  printf ("\t\t\t instead of opaque gray color; requires PDF 1.4.\n");
   printf ("\t\t  0x0004 Treat all CIDFont as fixed-pitch font.\n");
   printf ("\t\t  0x0008 Do not replace duplicate fontmap entries.\n");
   printf ("\t\t  0x0010 Do not optimize PDF destinations.\n");
@@ -884,12 +887,29 @@ do_mps_pages (void)
   }
 }
 
-/* TODO: MetaPost mode */
+#if defined(XETEX)
+/* At present no DLL for xdvipdfmx */
+#undef DLLPROC
+#else
+/* Support to make DLL in W32TeX */
+#define DLLPROC dlldvipdfmxmain
+#endif
+#if defined(WIN32) && !defined(__MINGW32__) && !defined(MIKTEX) && defined(DLLPROC)
+extern __declspec(dllexport) int DLLPROC (int argc, char *argv[]);
+#else
+#undef DLLPROC
+#endif
+
 #if defined(MIKTEX)
 #  define main Main
 #endif
-int CDECL
-main (int argc, char *argv[]) 
+
+int
+#if defined(DLLPROC)
+DLLPROC (int argc, char *argv[])
+#else
+CDECL main (int argc, char *argv[])
+#endif
 {
   double dvi2pts;
   char *base;
@@ -914,6 +934,7 @@ main (int argc, char *argv[])
 
   if (argc > 1 &&
                (STREQ (argv[1], "--xbb") ||
+                STREQ (argv[1], "--extractbb") ||
                 STREQ (argv[1], "--dvipdfm") ||
                 STREQ (argv[1], "--ebb"))) {
     argc--;
@@ -931,13 +952,16 @@ main (int argc, char *argv[])
     return extractbb (argc, argv);
   }
 
-  /* Special-case single option --help or --version, to avoid possible
-     diagnostics about config files, etc.  */
+  /* Special-case single option --help, --showpaper, or --version, to avoid
+     possible diagnostics about config files, etc.  */
   if (argc == 2 && STREQ (argv[1], "--help")) {
     show_usage();
     exit(0);
   } else if (argc == 2 && STREQ (argv[1], "--version")) {
     show_version();
+    exit(0);
+  } else if (argc == 2 && STREQ (argv[1], "--showpaper")) {
+    dumppaperinfo();
     exit(0);
   }
 

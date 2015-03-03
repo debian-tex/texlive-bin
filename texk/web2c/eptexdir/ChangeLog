@@ -1,3 +1,29 @@
+2014-12-12  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* eptriptest: Complain early if (e)trip.fmt is not created.
+	Inspired by report from vvv, tlbuild 14 Jun 2011 10:25:47.
+
+2014-12-10  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* eptex.ech: Fix bugs in \fontcharwd etc.
+	* eptex_version.h: Change version to 141210.
+
+2014-11-19  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* eptex.ech: Fix a bug introduced in the primitive \lastnodechar.
+	* eptex_version.h: Change version to 141119.
+
+2014-11-09  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* eptex.ech: Improve the new primitive \lastnodechar.
+	* eptex_version.h: Change version to 141109.
+
+2014-11-08  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* pdfutils.ch, eptex.ech: Add primitives \pdfshellescape and
+	\lastnodechar to e-(u)ptex.
+	* eptex_version.h: Change version to 141108.
+
 2014-05-05  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
 2014-05-06  Peter Breitenlohner  <peb@mppmu.mpg.de>
 

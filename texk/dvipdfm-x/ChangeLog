@@ -1,3 +1,144 @@
+2015-03-01  Shunsaku Hirata  <shunsaku.hirata74@gmail.com>
+
+	* spc_tpic.c: Make tpic "ar" command dvips compatible to fix the problem
+	that an excess line is drawn when "ar" command is used along
+	with dvips transformation commands.
+
+2015-02-25  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* fontmap.h (pdf_insert_native_fontmap_record): Declare also
+	without '#ifdef XETEX'.
+	* fontmap.c (pdf_insert_native_fontmap_record): Define also
+	without '#ifdef XETEX'; drop redundant test for path==NULL.
+
+2015-02-24  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* dvi.c (dvi_locate_native_font): Avoid sprintf() buffer overrun.
+
+	* dvi.c (dvi_locate_native_font): Fix a small memory leak.
+
+2015-02-21  Khaled Hosny  <khaledhosny@eglug.org>
+
+	* dvi.c (dvi_locate_font, dvi_locate_native_font): make sure the
+	all members of loaded font struct are initialized, avoid crash in
+	dvi_close for simple fonts because hvmt member is not initialized.
+	Fixes the xdvipdfmx-bkm test.
+	* dvi.c (dvi_locate_native_font): fix loading files without absolute
+	paths.
+	* dvi.c (dvi_locate_native_font): fix loading TTC fonts.
+	* xdvipdfm-ttc.test, tests/ttc.dvi, tests/ttc.tex, tests/test.ttc,
+	Makefile.am: new test.
+	* dvi.c (dvi_locate_native_font): correctly load vertical glyph
+	metrics.
+	* configure.ac, Makefile.am: drop FreeType dependency.
+	* dvi.c, fontmap.c, fontmap.h: remove the nonop pdf_load_native_font.
+	* fontmap.c, fontmap.h (pdf_insert_{native_}fontmap_record): return
+	the newly inserted record.
+	* dvi.c: adapt.
+
+2015-02-21  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* dvi.c: Read glyph advances without the need for FreeType, based on
+	patch by Clerk Ma.
+	* fontmap.c, fontmap.h: Stop loading FreeType fonts.
+
+2015-02-16  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* jpegimage.c: Fix jpeg_get_density().
+
+2015-01-07  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* bmpimage.c, dpxcrypt.c, dvi.c: Avoid compiler warnings.
+
+2015-01-07  Khaled Hosny  <khaledhosny@eglug.org>
+
+	* pdfdev.c (pdf_dev_reset_fonts): don't reset text_state.bold_param
+	unless called for a new page, otherwise we "forget" that the last font
+	was a fake bold font and don't reset text stroke when this function
+	gets called immediatly after a fake bold font is used
+	(https://sourceforge.net/p/xetex/bugs/105/).
+	* pdfdev.h, pdfdoc.c, pdfdraw.c, spc_xtx.c: adapt.
+
+2014-12-03  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* xbb.c: Support to specify a page in a multi-page PDF to extract
+	bounding box, usage: extractbb -p page foo.pdf.
+
+2014-12-01  Karl Berry  <karl@tug.org>
+
+	* data/dvipdfmx.cfg (D): add back -sPAPERSIZE=a0, needed for
+	pstricks under xetex; retain -dEPSCROP, needed for negative llx/lly.
+	From Akira, thread at
+        http://tug.org/pipermail/xetex/2014-November/025664.html.
+
+2014-11-29  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* dvipdfmx.test, xdvipdfmx.test: Also test --showpaper option.	
+
+2014-11-29  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* dvipdfmx.c, dpxconf.c, dpxconf.h: Add an option --showpaper which
+	shows available paper formats and exits.
+
+2014-11-29  Karl Berry  <karl@tug.org>
+
+	* dvipdfmx.c (show_usage): use [all pages] instead of (-).
+	From peb.
+
+2014-11-28  Karl Berry  <karl@tug.org>
+
+	* dvipdfmx.c (main): accept --extractbb per help message.
+	(show_usage): one line of description.
+	* xbb.c (show_usage): likewise.
+	Suggestion from Tom Schneider, texhax 22 Nov 2014 08:53:19.
+
+2014-11-19  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* dvipdfmx.c: Modified support to make DLL(s) in W32TeX.
+
+2014-11-15  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* dvipdfmx.c: Support to make DLL in W32TeX.
+
+2014-11-05  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* dpxfile.c: Check if fqpn == NULL in dpx_open_file(), because
+	MESG (fqpn) crashes if fqpn == NULL.
+
+2014-11-04  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* pkfont.c: Fix the messed up formatting codes.
+	* pdfparse.c: Avoid undefined behaviour when char is signed.
+
+2014-11-03  Shunsaku Hirata  <shunsaku.hirata74@gmail.com>
+
+	* pdfdev.c: Do not convert integer part of real numbers to long int
+	when printing a real number.
+	* pdfparse.c: Do not use temporary integer values for storing
+	parsed numbers.
+	* pkfont.c: Remove debugging codes, additional fixes in formatting
+	integer values.
+
+2014-10-29  Shunsaku Hirata  <shunsaku.hirata74@gmail.com>
+
+	* pkfont.c: Cast unsigned integers when they appear in subtractions
+	to obtain results in double.
+
+2014-10-05  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* spc_dvips.c: Add " showpage\n" to a temporary file gs_in because
+	Ghostscript 9.15 gives an empty pdf without it
+	in dpx_file_apply_filter().
+
+2014-10-03  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* spc_dvips.c: Fix a bug in spc_dvips_at_end_page (void), that is
+	change "if (!temporary_defs)" to "if (temporary_defs)".
+
+2014-09-29  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* spc_pdfm.c: Minor cleanup.
+
 2014-09-25  Peter Breitenlohner  <peb@mppmu.mpg.de>
 
 	* {bmp,jp2,jpeg,png}image.[ch], xbb.c: More cleanup (whitespace

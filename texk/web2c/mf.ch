@@ -1050,12 +1050,6 @@ end;
 @!mem : ^memory_word; {the big dynamic storage area}
 @z
 
-@x [10.167] Fix an unsigned/signed problem in getnode.
-if r>p+1 then @<Allocate from the top of node |p| and |goto found|@>;
-@y
-if r>intcast(p+1) then @<Allocate from the top of node |p| and |goto found|@>;
-@z
-
 % [11.178] Change the word `free' so that it doesn't conflict with the
 % standard C library routine of the same name. Also change arrays that
 % use mem_max, since that's a variable now, effectively disabling the feature.
@@ -1821,14 +1815,6 @@ if (tx<>0)or(ty<>0) then @<Shift the coordinates of path |q|@>;
 end
 @z
 
-@x [42.965] A C casting problem.
-if (m_min(cur_edges)+tx<=0)or(m_max(cur_edges)+tx>=8192)or@|
- (n_min(cur_edges)+ty<=0)or(n_max(cur_edges)+ty>=8191)or@|
-@y
-if (intcast(m_min(cur_edges))+tx<=0)or(m_max(cur_edges)+tx>=8192)or@|
- (intcast(n_min(cur_edges))+ty<=0)or(n_max(cur_edges)+ty>=8191)or@|
-@z
-
 @x [44.1023] if batchmode, MakeTeX... scripts should be silent.
 mode_command: begin print_ln; interaction:=cur_mod;
 @y
@@ -1986,14 +1972,6 @@ procedure init_gf;
 var @!k:0..256; {runs through all possible character codes}
 @z
 
-@x [47.1169] Fix signed/unsigned comparison problem in C.
-if prev_m-m_offset(cur_edges)+x_off>gf_max_m then
-  gf_max_m:=prev_m-m_offset(cur_edges)+x_off
-@y
-if prev_m-intcast(m_offset(cur_edges))+x_off>gf_max_m then
-  gf_max_m:=prev_m-m_offset(cur_edges)+x_off
-@z
-
 @x [47.1182] print_file_name
 print_nl("Output written on "); slow_print(output_file_name);
 @y
@@ -2081,7 +2059,7 @@ undump_things(base_engine[0], x);
 base_engine[x-1]:=0; {force string termination, just in case}
 if strcmp(engine_name, stringcast(base_engine)) then
   begin wake_up_terminal;
-  wterm_ln('---! ', stringcast(name_of_file+1), ' was written by ', base_engine);
+  wterm_ln('---! ', stringcast(name_of_file+1), ' was written by ', stringcast(base_engine));
   libc_free(base_engine);
   goto off_base;
 end;

@@ -1,4 +1,4 @@
-% $Id: mpost.w 2007 2014-04-10 11:13:03Z taco $
+% $Id: mpost.w 2048 2014-12-04 10:26:26Z luigi $
 %
 % This file is part of MetaPost;
 % the MetaPost program is in the public domain.
@@ -1284,12 +1284,15 @@ if (options->job_name != NULL) {
 }
 options->job_name = job_name;
 
-@ For W32\TeX we can |#define DLLPROC dllmpostmain| in order to build \MP\
-as DLL.
+@ We |#define DLLPROC dllmpostmain| in order to build \MP\ as DLL for
+W32\TeX.
 
 @<Declarations@>=
+#define DLLPROC dllmpostmain
 #if defined(WIN32) && !defined(__MINGW32__) && defined(DLLPROC)
 extern __declspec(dllexport) int DLLPROC (int argc, char **argv);
+#else
+#undef DLLPROC
 #endif
 
 @ Now this is really it: \MP\ starts and ends here.
@@ -1307,7 +1310,7 @@ static char *cleaned_invocation_name(char *arg)
     return ret;
 }
 int
-#if defined(WIN32) && !defined(__MINGW32__) && defined(DLLPROC)
+#if defined(DLLPROC)
 DLLPROC (int argc, char **argv)
 #else
 main (int argc, char **argv)
@@ -1377,13 +1380,15 @@ main (int argc, char **argv)
   if (mp==NULL)
 	exit(EXIT_FAILURE);
   history = mp_status(mp);
-  if (history!=0)
+  if (history!=0 && history!=mp_warning_issued)
 	exit(history);
   if (set_list!=NULL) {
     run_set_list(mp);
   }
   history = mp_run(mp);
   (void)mp_finish(mp);
-  exit(history);
+  if (history!=0 && history!=mp_warning_issued)
+	exit(history);
+  else
+     exit(0);
 }
-

@@ -50,6 +50,11 @@
 program TFtoPL(@!tfm_file,@!pl_file,@!output);
 @z
 
+@x [2] No global label.
+label @<Labels in the outer block@>@/
+@y
+@z
+
 @x [still 2] Don't print banner until later (and unless verbose).
 procedure initialize; {this procedure gets things started properly}
   begin print_ln(banner);@/
@@ -61,8 +66,13 @@ procedure initialize; {this procedure gets things started properly}
     kpse_init_prog ('TFTOPL', 0, nil, nil);
     {We |xrealloc| when we know how big the file is.  The 1000 comes
      from the negative lower bound.}
-    tfm_file_array := cast_to_byte_pointer (xmalloc (1003));
+    tfm_file_array := xmalloc_array (byte, 1002);
     parse_arguments;
+@z
+
+@x [3] No global label.
+@<Labels...@>=final_end;
+@y
 @z
 
 @x [5] Increase sizes to match vptovf.
@@ -131,15 +141,14 @@ end;
 {Kludge here to define |tfm| as a macro which takes care of the negative
  lower bound.  We've defined |tfm| for the benefit of web2c above.}
 @=#define tfm (tfmfilearray + 1001);@>@\
-@!tfm_file_array: pointer_to_byte; {the input data all goes here}
+@!tfm_file_array: ^byte; {the input data all goes here}
 @z
 
 @x [20] Allow arbitrarily large input files.
 if 4*lf-1>tfm_size then abort('The file is bigger than I can handle!');
 @.The file is bigger...@>
 @y
-tfm_file_array
-  := cast_to_byte_pointer (xrealloc (tfm_file_array, 4 * lf - 1 + 1002));
+tfm_file_array := xrealloc_array (tfm_file_array, byte, 4 * lf + 1000);
 @z
 
 % [27, 28] Change strings to C char pointers. The Pascal strings are
@@ -214,12 +223,6 @@ else  begin tfm[0]:=c; out_octal(0,1);
   put_byte(RCE_string[1+(b div 3)], pl_file);
 @z
 
-@x [40] Force 32-bit constant arithmetic for 16-bit machines.
-f:=((tfm[k+1] mod 16)*@'400+tfm[k+2])*@'400+tfm[k+3];
-@y
-f:=((tfm[k+1] mod 16)*intcast(@'400)+tfm[k+2])*@'400+tfm[k+3];
-@z
-
 % [78] No progress reports unless verbose.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 @x
@@ -243,12 +246,24 @@ f:=((tfm[k+1] mod 16)*intcast(@'400)+tfm[k+2])*@'400+tfm[k+3];
 @d class == class_var
 @z
 
+@x [90]
+  goto final_end;
+@y
+  uexit(1);;
+@z
+
 % [90] Change name of the function `f'.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 @x
      r:=f(r,(hash[r]-1)div 256,(hash[r]-1)mod 256);
 @y
      r:=f_fn(r,(hash[r]-1)div 256,(hash[r]-1)mod 256);
+@z
+
+@x [90]
+  out('(INFINITE LIGATURE LOOP MUST BE BROKEN!)'); goto final_end;
+@y
+  out('(INFINITE LIGATURE LOOP MUST BE BROKEN!)'); uexit(1);
 @z
 
 % [94] web2c can't handle these mutually recursive procedures.
@@ -284,12 +299,24 @@ f:=lig_z[h];
 f_fn:=lig_z[h];
 @z
 
+@x [99]
+if not organize then goto final_end;
+@y
+if not organize then uexit(1);
+@z
+
 % [99] No final newline unless verbose.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 @x
 do_characters; print_ln('.');@/
 @y
 do_characters; if verbose then print_ln('.');@/
+@z
+
+@x [99]
+final_end:end.
+@y
+end.
 @z
 
 @x [100] System-dependent changes.
@@ -337,7 +364,7 @@ begin
       else if strcmp (optarg, 'octal') = 0 then
         charcode_format := charcode_octal
       else
-        print_ln ('Bad character code format', optarg, '.');
+        print_ln ('Bad character code format ', stringcast(optarg), '.');
 
     end; {Else it was a flag; |getopt| has already done the assignment.}
   until getopt_return_val = -1;

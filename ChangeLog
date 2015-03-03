@@ -1,3 +1,22 @@
+2015-02-16  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* am/dist_hook.am (new): Makefile fragment for dist-hook target.
+	* Makefile.am: Use the fragment am/dist_hook.am.
+
+2014-11-24  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* tardate.ac: Switch to 2014-11-24.
+
+2014-11-17  Karl Berry  <karl@tug.org>
+
+	* am/script_links.am: Use w32_wrapper or w64_wrapper.
+
+2014-10-21  Karl Berry  <karl@tug.org>
+
+	* configure.ac: report CC/CXX values, with --version output
+	if available.
+	* Build: no need for objc any more.
+
 2014-08-22  Peter Breitenlohner  <peb@mppmu.mpg.de>
 
 	* tardate.ac: Switch to 2014-08-22.

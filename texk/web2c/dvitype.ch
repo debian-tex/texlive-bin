@@ -60,12 +60,20 @@ procedure initialize; {this procedure gets things started properly}
   print_ln (version_string);
 @z
 
-@x [5] Allow more fonts, more widths, no arbitrary filename length.
+% There were no complaints that these values are too small, and adjusting
+% them dynamically requires to resize a large number of arrays and is not
+% worth the effort (if necessary one can recompile with larger values).
+@x [5] Allow more fonts, more widths, no arbitrary filename length. No dialog.
 @!max_fonts=100; {maximum number of distinct fonts per \.{DVI} file}
 @!max_widths=10000; {maximum number of different characters among all fonts}
 @y
 @!max_fonts=500; {maximum number of distinct fonts per \.{DVI} file}
 @!max_widths=25000; {maximum number of different characters among all fonts}
+@z
+@x
+@!terminal_line_length=150; {maximum number of characters input in a single
+  line of input from the terminal}
+@y
 @z
 @x
 @!name_size=1000; {total length of all font file names}
@@ -144,31 +152,6 @@ end;
 @!cur_name:^char; {external name}
 @z
 
-@x [27] Make get_n_bytes routines work with 16-bit math.
-get_two_bytes:=a*256+b;
-@y
-get_two_bytes:=a*intcast(256)+b;
-@z
-@x
-get_three_bytes:=(a*256+b)*256+c;
-@y
-get_three_bytes:=(a*intcast(256)+b)*256+c;
-@z
-@x
-if a<128 then signed_trio:=(a*256+b)*256+c
-else signed_trio:=((a-256)*256+b)*256+c;
-@y
-if a<128 then signed_trio:=(a*intcast(256)+b)*256+c
-else signed_trio:=((a-intcast(256))*256+b)*256+c;
-@z
-@x
-if a<128 then signed_quad:=((a*256+b)*256+c)*256+d
-else signed_quad:=(((a-256)*256+b)*256+c)*256+d;
-@y
-if a<128 then signed_quad:=((a*intcast(256)+b)*256+c)*256+d
-else signed_quad:=(((a-256)*intcast(256)+b)*256+c)*256+d;
-@z
-
 @x [28] dvi_length and move_to_byte.
 @p function dvi_length:integer;
 begin set_pos(dvi_file,-1); dvi_length:=cur_pos(dvi_file);
@@ -192,25 +175,14 @@ begin
 end;
 @z
 
-@x [35] Make 16-bit TFM calculations work.
-read_tfm_word; lh:=b2*256+b3;
-read_tfm_word; font_bc[nf]:=b0*256+b1; font_ec[nf]:=b2*256+b3;
-@y
-read_tfm_word; lh:=b2*intcast(256)+b3;
-read_tfm_word; font_bc[nf]:=b0*intcast(256)+b1; font_ec[nf]:=b2*intcast(256)+b3;
-@z
-@x
-    if b0<128 then tfm_check_sum:=((b0*256+b1)*256+b2)*256+b3
-    else tfm_check_sum:=(((b0-256)*256+b1)*256+b2)*256+b3
-@y
-    if b0<128 then tfm_check_sum:=((b0*intcast(256)+b1)*256+b2)*256+b3
-    else tfm_check_sum:=(((b0-256)*intcast(256)+b1)*256+b2)*256+b3
-@z
+@x [42/43] Initialize optional variables sooner.
+@!count:array[0..9] of integer; {the count values on the current page}
 
-@x [43] Initialize optional variables sooner.
 @ @<Set init...@>=
 out_mode:=the_works; max_pages:=1000000; start_vals:=0; start_there[0]:=false;
 @y
+@!count:array[0..9] of integer; {the count values on the current page}
+
 @ Initializations are done sooner now.
 @z
 
@@ -493,7 +465,7 @@ endcases;
   if show_opcodes and (o >= 128) then print (' {', o:1, '}');
 @z
 
-@x [106] (main) No dialog; remove unused label.
+@x [107] (main) No dialog; remove unused label.
 dialog; {set up all the options}
 @y
 @<Print all the selected options@>;
@@ -505,7 +477,7 @@ final_end:end.
 end.
 @z
 
-@x [109] Fix another floating point print.
+@x [110] Fix another floating point print.
 print_ln('magnification=',mag:1,'; ',conv:16:8,' pixels per DVI unit')
 @y
 print ('magnification=', mag:1, '; ');
@@ -513,7 +485,7 @@ print_real (conv, 16, 8);
 print_ln (' pixels per DVI unit')
 @z
 
-@x [111] System-dependent changes.
+@x [112] System-dependent changes.
 This section should be replaced, if necessary, by changes to the program
 that are necessary to make \.{DVItype} work at a particular installation.
 It is usually best to design your change file so that all changes to

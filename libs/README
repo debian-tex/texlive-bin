@@ -1,4 +1,4 @@
-$Id: README 35191 2014-09-18 09:45:34Z peter $
+$Id: README 36222 2015-02-06 07:47:34Z peter $
 Public domain.  Originally created by Karl Berry, 2005.
 
 Libraries we compile for TeX Live.
@@ -9,13 +9,13 @@ bypassing or using the original one.
 
 See also comments in ../texk/README.
 
-cairo 1.12.16 - checked 10sep13
+cairo 1.14.0 - checked 15oct14
   http://cairographics.org/releases/
 
-freetype2 2.5.3 - checked 8mar14
+freetype2 2.5.5 - checked 7jan15
   http://savannah.nongnu.org/download/freetype/
 
-gd 2.1.0 - checked 26jun13
+gd 2.1.1 - checked 14jan15
   https://bitbucket.org/libgd/gd-libgd/downloads/
 
 gmp 6.0.0 - checked 25mar14
@@ -24,16 +24,16 @@ gmp 6.0.0 - checked 25mar14
 graphite2 1.2.4 - checked 2dec13
   http://sourceforge.net/projects/silgraphite/files/graphite2/
 
-harfbuzz 0.9.35 - checked 14aug14
+harfbuzz 0.9.38 - checked 26jan15
   http://www.freedesktop.org/software/harfbuzz/release/
 
-icu 54.1 (rc) - checked 18sep14
+icu 54.1 (release) - checked 2oct14
   http://download.icu-project.org/files/icu4c/
 
 libpaper 1.1.24+nmu2 - checked 24oct13
   ftp://ftp.de.debian.org/debian/pool/main/libp/libpaper/
 
-libpng 1.6.13 - checked 22aug14
+libpng 1.6.16 - checked 22dec14
   http://www.libpng.org/ - used by many
   http://www.libpng.org/pub/png/pngcode.html
 
@@ -49,7 +49,7 @@ mpfr 3.1.2 - checked 13mar13
 pixman 0.32.6 - checked 7jul14
   http://cairographics.org/releases/
 
-poppler 0.26.4 - checked 22aug14
+poppler 0.31.0 - checked 6feb15
   http://poppler.freedesktop.org/ - used by luatex and xetex
 
 potrace 1.11 - checked 12apr13

@@ -234,6 +234,22 @@ else
 @z
 
 @x
+#define DLLPROC dllmpostmain
+@y
+#ifdef UPMP
+#define DLLPROC dllupmpostmain
+#else
+#define DLLPROC dllpmpostmain
+#endif
+@z
+
+@x
+    if (FILESTRCASEEQ(base, "dvitomp"))
+@y
+    if (FILESTRCASEEQ(base, P_UP "dvitomp"))
+@z
+
+@x
   if (dvitomp_only) {
     @<Read and set dvitomp command line options@>;
   } else {

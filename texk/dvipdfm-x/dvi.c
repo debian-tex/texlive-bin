@@ -61,8 +61,10 @@
 #include "dvipdfmx.h"
 
 #ifdef XETEX
+#include "dpxfile.h"
 #include "pdfximage.h"
-#include FT_ADVANCES_H
+#include "tt_aux.h"
+#include "tt_table.h"
 #endif
 
 #define DVI_STACK_DEPTH_MAX  256u
@@ -142,7 +144,11 @@ static struct loaded_font
   int   source;     /* Source is either DVI or VF */
 #ifdef XETEX
   uint32_t rgba_color;
-  FT_Face ft_face;
+  struct tt_longMetrics *hvmt;
+  int   ascent;
+  int   descent;
+  unsigned unitsPerEm;
+  unsigned numGlyphs;
   int   layout_dir;
   float extend;
   float slant;
@@ -793,6 +799,8 @@ dvi_locate_font (const char *tfm_name, spt_t ptsize)
     subfont_id = sfd_load_record(mrec->charmap.sfd_name, mrec->charmap.subfont_id);
   }
 
+  memset(&loaded_fonts[cur_id], 0, sizeof (struct loaded_font));
+
   /* TFM must exist here. */
   loaded_fonts[cur_id].tfm_id     = tfm_open(tfm_name, 1);
   loaded_fonts[cur_id].subfont_id = subfont_id;
@@ -913,31 +921,74 @@ dvi_locate_native_font (const char *filename, uint32_t index,
 {
   int           cur_id = -1;
   fontmap_rec  *mrec;
-  char         *fontmap_key = malloc(strlen(filename) + 40); // CHECK this is enough
+  char         *fontmap_key;
+  FILE         *fp;
+  char         *path;
+  sfnt         *sfont;
+  unsigned      offset = 0;
+  struct tt_head_table *head;
+  struct tt_maxp_table *maxp;
+  struct tt_hhea_table *hhea;
 
   if (verbose)
     MESG("<%s@%.2fpt", filename, ptsize * dvi2pts);
 
+  if ((fp = fopen(filename, "rb")) != NULL)
+    path = strdup(filename);
+  else if (((path = dpx_find_opentype_file(filename)) == NULL
+         && (path = dpx_find_truetype_file(filename)) == NULL
+         && (path = dpx_find_type1_file(filename)) == NULL
+         && (path = dpx_find_dfont_file(filename)) == NULL)
+         || (fp = fopen(path, "rb")) == NULL) {
+    ERROR("Cannot proceed without the font: %s", filename);
+  }
   need_more_fonts(1);
 
   cur_id = num_loaded_fonts++;
 
-  sprintf(fontmap_key, "%s/%u/%c/%d/%d/%d", filename, index, layout_dir == 0 ? 'H' : 'V', extend, slant, embolden);
+  fontmap_key = malloc(strlen(path) + 40); // CHECK this is enough
+  sprintf(fontmap_key, "%s/%u/%c/%d/%d/%d", path, index, layout_dir == 0 ? 'H' : 'V', extend, slant, embolden);
   mrec = pdf_lookup_fontmap_record(fontmap_key);
   if (mrec == NULL) {
-    if (pdf_load_native_font(filename, index, layout_dir, extend, slant, embolden) == -1) {
-      ERROR("Cannot proceed without the \"native\" font: %s", filename);
+    if ((mrec = pdf_insert_native_fontmap_record(path, index, layout_dir, extend, slant, embolden)) == NULL) {
+      ERROR("Failed to insert font record for font: %s", filename);
     }
-    mrec = pdf_lookup_fontmap_record(fontmap_key);
-    /* FIXME: would be more efficient if pdf_load_native_font returned the mrec ptr (or NULL for error)
-              so we could avoid doing a second lookup for the item we just inserted */
   }
+
+  memset(&loaded_fonts[cur_id], 0, sizeof (struct loaded_font));
+
   loaded_fonts[cur_id].font_id = pdf_dev_locate_font(fontmap_key, ptsize);
   loaded_fonts[cur_id].size    = ptsize;
   loaded_fonts[cur_id].type    = NATIVE;
   free(fontmap_key);
 
-  loaded_fonts[cur_id].ft_face = mrec->opt.ft_face;
+  sfont = sfnt_open(fp);
+  if (sfont->type == SFNT_TYPE_TTC)
+    offset = ttc_read_offset(sfont, index);
+  sfnt_read_table_directory(sfont, offset);
+  head = tt_read_head_table(sfont);
+  maxp = tt_read_maxp_table(sfont);
+  hhea = tt_read_hhea_table(sfont);
+  loaded_fonts[cur_id].ascent = hhea->ascent;
+  loaded_fonts[cur_id].descent = hhea->descent;
+  loaded_fonts[cur_id].unitsPerEm = head->unitsPerEm;
+  loaded_fonts[cur_id].numGlyphs = maxp->numGlyphs;
+  if (layout_dir == 1 && sfnt_find_table_pos(sfont, "vmtx") > 0) {
+    struct tt_vhea_table *vhea = tt_read_vhea_table(sfont);
+    sfnt_locate_table(sfont, "vmtx");
+    loaded_fonts[cur_id].hvmt = tt_read_longMetrics(sfont, maxp->numGlyphs, vhea->numOfLongVerMetrics, vhea->numOfExSideBearings);
+    RELEASE(vhea);
+  } else {
+    sfnt_locate_table(sfont, "hmtx");
+    loaded_fonts[cur_id].hvmt = tt_read_longMetrics(sfont, maxp->numGlyphs, hhea->numOfLongHorMetrics, hhea->numOfExSideBearings);
+  }
+  RELEASE(hhea);
+  RELEASE(maxp);
+  RELEASE(head);
+  sfnt_close(sfont);
+  free(path);
+  fclose(fp);
+
   loaded_fonts[cur_id].layout_dir = layout_dir;
   loaded_fonts[cur_id].extend = mrec->opt.extend;
   loaded_fonts[cur_id].slant = mrec->opt.slant;
@@ -1474,13 +1525,13 @@ dvi_end_reflect (void)
     current_font = lr_state.font;
     dvi_page_buf_index = lr_state.buf_index;
     lr_mode = REVERSE(lr_state.state); /* must precede dvi_right */
-    dvi_right(-lr_width);
+    dvi_right(-(int32_t)lr_width);
     lr_width_push();
     break;
   case LTYPESETTING:
   case RTYPESETTING:
     lr_width_pop();
-    dvi_right(-lr_width);
+    dvi_right(-(int32_t)lr_width);
     lr_mode = REVERSE(lr_mode);
     break;
   default:                     /* lr_mode > SKIMMING */
@@ -1566,24 +1617,15 @@ do_glyphs (void)
 
   for (i = 0; i < slen; i++) {
     glyph_id = get_buffered_unsigned_pair(); /* freetype glyph index */
-    if (glyph_id < font->ft_face->num_glyphs) {
-      FT_Error error;
-      FT_Fixed advance;
-      int flags = FT_LOAD_NO_SCALE;
+    if (glyph_id < font->numGlyphs) {
+      unsigned advance = (font->hvmt)[glyph_id].advance;
+      glyph_width    = (double)font->size * (double)advance / (double)font->unitsPerEm;
+      glyph_width    = glyph_width * font->extend;
 
-      if (font->layout_dir == 1)
-        flags |= FT_LOAD_VERTICAL_LAYOUT;
-
-      error = FT_Get_Advance(font->ft_face, glyph_id, flags, &advance);
-      if (error)
-        advance = 0;
-
-      glyph_width = (double)font->size * (double)advance / (double)font->ft_face->units_per_EM;
-      glyph_width = glyph_width * font->extend;
       if (dvi_is_tracking_boxes()) {
         pdf_rect rect;
-        height = (double)font->size * (double)font->ft_face->ascender / (double)font->ft_face->units_per_EM;
-        depth  = (double)font->size * -(double)font->ft_face->descender / (double)font->ft_face->units_per_EM;
+        height = (double)font->size * (double)font->ascent / (double)font->unitsPerEm;
+        depth  = (double)font->size * -(double)font->descent / (double)font->unitsPerEm;
         pdf_dev_set_rect(&rect, dvi_state.h + xloc[i], -dvi_state.v - yloc[i], glyph_width, height, depth);
         pdf_doc_expand_box(&rect);
       }
@@ -1867,6 +1909,16 @@ dvi_close (void)
     RELEASE(page_loc);
   page_loc  = NULL;
   num_pages = 0;
+
+#ifdef XETEX
+  for (i = 0; i < num_loaded_fonts; i++)
+  {
+    if (loaded_fonts[i].hvmt != NULL)
+      RELEASE(loaded_fonts[i].hvmt);
+
+    loaded_fonts[i].hvmt = NULL;
+  }
+#endif
 
   if (loaded_fonts)
     RELEASE(loaded_fonts);

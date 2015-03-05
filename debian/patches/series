@@ -8,16 +8,5 @@ relax-zlib-version-check
 #pmpost-mp1.999
 #upmpost-mp1.999
 ac-ctie
-upupstream-fix-pdf_h-query-svn5018
-upupstream-fix-math-list-crash-svn5019
-upupstream-bug907-svn5024
 libpng-arm64-neon-fix
-upstream-svn35304-dvipdfmx-bug-spc-dvips-end-page
-upstream-svn35312-dvipdfmx-ghostscript-fix
-upstream-svn35457-enctex-chars
-upstream-svn35461-dvipdfmx-pk-support
-upstream-svn35516-dvipdfmx-fix-crash-missing-fontmap
-upstream-svn35518-mpost-fontmap-warnings
-cve-libpng-heap-overflow-fix
 mktexlsr-use-mktemp
-cve-2015-0973

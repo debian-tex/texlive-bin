@@ -1,10 +1,13 @@
 ---
 
-Index: texlive-bin/texk/web2c/configure.ac
-===================================================================
+---
+ texk/web2c/Makefile.am  |    6 ++++++
+ texk/web2c/configure.ac |    1 +
+ 2 files changed, 7 insertions(+)
+
 --- texlive-bin.orig/texk/web2c/configure.ac
 +++ texlive-bin/texk/web2c/configure.ac
-@@ -352,6 +352,7 @@ KPSE_CROSS_PATH_PROG([TANGLE],      [tan
+@@ -354,6 +354,7 @@
  KPSE_CROSS_PATH_PROG([CTANGLEBOOT], [ctangle],   [./ctangleboot])
  KPSE_CROSS_PATH_PROG([CTANGLE],     [ctangle],   [./ctangle])
  KPSE_CROSS_PATH_PROG([TIE],         [tie],       [./tie])
@@ -12,11 +15,9 @@ Index: texlive-bin/texk/web2c/configure.ac
  dnl Required for Aleph and XeTeX
  KPSE_CROSS_PATH_PROG([OTANGLE],     [otangle],   [./otangle])
  
-Index: texlive-bin/texk/web2c/Makefile.am
-===================================================================
 --- texlive-bin.orig/texk/web2c/Makefile.am
 +++ texlive-bin/texk/web2c/Makefile.am
-@@ -138,6 +138,12 @@ tie_silent = $(tie_silent_@AM_V@)
+@@ -135,6 +135,12 @@
  tie_silent_ = $(tie_silent_@AM_DEFAULT_V@)
  tie_silent_0 = @echo "  TIE     " $@; $(SHELL) ./silent-sh $@ #
  tie_silent_1 =

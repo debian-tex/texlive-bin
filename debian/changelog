@@ -1,3 +1,11 @@
+texlive-bin (2014.20150305.36438-1) experimental; urgency=medium
+
+  * re-include libpoppler in new sources, debian's version is too old
+  * Imported Upstream version 2014.20150305.36438
+  * update/remove/unfuzzify patches
+
+ -- Norbert Preining <preining@debian.org>  Thu, 05 Mar 2015 23:30:03 +0900
+
 texlive-bin (2014.20140926.35254-6) unstable; urgency=high
 
   * cherrypick security fix for libpng CVE-2015-0973 (Closes: #775673)

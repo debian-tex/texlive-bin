@@ -1,3 +1,23 @@
+2015-03-01  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* Imported release 1.9.1.
+	* version.ac: Adapted.
+	* Makefile.am: Adjusted.
+
+2015-02-16  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* Makefile.am: Use the fragment ../../am/dist_hook.am.
+
+2015-01-07  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* Imported release 1.9.
+	* version.ac: Adapted.
+	* Makefile.am: Adjusted.
+
+2014-12-02  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* configure.ac: Drop useless KPSE_COMPILER_VISIBILITY.
+
 2014-09-15  Peter Breitenlohner  <peb@mppmu.mpg.de>
 
 	* Imported release 1.8.1.

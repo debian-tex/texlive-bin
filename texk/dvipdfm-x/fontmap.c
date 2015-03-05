@@ -35,11 +35,6 @@
 
 #include "fontmap.h"
 
-#ifdef XETEX
-#include "ft2build.h"
-#include FT_FREETYPE_H
-#endif
-
 /* CIDFont */
 static char *strip_options (const char *map_name, fontmap_opt *opt);
 
@@ -81,10 +76,6 @@ pdf_init_fontmap_record (fontmap_rec *mrec)
   mrec->opt.charcoll  = NULL;
   mrec->opt.style     = FONTMAP_STYLE_NONE;
   mrec->opt.stemv     = -1; /* not given explicitly by an option */
-
-#ifdef XETEX
-  mrec->opt.ft_face   = NULL;
-#endif
 
   mrec->opt.cff_charsets = NULL;
 }
@@ -152,10 +143,6 @@ pdf_copy_fontmap_record (fontmap_rec *dst, const fontmap_rec *src)
   dst->opt.charcoll  = mstrdup(src->opt.charcoll);
   dst->opt.style     = src->opt.style;
   dst->opt.stemv     = src->opt.stemv;
-
-#ifdef XETEX
-  dst->opt.ft_face   = src->opt.ft_face;
-#endif
 
   dst->opt.cff_charsets = src->opt.cff_charsets;
 }
@@ -829,7 +816,7 @@ pdf_remove_fontmap_record (const char *kp)
   return  0;
 }
 
-int
+fontmap_rec *
 pdf_insert_fontmap_record (const char *kp, const fontmap_rec *vp)
 {
   fontmap_rec *mrec;
@@ -837,7 +824,7 @@ pdf_insert_fontmap_record (const char *kp, const fontmap_rec *vp)
 
   if (!kp || fontmap_invalid(vp)) {
     WARN("Invalid fontmap record...");
-    return -1;
+    return NULL;
   }
 
   if (verbose > 3)
@@ -852,7 +839,8 @@ pdf_insert_fontmap_record (const char *kp, const fontmap_rec *vp)
     if (!subfont_ids) {
       RELEASE(fnt_name);
       RELEASE(sfd_name);
-      return  -1;
+      WARN("Could not open SFD file: %s", sfd_name);
+      return NULL;
     }
     if (verbose > 3)
       MESG("\nfontmap>> Expand @%s@:", sfd_name);
@@ -885,7 +873,7 @@ pdf_insert_fontmap_record (const char *kp, const fontmap_rec *vp)
   if (verbose > 3)
     MESG("\n");
 
-  return  0;
+  return mrec;
 }
 
 
@@ -1047,15 +1035,15 @@ pdf_load_fontmap_file (const char *filename, int mode)
   return  error;
 }
 
-#ifdef XETEX
-static int
-pdf_insert_native_fontmap_record (const char *path, int index, FT_Face face,
+fontmap_rec *
+pdf_insert_native_fontmap_record (const char *path, uint32_t index,
                                   int layout_dir, int extend, int slant, int embolden)
 {
   char        *fontmap_key;
   fontmap_rec *mrec;
+  fontmap_rec *ret;
 
-  ASSERT(path || face);
+  ASSERT(path);
 
   fontmap_key = malloc(strlen(path) + 40);	// CHECK
   sprintf(fontmap_key, "%s/%d/%c/%d/%d/%d", path, index, layout_dir == 0 ? 'H' : 'V', extend, slant, embolden);
@@ -1068,9 +1056,8 @@ pdf_insert_native_fontmap_record (const char *path, int index, FT_Face face,
 
   mrec->map_name  = fontmap_key;
   mrec->enc_name  = mstrdup(layout_dir == 0 ? "Identity-H" : "Identity-V");
-  mrec->font_name = (path != NULL) ? mstrdup(path) : NULL;
+  mrec->font_name = mstrdup(path);
   mrec->opt.index = index;
-  mrec->opt.ft_face = face;
   if (layout_dir != 0)
     mrec->opt.flags |= FONTMAP_OPT_VERT;
 
@@ -1080,50 +1067,15 @@ pdf_insert_native_fontmap_record (const char *path, int index, FT_Face face,
   mrec->opt.slant  = slant    / 65536.0;
   mrec->opt.bold   = embolden / 65536.0;
   
-  pdf_insert_fontmap_record(mrec->map_name, mrec);
+  ret = pdf_insert_fontmap_record(mrec->map_name, mrec);
   pdf_clear_fontmap_record(mrec);
   RELEASE(mrec);
 
   if (verbose)
     MESG(">");
 
-  return 0;
+  return ret;
 }
-
-static FT_Library ftLib;
-
-int
-pdf_load_native_font (const char *filename, unsigned long index,
-                      int layout_dir, int extend, int slant, int embolden)
-{
-  char *q;
-  FT_Face face = NULL;
-  int  error = -1;
-
-  if (FT_Init_FreeType(&ftLib) != 0) {
-    ERROR("FreeType initialization failed.");
-    return error;
-  }
-
-  /* try loading the filename directly */
-  error = FT_New_Face(ftLib, filename, index, &face);
-
-  /* if failed, try locating the file in the TEXMF tree */
-  if ( error &&
-       ( (q = dpx_find_opentype_file(filename)) != NULL
-      || (q = dpx_find_truetype_file(filename)) != NULL
-      || (q = dpx_find_type1_file(filename)) != NULL
-      || (q = dpx_find_dfont_file(filename)) != NULL) ) {
-    error = FT_New_Face(ftLib, q, index, &face);
-    RELEASE(q);
-  }
-
-  if (error == 0)
-    error = pdf_insert_native_fontmap_record(filename, index, face,
-                                           layout_dir, extend, slant, embolden);
-  return error;
-}
-#endif /* XETEX */
 
 #if 0
 /* tfm_name="dmjhira10", map_name="dmj@DNP@10", sfd_name="DNP"

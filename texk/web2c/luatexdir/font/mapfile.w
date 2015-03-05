@@ -20,7 +20,7 @@
 
 @ @c
 static const char _svn_version[] =
-    "$Id: mapfile.w 4956 2014-03-28 12:12:17Z luigi $"
+    "$Id: mapfile.w 5081 2014-11-07 18:38:33Z luigi $"
     "$URL: https://foundry.supelec.fr/svn/luatex/trunk/source/texk/web2c/luatexdir/font/mapfile.w $";
 
 #include "ptexlib.h"
@@ -337,7 +337,8 @@ static void fm_scan_line(void)
     float d;
     fm_entry *fm;
     char fm_line[FM_BUF_SIZE], buf[FM_BUF_SIZE];
-    char *p, *q, *r, *s;
+    char *p, *q, *s; 
+    char *r = NULL;
     switch (mitem->type) {
     case MAPFILE:
         p = fm_line;

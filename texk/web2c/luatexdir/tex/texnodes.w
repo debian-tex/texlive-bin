@@ -19,7 +19,7 @@
 
 @ @c
 static const char _svn_version[] =
-    "$Id: texnodes.w 4911 2014-03-20 14:00:02Z luigi $"
+    "$Id: texnodes.w 5112 2014-12-20 08:21:53Z luigi $"
     "$URL: https://foundry.supelec.fr/svn/luatex/trunk/source/texk/web2c/luatexdir/tex/texnodes.w $";
 
 #include "ptexlib.h"
@@ -2146,6 +2146,8 @@ static halfword new_attribute_node(unsigned int i, int v)
     type(r) = attribute_node;
     attribute_id(r) = (halfword) i;
     attribute_value(r) = v;
+    /* not used but nicer in print */ 
+    subtype(r) = 0; 
     return r;
 }
 
@@ -2276,8 +2278,10 @@ void set_attribute(halfword n, int i, int val)
 {
     register halfword p;
     register int j = 0;
+    /* not all nodes can have an attribute list */
     if (!nodetype_has_attributes(type(n)))
         return;
+    /* if we have no list, we create one and quit */
     p = node_attr(n);
     if (p == null) {            /* add a new head \& node */
         p = get_node(attribute_node_size);
@@ -2288,6 +2292,7 @@ void set_attribute(halfword n, int i, int val)
         vlink(node_attr(n)) = p;
         return;
     }
+    /* we check if we have this attribute already and quit if the value stays the same */
     assert(vlink(p) != null);
     while (vlink(p) != null) {
         int t = attribute_id(vlink(p));
@@ -2298,22 +2303,40 @@ void set_attribute(halfword n, int i, int val)
         j++;
         p = vlink(p);
     }
+    /* j has now the position (if found) .. we assume a sorted list ! */
     p = node_attr(n);
-    if (attr_list_ref(p) != 1) {
-        if (attr_list_ref(p) > 1) {
+
+    if (attr_list_ref(p) == 0 ) {
+        /* the list is invalid i.e. freed already */
+        fprintf(stdout,"Node %d has an attribute list that is free already\n",(int) n);
+        /* the still dangling list gets ref count 1 */
+        attr_list_ref(p) = 1;
+    } else if (attr_list_ref(p) == 1) {
+        /* this can really happen HH-LS */
+        if (p == attr_list_cache) {
+            /* we can invalidate the cache setting */
+            /* attr_list_cache = cache_disabled    */
+            /* or save the list, as done below     */
             p = copy_attribute_list(p);
-            delete_attribute_ref(node_attr(n));
             node_attr(n) = p;
-        } else {
-            fprintf(stdout,
-                    "Node %d has an attribute list that is free already\n",
-                    (int) n);
+            /* the copied list gets ref count 1 */
+            attr_list_ref(p) = 1;
         }
+    } else {
+        /* the list is used multiple times so we make a copy */
+        p = copy_attribute_list(p);
+        /* we decrement the ref count or the original */
+        delete_attribute_ref(node_attr(n));
+        node_attr(n) = p;
+        /* the copied list gets ref count 1 */
         attr_list_ref(p) = 1;
     }
+
+
+    /* we go to position j in the list */
     while (j-- > 0)
         p = vlink(p);
-
+    /* if we have a hit we just set the value otherwise we add a new node */
     if (attribute_id(vlink(p)) == i) {
         attribute_value(vlink(p)) = val;
     } else {                    /* add a new node */

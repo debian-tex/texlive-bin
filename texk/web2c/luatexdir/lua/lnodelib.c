@@ -96,12 +96,16 @@
 */
 
 static const char _svn_version[] =
-    "$Id: lnodelib.c 4956 2014-03-28 12:12:17Z luigi $ "
+    "$Id: lnodelib.c 5115 2014-12-21 17:46:00Z luigi $ "
     "$URL: https://foundry.supelec.fr/svn/luatex/trunk/source/texk/web2c/luatexdir/lua/lnodelib.c $";
 
 #include "ptexlib.h"
 #include "lua/luatex-api.h"
+#ifdef LuajitTeX
 #include "lua/lauxlib_bridge.h"
+#else
+#include "lauxlib.h"
+#endif
 
 /*
 
@@ -1984,14 +1988,18 @@ static int lua_nodelib_end_of_math(lua_State * L)
     halfword *n;
     halfword t;
     if (lua_isnil(L, 1))
-        return 1;               /* the nil itself */
+        return 0;
     n = check_isnode(L, 1);
     t = *n;
     if (t == null)
-        return 1;               /* the old userdata */
+        return 0;
+    if (type(t)==math_node && (subtype(t)==1)) {
+        lua_nodelib_push_fast(L, t);
+        return 1;
+    }
     while (vlink(t) != null) {
-        t = vlink(t); /* skip first node */
-        if (t && type(t)==math_node) {
+        t = vlink(t);
+        if (t && (type(t)==math_node) && (subtype(t)==1)) {
             lua_nodelib_push_fast(L, t);
             return 1;
         }
@@ -2005,18 +2013,22 @@ static int lua_nodelib_direct_end_of_math(lua_State * L)
 {
     halfword n;
     n = (halfword) lua_tonumber(L, 1);
-    if (n != null) {
-        while (vlink(n) != null) {
-            n = vlink(n); /* skip first node */
-            if (n && type(n)==math_node) {
-                lua_pushnumber(L, n);
-                return 1;
-            }
+    if (n == null)
+        return 0;
+    if ((type(n)==math_node && (subtype(n)==1))) {
+        lua_pushnumber(L, n);
+        return 1;
+    }
+    while (vlink(n) != null) {
+        n = vlink(n);
+        if (n && (type(n)==math_node) && (subtype(n)==1)) {
+            lua_pushnumber(L, n);
+            return 1;
         }
     }
-    lua_pushnil(L);
     return 0;
 }
+
 
 /* node.has_attribute (gets attribute) */
 
@@ -3898,9 +3910,10 @@ static void lua_nodelib_do_tostring(lua_State * L, halfword n, const char *tag)
     char a[7] = { ' ', ' ', ' ', 'n', 'i', 'l', 0 };
     char v[7] = { ' ', ' ', ' ', 'n', 'i', 'l', 0 };
     msg = xmalloc(256);
-    if (alink(n) != null)
+
+    if ((alink(n) != null) && (type(n) != attribute_node))
         snprintf(a, 7, "%6d", (int) alink(n));
-    if (vlink(n) != null)
+    if (vlink(n) != null) 
         snprintf(v, 7, "%6d", (int) vlink(n));
     snprintf(msg, 255, "<%s %s < %6d > %s : %s %d>", tag, a, (int) n, v, node_data[type(n)].name, subtype(n));
     lua_pushstring(L, msg);
@@ -4171,7 +4184,7 @@ static int lua_nodelib_has_glyph(lua_State * L)
     halfword *a;
     halfword h = (halfword) *(check_isnode(L,1)) ;
     while (h != null) {
-        if (type(h) == glyph_node) {
+        if ( (type(h) == glyph_node) || (type(h) == disc_node)) {
             fast_metatable(h);
             return 1;
         } else {
@@ -4188,7 +4201,7 @@ static int lua_nodelib_direct_has_glyph(lua_State * L)
 {
     halfword h = (halfword) lua_tonumber(L,1) ;
     while (h != null) {
-        if (type(h) == glyph_node) {
+        if ((type(h) == glyph_node) || (type(h) == disc_node)) {
             nodelib_pushdirect(h);
             return 1;
         } else {

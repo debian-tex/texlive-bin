@@ -10,22 +10,30 @@
    #defines TeX or MF, which avoids the need for a special
    Makefile rule.  */
 
+/* We |#define DLLPROC| in order to build LuaTeX and LuajitTeX as DLL
+   for W32TeX.  */
+#if defined LuajitTeX
+#define DLLPROC dllluajittexmain
+#else
+#define DLLPROC dllluatexmain
+#endif
+
 #include "ptexlib.h"
 #include "luatex.h"
 #include "lua/luatex-api.h"
 #include "luatex_svnversion.h"
 
 static const char _svn_version[] =
-    "$Id: luatex.c 4969 2014-03-29 08:47:58Z taco $ "
-    "$URL: https://foundry.supelec.fr/svn/luatex/tags/beta-0.79.1/source/texk/web2c/luatexdir/luatex.c $";
+    "$Id: luatex.c 5093 2014-12-10 09:41:01Z luigi $ "
+    "$URL: https://foundry.supelec.fr/svn/luatex/trunk/source/texk/web2c/luatexdir/luatex.c $";
 
 #define TeX
 
-int luatex_svn = luatex_svn_revision;
+int luatex_svn = 5140;
 int luatex_version = 79;        /* \.{\\luatexversion}  */
-int luatex_revision = '1';      /* \.{\\luatexrevision}  */
-int luatex_date_info = 2014040100;     /* the compile date is now hardwired */
-const char *luatex_version_string = "beta-0.79.1";
+int luatex_revision = '3';      /* \.{\\luatexrevision}  */
+int luatex_date_info = 2015012100;     /* the compile date is now hardwired */
+const char *luatex_version_string = "beta-0.79.3";
 const char *engine_name = my_name;     /* the name of this engine */
 
 #include <kpathsea/c-ctype.h>
@@ -113,40 +121,31 @@ void mk_shellcmdlist(char *v)
 {
     char **p;
     char *q, *r;
-    unsigned int n;
+    size_t n;
 
     q = v;
-    n = 0;
+    n = 1;
 
 /* analyze the variable shell_escape_commands = foo,bar,...
    spaces before and after (,) are not allowed. */
 
     while ((r = strchr(q, ',')) != 0) {
         n++;
-        r++;
-        q = r;
+        q = r + 1;
     }
     if (*q)
         n++;
-    cmdlist = (char **) xmalloc((unsigned) ((n + 1) * sizeof(char *)));
+    cmdlist = (char **) xmalloc(n * sizeof (char *));
     p = cmdlist;
     q = v;
     while ((r = strchr(q, ',')) != 0) {
         *r = '\0';
-        *p = (char *) xmalloc((unsigned) strlen(q) + 1);
-        strcpy(*p, q);
-        *r = ',';
-        r++;
-        q = r;
-        p++;
+        *p++ = xstrdup (q);
+        q = r + 1;
     }
-    if (*q) {
-        *p = (char *) xmalloc((unsigned) strlen(q) + 1);
-        strcpy(*p, q);
-        p++;
-        *p = NULL;
-    } else
-        *p = NULL;
+    if (*q)
+        *p++ = xstrdup (q);
+    *p = NULL;
 }
 
 /* Called from maininit.  Not static because also called from
@@ -404,7 +403,7 @@ int shell_cmd_is_allowed(const char *cmd, char **safecmd, char **cmdname)
    1 if shell escapes are not restricted, hence any command is allowed.
    2 if shell escapes are restricted and CMD is allowed.  */
 
-int runsystem(char *cmd)
+int runsystem(const char *cmd)
 {
     int allow = 0;
     char *safecmd = NULL;
@@ -415,12 +414,10 @@ int runsystem(char *cmd)
     }
 
     /* If restrictedshell == 0, any command is allowed. */
-    if (restrictedshell == 0) {
+    if (restrictedshell == 0)
         allow = 1;
-    } else {
-        const char *thecmd = cmd;
-        allow = shell_cmd_is_allowed(thecmd, &safecmd, &cmdname);
-    }
+    else
+        allow = shell_cmd_is_allowed(cmd, &safecmd, &cmdname);
 
     if (allow == 1)
         (void) system(cmd);
@@ -450,11 +447,34 @@ const_string c_job_name;
 
 const char *ptexbanner;
 
+#ifdef _MSC_VER
+/* Invalid parameter handler */
+static void myInvalidParameterHandler(const wchar_t * expression,
+   const wchar_t * function,
+   const wchar_t * file,
+   unsigned int line,
+   uintptr_t pReserved)
+{
+/*
+   printf(L"Invalid parameter detected in function %s."
+            L" File: %s Line: %d\n", function, file, line);
+   printf(L"Expression: %s\n", expression);
+*/
+/*
+   I return silently to avoid an exit with the error 0xc0000417
+   (invalid parameter) when we use non-embedded fonts in luatex-ja,
+   which works without any problem on Unix systems. 
+   I hope it is not dangerous.
+*/
+   return;
+}
+#endif
+
 /* The entry point: set up for reading the command line, which will
    happen in `topenin', then call the main body.  */
 
 int
-#if defined(WIN32) && !defined(__MINGW32__) && defined(DLLPROC)
+#if defined(DLLPROC)
 DLLPROC (int ac, string *av)
 #else
 main (int ac, string *av)
@@ -466,11 +486,35 @@ main (int ac, string *av)
 #  endif
 
 #  ifdef WIN32
+#    ifdef _MSC_VER
+    _set_invalid_parameter_handler(myInvalidParameterHandler);
+#    endif
+    av[0] = kpse_program_basename (av[0]);
     _setmaxstdio(2048);
     SetErrorMode (SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX | SEM_NOOPENFILEERRORBOX);
+    setmode(fileno(stdin), _O_BINARY);
 #  endif
 
     lua_initialize(ac, av);
+
+#  ifdef WIN32
+    if (ac > 1) {
+      char *pp;
+      if ((strlen(av[ac-1]) > 2) &&
+          isalpha(av[ac-1][0]) &&
+          (av[ac-1][1] == ':') &&
+          (av[ac-1][2] == '\\')) {
+        for (pp=av[ac-1]+2; *pp; pp++) {
+          if (IS_KANJI(pp)) {
+            pp++;
+            continue;
+          }
+          if (*pp == '\\')
+            *pp = '/';
+        }
+      }
+    }
+#  endif
 
     /* Call the real main program.  */
     main_body();
@@ -604,10 +648,7 @@ ipc_make_name (void)
   return ipc_addr_len;
 }
 
-#ifndef INVALID_SOCKET
-# define INVALID_SOCKET (-1)
-#endif
-static int sock = INVALID_SOCKET;
+static int sock = -1;
 
 #ifdef WIN32
 # define CLOSE_SOCKET(s) closesocket (s); WSACleanup ()
@@ -618,7 +659,7 @@ static int sock = INVALID_SOCKET;
 static int
 ipc_is_open (void)
 {
-   return sock != INVALID_SOCKET;
+   return sock != -1;
 }
 
 static void
@@ -631,7 +672,7 @@ ipc_open_out (void) {
 #ifdef IPC_DEBUG
   fputs ("tex: Opening socket for IPC output ...\n", stderr);
 #endif
-  if (sock != INVALID_SOCKET) {
+  if (sock != -1) {
     return;
   }
 
@@ -647,13 +688,13 @@ ipc_open_out (void) {
 
   sock = socket (IPC_AF, SOCK_STREAM, 0);
 #ifdef IPC_DEBUG
-  if(sock != INVALID_SOCKET)
+  if(sock != -1)
     fprintf(stderr, "tex: Socket handle is %d\n", sock);
   else
     fprintf(stderr, "tex: Socket is invalid.\n");
 #endif
 
-  if (sock != INVALID_SOCKET) {
+  if (sock != -1) {
     if (connect (sock, ipc_addr, ipc_addr_len) != 0 ||
 #ifdef WIN32
         ioctlsocket (sock, FIONBIO, &mode) < 0
@@ -662,7 +703,7 @@ ipc_open_out (void) {
 #endif
         ) {
       CLOSE_SOCKET (sock);
-      sock = INVALID_SOCKET;
+      sock = -1;
 #ifdef IPC_DEBUG
       fputs ("tex: IPC socket cannot be connected.\n", stderr);
       fputs ("tex: Socket is closed.\n", stderr);
@@ -683,7 +724,7 @@ ipc_close_out (void)
 #endif
   if (ipc_is_open ()) {
     CLOSE_SOCKET (sock);
-    sock = INVALID_SOCKET;
+    sock = -1;
   }
 }
 

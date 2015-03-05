@@ -1,6 +1,6 @@
 ## Makefile.am for the TeX Live subdirectory texk/dvipdfm-x/
 ##
-## Copyright (C) 2009-2014 Peter Breitenlohner <tex-live@tug.org>
+## Copyright (C) 2009-2015 Peter Breitenlohner <tex-live@tug.org>
 ## You may freely use, modify and/or distribute this file.
 ##
 bin_PROGRAMS =
@@ -16,7 +16,7 @@ endif XDVIPDFMX
 EXTRA_PROGRAMS = dvipdfmx xdvipdfmx
 
 AM_CPPFLAGS = $(KPATHSEA_INCLUDES) $(LIBPNG_INCLUDES) $(ZLIB_INCLUDES) $(LIBPAPER_INCLUDES)
-xdvipdfmx_CPPFLAGS = -DXETEX $(FREETYPE2_INCLUDES) $(AM_CPPFLAGS)
+xdvipdfmx_CPPFLAGS = -DXETEX $(AM_CPPFLAGS)
 AM_CFLAGS = $(WARNING_CFLAGS)
 
 dvipdfmx_SOURCES = \
@@ -173,8 +173,7 @@ dvipdfmx_SOURCES = \
 
 nodist_xdvipdfmx_SOURCES = $(dvipdfmx_SOURCES)
 
-dvipdfmx_LDADD = $(KPATHSEA_LIBS) $(LIBPNG_LIBS) $(ZLIB_LIBS) $(LIBPAPER_LIBS)
-xdvipdfmx_LDADD = $(FREETYPE2_LIBS) $(dvipdfmx_LDADD)
+LDADD = $(KPATHSEA_LIBS) $(LIBPNG_LIBS) $(ZLIB_LIBS) $(LIBPAPER_LIBS)
 
 $(dvipdfmx_OBJECTS) $(xdvipdfmx_OBJECTS): config.force
 
@@ -251,7 +250,7 @@ endif DVIPDFMX
 
 all-local: config.force
 
-config.force: $(ZLIB_DEPEND) $(LIBPNG_DEPEND) $(KPATHSEA_DEPEND) $(FREETYPE2_DEPEND) $(LIBPAPER_DEPEND)
+config.force: $(ZLIB_DEPEND) $(LIBPNG_DEPEND) $(KPATHSEA_DEPEND) $(LIBPAPER_DEPEND)
 	echo timestamp >config.force
 	$(SHELL) ./config.status --recheck
 
@@ -259,8 +258,6 @@ DISTCLEANFILES = config.force
 
 ## Rebuild libkpathsea
 @KPATHSEA_RULE@
-## Rebuild libfreetype
-@FREETYPE2_RULE@
 ## Rebuild libpng
 @LIBPNG_RULE@
 ## Rebuild libz
@@ -278,6 +275,7 @@ TESTS += $(dvipdfmx_tests)
 endif DVIPDFMX
 xdvipdfmx_tests = xdvipdfmx.test xdvipdfm-ann.test xdvipdfm-bb.test xdvipdfm-bkm.test xdvipdfm-psz.test
 xdvipdfmx_tests += xdvipdfm-res.test
+xdvipdfmx_tests += xdvipdfm-ttc.test
 if XDVIPDFMX
 TESTS += $(xdvipdfmx_tests)
 endif XDVIPDFMX
@@ -295,4 +293,5 @@ EXTRA_DIST += tests/cmr10.pfb tests/cmr10.tfm tests/annot.dvi tests/annot.tex
 EXTRA_DIST += tests/bookm.dvi tests/bookm.tex tests/paper.dvi tests/paper.tex
 EXTRA_DIST += tests/resrc.dvi tests/resrc.tex
 EXTRA_DIST += tests/xbmc.dvi tests/xbmc.tex tests/xbmc10.600pk tests/xbmc10.tfm
-DISTCLEANFILES += img*.* pic*.* image*.pdf annot*.pdf bookm*.pdf paper*.pdf resrc*.pdf xbmc*.pdf
+EXTRA_DIST += tests/ttc.dvi tests/ttc.tex tests/test.ttc
+DISTCLEANFILES += img*.* pic*.* image*.pdf annot*.pdf bookm*.pdf paper*.pdf resrc*.pdf xbmc*.pdf ttc*.pdf

@@ -21,6 +21,7 @@ along with Omega; if not, write to the Free Software Foundation, Inc.,
 
 */
 
+#define OMFONTS
 #define OFM2OPL
 #define OPL2OFM
 #define OVP2OVF
@@ -292,6 +293,7 @@ main (int argc, string *argv)
             (void)yyparse();
             output_ofm_file();
             (void)fclose(file_ofm);
+            if (num_errors > 0) exit(1);
             break;
         }
         case PROG_OVP2OVF: {
@@ -305,6 +307,7 @@ main (int argc, string *argv)
             (void)fclose(file_ofm);
             output_ovf_file();
             (void)fclose(file_ovf);
+            if (num_errors > 0) exit(1);
             break;
         }
         default: {exit(1);}

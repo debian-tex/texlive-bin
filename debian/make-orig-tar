@@ -42,6 +42,8 @@ rm -rf $verstr/utils/t1utils
 # and depending libs are not compiled against it, 
 # as bad as it is, we have to keep 
 #	cairo freetype2 gd libpng
+# poppler is currently too old in Debian, keep it
+#	poppler
 
 for i in \
 	graphite2	\
@@ -51,7 +53,6 @@ for i in \
 	libpaper	\
 	mpfr		\
 	pixman		\
-	poppler		\
 	potrace		\
 	xpdf		\
 	zlib		\

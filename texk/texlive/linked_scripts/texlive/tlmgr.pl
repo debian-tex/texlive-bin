@@ -1,12 +1,12 @@
 #!/usr/bin/env perl
-# $Id: tlmgr.pl 34227 2014-05-23 13:13:03Z karl $
+# $Id: tlmgr.pl 36352 2015-02-22 13:05:56Z preining $
 #
-# Copyright 2008-2014 Norbert Preining
+# Copyright 2008-2015 Norbert Preining
 # This file is licensed under the GNU General Public License version 2
 # or any later version.
 
-my $svnrev = '$Revision: 34227 $';
-my $datrev = '$Date: 2014-05-23 15:13:03 +0200 (Fri, 23 May 2014) $';
+my $svnrev = '$Revision: 36352 $';
+my $datrev = '$Date: 2015-02-22 14:05:56 +0100 (Sun, 22 Feb 2015) $';
 my $tlmgrrevision;
 my $prg;
 if ($svnrev =~ m/: ([0-9]+) /) {
@@ -25,6 +25,7 @@ our $packagelogfile;
 our $packagelogged;
 our $tlmgr_config_file;
 our $pinfile;
+our $action; # for the pod2usage -sections call
 
 BEGIN {
   $^W = 1;
@@ -130,6 +131,8 @@ sub main {
     "gui" => 1,
     "gui-lang" => "=s",
     "debug-translation" => 1,
+    "h|?" => 1,
+    "help" => 1,
     "location|repository|repo" => "=s",
     "machine-readable" => 1,
     "no-execute-actions" => 1,
@@ -141,81 +144,74 @@ sub main {
     "usermode|user-mode" => 1,
     "usertree|user-tree" => "=s",
     "version" => 1,
-    "help" => 1,
-    "h|?" => 1);
+  );
 
   my %actionoptions = (
-    "get-mirror"    => { },
-    "option"        => { },
+    "backup"        => { "all" => 1,
+                         "backupdir" => "=s",
+                         "clean" => ":-99",
+                         "dry-run|n" => 1 },
+    "candidates"    => { },
+    "check"         => { "use-svn" => 1 },
     "conf"          => { "conffile" => "=s", 
                          "delete" => 1 },
-    "version"       => { },
-    "repository"    => { },
-    "candidate"     => { },
-    "backup"        => { "backupdir" => "=s",
-                         "clean" => ":-99",
-                         "all" => 1,
-                         "dry-run|n" => 1 },
-    "check"         => { "use-svn" => 1 },
-    "generate"      => { "localcfg" => "=s",
-                         "dest" => "=s",
+    "dump-tlpdb"    => { "local" => 1,
+                         "remote" => 1 },
+    "generate"      => { "dest" => "=s",
+                         "localcfg" => "=s",
                          "rebuild-sys" => 1 },
+    "get-mirror"    => { },
     "gui"           => { "load" => 1 },
-    "install"       => { "no-depends" => 1,
-                         "no-depends-at-all" => 1,
+    "help"          => { },
+    "info"          => { "list" => 1,
+                         "only-installed" => 1 },
+    "install"       => { "dry-run|n" => 1,
                          "file" => 1,
-                         "reinstall" => 1,
                          "force" => 1,
-                         "dry-run|n" => 1 },
+                         "with-doc" => 1,
+                         "with-src" => 1,
+                         "no-depends" => 1,
+                         "no-depends-at-all" => 1,
+                         "reinstall" => 1},
+    "option"        => { },
     "paper"         => { "list" => 1 },
     "path"          => { "w32mode" => "=s" },
     "pinning"       => { "all" => 1 },
     "platform"      => { "dry-run|n" => 1 },
-    "postaction"    => { "w32mode" => "=s",
-                         "all" => 1,
-                         "fileassocmode" => "=i" },
+    "postaction"    => { "all" => 1,
+                         "fileassocmode" => "=i",
+                         "w32mode" => "=s"},
     "recreate-tlpdb"=> { "platform|arch" => "=s" },
-    "remove"        => { "no-depends" => 1,
-                         "no-depends-at-all" => 1,
+    "remove"        => { "dry-run|n" => 1,
                          "force" => 1,
-                         "dry-run|n" => 1 },
+                         "no-depends" => 1,
+                         "no-depends-at-all" => 1 },
     "repository"    => { "with-platforms" => 1 },
-    "restore"       => { "backupdir" => "=s",
+    "restore"       => { "all" => 1,
+                         "backupdir" => "=s",
                          "dry-run|n" => 1,
-                         "all" => 1,
-                         "force" => 1 },
-    "search"        => { "global" => 1,
-                         "word" => 1,
+                         "force" => 1, },
+    "search"        => { "all" => 1, 
                          "file" => 1,
-                         "keyword" => 1,
-                         "list" => 1,
-                         "all" => 1,
-                         "characterization" => 1,
-                         "functionality" => 1,
-                         "taxonomy" => 1 },
-    "info"          => { "list" => 1,
-                         "taxonomy" => 1,
-                         "keyword" => 1,
-                         "characterization" => 1,
-                         "functionality" => 1,
-                         "only-installed" => 1 },
-    "dump-tlpdb"    => { "local" => 1,
-                         "remote" => 1 },
+                         "global" => 1,
+                         "word" => 1 },
+    "repository"    => { },
     "uninstall"     => { "force" => 1 },
-    "update"        => { "no-depends" => 1,
-                         "no-depends-at-all" => 1,
-                         "all" => 1,
-                         "self" => 1,
+    "update"        => { "all" => 1,
+                         "backup" => 1,
+                         "backupdir" => "=s",
+                         "dry-run|n" => 1,
+                         "exclude" => "=s@",
+                         "force" => 1,
                          "list" => 1,
                          "no-auto-remove" => 1,
                          "no-auto-install" => 1,
+                         "no-depends" => 1,
+                         "no-depends-at-all" => 1,
                          "reinstall-forcibly-removed" => 1,
-                         "force" => 1,
-                         "backupdir" => "=s",
-                         "backup" => 1,
-                         "exclude" => "=s@",
-                         "dry-run|n" => 1 },
-    );
+                         "self" => 1 },
+    "version"       => { },
+  );
 
   my %optarg;
   for my $k (keys %globaloptions) {
@@ -248,7 +244,7 @@ sub main {
   $::machinereadable = $opts{"machine-readable"}
     if (defined($opts{"machine-readable"}));
 
-  my $action = shift @ARGV;
+  $action = shift @ARGV;
   if (!defined($action)) {
     if ($opts{"gui"}) {			# -gui = gui
       $action = "gui";
@@ -281,6 +277,10 @@ sub main {
     exit 0;
   }
 
+  if (defined($action) && $action && !exists $actionoptions{$action}) {
+    die "$prg: unknown action: $action; try --help if you need it.\n";
+  }
+
   if ((!defined($action) || !$action) && !$opts{"help"} && !$opts{"h"}) {
     die "$prg: missing action; try --help if you need it.\n";
   }
@@ -298,9 +298,8 @@ sub main {
         @noperldoc = ("-noperldoc", "1");
       } else {
         # checking only for the existence of perldoc is not enough
-        # because stupid Debian/Ubuntu ships a stub that does nothing
-        # which is very very bad idea
-        # try to check for that, too
+        # because Debian/Ubuntu unfortunately ship a stub that does nothing;
+        # try to check for that, too.
         my $ret = system("perldoc -V >/dev/null 2>&1");
         if ($ret == 0) {
           debug("working perldoc found, using it\n");
@@ -322,8 +321,13 @@ sub main {
     delete $ENV{'LESSPIPE'};
     delete $ENV{'LESSOPEN'};
     if ($action && ($action ne "help")) {
+      # 1) Must use [...] form for -sections arg because otherwise the
+      #    /$action subsection selector applies to all sections.
+      #    https://rt.cpan.org/Public/Bug/Display.html?id=102116
+      # 2) Must use "..." for that so the $action value is interpolated.
       pod2usage(-exitstatus => 0, -verbose => 99,
-                -sections => "NAME|SYNOPSIS|ACTIONS/$action.*" , @noperldoc);
+                -sections => [ 'NAME', 'SYNOPSIS', "ACTIONS/$::action.*" ],
+                @noperldoc);
     } else {
       if ($opts{"help"}) {
         pod2usage(-exitstatus => 0, -verbose => 2, @noperldoc);
@@ -360,7 +364,7 @@ for the full story.\n";
   # --machine-readable is only supported by update.
   if ($::machinereadable && 
     $action ne "update" && $action ne "install" && $action ne "option") {
-    tlwarn("tlmgr: --machine-readable output not supported for $action\n");
+    tlwarn("$prg: --machine-readable output not supported for $action\n");
   }
 
   # check on supported arguments
@@ -383,17 +387,12 @@ for the full story.\n";
     push @notvalidargs, $k if !$found;
   }
   if (@notvalidargs) {
-    my $msg =
-      "The following arguments are not supported for the action $action:\n";
+    my $msg = "The action $action does not support the following option(s):\n";
     for my $c (@notvalidargs) {
       $msg .= " $c";
     }
-    $msg .= "\n";
-    my @noperldoc = ();
-    if (win32() || ! TeXLive::TLUtils::which("perldoc")) {
-      @noperldoc = ("-noperldoc", "1");
-    }
-    pod2usage(-msg => $msg, -exitstatus => 1, -verbose => 1, @noperldoc);
+    tlwarn("$prg: $msg\n");
+    tldie("$prg: Try --help if you need it.\n");
   }
 
   #
@@ -615,7 +614,7 @@ sub execute_action {
     action_recreate_tlpdb();
     finish(0);
   } else {
-    die "$prg: unknown action: $action; try --help if you need it.\n";
+    die "$prg: unknown action $action; try --help if you need it.\n";
   }
 
   # close the special log file
@@ -777,7 +776,7 @@ sub handle_execute_actions {
       # here we check whether an engine is updated
       my %foo = %{$::execute_actions{'enable'}{'formats'}{$m}};
       if (!defined($foo{'name'}) || !defined($foo{'engine'})) {
-        tlwarn("tlmgr: Very strange error, please report ", %foo);
+        tlwarn("$prg: Very strange error, please report ", %foo);
       } else {
         $format_to_engine{$m} = $foo{'engine'};
         if ($foo{'name'} eq $foo{'engine'}) {
@@ -890,7 +889,7 @@ sub action_remove {
   my @more_removal;
   init_local_db();
   return if !check_on_writable();
-  info("remove: dry run, no changes will be made\n") if $opts{"dry-run"};
+  info("$prg remove: dry run, no changes will be made\n") if $opts{"dry-run"};
   my @packs = @ARGV;
   #
   # we have to be carefull not to remove too many packages. The idea is
@@ -928,11 +927,11 @@ sub action_remove {
       # that package was asked for to be removed on the cmd line
       my @needed = $localtlpdb->needed_by($p);
       if ($opts{"force"}) {
-        info("tlmgr: $p is needed by " . join(" ", @needed) . "\n");
-        info("tlmgr: removing it anyway, due to --force\n");
+        info("$prg: $p is needed by " . join(" ", @needed) . "\n");
+        info("$prg: removing it anyway, due to --force\n");
       } else {
         delete($packs{$p});
-        tlwarn("tlmgr: not removing $p, needed by " .
+        tlwarn("$prg: not removing $p, needed by " .
           join(" ", @needed) . "\n");
       }
     } else {
@@ -990,9 +989,9 @@ sub action_remove {
     $localtlpdb->save;
     my @foo = sort keys %already_removed;
     if (@foo) {
-      info("tlmgr: ultimately removed these packages: @foo\n");
+      info("$prg: ultimately removed these packages: @foo\n");
     } else {
-      info("tlmgr: no packages removed.\n");
+      info("$prg: no packages removed.\n");
     }
   }
 }
@@ -1018,9 +1017,9 @@ sub action_paper {
   if ($action =~ m/^paper$/i) {  # generic paper
     my $newpaper = shift @ARGV;
     if ($opts{"list"}) {  # tlmgr paper --list => complain.
-      tlwarn("tlmgr: ignoring paper setting to $newpaper with --list\n")
+      tlwarn("$prg: ignoring paper setting to $newpaper with --list\n")
         if $newpaper;  # complain if they tried to set, too.
-      tlwarn("tlmgr: please specify a program before paper --list, ",
+      tlwarn("$prg: please specify a program before paper --list, ",
              "as in: tlmgr pdftex paper --list\n");
 
     } elsif (!defined($newpaper)) {  # tlmgr paper => show all current sizes.
@@ -1028,7 +1027,7 @@ sub action_paper {
 
     } elsif ($newpaper !~ /^(a4|letter)$/) {  # tlmgr paper junk => complain.
       $newpaper = "the empty string" if !defined($newpaper);
-      tlwarn("tlmgr: expected `a4' or `letter' after paper, not $newpaper\n");
+      tlwarn("$prg: expected `a4' or `letter' after paper, not $newpaper\n");
 
     } else { # tlmgr paper {a4|letter} => do it.
       return if !check_on_writable();
@@ -1040,7 +1039,7 @@ sub action_paper {
     my $arg = shift @ARGV;  # get "paper" argument
     if (!defined($arg) || $arg ne "paper") {
       $arg = "the empty string." if ! $arg;
-      tlwarn("tlmgr: expected `paper' after $prog, not $arg\n");
+      tlwarn("$prg: expected `paper' after $prog, not $arg\n");
       return;
     }
     # the do_paper progs check for the argument --list, so if given
@@ -1064,7 +1063,7 @@ sub action_path {
   my $what = shift @ARGV;
   if (!defined($what) || ($what !~ m/^(add|remove)$/i)) {
     $what = "" if ! $what;
-    tlwarn("tlmgr: action path requires add or remove, not: $what\n");
+    tlwarn("$prg: action path requires add or remove, not: $what\n");
     return;
   }
   init_local_db();
@@ -1154,8 +1153,7 @@ sub action_path {
         $localtlpdb->option("sys_info"));
     }
   } else {
-    # that should not happen
-    tlwarn("\ntlmgr: Should not happen, action_path what=$what\n");
+    tlwarn("\n$prg: Should not happen, action_path what=$what\n");
     exit 1;
   }
   return;
@@ -1192,15 +1190,7 @@ sub action_dumptlpdb {
 #
 sub action_info {
   init_local_db();
-  my $taxonomy;
-  if ($opts{"taxonomy"} || $opts{"characterization"} || $opts{"functionality"}
-      || $opts{"keyword"}) {
-    $taxonomy = load_taxonomy_datafile();
-    if (!defined($taxonomy)) {
-      tlwarn("tlmgr: Cannot load taxonomy file, showing taxonomies not supported.\n");
-    }
-  }
-  my ($what, @todo) = @ARGV;
+  my ($what,@todo) = @ARGV;
   #
   # tlmgr info
   # tlmgr info collection
@@ -1214,7 +1204,7 @@ sub action_info {
   # we are still here, so $what is defined and neither collection nor scheme,
   # so assume the arguments are package names
   foreach my $ppp ($what, @todo) {
-    my ($pkg, $tag) = split '@', $ppp, 2;
+    my ($pkg, $tag) = split ('@', $ppp, 2);
     my $tlpdb = $localtlpdb;
     my $source_found;
     my $tlp = $localtlpdb->get_package($pkg);
@@ -1225,11 +1215,11 @@ sub action_info {
       }
       if (defined($tag)) {
         if (!$remotetlpdb->is_virtual) {
-          tlwarn("tlmgr: specifying implicit tags is not allowed for non-virtual databases!\n");
+          tlwarn("$prg: specifying implicit tags is not allowed for non-virtual databases!\n");
           next;
         } else {
           if (!$remotetlpdb->is_repository($tag)) {
-            tlwarn("tlmgr: no such repository tag defined: $tag\n");
+            tlwarn("$prg: no such repository tag defined: $tag\n");
             next;
           }
         }
@@ -1239,7 +1229,7 @@ sub action_info {
         if (defined($tag)) {
           # we already searched for the package in a specific tag, don't retry
           # all candidates!
-          tlwarn("tlmgr: Cannot find package $pkg in repository $tag\n");
+          tlwarn("$prg: Cannot find package $pkg in repository $tag\n");
           next;
         }
         if ($remotetlpdb->is_virtual) {
@@ -1277,7 +1267,7 @@ sub action_info {
             next;
           }
         }
-        tlwarn("tlmgr: cannot find package $pkg\n");
+        tlwarn("$prg: cannot find package $pkg\n");
         next;
       }
       # we want to also show the source if it is known
@@ -1366,36 +1356,6 @@ sub action_info {
     print "cat-license: ", $tlp->cataloguedata->{'license'}, "\n"
       if $tlp->cataloguedata->{'license'};
     print "collection:  ", @colls, "\n" if (@colls);
-    if ($opts{"keyword"} || $opts{"taxonomy"}) {
-      print "keywords:    ";
-      if (defined($taxonomy->{'by-package'}{'keyword'}{$pkg})) {
-        print join(', ',@{$taxonomy->{'by-package'}{'keyword'}{$pkg}}), "\n";
-      } else {
-        print "(none found)\n";
-      }
-    }
-    if ($opts{"functionality"} || $opts{"taxonomy"}) {
-      print "function:    ";
-      if (defined($taxonomy->{'by-package'}{'functionality'}{$pkg})) {
-        print join(', ',@{$taxonomy->{'by-package'}{'functionality'}{$pkg}}), "\n";
-      } else {
-        print "(none found)\n";
-      }
-    }
-    if ($opts{"characterization"} || $opts{"taxonomy"}) {
-      print "primary characterization: ";
-      if (defined($taxonomy->{'by-package'}{'primary'}{$pkg})) {
-        print $taxonomy->{'by-package'}{'primary'}{$pkg}, "\n";
-      } else {
-        print "(none found)\n";
-      }
-      print "secondary characterization: ";
-      if (defined($taxonomy->{'by-package'}{'secondary'}{$pkg})) {
-        print $taxonomy->{'by-package'}{'secondary'}{$pkg}, "\n";
-      } else {
-        print "(none found)\n";
-      }
-    }
     if ($opts{"list"}) {
       if ($tlp->category eq "Collection" || $tlp->category eq "Scheme") {
         # in the case of collections of schemes we list the deps
@@ -1454,83 +1414,26 @@ sub action_info {
 }
 
 
-
-# taxonomy subroutines
-# 
-sub load_taxonomy_datafile {
-  init_local_db();
-  my $taxonomy;
-  my $fpath = $localtlpdb->root
-              . "/texmf-dist/scripts/texlive/var/texcatalogue.keywords";
-  if (! -r $fpath) {
-    tlwarn("tlmgr: taxonomy file $fpath not readable: $!\n");
-    return;
-  }
-  if (!open (TAXF, $fpath)) {
-    tlwarn("tlmgr: taxonomy file $fpath cannot be opened: $!\n");
-    return;
-  }
-  # suck in the whole file contents
-  my @foo = <TAXF>;
-  close(TAXF);
-  my $foo = "@foo";
-  no strict "vars";
-  # the no strict "vars" is *ABSOLUTELY* necessary otherwise the file is
-  # not evaluated, no idea why!
-  eval "$foo";
-  use strict "vars";
-  return $taxonomy;
-}
-
-sub walk_level_tree {
-  my $cp = shift;
-  my $prestring = shift;
-  my $print_packages = shift;
-  if (defined($cp->{'_packages_'})) {
-    print "$prestring\n";
-    if ($print_packages) {
-      my @pkgs = sort @{$cp->{'_packages_'}};
-      print "\t@pkgs\n";
-    }
-  }
-  for my $cz (keys %$cp) {
-    if ($cz ne '_packages_') {
-      my $nextstring = "$prestring > $cz";
-      my $np = $cp->{$cz};
-      &walk_level_tree($np,$nextstring);
-    }
-  }
-}
-
 #  SEARCH
 #
 sub action_search {
-  my $r = shift @ARGV;
+  my ($r) = @ARGV;
   my $ret = "";
   my $tlpdb;
-  my $taxonomy;
-  #
-  if (!$opts{"list"} && (!defined($r) || !$r)) {
-
-    tlwarn("tlmgr: nothing to search for.\n");
-    return;
-  }
-  if ($opts{"extended"}) {
-    tlwarn("tlmgr: sorry, extended searching not implemented by now.\n");
-    return;
-  }
   # check the arguments
   my $search_type_nr = 0;
   $search_type_nr++ if $opts{"file"};
-  $search_type_nr++ if $opts{"taxonomy"};
-  $search_type_nr++ if $opts{"characterization"};
-  $search_type_nr++ if $opts{"functionality"};
-  $search_type_nr++ if $opts{"keyword"};
   $search_type_nr++ if $opts{"all"};
   if ($search_type_nr > 1) {
-    tlwarn("tlmgr: please specify only one thing to search for!\n");
+    tlwarn("$prg: please specify only one thing to search for\n");
     return;
   }
+  #
+  if (!defined($r) || !$r) {
+    tlwarn("$prg: nothing to search for.\n");
+    return;
+  }
+
   init_local_db();
   if ($opts{"global"}) {
     init_tlmedia_or_die();
@@ -1538,49 +1441,9 @@ sub action_search {
   } else {
     $tlpdb = $localtlpdb;
   }
-  my $search_characterization = 
-    $opts{"characterization"} || $opts{"taxonomy"} || $opts{"all"};
-  my $search_functionality =
-    $opts{"functionality"} || $opts{"taxonomy"} || $opts{"all"};
-  my $search_keyword =
-    $opts{"keyword"} || $opts{"taxonomy"} || $opts{"all"};
-  my $search_tlpdb =
-    $opts{"all"} ||
-      !($opts{"taxonomy"} || $opts{"characterization"} || 
-        $opts{"functionality"} || $opts{"keyword"});
-  if ($opts{"all"} || $opts{"taxonomy"} || $opts{"characterization"} 
-      || $opts{"functionality"} || $opts{"keyword"}) {
-    $taxonomy = load_taxonomy_datafile();
-    if (!defined($taxonomy)) {
-      tlwarn("tlmgr: Cannot load taxonomy file;",
-             " searching/listing for taxonomies not supported.\n");
-      return;
-    }
-    if ($opts{"list"}) {
-      if ($search_keyword) {
-        print "\f Keywords:\n";
-        for (sort keys %{$taxonomy->{'by-taxonomy'}{'keyword'}}) {
-          print "\t$_\n";
-        }
-        print "\n";
-      }
-      if ($search_functionality) {
-        print "\f Functionalities:\n";
-        &walk_level_tree($taxonomy->{'by-taxonomy'}{'functionality'}, "", 0);
-        print "\n";
-      }
-      if ($search_characterization) {
-        # Assume all possible characterizations occur under the primary ones!
-        print "\f Characterizations:\n";
-        &walk_level_tree($taxonomy->{'by-taxonomy'}{'primary'}, "", 0);
-        print "\n";
-      }
-      return;
-    }
-  }
   foreach my $pkg ($tlpdb->list_packages) {
     my $tlp = $tlpdb->get_package($pkg);
-    if ($opts{"file"}) {
+    if ($opts{"file"} || $opts{"all"}) {
       my @files = $tlp->all_files;
       if ($tlp->relocated) {
         for (@files) { s:^$RelocPrefix/:$RelocTree/:; }
@@ -1594,36 +1457,14 @@ sub action_search {
       }
     } else {
       next if ($pkg =~ m/\./);
-      # the other searching is done together
-      my $t = "";
-      if ($search_keyword) {
-        $t = $t . join('\n', @{$taxonomy->{'by-package'}{'keyword'}{$pkg}})
-          if (defined($taxonomy->{'by-package'}{'keyword'}{$pkg}));
-      }
-      if ($search_functionality) {
-        $t = $t.join('\n', @{$taxonomy->{'by-package'}{'functionality'}{$pkg}})
-          if (defined($taxonomy->{'by-package'}{'functionality'}{$pkg}));
-      } 
-      if ($search_characterization) {
-        $t = "$t$taxonomy->{'by-package'}{'primary'}{$pkg}\n"
-          if (defined($taxonomy->{'by-package'}{'primary'}{$pkg}));
-        $t = "$t$taxonomy->{'by-package'}{'secondary'}{$pkg}\n"
-          if (defined($taxonomy->{'by-package'}{'secondary'}{$pkg}));
-      }
-      if ($search_tlpdb) {
-        $t .= "$pkg\n";
-        $t = "$t" . $tlp->shortdesc . "\n"
-          if (defined($tlp->shortdesc));
-        $t = "$t" . $tlp->longdesc . "\n"
-          if (defined($tlp->longdesc));
-      }
-      my $shortdesc = $tlp->shortdesc;
-      $shortdesc |= "";
+      # glom description strings together for one search
+      my $t = "$pkg\n";
+      $t = $t . $tlp->shortdesc . "\n" if (defined($tlp->shortdesc));
+      $t = $t . $tlp->longdesc . "\n" if (defined($tlp->longdesc));
       my $pat = $r;
-      if ($opts{"word"}) {
-        $pat = '\W' . $r . '\W';
-      }
+      $pat = '\W' . $r . '\W' if ($opts{"word"});
       if ($t =~ m/$pat/i) {
+        my $shortdesc = $tlp->shortdesc || "";
         $ret .= " $pkg - $shortdesc\n";
       }
     }
@@ -1710,7 +1551,7 @@ sub check_backupdir_selection {
     my $ob = abs_path($opts{"backupdir"});
     $ob && ($opts{"backupdir"} = $ob);
     if (! -d $opts{"backupdir"}) {
-      $warntext .= "tlmgr: backupdir argument\n";
+      $warntext .= "$prg: backupdir argument\n";
       $warntext .= "  $opts{'backupdir'}\n";
       $warntext .= "is not a directory.\n";
       return (0, $warntext);
@@ -1720,13 +1561,13 @@ sub check_backupdir_selection {
     init_local_db(1);
     $opts{"backupdir"} = norm_tlpdb_path($localtlpdb->option("backupdir"));
     if (!$opts{"backupdir"}) {
-      return (0, "tlmgr: No way to determine backupdir.\n");
+      return (0, "$prg: No way to determine backupdir.\n");
     }
     # we are still here, there is something set in tlpdb
     my $ob = abs_path($opts{"backupdir"});
     $ob && ($opts{"backupdir"} = $ob);
     if (! -d $opts{"backupdir"}) {
-      $warntext =  "tlmgr: backupdir as set in tlpdb\n";
+      $warntext =  "$prg: backupdir as set in tlpdb\n";
       $warntext .= "  $opts{'backupdir'}\n";
       $warntext .= "is not a directory.\n";
       return (0, $warntext);
@@ -1751,18 +1592,18 @@ sub action_restore {
     if (!$a) {
       # in all these cases we want to terminate in the non-gui mode
       tlwarn($b);
-      tlwarn("Exiting.\n");
+      tlwarn("$prg: Terminating.\n");
       exit 1;
     }
   }
-  info("restore: dry run, no changes will be made\n") if $opts{"dry"};
+  info("$prg restore: dry run, no changes will be made\n") if $opts{"dry-run"};
 
   # initialize the hash(packages) of hash(revisions), do stat files! (the 1)
   my %backups = get_available_backups($opts{"backupdir"}, 1);
   my ($pkg, $rev) = @ARGV;
   if (defined($pkg) && $opts{"all"}) {
-    tlwarn("Do you want to restore all packages or only $pkg?\n");
-    tlwarn("Terminating.\n");
+    tlwarn("$prg: Specify either --all or individual package(s) ($pkg)\n");
+    tlwarn("$prg: to restore, not both.  Terminating.\n");
     exit 1;
   }
   if ($opts{"all"}) {
@@ -1780,7 +1621,7 @@ sub action_restore {
       my @tmp = sort {$b <=> $a} (keys %{$backups{$p}});
       my $rev = $tmp[0];
       print "Restoring $p, $rev from $opts{'backupdir'}/${p}.r${rev}.tar.xz\n";
-      if (!$opts{"dry"}) {
+      if (!$opts{"dry-run"}) {
         # first remove the package, then reinstall it
         # this way we get rid of useless files
         restore_one_package($p, $rev, $opts{"backupdir"});
@@ -1841,7 +1682,7 @@ sub action_restore {
       }
     }
     print "Restoring $pkg, $rev from $opts{'backupdir'}/${pkg}.r${rev}.tar.xz\n";
-    if (!$opts{"dry"}) {
+    if (!$opts{"dry-run"}) {
       init_local_db(1);
       # first remove the package, then reinstall it
       # this way we get rid of useless files
@@ -1899,7 +1740,7 @@ sub action_backup {
     if (!$a) {
       # in all these cases we want to terminate in the non-gui mode
       tlwarn($b);
-      tlwarn("Exiting.\n");
+      tlwarn("$prg: Terminating.\n");
       exit 1;
     }
   }
@@ -2312,9 +2153,9 @@ sub auto_remove_install_force_packages {
     $forcermpkgs{$p} = 1 if defined($forcermpkgs_full{$p});
     $newpkgs{$p} = 1 if defined($newpkgs_full{$p});
   }
-  debug ("tlmgr: new pkgs: " . join("\n\t",keys %newpkgs) . "\n");
-  debug ("tlmgr: deleted : " . join("\n\t",keys %removals) . "\n");
-  debug ("tlmgr: forced  : " . join("\n\t",keys %forcermpkgs) . "\n");
+  debug ("$prg: new pkgs: " . join("\n\t",keys %newpkgs) . "\n");
+  debug ("$prg: deleted : " . join("\n\t",keys %removals) . "\n");
+  debug ("$prg: forced  : " . join("\n\t",keys %forcermpkgs) . "\n");
 
   return (\%removals, \%newpkgs, \%forcermpkgs, \%new_pkgs_due_forcerm_coll);
 }
@@ -2393,7 +2234,7 @@ sub action_update {
   }
 
   init_tlmedia_or_die();
-  info("update: dry run, no changes will be made\n") if $opts{"dry-run"};
+  info("$prg update: dry run, no changes will be made\n") if $opts{"dry-run"};
 
   my @excluded_pkgs = ();
   if ($opts{"exclude"}) {
@@ -2422,7 +2263,7 @@ sub action_update {
         # return here and don't do any updates
         return;
       } else {
-        die "$prg: Exiting, please read above warning.\n";
+        die "$prg: Terminating; please read above warning.\n";
       }
     }
   }
@@ -2458,7 +2299,7 @@ sub action_update {
     if (!$a) {
       # in all these cases we want to terminate in the non-gui mode
       tlwarn($b);
-      tlwarn("Exiting.\n");
+      tlwarn("$prg: Terminating.\n");
       exit 1;
     }
   }
@@ -2466,7 +2307,7 @@ sub action_update {
   # finally, if we have --backupdir, but no --backup, just enable it
   $opts{"backup"} = 1 if $opts{"backupdir"};
 
-  info("tlmgr: saving backups to $opts{'backupdir'}\n")
+  info("$prg: saving backups to $opts{'backupdir'}\n")
     if $opts{"backup"} && !$::machinereadable;
 
   # these two variables are used throughout this function
@@ -2500,10 +2341,10 @@ sub action_update {
   } else {
     @todo = @ARGV;
   }
-  # don't do anything if we have been invoced in a strange way
+  # don't do anything if we have been invoked in a strange way
   if (!@todo) {
     if ($opts{"self"}) {
-      info("tlmgr: no updates for tlmgr present.\n");
+      info("$prg: no updates for tlmgr present.\n");
     } else {
       tlwarn("tlmgr update: please specify a list of packages, --all, or --self.\n");
     }
@@ -2617,11 +2458,11 @@ sub action_update {
         # and has already been removed
         next;
       } elsif (defined($new_due_to_forcerm_coll{$pkg})) {
-        debug("tlmgr: $pkg seems to be contained in a forcibly removed" .
+        debug("$prg: $pkg seems to be contained in a forcibly removed" .
           " collection, not auto-installing it!\n");
         next;
       } else {
-        tlwarn("\ntlmgr: $pkg mentioned, but neither new nor forcibly removed\n");
+        tlwarn("\n$prg: $pkg mentioned, but neither new nor forcibly removed\n");
         next;
       }
       # install new packages
@@ -2828,7 +2669,7 @@ sub action_update {
           # for creating the backup will create some rubbish!
           # Same as further down in the update part!
           if ($pkg->relocated) {
-            debug("tlmgr: warn, relocated bit set for $p, but that is wrong!\n");
+            debug("$prg: warn, relocated bit set for $p, but that is wrong!\n");
             $pkg->relocated(0);
           }
           if ($opts{"backup"}) {
@@ -2931,8 +2772,8 @@ sub action_update {
       # - then it is tried to be updated here, which is not working!
       # report that and ask for report
       if (!defined($tlp)) {
-        tlwarn("tlmgr: inconsistency on the server:\n");
-        tlwarn("tlmgr: tlp for package $pkg cannot be found, please report.\n");
+        tlwarn("$prg: inconsistency on the server:\n");
+        tlwarn("$prg: tlp for package $pkg cannot be found, please report.\n");
         next;
       }
       my $unwind_package;
@@ -2998,7 +2839,7 @@ sub action_update {
       # for creating an unwind container will create some rubbish
       # TODO for user mode we should NOT clear this bit!
       if ($tlp->relocated) {
-        debug("tlmgr: warn, relocated bit set for $pkg, but that is wrong!\n");
+        debug("$prg: warn, relocated bit set for $pkg, but that is wrong!\n");
         $tlp->relocated(0);
       }
 
@@ -3085,9 +2926,9 @@ sub action_update {
             if (!defined($parentobj)) {
               # well, in this case we might have hit a package that only
               # has .ARCH package, like psv.win32, so do nothing
-              debug("tlmgr: .ARCH package without parent, not announcing postaction\n");
+              debug("$prg: .ARCH package without parent, not announcing postaction\n");
             } else {
-              debug("tlmgr: announcing parent execute action for $pkg\n");
+              debug("$prg: announcing parent execute action for $pkg\n");
               TeXLive::TLUtils::announce_execute_actions("enable", $parentobj);
             }
           }
@@ -3175,7 +3016,8 @@ sub action_update {
           if ($opts{"list"}) {
             upd_info($pkg, $kb, "<absent>", $mediarevstr, "autoinst");
           } else {
-            info("[$currnr/$totalnr, $estrem/$esttot] auto-install: $pkg ($mediarevstr) [${kb}k] ... ");
+            info("[" . sprintf ('%*2$s', $currnr, $totalnrdigits) .
+              "/$totalnr, $estrem/$esttot] auto-install: $pkg ($mediarevstr) [${kb}k] ... ");
           }
         }
         $currnr++;
@@ -3329,7 +3171,7 @@ sub action_update {
   # if a real update from default disk location didn't find anything,
   # warn if nothing is updated.
   if (!(@new || @updated)) {
-    info("tlmgr: no updates available\n");
+    info("$prg: no updates available\n");
     if ($remotetlpdb->media ne "NET"
         && $remotetlpdb->media ne "virtual"
         && !$opts{"dry-run"}
@@ -3337,7 +3179,7 @@ sub action_update {
         && !$ENV{"TEXLIVE_INSTALL_ENV_NOCHECK"}
        ) {
       tlwarn(<<END_DISK_WARN);
-tlmgr: Your installation is set up to look on the disk for updates.
+$prg: Your installation is set up to look on the disk for updates.
 To install from the Internet for this one time only, run:
   tlmgr -repository $TeXLiveURL ACTION ARG...
 where ACTION is install, update, etc.; see tlmgr -help if needed.
@@ -3383,7 +3225,6 @@ sub action_install {
   init_local_db(1);
   return if !check_on_writable();
 
-  #
   # installation from a .tar.xz
   if ($opts{"file"}) {
     return $localtlpdb->install_package_files(@ARGV);
@@ -3405,25 +3246,29 @@ sub action_install {
           # return here and don't do any updates
           return;
         } else {
-          die "tlmgr: Not continuing, please see warning above!\n";
+          die "$prg: Terminating; please see warning above!\n";
         }
       }
     }
   }
 
-
   $opts{"no-depends"} = 1 if $opts{"no-depends-at-all"};
-  info("install: dry run, no changes will be made\n") if $opts{"dry-run"};
+  info("$prg install: dry run, no changes will be made\n") if $opts{"dry-run"};
 
   my @packs = @ARGV;
   # first expand the .ARCH dependencies unless $opts{"no-depends-at-all"}
-  @packs = $remotetlpdb->expand_dependencies("-only-arch", $localtlpdb, @ARGV) unless $opts{"no-depends-at-all"};
-  # now expand all others unless $opts{"no-depends"}
-  # if $opts{"reinstall"} do not collection->collection dependencies
-  if ($opts{"reinstall"} || $opts{"usermode"}) {
-    @packs = $remotetlpdb->expand_dependencies("-no-collections", $localtlpdb, @packs) unless $opts{"no-depends"};
-  } else {
-    @packs = $remotetlpdb->expand_dependencies($localtlpdb, @packs) unless $opts{"no-depends"};
+  @packs = $remotetlpdb->expand_dependencies("-only-arch", $localtlpdb, @ARGV)
+    unless $opts{"no-depends-at-all"};
+  #
+  # if no-depends, we're done; else get rest of deps.
+  unless ($opts{"no-depends"}) {
+    if ($opts{"reinstall"} || $opts{"usermode"}) {
+      # if reinstall or usermode, omit collection->collection deps
+      @packs = $remotetlpdb->expand_dependencies("-no-collections",
+                                                 $localtlpdb, @packs);
+    } else {
+      @packs = $remotetlpdb->expand_dependencies($localtlpdb, @packs);
+    }
   }
   #
   # expand dependencies returns a list pkg@tag in case of a virtual
@@ -3466,7 +3311,7 @@ sub action_install {
     my $mediatlp = $remotetlpdb->get_package($pkg,
       ($packs{$pkg} ? $packs{$pkg} : undef));
     if (!defined($mediatlp)) {
-      tlwarn("package $pkg not present in package repository.\n");
+      tlwarn("$prg install: package $pkg not present in repository.\n");
       next;
     }
     if (defined($localtlpdb->get_package($pkg))) {
@@ -3475,16 +3320,27 @@ sub action_install {
         $revs{$pkg} = $mediatlp->revision;
         push @todo, $pkg;
       } else {
+        # debug msg that we have this one.
         debug("already installed: $pkg\n");
+        # if explicitly requested by user (not a dep), tell them.
+        info("$prg install: package already present: $pkg\n")
+          if grep { $_ eq $pkg } @ARGV;
       }
     } else {
       $totalnr++;
       $revs{$pkg} = $mediatlp->revision;
-      push @todo, $pkg;
+      push (@todo, $pkg);
     }
   }
   # return if there is nothing to install!
   return if (!@todo);
+
+  my $orig_do_src = $localtlpdb->option("install_srcfiles");
+  my $orig_do_doc = $localtlpdb->option("install_docfiles");
+  if (!$opts{"dry-run"}) {
+    $localtlpdb->option("install_srcfiles", 1) if $opts{'with-src'};
+    $localtlpdb->option("install_docfiles", 1) if $opts{'with-doc'};
+  }
 
   my $currnr = 1;
   # undef here is a ref to array of platforms, if undef all are used
@@ -3552,9 +3408,16 @@ sub action_install {
     $currnr++;
   }
   print "end-of-updates\n" if $::machinereadable;
+
+
   if ($opts{"dry-run"}) {
     # stop here, don't do any postinstall actions
     return(0);
+  } else {
+    # reset option if --with-src argument was given
+    $localtlpdb->option("install_srcfiles", $orig_do_src) if $opts{'with-src'};
+    $localtlpdb->option("install_docfiles", $orig_do_doc) if $opts{'with-doc'};
+    $localtlpdb->save if ($opts{'with-src'} || $opts{'with-doc'});
   }
 }
 
@@ -4164,7 +4027,7 @@ sub action_platform {
   }
   my $what = shift @ARGV;
   init_local_db(1);
-  info("platform: dry run, no changes will be made\n") if $opts{"dry-run"};
+  info("$prg platform: dry run, no changes will be made\n") if $opts{"dry-run"};
   $what || ($what = "list");
   if ($what =~ m/^list$/i) {
     # list the available platforms
@@ -5487,7 +5350,7 @@ sub init_local_db {
     $location = $opts{"location"};
   }
   if (!defined($location)) {
-    die("No installation source found, nor in the texlive.tlpdb nor on the cmd line.\nPlease specify one!");
+    die("$prg: No installation source found: neither in texlive.tlpdb nor on command line.\n$prg: Please specify one!");
   }
   if ($location =~ m/^ctan$/i) {
     $location = "$TeXLive::TLConfig::TeXLiveURL";
@@ -5976,7 +5839,7 @@ sub check_for_critical_updates
       # should it not be present, any anyway, those are so fundamental
       # so they have to be there
       tlwarn("\nFundamental package $pkg not present, uh oh, goodbye");
-      die "Serious error, $pkg not found";
+      die "Should not happen, $pkg not found";
     }
     my $localrev = $tlp->revision;
     my $mtlp = $mediatlpdb->get_package($pkg);
@@ -6588,18 +6451,6 @@ not be used; only locally installed packages, collections, or schemes
 are listed.
 (Does not work for listing of packages for now)
 
-=item B<--taxonomy>
-
-=item B<--keyword>
-
-=item B<--functionality>
-
-=item B<--characterization>
-
-In addition to the normal data displayed, also display information for
-given packages from the corresponding taxonomy (or all of them).  See
-L</TAXONOMIES> below for details.
-
 =back
 
 
@@ -6612,10 +6463,19 @@ with C<--usertree>.  See L<USER MODE> below.
 
 =head2 install [I<option>]... I<pkg>...
 
-Install each I<pkg> given on the command line. By default this installs
-all packages on which the given I<pkg>s are dependent, also.  Options:
+Install each I<pkg> given on the command line, if it is not already
+installed.  (It does not touch existing packages; see the C<update>
+action for how to get the latest version of a package.)
+
+By default this also installs all packages on which the given I<pkg>s are
+dependent.  Options:
 
 =over 4
+
+=item B<--dry-run>
+
+Nothing is actually installed; instead, the actions to be performed are
+written to the terminal.
 
 =item B<--file>
 
@@ -6623,14 +6483,11 @@ Instead of fetching a package from the installation repository, use
 the package files given on the command line.  These files must
 be standard TeX Live package files (with contained tlpobj file).
 
-=item B<--reinstall>
+=item B<--force>
 
-Reinstall a package (including dependencies for collections) even if it
-already seems to be installed (i.e, is present in the TLPDB).  This is
-useful to recover from accidental removal of files in the hierarchy.
-
-When re-installing, only dependencies on normal packages are followed
-(i.e., not those of category Scheme or Collection).
+If updates to C<tlmgr> itself (or other parts of the basic
+infrastructure) are present, C<tlmgr> will bail out and not perform the
+installation unless this option is given.  Not recommended.
 
 =item B<--no-depends>
 
@@ -6646,16 +6503,27 @@ an C<i386-linux> system.  This option suppresses this behavior, and also
 implies C<--no-depends>.  Don't use it unless you are sure of what you
 are doing.
 
-=item B<--dry-run>
+=item B<--reinstall>
 
-Nothing is actually installed; instead, the actions to be performed are
-written to the terminal.
+Reinstall a package (including dependencies for collections) even if it
+already seems to be installed (i.e, is present in the TLPDB).  This is
+useful to recover from accidental removal of files in the hierarchy.
 
-=item B<--force>
+When re-installing, only dependencies on normal packages are followed
+(i.e., not those of category Scheme or Collection).
 
-If updates to C<tlmgr> itself (or other parts of the basic
-infrastructure) are present, C<tlmgr> will bail out and not perform the
-installation unless this option is given.  Not recommended.
+=item B<--with-doc>
+
+=item B<--with-src>
+
+While not recommended, the C<install-tl> program provides an option to
+omit installation of all documentation and/or source files.  (By
+default, everything is installed.)  After such an installation, you may
+find that you want the documentation or source files for a given package
+after all.  You can get them by using these options in conjunction with
+C<--reinstall>, as in (using the C<fontspec> package as the example):
+
+  tlmgr install --reinstall --with-doc --with-src fontspec
 
 =back
 
@@ -6916,52 +6784,6 @@ Print the TeX Live identifier for the detected platform
 C<--print-arch> is a synonym.
 
 
-=head2 restore [--backupdir I<dir>] [--all | I<pkg> [I<rev>]]
-
-Restore a package from a previously-made backup.
-
-If C<--all> is given, try to restore the latest revision of all 
-package backups found in the backup directory.
-
-Otherwise, if neither I<pkg> nor I<rev> are given, list the available backup
-revisions for all packages.
-
-With I<pkg> given but no I<rev>, list all available backup revisions of
-I<pkg>.
-
-When listing available packages tlmgr shows the revision and in 
-parenthesis the creation time if available (in format yyyy-mm-dd hh:mm).
-
-With both I<pkg> and I<rev>, tries to restore the package from the
-specified backup.
-
-Options:
-
-=over 4
-
-=item B<--all>
-
-Try to restore the latest revision of all package backups found in the
-backup directory. Additional non-option arguments (like I<pkg>) are not
-allowed.
-
-=item B<--backupdir> I<directory>
-
-Specify the directory where the backups are to be found. If not given it
-will be taken from the configuration setting in the TLPDB.
-
-=item B<--dry-run>
-
-Nothing is actually restored; instead, the actions to be performed are
-written to the terminal.
-
-=item B<--force>
-
-Don't ask questions.
-
-=back
-
-
 =head2 remove [I<option>]... I<pkg>...
 
 Remove each I<pkg> specified.  Removing a collection removes all package
@@ -7035,27 +6857,71 @@ otherwise, all operations will fail!
 =back
 
 
+=head2 restore [--backupdir I<dir>] [--all | I<pkg> [I<rev>]]
+
+Restore a package from a previously-made backup.
+
+If C<--all> is given, try to restore the latest revision of all 
+package backups found in the backup directory.
+
+Otherwise, if neither I<pkg> nor I<rev> are given, list the available
+backup revisions for all packages.  With I<pkg> given but no I<rev>,
+list all available backup revisions of I<pkg>.
+
+When listing available packages tlmgr shows the revision, and in 
+parenthesis the creation time if available (in format yyyy-mm-dd hh:mm).
+
+If (and only if) both I<pkg> and a valid revision number I<rev> are
+specified, try to restore the package from the specified backup.
+
+Options:
+
+=over 4
+
+=item B<--all>
+
+Try to restore the latest revision of all package backups found in the
+backup directory. Additional non-option arguments (like I<pkg>) are not
+allowed.
+
+=item B<--backupdir> I<directory>
+
+Specify the directory where the backups are to be found. If not given it
+will be taken from the configuration setting in the TLPDB.
+
+=item B<--dry-run>
+
+Nothing is actually restored; instead, the actions to be performed are
+written to the terminal.
+
+=item B<--force>
+
+Don't ask questions.
+
+=back
+
+
 =head2 search [I<option>...] I<what>
 
 =head3 search [I<option>...] --file I<what>
-
-=head3 search [I<option>...] --taxonomy I<what>
-
-=head3 search [I<option>...] --keyword I<what>
-
-=head3 search [I<option>...] --functionality I<what>
-
-=head3 search [I<option>...] --characterization I<what>
 
 =head3 search [I<option>...] --all I<what>
 
 By default, search the names, short descriptions, and long descriptions
 of all locally installed packages for the argument I<what>, interpreted
-as a regular expression.
+as a (Perl) regular expression.
 
 Options:
 
 =over 4
+
+=item B<--file>
+
+List all filenames containing I<what>.
+
+=item B<--all>
+
+Search everything: package names, descriptions and filenames.
 
 =item B<--global>
 
@@ -7064,41 +6930,10 @@ local installation.
 
 =item B<--word>
 
-Restrict the search to match only full words. For example, searching for
-C<table> with this option will not output packages containing the
-word C<tables> (unless they also contain the word C<table> on its own).
-
-=item B<--list>
-
-If a search for any (or all) taxonomies is done, by specifying one of
-the taxonomy options below, then instead of searching for packages, list
-the entire corresponding taxonomy (or all of them).  See
-L</TAXONOMIES> below.
-
-=back
-
-Other search options are selected by specifying one of the following:
-
-=over 4
-
-=item B<--file>
-
-List all filenames containing I<what>.
-
-=item B<--taxonomy>
-
-=item B<--keyword>
-
-=item B<--functionality>
-
-=item B<--characterization>
-
-Search in the corresponding taxonomy (or all) instead of the package
-descriptions.  See L</TAXONOMIES> below.
-
-=item B<--all>
-
-Search for package names, descriptions, and taxonomies, but not files.
+Restrict the search of package names and descriptions (but not
+filenames) to match only full words.  For example, searching for
+C<table> with this option will not output packages containing the word
+C<tables> (unless they also contain the word C<table> on its own).
 
 =back
 
@@ -7298,6 +7133,12 @@ If the package on the server is older than the package already installed
 (e.g., if the selected mirror is out of date), C<tlmgr> does not
 downgrade.  Also, packages for uninstalled platforms are not installed.
 
+C<tlmgr> saves a copy of the C<texlive.tlpdb> file used for an update
+with a suffix representing the repository url, as in
+C<tlpkg/texlive.tlpdb.>I<long-hash-string>.  These can be useful for
+fallback information, but if you don't like them accumulating (e.g.,
+on each run C<mirror.ctan.org> might resolve to a new host, resulting in
+a different hash), it's harmless to delete them.
 
 =head1 USER MODE
 
@@ -7352,7 +7193,7 @@ installed into a user tree.
 
 Description of changes of actions in user mode:
 
-=head2 user mode install
+=head2 User mode install
 
 In user mode, the C<install> action checks that the package and all
 dependencies are all either relocated or already installed in the system
@@ -7368,13 +7209,13 @@ collection-context> would install C<collection-basic> and other
 collections, while in user mode, I<only> the packages mentioned in
 C<collection-context> are installed.
 
-=head2 user mode backup; restore; remove; update
+=head2 User mode backup, restore, remove, update
 
 In user mode, these actions check that all packages to be acted on are
 installed in the user tree before proceeding; otherwise, they behave
 just as in normal mode.
  
-=head2 user mode generate; option; paper
+=head2 User mode generate, option, paper
 
 In user mode, these actions operate only on the user tree's
 configuration files and/or C<texlive.tlpdb>.
@@ -7402,52 +7243,6 @@ C<persistent-downloads>, C<gui-lang>, and C<auto-remove> correspond to
 the respective command line options of the same name.  C<gui-expertmode>
 switches between the full GUI and a simplified GUI with only the
 important and mostly used settings.
-
-
-=head1 TAXONOMIES
-
-tlmgr allows searching and listing of various categorizations, which we
-call I<taxonomies>, as provided by an enhanced TeX Catalogue (available
-for testing at L<http://az.ctan.org>).  This is useful when, for
-example, you don't know a specific package name but have an idea of the
-functionality you need; or when you want to see all packages relating to
-a given area.
-
-There are three different taxonomies, specified by the following
-options:
-
-=over 4
-
-=item C<--keyword>
-
-The keywords, as specified at L<http://az.ctan.org/keyword>.
-
-=item C<--functionality>
-
-The ``by-topic'' categorization created by J\"urgen Fenn, as specified
-at L<http://az.ctan.org/characterization/by-function>.
-
-=item C<--characterization>
-
-Both the primary and secondary functionalities, as specified at
-L<http://az.ctan.org/characterization/choose_dimen>.
-
-=item C<--taxonomy>
-
-Operate on all the taxonomies.
-
-=back
-
-The taxonomies are updated nightly and stored within TeX Live, so
-Internet access is not required to search them.
-
-Examples:
-  
-  tlmgr search --taxonomy exercise      # check all taxonomies for "exercise"
-  tlmgr search --taxonomy --word table  # check for "table" on its own
-  tlmgr search --list --keyword         # dump entire keyword taxonomy
-  tlmgr show --taxonomy pdftex          # show pdftex package information,
-                                        #   including all taxonomy entries
 
 
 =head1 MULTIPLE REPOSITORIES
@@ -7590,10 +7385,9 @@ above.
 
 =item Match
 
-Select packages matching for a specific pattern.  By default, this uses
-the same algorithm as C<tlmgr search>, i.e., searches everything:
-descriptions, taxonomies, and/or filenames.  You can also select any
-subset for searching.
+Select packages matching for a specific pattern.  By default, this
+searches both descriptions and filenames.  You can also select a subset
+for searching.
 
 =item Selection
 

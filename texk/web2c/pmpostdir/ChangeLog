@@ -1,3 +1,16 @@
+2014-10-30  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* pmpost.ch, pmpxout.ch: Cleanup for pdvitomp and updvitomp.
+
+2014-10-30  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* pmpost.ch [W32TEX]: Handle building of (u)pmpost.dll.
+
+2014-10-26  Karl Berry  <karl@tug.org>
+
+	* pmpsamp.test, upmpsamp.test: check that e[u]ptex can read
+	their .fmt files, since that is what [u]pmpost is going to do.
+
 2014-09-22  Peter Breitenlohner  <peb@mppmu.mpg.de>
 
 	* pmpsamp.test, upmpsamp.test, tests/psample.mp: Shell scripts

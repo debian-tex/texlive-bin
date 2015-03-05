@@ -1,24 +1,29 @@
-$Id: README 35177 2014-09-15 10:16:13Z peter $
+$Id: README 36417 2015-03-02 08:20:57Z peter $
 Public domain.  Originally written 2005 by Karl Berry.
 
 Extra utilities we (optionally) compile for TeX Live.
 See comments in ../texk/README.
+
 
 asymptote 2.31 - checked 17may14
   update to TL from CTAN, to include prebuilt doc.
   see http://tug.org/texlive/build.html#asymptote
   and tlpkg/bin/tl-update-asy
 
+devnag - from devanagari package installed in texmf-dist.
+
+lacheck - maintained here, by us
+
 m-tx 0.60d - checked 16apr12
   http://mirror.ctan.org/support/m-tx/
 
-pmx 2.7.0 - checked 11apr13
+pmx 2.7.0 - checked 25nov14
   http://mirror.ctan.org/support/pmx/
 
 ps2eps 1.68 - checked 10may12
   http://tm.uka.de/~bless/ps2eps
 
-t1utils 1.38 - checked 3oct13
+t1utils 1.39 - checked 1mar15
   http://www.lcdf.org/type/
 
 texdoctk - reluctantly maintained here in TL

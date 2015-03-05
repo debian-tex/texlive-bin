@@ -1,6 +1,6 @@
 ## Makefile.am for the TeX Live subdirectory texk/dvisvgm/
 ##
-## Copyright (C) 2009-2014 Peter Breitenlohner <tex-live@tug.org>
+## Copyright (C) 2009-2015 Peter Breitenlohner <tex-live@tug.org>
 ## You may freely use, modify and/or distribute this file.
 ##
 #************************************************************************
@@ -18,9 +18,9 @@ EXTRA_DIST = $(DVISVGM_TREE)
 ##
 EXTRA_DIST += $(DVISVGM_TREE)-PATCHES
 
-# in case of an SVN repository
-dist-hook:
-	rm -rf `find $(distdir) -name .svn -o -name .deps -o -name .dirstamp -o -name '*.$(OBJEXT)'`
+# Files not to be distributed
+include $(srcdir)/../../am/dist_hook.am
+NEVER_NAMES += $(NEVER_NAMES_SUB)
 
 AM_CPPFLAGS = -I$(top_srcdir)/$(DVISVGM_TREE)/clipper -I$(top_srcdir)/$(DVISVGM_TREE)/src
 AM_CPPFLAGS += $(KPATHSEA_INCLUDES) $(POTRACE_INCLUDES) $(FREETYPE2_INCLUDES)
@@ -111,7 +111,9 @@ nodist_libdvisvgm_a_SOURCES = \
 	@DVISVGM_TREE@/src/PsSpecialHandler.cpp \
 	@DVISVGM_TREE@/src/psdefs.cpp \
 	@DVISVGM_TREE@/src/RangeMap.cpp \
+	@DVISVGM_TREE@/src/SVGOutput.cpp \
 	@DVISVGM_TREE@/src/SVGTree.cpp \
+	@DVISVGM_TREE@/src/ShadingPatch.cpp \
 	@DVISVGM_TREE@/src/SignalHandler.cpp \
 	@DVISVGM_TREE@/src/SpecialManager.cpp \
 	@DVISVGM_TREE@/src/StreamReader.cpp \
@@ -119,9 +121,11 @@ nodist_libdvisvgm_a_SOURCES = \
 	@DVISVGM_TREE@/src/Subfont.cpp \
 	@DVISVGM_TREE@/src/System.cpp \
 	@DVISVGM_TREE@/src/TFM.cpp \
+	@DVISVGM_TREE@/src/TensorProductPatch.cpp \
 	@DVISVGM_TREE@/src/Terminal.cpp \
 	@DVISVGM_TREE@/src/ToUnicodeMap.cpp \
 	@DVISVGM_TREE@/src/TpicSpecialHandler.cpp \
+	@DVISVGM_TREE@/src/TriangularPatch.cpp \
 	@DVISVGM_TREE@/src/Unicode.cpp \
 	@DVISVGM_TREE@/src/VFReader.cpp \
 	@DVISVGM_TREE@/src/XMLDocument.cpp \

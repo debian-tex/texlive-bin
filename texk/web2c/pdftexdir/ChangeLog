@@ -1,3 +1,18 @@
+2015-02-16  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* writejpg.c: support JPEG Exif in addition to JFIF.
+	(borrowed from dvipdfm-x).
+
+2014-12-12  Karl Berry  <karl@gnu.org>
+
+	* pdftoepdf.cc (read_pdf_info): do not even warn if
+	pdf_inclusion_errorlevel (aka \pdfinclusionerrorlevel) is negative.
+	Discussed with Thanh, 31 May 2011 10:17:35.
+
+2014-11-06  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* regex/regcomp.c [WIN64]: Use __int64 (not long) as intptr_t.
+
 2014-08-19  Peter Breitenlohner  <peb@mppmu.mpg.de>
 
 	* writepng.c: Avoid PNG warnings.

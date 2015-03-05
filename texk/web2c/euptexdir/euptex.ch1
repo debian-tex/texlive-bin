@@ -6,6 +6,12 @@
 @d banner_k==eupTeX_banner_k
 @z
 
+@x
+if font_dir[font(tx)]<>dir_default then cur_val:=KANJI(info(link(tx)))
+@y
+if font_dir[font(tx)]<>dir_default then cur_val:=KANJI(info(link(tx))) mod max_cjk_val
+@z
+
 @x e-pTeX: ifcsname l.28620
     begin buffer[m]:=Hi(info(p)); incr(m);
     end;
@@ -22,4 +28,3 @@
     begin buffer[m]:=info(p) mod max_char_val; incr(m); p:=link(p);
     end;
 @z
-

@@ -696,6 +696,8 @@ enable_native_texlive_build
 enable_multiplatform
 enable_cxx_runtime_hack
 enable_libtool_hack
+enable_devnag
+enable_lacheck
 enable_m_tx
 enable_pmx
 enable_ps2eps
@@ -707,7 +709,6 @@ enable_xindy
 enable_xindy_rules
 enable_xindy_docs
 with_clisp_runtime
-with_xindy_recode
 enable_xpdfopen
 enable_web2c
 with_banner_add
@@ -757,7 +758,6 @@ enable_bibtexu
 enable_chktex
 enable_cjkutils
 enable_detex
-enable_devnag
 enable_dtl
 enable_dvi2tty
 enable_dvidvi
@@ -777,7 +777,6 @@ with_system_libgs
 with_libgs_includes
 with_libgs_libdir
 enable_gsftopk
-enable_lacheck
 enable_lcdf_typetools
 enable_cfftot1
 enable_mmafm
@@ -794,7 +793,8 @@ enable_updmap
 enable_makeindexk
 enable_makejvf
 enable_mendexk
-enable_ps2pkm
+enable_musixtnt
+enable_ps2pk
 enable_psutils
 enable_seetexk
 enable_tex4htk
@@ -807,8 +807,6 @@ enable_linked_scripts
 with_system_harfbuzz
 with_system_icu
 with_system_teckit
-with_teckit_includes
-with_teckit_libdir
 with_system_graphite2
 with_system_zziplib
 with_system_xpdf
@@ -1506,6 +1504,8 @@ Optional Features:
                           lib/PLATFORM
   --enable-cxx-runtime-hack  link C++ runtime statically
   --enable-libtool-hack   ignore libtool dependency_libs
+  --disable-devnag        do not build the devnag package
+  --disable-lacheck       do not build the lacheck package
   --disable-m-tx          do not build the m-tx package
   --disable-pmx           do not build the pmx package
   --disable-ps2eps        do not build the ps2eps package
@@ -1520,7 +1520,7 @@ Optional Features:
   --disable-web2c         do not build the web2c (TeX & Co.) package
   --enable-auto-core        cause TeX&MF to dump core, given a certain
                             filename
-  --disable-dump-share      make fmt/base/mem files architecture-dependent
+  --disable-dump-share      make fmt/base files architecture-dependent
   --disable-ipc             disable TeX's --ipc option, i.e., pipe to a
                             program
   --disable-tex             do not compile and install TeX
@@ -1557,7 +1557,7 @@ Optional Features:
   --enable-tektronixwin       include Tektronix window support
   --enable-unitermwin         include Uniterm window support
   --disable-web-progs       do not build WEB programs bibtex ... weave
-  --disable-synctex         do not build the SyncTeX tool
+  --disable-synctex         do not build the SyncTeX library and tool
   --disable-afm2pl        do not build the afm2pl package
   --disable-bibtex-x      do not build the bibtex-x package
   --disable-bibtex8         do not build the bibtex8 program
@@ -1565,7 +1565,6 @@ Optional Features:
   --disable-chktex        do not build the chktex package
   --disable-cjkutils      do not build the cjkutils package
   --disable-detex         do not build the detex package
-  --disable-devnag        do not build the devnag package
   --disable-dtl           do not build the dtl package
   --disable-dvi2tty       do not build the dvi2tty package
   --disable-dvidvi        do not build the dvidvi package
@@ -1580,7 +1579,6 @@ Optional Features:
   --disable-dvipsk        do not build the dvipsk package
   --disable-dvisvgm       do not build the dvisvgm package
   --disable-gsftopk       do not build the gsftopk package
-  --disable-lacheck       do not build the lacheck package
   --disable-lcdf-typetools
                           do not build the lcdf-typetools package
   --disable-cfftot1         do not build the cfftot1 program
@@ -1602,7 +1600,8 @@ Optional Features:
   --disable-makeindexk    do not build the makeindexk package
   --disable-makejvf       do not build the makejvf package
   --disable-mendexk       do not build the mendexk package
-  --disable-ps2pkm        do not build the ps2pkm package
+  --disable-musixtnt      do not build the musixtnt package
+  --disable-ps2pk         do not build the ps2pk package
   --disable-psutils       do not build the psutils package
   --disable-seetexk       do not build the seetexk package
   --disable-tex4htk       do not build the tex4htk package
@@ -1638,8 +1637,6 @@ Optional Packages:
                           pathname of clisp runtime to install for `xindy',
                           `default' to derive from clisp, or `system' to use
                           installed version
-  --with-xindy-recode     use `recode' instead of `iconv' to build xindy
-                          [default: no]
   --with-banner-add=STR   add STR to version string appended to banner lines
   --with-editor=CMD       invoke CMD from the `e' option [vi +%d '%s'] or
                           [texworks --position=%d "%s"]
@@ -1658,11 +1655,8 @@ Optional Packages:
                           pkg-config)
   --with-system-icu       use installed ICU headers and libraries (requires
                           icu-config)
-  --with-system-teckit    use installed teckit headers and library
-  --with-teckit-includes=DIR
-                          teckit headers installed in DIR
-  --with-teckit-libdir=DIR
-                          teckit library installed in DIR
+  --with-system-teckit    use installed teckit headers and library (requires
+                          pkg-config)
   --with-system-graphite2 use installed graphite2 headers and library
                           (requires pkg-config)
   --with-system-zziplib   use installed zziplib headers and library (requires
@@ -2347,8 +2341,8 @@ if test "${enable_missing+set}" = set; then :
   enableval=$enable_missing;
 fi
 
-# expand $ac_aux_dir to an absolute path
-am_aux_dir=`cd $ac_aux_dir && pwd`
+# Expand $ac_aux_dir to an absolute path.
+am_aux_dir=`cd "$ac_aux_dir" && pwd`
 
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
@@ -3284,11 +3278,11 @@ if test "${enable_multiplatform+set}" = set; then :
 fi
 if test "x$enable_multiplatform" = xyes; then
   if test "x$bindir" = 'x${exec_prefix}/bin'; then
-    bindir="$bindir/$host"
+    bindir="$bindir/${host_alias-$host}"
     ac_configure_args="$ac_configure_args '--bindir=$bindir'"
   fi
   if test "x$libdir" = 'x${exec_prefix}/lib'; then
-    libdir="$libdir/$host"
+    libdir="$libdir/${host_alias-$host}"
     ac_configure_args="$ac_configure_args '--libdir=$libdir'"
   fi
 fi
@@ -3373,7 +3367,7 @@ case $enable_luajittex in #(
     : ;; #(
   *) :
     case $host in #(
-  alpha* | sparc* | x86_64-*-cygwin) :
+  alpha* | sparc* | x86_64-*-cygwin | powerpc-*-darwin* ) :
     { $as_echo "$as_me:${as_lineno-$LINENO}: $host -> \`--disable-luajittex'" >&5
 $as_echo "$as_me: $host -> \`--disable-luajittex'" >&6;}
                       ac_configure_args="$ac_configure_args '--disable-luajittex'" ;; #(
@@ -3381,6 +3375,42 @@ $as_echo "$as_me: $host -> \`--disable-luajittex'" >&6;}
      ;;
 esac ;;
 esac
+## utils/devnag/ac/withenable.ac: configure.ac fragment for the TeX Live subdirectory utils/devnag/
+## configure options and TL libraries required for devnag
+# Check whether --enable-devnag was given.
+if test "${enable_devnag+set}" = set; then :
+  enableval=$enable_devnag;
+fi
+case $enable_devnag in #(
+  yes|no) :
+     ;; #(
+  *) :
+
+   enable_devnag=$enable_all_pkgs
+     { $as_echo "$as_me:${as_lineno-$LINENO}: Assuming \`--enable-devnag=$enable_devnag'" >&5
+$as_echo "$as_me: Assuming \`--enable-devnag=$enable_devnag'" >&6;}
+     ac_configure_args="$ac_configure_args '--enable-devnag=$enable_devnag'"
+    ;;
+esac
+
+## utils/lacheck/ac/withenable.ac: configure.ac fragment for the TeX Live subdirectory utils/lacheck/
+## configure options and TL libraries required for lacheck
+# Check whether --enable-lacheck was given.
+if test "${enable_lacheck+set}" = set; then :
+  enableval=$enable_lacheck;
+fi
+case $enable_lacheck in #(
+  yes|no) :
+     ;; #(
+  *) :
+
+   enable_lacheck=$enable_all_pkgs
+     { $as_echo "$as_me:${as_lineno-$LINENO}: Assuming \`--enable-lacheck=$enable_lacheck'" >&5
+$as_echo "$as_me: Assuming \`--enable-lacheck=$enable_lacheck'" >&6;}
+     ac_configure_args="$ac_configure_args '--enable-lacheck=$enable_lacheck'"
+    ;;
+esac
+
 ## utils/m-tx/ac/withenable.ac: configure.ac fragment for the TeX Live subdirectory utils/m-tx/
 ## configure options and TL libraries required for mtx
 # Check whether --enable-m-tx was given.
@@ -3548,11 +3578,6 @@ fi
 # Check whether --with-clisp-runtime was given.
 if test "${with_clisp_runtime+set}" = set; then :
   withval=$with_clisp_runtime;
-fi
-
-# Check whether --with-xindy-recode was given.
-if test "${with_xindy_recode+set}" = set; then :
-  withval=$with_xindy_recode;
 fi
 
 ## utils/xindy/ac/clisp.ac: configure.ac fragment for the TeX Live subdirectory utils/xindy/
@@ -3957,8 +3982,7 @@ fi
 if test "${enable_web_progs+set}" = set; then :
   enableval=$enable_web_progs;
 fi
-
-## configure option for the SyncTeX tool
+## configure option for the SyncTeX library and tool
 # Check whether --enable-synctex was given.
 if test "${enable_synctex+set}" = set; then :
   enableval=$enable_synctex;
@@ -4009,7 +4033,8 @@ test "x$enable_bibtex_x" = xno || {
   need_kpathsea=yes
 }
 
-## Define configure options for bibtex-x.
+## texk/bibtex-x/ac/bibtex-x.ac: configure.ac fragment for the TeX Live subdirectory texk/bibtex-x/
+## configure options for bibtex-x
 # Check whether --enable-bibtex8 was given.
 if test "${enable_bibtex8+set}" = set; then :
   enableval=$enable_bibtex8;
@@ -4100,24 +4125,6 @@ esac
 test "x$enable_detex" = xno || {
   need_kpathsea=yes
 }
-
-## texk/devnag/ac/withenable.ac: configure.ac fragment for the TeX Live subdirectory texk/devnag/
-## configure options and TL libraries required for devnag
-# Check whether --enable-devnag was given.
-if test "${enable_devnag+set}" = set; then :
-  enableval=$enable_devnag;
-fi
-case $enable_devnag in #(
-  yes|no) :
-     ;; #(
-  *) :
-
-   enable_devnag=$enable_all_pkgs
-     { $as_echo "$as_me:${as_lineno-$LINENO}: Assuming \`--enable-devnag=$enable_devnag'" >&5
-$as_echo "$as_me: Assuming \`--enable-devnag=$enable_devnag'" >&6;}
-     ac_configure_args="$ac_configure_args '--enable-devnag=$enable_devnag'"
-    ;;
-esac
 
 ## texk/dtl/ac/withenable.ac: configure.ac fragment for the TeX Live subdirectory texk/dtl/
 ## configure options and TL libraries required for dtl
@@ -4231,7 +4238,8 @@ test "x$enable_dvipdfm_x" = xno || {
   need_libpaper=yes
 }
 
-## Define configure options for dvipdfm-x.
+## texk/dvipdfm-x/ac/dvipdfm-x.ac: configure.ac fragment for the TeX Live subdirectory texk/dvipdfm-x/
+## configure options for dvipdfm-x
 # Check whether --enable-dvipdfmx was given.
 if test "${enable_dvipdfmx+set}" = set; then :
   enableval=$enable_dvipdfmx;
@@ -4255,7 +4263,6 @@ case enable_xdvipdfmx in #(
     enable_xdvipdfmx=yes ;;
 esac
 
-test "x$enable_dvipdfm_x:$enable_xdvipdfmx" = xyes:yes && need_freetype2=yes
 
 ## texk/dvipng/ac/withenable.ac: configure.ac fragment for the TeX Live subdirectory texk/dvipng/
 ## configure options and TL libraries required for dvipng
@@ -4423,24 +4430,6 @@ test "x$enable_gsftopk" = xno || {
   need_kpathsea=yes
 }
 
-## texk/lacheck/ac/withenable.ac: configure.ac fragment for the TeX Live subdirectory texk/lacheck/
-## configure options and TL libraries required for lacheck
-# Check whether --enable-lacheck was given.
-if test "${enable_lacheck+set}" = set; then :
-  enableval=$enable_lacheck;
-fi
-case $enable_lacheck in #(
-  yes|no) :
-     ;; #(
-  *) :
-
-   enable_lacheck=$enable_all_pkgs
-     { $as_echo "$as_me:${as_lineno-$LINENO}: Assuming \`--enable-lacheck=$enable_lacheck'" >&5
-$as_echo "$as_me: Assuming \`--enable-lacheck=$enable_lacheck'" >&6;}
-     ac_configure_args="$ac_configure_args '--enable-lacheck=$enable_lacheck'"
-    ;;
-esac
-
 ## texk/lcdf-typetools/ac/withenable.ac: configure.ac fragment for the TeX Live subdirectory texk/lcdf-typetools/
 ## configure options and TL libraries required for lcdf-typetools
 # Check whether --enable-lcdf-typetools was given.
@@ -4594,25 +4583,47 @@ test "x$enable_mendexk" = xno || {
   need_ptexenc=yes
 }
 
-## texk/ps2pkm/ac/withenable.ac: configure.ac fragment for the TeX Live subdirectory texk/ps2pkm/
-## configure options and TL libraries required for ps2pkm
-# Check whether --enable-ps2pkm was given.
-if test "${enable_ps2pkm+set}" = set; then :
-  enableval=$enable_ps2pkm;
+## texk/musixtnt/ac/withenable.ac: configure.ac fragment for the TeX Live subdirectory texk/musixtnt/
+## configure options and TL libraries required for musixtnt
+# Check whether --enable-musixtnt was given.
+if test "${enable_musixtnt+set}" = set; then :
+  enableval=$enable_musixtnt;
 fi
-case $enable_ps2pkm in #(
+case $enable_musixtnt in #(
   yes|no) :
      ;; #(
   *) :
 
-   enable_ps2pkm=$enable_all_pkgs
-     { $as_echo "$as_me:${as_lineno-$LINENO}: Assuming \`--enable-ps2pkm=$enable_ps2pkm'" >&5
-$as_echo "$as_me: Assuming \`--enable-ps2pkm=$enable_ps2pkm'" >&6;}
-     ac_configure_args="$ac_configure_args '--enable-ps2pkm=$enable_ps2pkm'"
+   enable_musixtnt=$enable_all_pkgs
+     { $as_echo "$as_me:${as_lineno-$LINENO}: Assuming \`--enable-musixtnt=$enable_musixtnt'" >&5
+$as_echo "$as_me: Assuming \`--enable-musixtnt=$enable_musixtnt'" >&6;}
+     ac_configure_args="$ac_configure_args '--enable-musixtnt=$enable_musixtnt'"
     ;;
 esac
 
-test "x$enable_ps2pkm" = xno || {
+test "x$enable_musixtnt" = xno || {
+  need_kpathsea=yes
+}
+
+## texk/ps2pk/ac/withenable.ac: configure.ac fragment for the TeX Live subdirectory texk/ps2pk/
+## configure options and TL libraries required for ps2pk
+# Check whether --enable-ps2pk was given.
+if test "${enable_ps2pk+set}" = set; then :
+  enableval=$enable_ps2pk;
+fi
+case $enable_ps2pk in #(
+  yes|no) :
+     ;; #(
+  *) :
+
+   enable_ps2pk=$enable_all_pkgs
+     { $as_echo "$as_me:${as_lineno-$LINENO}: Assuming \`--enable-ps2pk=$enable_ps2pk'" >&5
+$as_echo "$as_me: Assuming \`--enable-ps2pk=$enable_ps2pk'" >&6;}
+     ac_configure_args="$ac_configure_args '--enable-ps2pk=$enable_ps2pk'"
+    ;;
+esac
+
+test "x$enable_ps2pk" = xno || {
   need_kpathsea=yes
 }
 
@@ -4723,6 +4734,10 @@ $as_echo "$as_me: Assuming \`--enable-ttfdump=$enable_ttfdump'" >&6;}
      ac_configure_args="$ac_configure_args '--enable-ttfdump=$enable_ttfdump'"
     ;;
 esac
+
+test "x$enable_ttfdump" = xno || {
+  need_kpathsea=yes
+}
 
 ## texk/xdvik/ac/withenable.ac: configure.ac fragment for the TeX Live subdirectory texk/xdvik/
 ## configure options and TL libraries required for xdvik
@@ -4864,16 +4879,6 @@ fi
 # Check whether --with-system-teckit was given.
 if test "${with_system_teckit+set}" = set; then :
   withval=$with_system_teckit;
-fi
-
-# Check whether --with-teckit-includes was given.
-if test "${with_teckit_includes+set}" = set; then :
-  withval=$with_teckit_includes;
-fi
-
-# Check whether --with-teckit-libdir was given.
-if test "${with_teckit_libdir+set}" = set; then :
-  withval=$with_teckit_libdir;
 fi
 if test "x$with_system_teckit" = x; then
   if test -f $srcdir/../libs/teckit/configure; then
@@ -5465,7 +5470,7 @@ fi
 
 
 
-am__api_version='1.14'
+am__api_version='1.15'
 
 # Find a good install program.  We prefer a C program (faster),
 # so one script is as good as another.  But avoid the broken or
@@ -5654,7 +5659,7 @@ else
 $as_echo "$as_me: WARNING: 'missing' script is too old or missing" >&2;}
 fi
 
-if test x"${install_sh}" != xset; then
+if test x"${install_sh+set}" != xset; then
   case $am_aux_dir in
   *\ * | *\	*)
     install_sh="\${SHELL} '$am_aux_dir/install-sh'" ;;
@@ -6061,8 +6066,8 @@ MAKEINFO=${MAKEINFO-"${am_missing_run}makeinfo"}
 # <http://lists.gnu.org/archive/html/automake/2012-07/msg00014.html>
 mkdir_p='$(MKDIR_P)'
 
-# We need awk for the "check" target.  The system "awk" is bad on
-# some platforms.
+# We need awk for the "check" target (and possibly the TAP driver).  The
+# system "awk" is bad on some platforms.
 # Always define AMTAR for backward compatibility.  Yes, it's still used
 # in the wild :-(  We should find a proper way to deprecate it ...
 AMTAR='$${TAR-tar}'
@@ -6247,6 +6252,7 @@ END
     as_fn_error $? "Your 'rm' program is bad, sorry." "$LINENO" 5
   fi
 fi
+
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to enable maintainer-specific portions of Makefiles" >&5
 $as_echo_n "checking whether to enable maintainer-specific portions of Makefiles... " >&6; }

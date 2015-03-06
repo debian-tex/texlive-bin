@@ -75,6 +75,36 @@ Description: Tex Live: SyncTeX parser library (development part)
  This package contains the static library and header files for the SyncTex
  parser library.
 
+Package: libtexlua52
+Section: libs
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Description: TeX Live: Lua 5.2, modified for use with LuaTeX
+ The Lua 5.2 library as used within LuaTeX.
+
+Package: libtexlua52-dev
+Section: libdevel
+Architecture: any
+Depends: ${misc:Depends}, libtexlua52 (= ${binary:Version})
+Description: Tex Live: Lua 5.2, modified for use with LuaTeX (development part)
+ This package contains the static library and header files for the texlua
+ library.
+
+Package: libtexluajit2
+Section: libs
+Architecture: amd64 armel armhf hurd-i386 i386 kfreebsd-amd64 kfreebsd-i386 mips mipsel powerpc
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Description: TeX Live: LuaJIT, modified for use with LuaJITTeX
+ The LuaJIT library as used within LuaJITTeX.
+
+Package: libtexluajit-dev
+Section: libdevel
+Architecture: amd64 armel armhf hurd-i386 i386 kfreebsd-amd64 kfreebsd-i386 mips mipsel powerpc
+Depends: ${misc:Depends}, libtexluajit2 (= ${binary:Version})
+Description: Tex Live: LuaJIT, modified for use with LuaJITTeX (development part)
+ This package contains the static library and header files for the texluajit
+ library.
+
 Package: luatex
 Section: oldlibs
 Priority: extra

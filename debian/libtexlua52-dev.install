@@ -1,0 +1,4 @@
+usr/lib/libtexlua52.a
+usr/lib/libtexlua52.so
+usr/lib/pkgconfig/texlua52.pc
+usr/include/texlua52/*

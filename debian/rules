@@ -9,7 +9,6 @@ export CONFIG_SHELL=/bin/sh
 # all cases. We have now two ways to test for where to build.
 # One by disabling on the other platforms, one by whitelisting
 # and building only on some platforms.
-LUAJIT_FAIL_ARCHS := s390x hppa arm64 ppc64 ppc64el x32 mips64 mips64el m68k
 LUAJIT_GOOD_ARCHS := amd64 armel armhf hurd-i386 i386 kfreebsd-amd64 kfreebsd-i386 mips mipsel powerpc 
 
 # In case one wants to build with old automake (<< 1.13.1), the following
@@ -34,18 +33,15 @@ ifeq ($(DEB_HOST_ARCH), s390x)
   export CXXFLAGS = -O1
 endif
 
-# for blacklisting bad archs
-#ifneq (,$(filter $(DEB_HOST_ARCH), $(LUAJIT_FAIL_ARCHS)))
-#  DISABLE_JIT=--disable-luajittex
-#endif
-
 # for whitelisting good archs
 ifeq (,$(filter $(DEB_HOST_ARCH), $(LUAJIT_GOOD_ARCHS)))
   # it is not in the list of good archs -> disable luajittex
   BUILDLUAJITTEX=--disable-luajittex
+  WITHLUAJIT=no
 else
   # not necessary, but for completeness
   BUILDLUAJITTEX=--enable-luajittex
+  WITHLUAJIT=yes
 endif
 
 #
@@ -192,6 +188,12 @@ override_dh_installdocs:
 	dh_installdocs -plibsynctex1 -plibsynctex-dev \
 		texk/web2c/synctexdir/README.txt	\
 		texk/web2c/synctexdir/synctex_parser_readme.txt
+	#dh_installdocs -plibtexlua52 -plibtexlua52-dev \
+	#	NOTHING TO INSTALL
+ifeq ($(WITHLUAJIT), yes)
+	dh_installdocs -plibtexluajit2 -plibtexluajit-dev \
+		libs/luajit/LuaJIT-2.0.3-PATCHES/TL-Changes
+endif
 
 override_dh_installchangelogs:
 	dh_installchangelogs
@@ -201,6 +203,12 @@ override_dh_installchangelogs:
 		texk/ptexenc/ChangeLog
 	dh_installchangelogs -plibsynctex1 -plibsynctex-dev \
 		texk/web2c/synctexdir/ChangeLog
+	dh_installchangelogs -plibtexlua52 -plibtexlua52-dev \
+		libs/lua52/lua-5.2.3-PATCHES/ChangeLog
+ifeq ($(WITHLUAJIT), yes)
+	dh_installchangelogs -plibtexluajit2 -plibtexluajit-dev \
+		libs/luajit/LuaJIT-2.0.3-PATCHES/ChangeLog
+endif
 
 override_dh_compress:
 	dh_compress -X.pdf
@@ -209,12 +217,22 @@ override_dh_makeshlibs:
 	dh_makeshlibs -plibkpathsea6
 	dh_makeshlibs -plibptexenc1
 	dh_makeshlibs -plibsynctex1
+	dh_makeshlibs -plibtexlua52
+ifeq ($(WITHLUAJIT), yes)
+	dh_makeshlibs -plibtexluajit2
+endif
 
-override_dh_shlibdeps:
-	dh_shlibdeps \
-		-l debian/libkpathsea6/usr/lib \
+SHLIBDEPS = -l debian/libkpathsea6/usr/lib \
 		-l debian/libptexenc1/usr/lib \
-		-l debian/libsynctex1/usr/lib
+		-l debian/libsynctex1/usr/lib \
+		-l debian/libtexlua52/usr/lib
+
+ifeq ($(WITHLUAJIT), yes)
+	SHLIBDEPS += -l debian/libtexluajit2/usr/lib
+endif
+override_dh_shlibdeps:
+	dh_shlibdeps $(SHLIBDEPS)
 
 override_dh_clean:
 	dh_clean -X.orig
+

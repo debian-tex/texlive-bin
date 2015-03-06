@@ -1,0 +1,4 @@
+usr/lib/libtexluajit.a
+usr/lib/libtexluajit.so
+usr/lib/pkgconfig/texluajit.pc
+usr/include/texluajit/*

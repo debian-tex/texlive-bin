@@ -5,8 +5,6 @@ debian-no-tl-scripts
 61_path_max.diff
 fix-manpages
 relax-zlib-version-check
-#pmpost-mp1.999
-#upmpost-mp1.999
 ac-ctie
 libpng-arm64-neon-fix
 mktexlsr-use-mktemp

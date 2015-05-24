@@ -1,8 +1,11 @@
-texlive-bin (2014.20150305.36438-1) experimental; urgency=medium
+texlive-bin (2015.20150524.37493-1) UNRELEASED; urgency=medium
 
-  * Imported Upstream version 2014.20150305.36438
+  * Imported Upstream version 2015.20150524.37493
+  * pin all of own libs to exact version
+  * add a TODO file
+  * add git support in make-orig-tar
+  * unfuzzify patches, disable relaz luazlib version check
   * re-include libpoppler in new sources, debian's version is too old
-  * update/remove/unfuzzify patches
   * build libtexlua and libtexluajit libraries
 
  -- Norbert Preining <preining@debian.org>  Fri, 06 Mar 2015 12:08:30 +0900

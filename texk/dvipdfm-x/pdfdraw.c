@@ -1,6 +1,6 @@
 /* This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
 
-    Copyright (C) 2002-2014 by Jin-Hwan Cho and Shunsaku Hirata,
+    Copyright (C) 2002-2015 by Jin-Hwan Cho and Shunsaku Hirata,
     the dvipdfmx project team.
     
     Copyright (C) 1998, 1999 by Mark A. Wicks <mwicks@kettering.edu>
@@ -1277,7 +1277,7 @@ pdf_dev_set_color (const pdf_color *color, char mask, int force)
     return;
 
   graphics_mode();
-  len = pdf_color_to_string(color, fmt_buf);
+  len = pdf_color_to_string(color, fmt_buf, mask);
   fmt_buf[len++] = ' ';
   switch (pdf_color_type(color)) {
   case  PDF_COLORSPACE_TYPE_RGB:
@@ -1293,7 +1293,7 @@ pdf_dev_set_color (const pdf_color *color, char mask, int force)
   default: /* already verified the given color */
     break;
   }
-  pdf_doc_add_page_content(fmt_buf, len);  /* op: RG K G rg k g */
+  pdf_doc_add_page_content(fmt_buf, len);  /* op: RG K G rg k g etc. */
 
   pdf_color_copycolor(current, color);
 }

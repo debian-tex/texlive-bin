@@ -2,7 +2,7 @@
 
     This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
 
-    Copyright (C) 2002 by Jin-Hwan Cho and Shunsaku Hirata,
+    Copyright (C) 2002-2015 by Jin-Hwan Cho and Shunsaku Hirata,
     the dvipdfmx project team <dvipdfmx@project.ktug.or.kr>
     
     Copyright (C) 1998, 1999 by Mark A. Wicks <mwicks@kettering.edu>
@@ -22,8 +22,10 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
 */
 
-#include <stdio.h>
-#include <stdlib.h>
+#if HAVE_CONFIG_H
+#include <w2c/config.h>
+#endif
+
 #include "mfileio.h"
 
 #ifdef IODEBUG 
@@ -110,11 +112,9 @@ long file_size (FILE *file)
 }
 
 /* Unlike fgets, mfgets works with \r, \n, or \r\n end of lines. */
-char *mfgets (char *buffer, unsigned long length, FILE *file) 
+char *mfgets (char *buffer, int length, FILE *file) 
 {
-  int ch = 0;
-  unsigned long i = 0;
-
+  int ch = 0, i = 0;
   while (i < length-1 && (ch = fgetc (file)) >= 0 && ch != '\n' && ch != '\r')
     buffer[i++] = ch;
   buffer[i] = 0;

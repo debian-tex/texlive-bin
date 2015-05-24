@@ -18,14 +18,12 @@
    You should have received a copy of the GNU General Public License along
    with LuaTeX; if not, see <http://www.gnu.org/licenses/>. */
 
-/* $Id: utils.h 5074 2014-10-24 16:57:38Z oneiros $ */
 
 #ifndef UTILS_H
 #  define UTILS_H
 
 extern int epochseconds;
 extern int microseconds;
-extern char *pdftex_banner;
 
 void make_subset_tag(fd_entry *);
 
@@ -33,7 +31,6 @@ __attribute__ ((format(printf, 1, 2)))
 void tex_printf(const char *, ...);
 
 void garbage_warning(void);
-void make_pdftex_banner(void);
 size_t xfwrite(void *, size_t size, size_t nmemb, FILE *);
 int xfflush(FILE *);
 int xgetc(FILE *);

@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-# $Id: epstopdf.pl 36129 2015-01-24 00:30:11Z karl $
+# $Id$
 # (Copyright lines below.)
 #
 # Redistribution and use in source and binary forms, with or without
@@ -171,7 +171,7 @@ my $ver = "2.23";
 ### emacs-page
 ### program identification
 my $program = "epstopdf";
-my $ident = '($Id: epstopdf.pl 36129 2015-01-24 00:30:11Z karl $)' . " $ver";
+my $ident = '($Id$)' . " $ver";
 my $copyright = <<END_COPYRIGHT ;
 Copyright 2009-2014 Karl Berry et al.
 Copyright 2002-2009 Gerben Wierda et al.

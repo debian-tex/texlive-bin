@@ -24,7 +24,7 @@
 
 /* This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
 
-    Copyright (C) 2002-2014 by Jin-Hwan Cho and Shunsaku Hirata,
+    Copyright (C) 2002-2015 by Jin-Hwan Cho and Shunsaku Hirata,
     the dvipdfmx project team.
 
     Copyright (C) 1998, 1999 by Mark A. Wicks <mwicks@kettering.edu>
@@ -78,13 +78,7 @@
 
 #include "mfileio.h"
 #include "numbers.h"
-
 #include "jpegimage.h"
-
-#include <stdlib.h>
-#include <string.h>
-
-#include "kpathsea/lib.h" /* for xmalloc/xrealloc prototypes */
 
 #define JPEG_DEBUG_STR "JPEG"
 #define JPEG_DEBUG     3
@@ -120,8 +114,8 @@ JPEG_info_init (struct JPEG_info *j_info)
   j_info->bits_per_component = 0;
   j_info->num_components = 0;
 
-  j_info->xdpi = 72.0;
-  j_info->ydpi = 72.0;
+  j_info->xdpi = 0.0;
+  j_info->ydpi = 0.0;
 
   j_info->flags    = 0;
   j_info->num_appn = 0;
@@ -307,9 +301,14 @@ read_APP1_Exif (struct JPEG_info *j_info, FILE *fp, unsigned short length)
         }
     }
   }
-
-  j_info->xdpi = xres * res_unit;
-  j_info->ydpi = yres * res_unit;
+/*
+  Do not overwrite if j_info->xdpi and j_info->ydpi are
+  already determined as JFIF
+*/
+  if (j_info->xdpi < 0.1 && j_info->ydpi < 0.1) {
+    j_info->xdpi = xres * res_unit;
+    j_info->ydpi = yres * res_unit;
+  }
 
 err:
   RELEASE(buffer);
@@ -350,7 +349,7 @@ read_APP0_JFIF (struct JPEG_info *j_info, FILE *fp)
     break;
   default: /* FIXME: not sure what to do with this.... */
     j_info->xdpi = 72.0;
-    j_info->ydpi = 72.0 * app_data->Ydensity / app_data->Xdensity;
+    j_info->ydpi = 72.0;
     break;
   }
 

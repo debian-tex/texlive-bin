@@ -1,6 +1,6 @@
 /* This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
 
-    Copyright (C) 2008-2014 by Jin-Hwan Cho, Matthias Franz, and Shunsaku Hirata,
+    Copyright (C) 2008-2015 by Jin-Hwan Cho, Matthias Franz, and Shunsaku Hirata,
     the dvipdfmx project team.
     
     Copyright (C) 1998, 1999 by Mark A. Wicks <mwicks@kettering.edu>
@@ -2279,7 +2279,7 @@ pdf_doc_finish_page (pdf_doc *p)
   return;
 }
 
-static pdf_color bgcolor = { 1, { 1.0 } };
+static pdf_color bgcolor = { 1, NULL, { 1.0 } };
 
 void
 pdf_doc_set_bgcolor (const pdf_color *color)

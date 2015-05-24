@@ -29,11 +29,10 @@
  *
  *  All bitdepth less than 16 is supported.
  *  Supported color types are: PALETTE, RGB, GRAY, RGB_ALPHA, GRAY_ALPHA.
- *  Supported ancillary chunks: tRNS, cHRM + gAMA, (sRGB), (iCCP)
+ *  Supported ancillary chunks: tRNS, cHRM, gAMA, (sRGB), (iCCP)
  *
- *  gAMA support is available only when cHRM exists. cHRM support is not
- *  tested well. CalRGB/CalGray colorspace is used for PNG images that
- *  have cHRM chunk (but not sRGB).
+ *  cHRM support is not tested well. CalRGB/CalGray colorspace is used for
+ *  PNG images that have cHRM chunk.
  *
  * LIMITATIONS
  *
@@ -41,8 +40,6 @@
  *   images are automatically converted to 8 bit bitpedth image.
  *
  * TODO
- *
- *  sBIT ? iTXT, tEXT and tIME as MetaData ?, pHYS (see below)
  *  16 bpc support for PDF-1.5. JBIG compression for monochrome image.
  *  Predictor for deflate ?
  */
@@ -84,18 +81,15 @@
 /* ColorSpace */
 static pdf_obj *create_cspace_Indexed  (png_structp png_ptr, png_infop info_ptr);
 
-/* CIE-Based: CalRGB/CalGray
- *
- * We ignore gAMA if cHRM is not found.
- */
+/* CIE-Based: CalRGB/CalGray */
 static pdf_obj *create_cspace_CalRGB   (png_structp png_ptr, png_infop info_ptr);
 static pdf_obj *create_cspace_CalGray  (png_structp png_ptr, png_infop info_ptr);
 static pdf_obj *make_param_Cal         (png_byte color_type,
-					double G,
-					double xw, double yw,
-					double xr, double yr,
-					double xg, double yg,
-					double xb, double yb);
+                                        double G,
+                                        double xw, double yw,
+                                        double xr, double yr,
+                                        double xg, double yg,
+                                        double xb, double yb);
 
 /* sRGB:
  *
@@ -126,17 +120,17 @@ static pdf_obj *create_ckey_mask   (png_structp png_ptr, png_infop info_ptr);
  * An object representing mask itself is returned.
  */
 static pdf_obj *create_soft_mask   (png_structp png_ptr, png_infop info_ptr,
-				    png_bytep image_data_ptr,
-				    png_uint_32 width, png_uint_32 height);
+                                    png_bytep image_data_ptr,
+                                    png_uint_32 width, png_uint_32 height);
 static pdf_obj *strip_soft_mask    (png_structp png_ptr, png_infop info_ptr,
-				    png_bytep image_data_ptr,
-				    png_uint_32p rowbytes_ptr,
-				    png_uint_32 width, png_uint_32 height);
+                                    png_bytep image_data_ptr,
+                                    png_uint_32p rowbytes_ptr,
+                                    png_uint_32 width, png_uint_32 height);
 
 /* Read image body */
 static void read_image_data (png_structp png_ptr,
-			     png_bytep dest_ptr,
-			     png_uint_32 height, png_uint_32 rowbytes);
+                             png_bytep dest_ptr,
+                             png_uint_32 height, png_uint_32 rowbytes);
 
 int
 check_for_png (FILE *png_file)
@@ -207,6 +201,19 @@ png_include_image (pdf_ximage *ximage, FILE *png_file)
   if (bpc > 8) {
     png_set_strip_16(png_ptr);
     bpc = 8;
+  }
+  /* Ask libpng to gamma-correct.
+   * It is wrong to assume screen gamma value 2.2 but...
+   * We do gamma correction here only when uncalibrated color space is used. 
+   */
+  if (!png_get_valid(png_ptr, png_info_ptr, PNG_INFO_iCCP) &&
+      !png_get_valid(png_ptr, png_info_ptr, PNG_INFO_sRGB) &&
+      !png_get_valid(png_ptr, png_info_ptr, PNG_INFO_cHRM) &&
+      !png_get_valid(png_ptr, png_info_ptr, PNG_INFO_sRGB) &&
+       png_get_valid(png_ptr, png_info_ptr, PNG_INFO_gAMA)) {
+    double G = 1.0;
+    png_get_gAMA (png_ptr, png_info_ptr, &G);
+    png_set_gamma(png_ptr, 2.2, G);
   }
 
   trans_type = check_transparency(png_ptr, png_info_ptr);
@@ -279,16 +286,12 @@ png_include_image (pdf_ximage *ximage, FILE *png_file)
 
     switch (trans_type) {
     case PDF_TRANS_TYPE_BINARY:
-      if (color_type != PNG_COLOR_TYPE_RGB)
-	ERROR("Unexpected error in png_include_image().");
       mask = create_ckey_mask(png_ptr, png_info_ptr);
       break;
     /* rowbytes changes 4 to 3 at here */
     case PDF_TRANS_TYPE_ALPHA:
-      if (color_type != PNG_COLOR_TYPE_RGB_ALPHA)
-	ERROR("Unexpected error in png_include_image().");
       mask = strip_soft_mask(png_ptr, png_info_ptr,
-			     stream_data_ptr, &rowbytes, width, height);
+                             stream_data_ptr, &rowbytes, width, height);
       break;
     default:
       mask = NULL;
@@ -311,15 +314,11 @@ png_include_image (pdf_ximage *ximage, FILE *png_file)
 
     switch (trans_type) {
     case PDF_TRANS_TYPE_BINARY:
-      if (color_type != PNG_COLOR_TYPE_GRAY)
-	ERROR("Unexpected error in png_include_image().");
       mask = create_ckey_mask(png_ptr, png_info_ptr);
       break;
     case PDF_TRANS_TYPE_ALPHA:
-      if (color_type != PNG_COLOR_TYPE_GRAY_ALPHA)
-	ERROR("Unexpected error in png_include_image().");
       mask = strip_soft_mask(png_ptr, png_info_ptr,
-			     stream_data_ptr, &rowbytes, width, height);
+                             stream_data_ptr, &rowbytes, width, height);
       break;
     default:
       mask = NULL;
@@ -342,10 +341,58 @@ png_include_image (pdf_ximage *ximage, FILE *png_file)
       pdf_add_dict(stream_dict, pdf_new_name("SMask"), pdf_ref_obj(mask));
       pdf_release_obj(mask);
     } else {
-      WARN("%s: You found a bug in pngimage.c.", PNG_DEBUG_STR);
+      WARN("%s: Unknown transparency type...???", PNG_DEBUG_STR);
       pdf_release_obj(mask);
     }
   }
+
+  /* Finally read XMP Metadata
+   * See, XMP Specification Part 3, Storage in Files
+   * http://www.adobe.com/jp/devnet/xmp.html
+   *
+   * We require libpng version >= 1.6.14 since prior versions
+   * of libpng had a bug that incorrectly treat the compression
+   * flag of iTxt chunks.
+   */
+#if PNG_LIBPNG_VER >= 10614
+  if (pdf_get_version() >= 4) {
+    png_textp text_ptr;
+    pdf_obj  *XMP_stream, *XMP_stream_dict;
+    int       i, num_text;
+    int       have_XMP = 0;
+
+    num_text = png_get_text(png_ptr, png_info_ptr, &text_ptr, NULL);
+    for (i = 0; i < num_text; i++) {
+      if (!memcmp(text_ptr[i].key, "XML:com.adobe.xmp", 17)) {
+        /* XMP found */
+        if (text_ptr[i].compression != PNG_ITXT_COMPRESSION_NONE ||
+            text_ptr[i].itxt_length == 0)
+          WARN("%s: Invalid value(s) in iTXt chunk for XMP Metadata.", PNG_DEBUG_STR);
+        else if (have_XMP)
+          WARN("%s: Multiple XMP Metadata. Don't know how to treat it.", PNG_DEBUG_STR);
+        else {
+          /* We compress XMP metadata for included images here.
+           * It is not recommended to compress XMP metadata for PDF documents but
+           * we compress XMP metadata for included images here to avoid confusing
+           * application programs that only want PDF document global XMP metadata
+           * and scan for that.
+           */
+          XMP_stream = pdf_new_stream(STREAM_COMPRESS);
+          XMP_stream_dict = pdf_stream_dict(XMP_stream);
+          pdf_add_dict(XMP_stream_dict,
+                       pdf_new_name("Type"), pdf_new_name("Metadata"));
+          pdf_add_dict(XMP_stream_dict,
+                       pdf_new_name("Subtype"), pdf_new_name("XML"));
+          pdf_add_stream(XMP_stream, text_ptr[i].text, text_ptr[i].itxt_length);
+          pdf_add_dict(stream_dict,
+                       pdf_new_name("Metadata"), pdf_ref_obj(XMP_stream));
+          pdf_release_obj(XMP_stream);
+          have_XMP = 1;
+        }
+      }
+    }
+  }
+#endif /* PNG_LIBPNG_VER */
 
   png_read_end(png_ptr, NULL);
 
@@ -625,7 +672,7 @@ create_cspace_CalRGB (png_structp png_ptr, png_infop info_ptr)
   if (png_get_valid(png_ptr, info_ptr, PNG_INFO_gAMA) &&
       png_get_gAMA (png_ptr, info_ptr, &G)) {
     if (G < 1.0e-2) {
-      WARN("%s: Unusual Gamma value: %g", PNG_DEBUG_STR, G);
+      WARN("%s: Unusual Gamma value: 1.0 / %g", PNG_DEBUG_STR, G);
       return NULL;
     }
     G = 1.0 / G; /* Gamma is inverted. */
@@ -666,7 +713,7 @@ create_cspace_CalGray (png_structp png_ptr, png_infop info_ptr)
   if (png_get_valid(png_ptr, info_ptr, PNG_INFO_gAMA) &&
       png_get_gAMA (png_ptr, info_ptr, &G)) {
     if (G < 1.0e-2) {
-      WARN("%s: Unusual Gamma value: %g", PNG_DEBUG_STR, G);
+      WARN("%s: Unusual Gamma value: 1.0 / %g", PNG_DEBUG_STR, G);
       return NULL;
     }
     G = 1.0 / G; /* Gamma is inverted. */
@@ -736,7 +783,7 @@ make_param_Cal (png_byte color_type,
   }
 
   if (G < 1.0e-2) {
-    WARN("Unusual Gamma specified: %g", G);
+    WARN("Unusual Gamma specified: 1.0 / %g", G);
     return NULL;
   }
 
@@ -835,13 +882,6 @@ create_cspace_Indexed (png_structp png_ptr, png_infop info_ptr)
 }
 
 /*
- * pHYs: no support
- *
- *  pngimage.c is not responsible for adjusting image size.
- *  Higher layer must do something for this.
- */
-
-/*
  * Colorkey Mask: array
  *
  *  [component_0_min component_0_max ... component_n_min component_n_max]
@@ -870,10 +910,10 @@ create_ckey_mask (png_structp png_ptr, png_infop info_ptr)
   case PNG_COLOR_TYPE_PALETTE:
     for (i = 0; i < num_trans; i++) {
       if (trans[i] == 0x00) {
-	pdf_add_array(colorkeys, pdf_new_number(i));
-	pdf_add_array(colorkeys, pdf_new_number(i));
+        pdf_add_array(colorkeys, pdf_new_number(i));
+        pdf_add_array(colorkeys, pdf_new_number(i));
       } else if (trans[i] != 0xff) {
-	WARN("%s: You found a bug in pngimage.c.", PNG_DEBUG_STR);
+        WARN("%s: You found a bug in pngimage.c.", PNG_DEBUG_STR);
       }
     }
     break;

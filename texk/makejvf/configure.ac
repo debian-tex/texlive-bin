@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
 dnl
-dnl   Copyright (C) 2010, 2013 Peter Breitenlohner <tex-live@tug.org>
+dnl   Copyright (C) 2010-2015 Peter Breitenlohner <tex-live@tug.org>
 dnl
 dnl   This file is free software; the copyright holder
 dnl   gives unlimited permission to copy and/or distribute it,
@@ -18,7 +18,6 @@ KPSE_COMMON([makejvfk], [no-define])
 AC_CONFIG_HEADERS([c-auto.h:c-auto.in])
 
 AC_CHECK_HEADERS([strings.h])
-AC_CHECK_FUNCS([strdup strtol])
 
 KPSE_KPATHSEA_FLAGS
 KPSE_PTEXENC_FLAGS

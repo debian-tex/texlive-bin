@@ -1,11 +1,11 @@
 # TeXLive::TLUtils.pm - the inevitable utilities for TeX Live.
-# Copyright 2007-2014 Norbert Preining, Reinhard Kotucha
+# Copyright 2007-2015 Norbert Preining, Reinhard Kotucha
 # This file is licensed under the GNU General Public License version 2
 # or any later version.
 
 package TeXLive::TLUtils;
 
-my $svnrev = '$Revision: 35719 $';
+my $svnrev = '$Revision: 36818 $';
 my $_modulerevision;
 if ($svnrev =~ m/: ([0-9]+) /) {
   $_modulerevision = $1;
@@ -69,8 +69,8 @@ C<TeXLive::TLUtils> -- utilities used in the TeX Live infrastructure
 
   TeXLive::TLUtils::make_var_skeleton($path);
   TeXLive::TLUtils::make_local_skeleton($path);
-  TeXLive::TLUtils::create_fmtutil($tlpdb,$dest,$localconf);
-  TeXLive::TLUtils::create_updmap($tlpdb,$dest,$localconf);
+  TeXLive::TLUtils::create_fmtutil($tlpdb,$dest);
+  TeXLive::TLUtils::create_updmap($tlpdb,$dest);
   TeXLive::TLUtils::create_language_dat($tlpdb,$dest,$localconf);
   TeXLive::TLUtils::create_language_def($tlpdb,$dest,$localconf);
   TeXLive::TLUtils::create_language_lua($tlpdb,$dest,$localconf);
@@ -2032,8 +2032,8 @@ sub add_link_dir_dir {
       }
       #
       # try to make the link.
-      if (system ("ln -s '$from/$f' '$to'") != 0) {
-        tlwarn ("add_link_dir_dir: linking $f from $from to $to failed: $!\n");
+      if (symlink ("$from/$f", "$to/$f") == 0) {
+        tlwarn ("add_link_dir_dir: symlink of $f from $from to $to failed: $!\n");
         $ret = 0;
       }
     }
@@ -2763,9 +2763,9 @@ sub make_local_skeleton {
 }
 
 
-=item C<create_fmtutil($tlpdb, $dest, $localconf)>
+=item C<create_fmtutil($tlpdb, $dest)>
 
-=item C<create_updmap($tlpdb, $dest, $localconf)>
+=item C<create_updmap($tlpdb, $dest)>
 
 =item C<create_language_dat($tlpdb, $dest, $localconf)>
 
@@ -2799,22 +2799,21 @@ sub get_disabled_local_configs {
   my $localconf = shift;
   my $cc = shift;
   my @disabled = ();
-  if (-r "$localconf") {
-    open FOO, "<$localconf"
-      or die "strange, -r ok but cannot open $localconf: $!";
+  if ($localconf && -r $localconf) {
+    open (FOO, "<$localconf")
+    || die "strange, -r ok but open($localconf) failed: $!";
     my @tmp = <FOO>;
-    close(FOO) || warn("Closing $localconf did not succeed: $!");
-    @disabled = map { if (m/^$cc!(\S+)\s*$/) { $1 } else { }} @tmp;
+    close(FOO) || warn("close($localconf) failed: $!");
+    @disabled = map { if (m/^$cc!(\S+)\s*$/) { $1 } else { } } @tmp;
   }
   return @disabled;
 }
 
 sub create_fmtutil {
-  my ($tlpdb,$dest,$localconf) = @_;
-  my @lines = $tlpdb->fmtutil_cnf_lines(
-                         get_disabled_local_configs($localconf, '#'));
+  my ($tlpdb,$dest) = @_;
+  my @lines = $tlpdb->fmtutil_cnf_lines();
   _create_config_files($tlpdb, "texmf-dist/web2c/fmtutil-hdr.cnf", $dest,
-                       $localconf, 0, '#', \@lines);
+                       undef, 0, '#', \@lines);
 }
 
 sub create_updmap {

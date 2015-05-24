@@ -18,9 +18,7 @@
 % with LuaTeX; if not, see <http://www.gnu.org/licenses/>.
 
 @ @c
-static const char _svn_version[] =
-    "$Id: luastuff.w 4730 2014-01-03 14:44:14Z taco $"
-    "$URL: https://foundry.supelec.fr/svn/luatex/trunk/source/texk/web2c/luatexdir/lua/luastuff.w $";
+
 
 #include "ptexlib.h"
 #include "lua/luatex-api.h"
@@ -95,7 +93,6 @@ static int my_luapanic(lua_State * L)
     return 0;
 }
 
-
 @ @c
 void luafunctioncall(int slot)
 {
@@ -106,10 +103,12 @@ void luafunctioncall(int slot)
     lua_gettable(Luas, LUA_REGISTRYINDEX);
     lua_rawgeti(Luas, -1,slot);
     if (lua_isfunction(Luas,-1)) {
-        lua_pushcfunction(Luas, lua_traceback);     /* push traceback function */
-        lua_insert(Luas, -2);     /* put it under chunk  */
+        int base = lua_gettop(Luas); /* function index */
         lua_pushnumber(Luas, slot);
-        i = lua_pcall(Luas, 1, 0, -2);
+        lua_pushcfunction(Luas, lua_traceback); /* push traceback function */
+        lua_insert(Luas, base); /* put it under chunk  */
+        i = lua_pcall(Luas, 1, 0, base);
+        lua_remove(Luas, base); /* remove traceback function */
         if (i != 0) {
             lua_gc(Luas, LUA_GCCOLLECT, 0);
             Luas = luatex_error(Luas, (i == LUA_ERRRUN ? 0 : 1));
@@ -118,6 +117,7 @@ void luafunctioncall(int slot)
     lua_settop(Luas,stacktop);
     lua_active--;
 }
+
 
 
 
@@ -311,6 +311,7 @@ void luainterpreter(void)
     /* our own libraries */
     luaopen_ff(L);
     luaopen_tex(L);
+    luaopen_newtoken(L);
     luaopen_token(L);
     luaopen_node(L);
     luaopen_texio(L);
@@ -661,7 +662,7 @@ LUALIB_API void *luaL_testudata (lua_State *L, int ud, const char *tname) {
 }
 
 @ @c
-/* It's not ok. See lua-users.org/wiki/CompatibilityWithLuafive for another solution */
+/* It's not ok. See lua-users.org/wiki/CompatibilityWithLuaFive for another solution */
 LUALIB_API void luaL_setfuncs (lua_State *L, const luaL_Reg *l, int nup) {
   /*luaL_checkversion(L);*/
   luaL_checkstack(L, nup, "too many upvalues");

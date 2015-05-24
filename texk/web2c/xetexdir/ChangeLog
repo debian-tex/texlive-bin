@@ -1,3 +1,46 @@
+2015-05-07  Jonathan Kew  <jfkthame@gmail.com>
+
+	* xetex.web: Merged UTF-16 surrogate-handling fixes from github.
+	* xetex.web: New \Uchar and \Ucharcat primitives.
+
+2015-05-05  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* XeTeX_ext.c: Can not use non-locking getc() for MinGW.
+
+2015-05-03  Jonathan Kew  <jfkthame@gmail.com>
+
+	* XeTeX_ext.c: use non-locking getc() for faster file reading.
+
+2015-03-27  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* image/mfileio.[ch]: Use mfgets() parameters as for fgets().
+
+2015-03-26  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* image/jpegimage.c: Drop redundant #include directives.
+	* image/{mfileio,numbers}.c: First '#include <w2c/config.h>'.
+	* image/mfileio.h, image/numbers.[ch]: Drop unused types and
+	functions.
+
+2015-03-22  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* XeTeX_ext.c: The SELFAUTOLOC issue has been considered on W32
+	independently.
+
+2015-03-17  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* xetex-bug73.test: The equivalent of 'tail -n+2' is 'sed 1d'.
+
+2015-03-16  Karl Berry  <karl@tug.org>
+
+	* xetex-bug73.test: sed 1,2d instead of tail -n+2, which
+	is not supported on Solaris 10.  tlbuild mail from Mojca,
+	16 Mar 2015 17:03:25.
+
+2015-03-12  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* image/jpegimage.c: Fix a bug introduced by me on 2015-02-15.
+
 2015-02-15  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
 
 	* XeTeX_pic.c and image/jpegimage.c: Revert. The changes in 2015-02-09

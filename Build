@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: Build 35438 2014-10-25 15:33:44Z karl $
+# $Id$
 # Public domain.  Originally written many years ago by Sebastian Rahtz.
 # The basic idea is to run configure && make, but with a multitude of
 # environment variables to allow overriding everything.

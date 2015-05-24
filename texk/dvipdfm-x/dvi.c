@@ -3,7 +3,7 @@
     Copyright (C) 2002-2014 by Jin-Hwan Cho and Shunsaku Hirata,
     the dvipdfmx project team.
 
-    Copyright (C) 2012-2014 by Khaled Hosny <khaledhosny@eglug.org>
+    Copyright (C) 2012-2015 by Khaled Hosny <khaledhosny@eglug.org>
     
     Copyright (C) 1998, 1999 by Mark A. Wicks <mwicks@kettering.edu>
 
@@ -65,6 +65,9 @@
 #include "pdfximage.h"
 #include "tt_aux.h"
 #include "tt_table.h"
+#include "t1_load.h"
+#include "t1_char.h"
+#include "cff_dict.h"
 #endif
 
 #define DVI_STACK_DEPTH_MAX  256u
@@ -148,6 +151,8 @@ static struct loaded_font
   int   ascent;
   int   descent;
   unsigned unitsPerEm;
+  cff_font *cffont;
+  int cff_is_standard_encoding;
   unsigned numGlyphs;
   int   layout_dir;
   float extend;
@@ -929,16 +934,18 @@ dvi_locate_native_font (const char *filename, uint32_t index,
   struct tt_head_table *head;
   struct tt_maxp_table *maxp;
   struct tt_hhea_table *hhea;
+  int is_dfont = 0, is_type1 = 0;
 
   if (verbose)
     MESG("<%s@%.2fpt", filename, ptsize * dvi2pts);
 
-  if ((fp = fopen(filename, "rb")) != NULL)
-    path = strdup(filename);
+  if ((path = dpx_find_dfont_file(filename)) != NULL &&
+      (fp = fopen(path, "rb")) != NULL)
+    is_dfont = 1;
+  else if ((path = dpx_find_type1_file(filename)) != NULL)
+    is_type1 = 1;
   else if (((path = dpx_find_opentype_file(filename)) == NULL
-         && (path = dpx_find_truetype_file(filename)) == NULL
-         && (path = dpx_find_type1_file(filename)) == NULL
-         && (path = dpx_find_dfont_file(filename)) == NULL)
+         && (path = dpx_find_truetype_file(filename)) == NULL)
          || (fp = fopen(path, "rb")) == NULL) {
     ERROR("Cannot proceed without the font: %s", filename);
   }
@@ -962,32 +969,72 @@ dvi_locate_native_font (const char *filename, uint32_t index,
   loaded_fonts[cur_id].type    = NATIVE;
   free(fontmap_key);
 
-  sfont = sfnt_open(fp);
-  if (sfont->type == SFNT_TYPE_TTC)
-    offset = ttc_read_offset(sfont, index);
-  sfnt_read_table_directory(sfont, offset);
-  head = tt_read_head_table(sfont);
-  maxp = tt_read_maxp_table(sfont);
-  hhea = tt_read_hhea_table(sfont);
-  loaded_fonts[cur_id].ascent = hhea->ascent;
-  loaded_fonts[cur_id].descent = hhea->descent;
-  loaded_fonts[cur_id].unitsPerEm = head->unitsPerEm;
-  loaded_fonts[cur_id].numGlyphs = maxp->numGlyphs;
-  if (layout_dir == 1 && sfnt_find_table_pos(sfont, "vmtx") > 0) {
-    struct tt_vhea_table *vhea = tt_read_vhea_table(sfont);
-    sfnt_locate_table(sfont, "vmtx");
-    loaded_fonts[cur_id].hvmt = tt_read_longMetrics(sfont, maxp->numGlyphs, vhea->numOfLongVerMetrics, vhea->numOfExSideBearings);
-    RELEASE(vhea);
+  if (is_type1) {
+    cff_font *cffont;
+    char     *enc_vec[256];
+    int       code;
+
+    fp = DPXFOPEN(filename, DPX_RES_TYPE_T1FONT);
+    if (!fp)
+      return -1;
+
+    if (!is_pfb(fp))
+      ERROR("Failed to read Type 1 font \"%s\".", filename);
+
+    memset(enc_vec, 0, 256 * sizeof(char *));
+    cffont = t1_load_font(enc_vec, 0, fp);
+    if (!cffont)
+      ERROR("Failed to read Type 1 font \"%s\".", filename);
+
+    loaded_fonts[cur_id].cffont = cffont;
+    loaded_fonts[cur_id].cff_is_standard_encoding = enc_vec[0] == NULL;
+
+    if (cff_dict_known(cffont->topdict, "FontBBox")) {
+      loaded_fonts[cur_id].ascent = cff_dict_get(cffont->topdict, "FontBBox", 3);
+      loaded_fonts[cur_id].descent = cff_dict_get(cffont->topdict, "FontBBox", 1);
+    } else {
+      loaded_fonts[cur_id].ascent = 690;
+      loaded_fonts[cur_id].descent = -190;
+    }
+
+    loaded_fonts[cur_id].unitsPerEm = 1000;
+    loaded_fonts[cur_id].numGlyphs = cffont->num_glyphs;
+
+    DPXFCLOSE(fp);
   } else {
-    sfnt_locate_table(sfont, "hmtx");
-    loaded_fonts[cur_id].hvmt = tt_read_longMetrics(sfont, maxp->numGlyphs, hhea->numOfLongHorMetrics, hhea->numOfExSideBearings);
+    if (is_dfont)
+      sfont = dfont_open(fp, index);
+    else
+      sfont = sfnt_open(fp);
+    if (sfont->type == SFNT_TYPE_TTC)
+      offset = ttc_read_offset(sfont, index);
+    else if (sfont->type == SFNT_TYPE_DFONT)
+      offset = sfont->offset;
+    sfnt_read_table_directory(sfont, offset);
+    head = tt_read_head_table(sfont);
+    maxp = tt_read_maxp_table(sfont);
+    hhea = tt_read_hhea_table(sfont);
+    loaded_fonts[cur_id].ascent = hhea->ascent;
+    loaded_fonts[cur_id].descent = hhea->descent;
+    loaded_fonts[cur_id].unitsPerEm = head->unitsPerEm;
+    loaded_fonts[cur_id].numGlyphs = maxp->numGlyphs;
+    if (layout_dir == 1 && sfnt_find_table_pos(sfont, "vmtx") > 0) {
+      struct tt_vhea_table *vhea = tt_read_vhea_table(sfont);
+      sfnt_locate_table(sfont, "vmtx");
+      loaded_fonts[cur_id].hvmt = tt_read_longMetrics(sfont, maxp->numGlyphs, vhea->numOfLongVerMetrics, vhea->numOfExSideBearings);
+      RELEASE(vhea);
+    } else {
+      sfnt_locate_table(sfont, "hmtx");
+      loaded_fonts[cur_id].hvmt = tt_read_longMetrics(sfont, maxp->numGlyphs, hhea->numOfLongHorMetrics, hhea->numOfExSideBearings);
+    }
+    RELEASE(hhea);
+    RELEASE(maxp);
+    RELEASE(head);
+    sfnt_close(sfont);
+    fclose(fp);
   }
-  RELEASE(hhea);
-  RELEASE(maxp);
-  RELEASE(head);
-  sfnt_close(sfont);
+
   free(path);
-  fclose(fp);
 
   loaded_fonts[cur_id].layout_dir = layout_dir;
   loaded_fonts[cur_id].extend = mrec->opt.extend;
@@ -1618,14 +1665,36 @@ do_glyphs (void)
   for (i = 0; i < slen; i++) {
     glyph_id = get_buffered_unsigned_pair(); /* freetype glyph index */
     if (glyph_id < font->numGlyphs) {
-      unsigned advance = (font->hvmt)[glyph_id].advance;
+      unsigned advance;
+      double ascent = (double)font->ascent;
+      double descent = (double)font->descent;
+
+      if (font->cffont) {
+        cff_index *cstrings = font->cffont->cstrings;
+        t1_ginfo gm;
+
+        /* For standard encoding, Type1 glyph id is FreeType glyph index + 1. */
+        if (font->cff_is_standard_encoding)
+          glyph_id += 1;
+
+        t1char_get_metrics(cstrings->data + cstrings->offset[glyph_id] - 1,
+                           cstrings->offset[glyph_id + 1] - cstrings->offset[glyph_id],
+                           font->cffont->subrs[0], &gm);
+
+        advance = font->layout_dir == 0 ? gm.wx : gm.wy;
+        ascent = gm.bbox.ury;
+        descent = gm.bbox.lly;
+      } else {
+        advance = font->hvmt[glyph_id].advance;
+      }
+
       glyph_width    = (double)font->size * (double)advance / (double)font->unitsPerEm;
       glyph_width    = glyph_width * font->extend;
 
       if (dvi_is_tracking_boxes()) {
         pdf_rect rect;
-        height = (double)font->size * (double)font->ascent / (double)font->unitsPerEm;
-        depth  = (double)font->size * -(double)font->descent / (double)font->unitsPerEm;
+        height = (double)font->size * ascent / (double)font->unitsPerEm;
+        depth  = (double)font->size * -descent / (double)font->unitsPerEm;
         pdf_dev_set_rect(&rect, dvi_state.h + xloc[i], -dvi_state.v - yloc[i], glyph_width, height, depth);
         pdf_doc_expand_box(&rect);
       }
@@ -1917,6 +1986,11 @@ dvi_close (void)
       RELEASE(loaded_fonts[i].hvmt);
 
     loaded_fonts[i].hvmt = NULL;
+
+    if (loaded_fonts[i].cffont != NULL)
+      cff_close(loaded_fonts[i].cffont);
+
+    loaded_fonts[i].cffont = NULL;
   }
 #endif
 

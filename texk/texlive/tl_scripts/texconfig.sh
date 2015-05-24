@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: texconfig.sh 34586 2014-07-13 00:06:11Z karl $
+# $Id$
 # texconfig version 3.0
 # Originally written by Thomas Esser. Public domain.
 # Now maintained as part of TeX Live; correspondence to tex-live@tug.org.
@@ -28,7 +28,7 @@ PATH="$mydir:$PATH"; export PATH
 progname=texconfig
 
 # the version string
-version='$Id: texconfig.sh 34586 2014-07-13 00:06:11Z karl $'
+version='$Id$'
 
 envVars="
   AFMFONTS BIBINPUTS BSTINPUTS CMAPFONTS CWEBINPUTS ENCFONTS GFFONTS

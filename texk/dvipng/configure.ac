@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
 dnl
-dnl   Copyright (C) 2009-2014 Peter Breitenlohner <tex-live@tug.org>
+dnl   Copyright (C) 2009-2015 Peter Breitenlohner <tex-live@tug.org>
 dnl
 dnl   This file is free software; the copyright holder
 dnl   gives unlimited permission to copy and/or distribute it,
@@ -70,7 +70,7 @@ AC_TYPE_PID_T
 AC_FUNC_MMAP
 AC_FUNC_STRTOD
 AC_FUNC_VPRINTF
-AC_CHECK_FUNCS([dup2 memset munmap pow putenv strchr strrchr strtol strstr])
+AC_CHECK_FUNCS([dup2 memset munmap pow putenv strchr strrchr])
 
 if test "x$enable_timing" = xyes; then
   AC_CHECK_FUNCS([ftime gettimeofday])
@@ -130,6 +130,8 @@ AC_CHECK_FUNC([kpse_set_program_name],
               [AC_MSG_ERROR([cannot find/use libkpathsea])])
 
 AC_CHECK_FUNCS([kpse_program_basename])
+
+KPSE_DO_IF_WIN32([AC_CHECK_FUNCS([texlive_gs_init])])
 
 # We need enc, cmap, and sfd formats.
 # Introduced together with opentype format (Dec 2003).

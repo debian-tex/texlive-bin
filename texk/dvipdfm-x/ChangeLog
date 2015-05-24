@@ -1,3 +1,113 @@
+2015-05-23  Jiang Jiang  <gzjjgod@gmail.com>
+
+	* dvi.c: Fix Type1 font encoding and metrics.
+
+2015-05-21  Karl Berry  <karl@tug.org>
+
+	* version 20150515 for TL'15.
+
+2015-05-06  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* dvi.c: Do not identify Type1 fonts as TrueType or OpenType.
+
+2015-05-04  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* cidtype0.c: Avoid compiler warnings:
+	(CIDFont_type0_get_used_chars, CIDType0Error_Show,
+	CIDFontInfo_init, CIDFontInfo_close, -CIDType0Error,
+	CIDFont_type0_add_CIDSet): Declare as static.
+	(CIDFont_type0_add_CIDSet): Initialize num_glyphs, last_cid.
+	(CIDFont_type0_open): Always initialize sfont, drop unused.
+
+2015-05-01  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* cidtype0.c: Support old compilers.
+
+2015-05-01  Jiang Jiang  <gzjjgod@gmail.com>
+
+	* cidtype0.c, cidtype0.h, cid.c: Combine all Type 0 open functions
+	into one. Simplify some implementations.
+
+2015-04-27  Jiang Jiang  <gzjjgod@gmail.com>
+
+	* cidtype0.c: Fix TTC support for Type 1 Composite and Type 0 fonts.
+
+2015-04-27  Jiang Jiang  <gzjjgod@gmail.com>
+
+	* dpxfile.c: Ignore empty file in filetype checking.
+
+2015-04-26  Jiang Jiang  <gzjjgod@gmail.com>
+
+	* cidtype0.c, cidtype2.c: Support loading CID type 0 font from
+	TrueType Collection.
+
+	* truetype.c: Fix offset in offset for TrueType loading.
+
+2015-04-25  Jiang Jiang  <gzjjgod@gmail.com>
+
+	* cff_dict.c: Be more permissive in CFF dict parsing, fix Yuppy SC
+	and Yuppy TC fonts support.
+
+2015-04-25  Jiang Jiang  <gzjjgod@gmail.com>
+
+	* sfnt.c: Fix Mac TrueType font support.
+	  bug found by Richard Koch <richardmoncriefkoch@icloud.com>.
+
+2015-04-21  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* dvi.c, tt_cmap.c: Fixed a dfont bug, from Akira,
+	  bug found by Dohyun Kim <nomosnomos@gmail.com>.
+
+2015-04-19  Shunsaku Hirata  <shunsaku.hirata74@gmail.com>
+
+	* pngimage.c: Ask libpng to do gamma correction with assumed
+	screen gamma 2.2.
+
+2015-04-12  Shunsaku Hirata  <shunsaku.hirata74@gmail.com>
+
+	* pdfobj.c:  Fix some problems in reading cross-reference streams.
+	* pngimage.c: Support PNG gAMA chunk.
+	* jpegimage.c: Various fixes in handling JPEG Exif data
+	(possible overflow and buffer overrun), adjusting indent and spaces.
+	* jp2image.c: JPEG2000 opacity channel support.
+	* pdfcolor.c: Update for PDF 1.7 in pdfcolor.c.
+
+2015-04-05  Shunsaku Hirata  <shunsaku.hirata74@gmail.com>
+
+	* pngimage.c: XMP Metadata support for PNG images.
+
+2015-03-27  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* mfileio.[ch]: Use mfgets() parameters as for fgets().
+
+2015-03-24  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* bmpimage.c, dpxcrypt.c, dvi.c, fontmap.[ch], jpegimage.c,
+	pdfcolor.[ch], pdfdev.[ch], pdfdoc.c, pdfdraw.c, spc_tpic.c,
+	spc_util.c, spc_xtx.c, xbb.c: Copyright "2014" => "2015".
+
+2015-03-24  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* dvipdfmx.c: Change "Copyright (C) 2002-2014" to
+	"Copyright (C) 2002-2015".
+
+2015-03-17  Khaled Hosny  <khaledhosny@eglug.org>
+
+	* pdfcolor.c, pdfcolor.h, pdfdoc.c, pdfdraw.c, spc_util.c: Add spot
+	colors support, based on patch by Apostolos Syropoulos.
+
+2015-03-15  Khaled Hosny  <khaledhosny@eglug.org>
+
+	* tests/*.{bb,xbb}: Update version number.
+
+2015-03-15  Karl Berry  <karl@tug.org>
+
+	* configure.ac: version 20150315 for TL'15.
+
+2015-03-12  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* jpegimage.c: Fix a bug introduced by me on 2015-02-16.
+
 2015-03-01  Shunsaku Hirata  <shunsaku.hirata74@gmail.com>
 
 	* spc_tpic.c: Make tpic "ar" command dvips compatible to fix the problem

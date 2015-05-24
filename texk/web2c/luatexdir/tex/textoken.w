@@ -18,9 +18,7 @@
 % with LuaTeX; if not, see <http://www.gnu.org/licenses/>.
 
 @ @c
-static const char _svn_version[] =
-    "$Id: textoken.w 5004 2014-05-20 09:23:31Z taco $"
-    "$URL: https://foundry.supelec.fr/svn/luatex/trunk/source/texk/web2c/luatexdir/tex/textoken.w $";
+
 
 #include "ptexlib.h"
 
@@ -29,6 +27,8 @@ static const char _svn_version[] =
 #define cat_code_table int_par(cat_code_table_code)
 #define tracing_nesting int_par(tracing_nesting_code)
 #define suppress_outer_error int_par(suppress_outer_error_code)
+#define suppress_mathpar_error int_par(suppress_mathpar_error_code)
+
 
 #define every_eof equiv(every_eof_loc)
 #define box(A) equiv(box_base+(A))
@@ -480,8 +480,9 @@ boolean scan_keyword(const char *s)
     const char *k;              /* index into |str_pool| */
     halfword save_cur_cs = cur_cs;
     int saved_align_state = align_state;
-    assert (strlen(s) > 1);
-    p = backup_head;
+    if (strlen(s) == 0)        /* was assert (strlen(s) > 1); */
+      return false ;           /* but not with newtokenlib  zero keyword simply doesn't match  */
+    p = backup_head;           
     token_link(p) = null;
     k = s;
     while (*k) {
@@ -1649,8 +1650,8 @@ static boolean print_convert_string(halfword c, int i)
     case luatex_date_code:
         print_int(get_luatex_date_info());
         break;
-    case pdftex_banner_code:
-        tprint(pdftex_banner);
+    case luatex_banner_code:
+        tprint(luatex_banner);
         break;
     case uniform_deviate_code:
         print_int(unif_rand(i));
@@ -1781,7 +1782,7 @@ void conv_toks(void)
     case pdftex_revision_code:
     case luatex_revision_code:
     case luatex_date_code:
-    case pdftex_banner_code:
+    case luatex_banner_code:
         break;
     case pdf_font_name_code:
     case pdf_font_objnum_code:
@@ -1923,6 +1924,7 @@ void conv_toks(void)
             if (luacstrings > 0)
                 lua_string_start();
         }
+        return;
         break;
     case pdf_insert_ht_code:
         scan_register_num();

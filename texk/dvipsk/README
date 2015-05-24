@@ -1,4 +1,4 @@
-$Id: README 17566 2010-03-26 17:29:02Z karl $
+$Id$
 This directory contains Dvips, Tom Rokicki's dvips, a DVI-to-PostScript
 translator.  It requires the Kpathsea library for path searching.
 

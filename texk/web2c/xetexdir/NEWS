@@ -1,4 +1,18 @@
 ==============================================================
+XeTeX 0.99992 was released 2015????
+==============================================================
+
+XeTeX:
+* Various image handling fixes by Akira Kakuto.
+* Fix off-by-one error in display of \every... token registers, thanks to Bruno
+  Le Floch.
+* The XDV opcodes have been simplified slightly. The DVI id have been bumped to
+  6 to reflect this.
+* XeTeX now looks for the xdvipdfmx binary installed next to it and no longer
+  requires that it is installed in the system PATH (this was previously done
+  only on Windows).
+
+==============================================================
 XeTeX 0.99991 was released 20140614
 ==============================================================
 

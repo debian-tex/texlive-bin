@@ -4,7 +4,7 @@ debian-no-tl-scripts
 60_unneeded_linking
 61_path_max.diff
 fix-manpages
-relax-zlib-version-check
+#relax-zlib-version-check
 ac-ctie
 libpng-arm64-neon-fix
 mktexlsr-use-mktemp

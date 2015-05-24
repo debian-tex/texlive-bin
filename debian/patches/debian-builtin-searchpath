@@ -41,11 +41,11 @@
  TEXMFHOME = ~/texmf
  
  % TEXMFVAR, where texconfig/updmap/fmtutil store cached runtime data.
--TEXMFVAR = ~/.texlive2014/texmf-var
+-TEXMFVAR = ~/.texlive2015/texmf-var
 +TEXMFVAR = ~/.texmf-var
  
  % TEXMFCONFIG, where texconfig/updmap/fmtutil store configuration data.
--TEXMFCONFIG = ~/.texlive2014/texmf-config
+-TEXMFCONFIG = ~/.texlive2015/texmf-config
 +TEXMFCONFIG = ~/.texmf-config
  
  % List all the texmf trees. For an explanation of what they are, see the

@@ -4,9 +4,13 @@ Description: Fix FTBFS on arm64
 Author: Wookey <wookey@debian.org>
 Last-Update: 2014-09-30
 
---- texlive-bin-2014.20140926.35254.orig/libs/libpng/libpng-1.6.16/pngpriv.h
-+++ texlive-bin-2014.20140926.35254/libs/libpng/libpng-1.6.16/pngpriv.h
-@@ -124,7 +124,7 @@
+---
+ libs/libpng/libpng-1.6.17/pngpriv.h |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+--- texlive-bin.orig/libs/libpng/libpng-1.6.17/pngpriv.h
++++ texlive-bin/libs/libpng/libpng-1.6.17/pngpriv.h
+@@ -122,7 +122,7 @@
      * check both variants.
      */
  #  if (defined(__ARM_NEON__) || defined(__ARM_NEON)) && \

@@ -19,9 +19,7 @@
 % with LuaTeX; if not, see <http://www.gnu.org/licenses/>.
 
 @ @c
-static const char _svn_version[] =
-    "$Id: utils.w 5074 2014-10-24 16:57:38Z oneiros $"
-    "$URL: https://foundry.supelec.fr/svn/luatex/trunk/source/texk/web2c/luatexdir/utils/utils.w $";
+
 
 @ @c
 #include "ptexlib.h"
@@ -37,7 +35,7 @@ static const char _svn_version[] =
 #include "zlib.h"
 #include "md5.h"
 
-#include "lua/luatex-api.h"     /* for ptexbanner */
+#include "lua/luatex-api.h"     /* for luatex_banner */
 
 #include "png.h"
 #include "mplib.h"
@@ -197,30 +195,6 @@ void garbage_warning(void)
     remove_pdffile(static_pdf);
 }
 
-@ @c
-char *pdftex_banner = NULL;
-
-@ @c
-void make_pdftex_banner(void)
-{
-    char *s;
-    unsigned int slen;
-    int i;
-
-    if (pdftex_banner != NULL)
-        return;
-
-    slen = (unsigned int) (SMALL_BUF_SIZE +
-                           strlen(ptexbanner) +
-                           strlen(versionstring) +
-                           strlen(kpathsea_version_string));
-    s = xtalloc(slen, char);
-    /* The Web2c version string starts with a space.  */
-    i = snprintf(s, slen,
-                 "%s%s %s", ptexbanner, versionstring, kpathsea_version_string);
-    check_nprintf(i, slen);
-    pdftex_banner = s;
-}
 
 @ @c
 size_t xfwrite(void *ptr, size_t size, size_t nmemb, FILE * stream)

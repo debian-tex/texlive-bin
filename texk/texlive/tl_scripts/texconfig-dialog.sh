@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: texconfig-dialog.sh 34586 2014-07-13 00:06:11Z karl $
+# $Id$
 # texconfig-dialog
 # Originally written by Thomas Esser. Public domain.
 # Now maintained as part of TeX Live; correspondence to tex-live@tug.org.
@@ -25,7 +25,7 @@ mydir=`cd "$mydir" && pwd`
 PATH="$mydir:$PATH"; export PATH
 
 # the version string
-version='$Id: texconfig-dialog.sh 34586 2014-07-13 00:06:11Z karl $'
+version='$Id$'
 
 : ${PAGER=more}
 progname=texconfig-dialog

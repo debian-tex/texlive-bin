@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
 dnl
-dnl   Copyright (C) 2009-2014 Peter Breitenlohner <tex-live@tug.org>
+dnl   Copyright (C) 2009-2015 Peter Breitenlohner <tex-live@tug.org>
 dnl
 dnl   This file is free software; the copyright holder
 dnl   gives unlimited permission to copy and/or distribute it,
@@ -35,9 +35,12 @@ AC_PROG_AWK
 
 AC_CHECK_SIZEOF([long])
 
+dnl Check if <ctype.h> declares isascii.
+AC_CHECK_DECLS([isascii], [], [], [[#include <ctype.h>]])
+
 dnl Replacement functions that may be required on ancient broken system.
-AC_CHECK_DECLS([putenv, strstr])
-AC_REPLACE_FUNCS([putenv strcasecmp strtol strstr])
+AC_CHECK_DECLS([putenv])
+AC_REPLACE_FUNCS([putenv])
 
 if test "x$ac_cv_func_getcwd" = xyes; then
 # We only need to run this if we have getcwd.
@@ -117,7 +120,7 @@ AC_CONFIG_HEADERS([c-auto.h:c-auto.in],
 
 AH_TOP([/* c-auto.h: defines for kpathsea, as determined by configure.
 
-   Copyright 1994-97, 2008, 2009, 2010 Karl Berry.
+   Copyright 1994-97, 2008-2015 Karl Berry.
    Copyright 1997-99, 2002, 2005 Olaf Weber.
 
    This library is free software; you can redistribute it and/or

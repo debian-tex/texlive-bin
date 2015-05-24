@@ -2,7 +2,7 @@
 
     This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
 
-    Copyright (C) 2002 by Jin-Hwan Cho and Shunsaku Hirata,
+    Copyright (C) 2002-2015 by Jin-Hwan Cho and Shunsaku Hirata,
     the dvipdfmx project team <dvipdfmx@project.ktug.or.kr>
     
     Copyright (C) 1998, 1999 by Mark A. Wicks <mwicks@kettering.edu>
@@ -41,8 +41,6 @@ int mfclose (FILE *file, const char *function, int line);
 #define MFCLOSE(file) fclose(file)
 #endif
 
-extern UNSIGNED_BYTE read_byte (FILE *);
-
 extern void seek_absolute (FILE *file, long pos);
 extern void seek_relative (FILE *file, long pos);
 
@@ -52,7 +50,7 @@ extern long tell_position (FILE *file);
 
 extern long file_size (FILE *file);
 
-extern char *mfgets (char *buffer, unsigned long size, FILE *file);
+extern char *mfgets (char *buffer, int length, FILE *file);
 
 extern char work_buffer[];
 

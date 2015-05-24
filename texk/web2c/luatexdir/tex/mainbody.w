@@ -22,9 +22,7 @@
 \def\pdfTeX{pdf\TeX}
 
 @ @c
-static const char _svn_version[] =
-    "$Id: mainbody.w 4956 2014-03-28 12:12:17Z luigi $"
-    "$URL: https://foundry.supelec.fr/svn/luatex/trunk/source/texk/web2c/luatexdir/tex/mainbody.w $";
+
 
 #include "ptexlib.h"
 
@@ -448,8 +446,8 @@ void main_body(void)
     else
         buffer[ilimit] = (packed_ASCII_code) int_par(end_line_char_code);
     fix_date_and_time();
-    if (ini_version)
-        make_pdftex_banner();
+    /*if (ini_version)*/
+    /*    make_pdftex_banner();*/
     random_seed = (microseconds * 1000) + (epochseconds % 1000000);
     init_randoms(random_seed);
     initialize_math();

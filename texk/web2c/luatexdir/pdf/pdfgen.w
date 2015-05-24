@@ -18,9 +18,7 @@
 % with LuaTeX; if not, see <http://www.gnu.org/licenses/>.
 
 @ @c
-static const char _svn_version[] =
-    "$Id: pdfgen.w 5081 2014-11-07 18:38:33Z luigi $"
-    "$URL: https://foundry.supelec.fr/svn/luatex/trunk/source/texk/web2c/luatexdir/pdf/pdfgen.w $";
+
 
 #include "ptexlib.h"
 
@@ -1780,15 +1778,14 @@ void set_job_id(PDF pdf, int year, int month, int day, int time)
 
     name_string = makecstring(job_name);
     format_string = makecstring(format_ident);
-    make_pdftex_banner();
     slen = SMALL_BUF_SIZE +
-        strlen(name_string) + strlen(format_string) + strlen(pdftex_banner);
+        strlen(name_string) + strlen(format_string) + strlen(luatex_banner);
     s = xtalloc(slen, char);
     /* The Web2c version string starts with a space.  */
     i = snprintf(s, slen,
                  "%.4d/%.2d/%.2d %.2d:%.2d %s %s %s",
                  year, month, day, time / 60, time % 60,
-                 name_string, format_string, pdftex_banner);
+                 name_string, format_string, luatex_banner);
     check_nprintf(i, slen);
     pdf->job_id_string = xstrdup(s);
     xfree(s);
@@ -2357,7 +2354,7 @@ static int pdf_print_info(PDF pdf, int luatexversion,
     if (!trapped_given) {
         pdf_dict_add_name(pdf, "Trapped", "False");
     }
-    pdf_dict_add_string(pdf, "PTEX.Fullbanner", pdftex_banner);
+    pdf_dict_add_string(pdf, "PTEX.Fullbanner", luatex_banner);
     pdf_end_dict(pdf);
     pdf_end_obj(pdf);
     return k;

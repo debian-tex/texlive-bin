@@ -23,17 +23,14 @@
 #include "lua/luatex-api.h"
 #include "luatex_svnversion.h"
 
-static const char _svn_version[] =
-    "$Id: luatex.c 5093 2014-12-10 09:41:01Z luigi $ "
-    "$URL: https://foundry.supelec.fr/svn/luatex/trunk/source/texk/web2c/luatexdir/luatex.c $";
 
 #define TeX
 
-int luatex_svn = 5140;
-int luatex_version = 79;        /* \.{\\luatexversion}  */
-int luatex_revision = '3';      /* \.{\\luatexrevision}  */
-int luatex_date_info = 2015012100;     /* the compile date is now hardwired */
-const char *luatex_version_string = "beta-0.79.3";
+int luatex_svn = 5238;
+int luatex_version = 80;        /* \.{\\luatexversion}  */
+int luatex_revision = '0';      /* \.{\\luatexrevision}  */
+int luatex_date_info = 2015051900;     /* the compile date is now hardwired */
+const char *luatex_version_string = "beta-0.80.0";
 const char *engine_name = my_name;     /* the name of this engine */
 
 #include <kpathsea/c-ctype.h>
@@ -445,7 +442,7 @@ string dump_name;
 /* The C version of the jobname, if given. */
 const_string c_job_name;
 
-const char *ptexbanner;
+const char *luatex_banner;
 
 #ifdef _MSC_VER
 /* Invalid parameter handler */

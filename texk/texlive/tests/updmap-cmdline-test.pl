@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-# $Id: updmap-cmdline-test.pl 30033 2013-04-19 07:07:46Z peter $
+# $Id$
 # Public domain.  Originally written 2011, Karl Berry.
 # Check that updmap can parse various cmdline invocations.
 

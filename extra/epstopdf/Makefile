@@ -1,4 +1,4 @@
-# $Id: Makefile 34293 2014-06-18 18:16:38Z karl $
+# $Id$
 # This file is public domain.  (Originally written by Karl Berry, 2009.)
 
 prg = epstopdf

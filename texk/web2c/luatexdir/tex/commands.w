@@ -20,9 +20,7 @@
 \def\eTeX{e-\TeX}
 
 @ @c
-static const char _svn_version[] =
-    "$Id: commands.w 4878 2014-03-14 10:48:03Z taco $"
-    "$URL: https://foundry.supelec.fr/svn/luatex/trunk/source/texk/web2c/luatexdir/tex/commands.w $";
+
 
 #include "ptexlib.h"
 
@@ -450,7 +448,7 @@ void initialize_commands(void)
     primitive_tex("lastskip", last_item_cmd, lastskip_code, 0);
     primitive_tex("inputlineno", last_item_cmd, input_line_no_code, 0);
     primitive_tex("badness", last_item_cmd, badness_code, 0);
-    primitive_pdftex("pdftexversion", last_item_cmd, pdftex_version_code, 0);
+    primitive_pdftex("pdftexversion", last_item_cmd, luatex_version_code, 0); /*OBSOLETE */
     primitive_luatex("luatexversion", last_item_cmd, luatex_version_code, 0);
     primitive_pdftex("pdflastobj", last_item_cmd, pdf_last_obj_code, 0);
     primitive_pdftex("pdflastxform", last_item_cmd, pdf_last_xform_code, 0);
@@ -473,10 +471,11 @@ void initialize_commands(void)
     primitive_etex("eTeXVersion", convert_cmd, etex_code, 0);
     primitive_tex("fontname", convert_cmd, font_name_code, 0);
     primitive_luatex("fontid", convert_cmd, font_id_code, 0);
-    primitive_pdftex("pdftexrevision", convert_cmd, pdftex_revision_code, 0);
+    primitive_pdftex("pdftexrevision", convert_cmd, luatex_revision_code, 0); /*OBSOLETE*/
     primitive_luatex("luatexrevision", convert_cmd, luatex_revision_code, 0);
     primitive_luatex("luatexdatestamp", convert_cmd, luatex_date_code, 0);
-    primitive_pdftex("pdftexbanner", convert_cmd, pdftex_banner_code, 0);
+    primitive_pdftex("pdftexbanner", convert_cmd, luatex_banner_code, 0); /*OBSOLETE*/
+    primitive_pdftex("luatexbanner", convert_cmd, luatex_banner_code, 0); /*will replace pdftexbanner*/
     primitive_pdftex("pdffontname", convert_cmd, pdf_font_name_code, 0);
     primitive_pdftex("pdffontobjnum", convert_cmd, pdf_font_objnum_code, 0);
     primitive_pdftex("pdffontsize", convert_cmd, pdf_font_size_code, 0);
@@ -1060,6 +1059,8 @@ void initialize_etex_commands(void)
                      int_base + suppress_fontnotfound_error_code, int_base);
     primitive_luatex("suppresslongerror", assign_int_cmd,
                      int_base + suppress_long_error_code, int_base);
+    primitive_luatex("suppressmathparerror", assign_int_cmd,
+                     int_base + suppress_mathpar_error_code, int_base);
     primitive_luatex("suppressifcsnameerror", assign_int_cmd,
                      int_base + suppress_ifcsname_error_code, int_base);
     primitive_luatex("suppressoutererror", assign_int_cmd,

@@ -10,7 +10,7 @@
 # Originally written as `texhash' by Thomas Esser, Okt., 1994.
 # Public domain.
 
-version='$Id: mktexlsr 34656 2014-07-18 23:38:50Z karl $'
+version='$Id$'
 progname=`echo $0 | sed 's%.*/%%'`
 
 usage="Usage: $progname [OPTION]... [DIR]...

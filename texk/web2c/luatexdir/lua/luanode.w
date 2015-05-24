@@ -21,9 +21,7 @@
 nodes are removedor inserted, temp nodes don't interfere */
 
 @ @c
-static const char _svn_version[] =
-    "$Id: luanode.w 4956 2014-03-28 12:12:17Z luigi $"
-    "$URL: https://foundry.supelec.fr/svn/luatex/trunk/source/texk/web2c/luatexdir/lua/luanode.w $";
+
 
 #include "ptexlib.h"
 #include "lua/luatex-api.h"
@@ -420,6 +418,7 @@ void show_pdf_literal(pointer p)
     }
 }
 
+@ @c
 void show_late_lua(pointer p)
 {
     tprint_esc("latelua");
@@ -427,10 +426,8 @@ void show_late_lua(pointer p)
     if (late_lua_type(p) == normal) {
         print_mark(late_lua_data(p));
     } else {
-        lua_rawgeti(Luas, LUA_REGISTRYINDEX, late_lua_data(p));
-        tprint("\"");
-        tprint(lua_tostring(Luas, -1));
-        tprint("\"");
-        lua_pop(Luas, 1);
+        tprint(" <function ");
+        print_int(late_lua_data(p));
+        tprint(">");
     }
 }

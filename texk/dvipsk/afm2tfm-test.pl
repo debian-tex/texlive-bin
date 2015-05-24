@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-# $Id: afm2tfm-test.pl 17798 2010-04-11 00:54:05Z karl $
+# $Id$
 # Public domain.  Originally written 2010, Karl Berry.
 # Check that afm2tfm functions at all.
 

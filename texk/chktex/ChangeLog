@@ -1,3 +1,21 @@
+2015-04-13  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* ChkTeX.tex (new): Source of ChkTeX.pdf.
+	* Makefile.am, configure.ac: Rules to build ChkTeX.pdf.
+
+2015-04-12  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* ChkTeX.pdf (new): Moved from chktex-1.7.2/ChkTeX.pdf to here.
+	(No longer distributed).
+
+2015-04-12  Karl Berry  <karl@tug.org>
+
+	* Import chktex-1.7.4.
+
+2015-03-10  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* configure.ac: Drop check for strtol.
+
 2015-02-16  Peter Breitenlohner  <peb@mppmu.mpg.de>
 
 	* Makefile.am: Use the fragment ../../am/dist_hook.am.

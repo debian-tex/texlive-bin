@@ -1,12 +1,27 @@
 
+if [ "$1" = "-git" ] ; then
+  gitmode=1
+  shift
+else
+  gitmode=0
+fi
+
 if [ -n "$1" ] ; then
   svnroot="$1"
 else
-  svnroot=/src/TeX/texlive-svn/Build/source
+  if [ $gitmode = 1 ] ; then
+    svnroot=/src/TeX/texlive.git/Build/source
+  else
+    svnroot=/src/TeX/texlive-svn/Build/source
+  fi
 fi
-baseyear=2014
+baseyear=2015
 
-svni=$(cd $svnroot ; svn info | grep "^Last Changed Rev" | awk '{print$4}')
+cmd="svn info"
+if [ $gitmode = 1 ] ; then
+  cmd="git svn info"
+fi
+svni=$(cd $svnroot ; $cmd | grep "^Last Changed Rev" | awk '{print$4}')
 verstr=texlive-bin-$baseyear.`date +%Y%m%d`.$svni
 pkgstr=texlive-bin_$baseyear.`date +%Y%m%d`.$svni
 
@@ -15,7 +30,11 @@ if [ -r $verstr ] ; then
   exit 1
 fi
 
-svnstat=$(cd $svnroot ; svn status --no-ignore)
+cmd="svn status --no-ignore"
+if [ $gitmode = 1 ] ; then
+  cmd="git status --ignored --short"
+fi
+svnstat=$(cd $svnroot ; $cmd)
 if [ -n "$svnstat" ] ; then
   echo "Strange files present, stopping!"
   echo $svnstat
@@ -61,6 +80,7 @@ for i in \
   rm -rf $verstr/libs/$i
 done
 find $verstr -name \.svn -exec rm -rf '{}' \;
+find $verstr -name \.git -exec rm -rf '{}' \;
 find $verstr -name autom4te.cache -exec rm -rf '{}' \;
 
 echo "packing up"

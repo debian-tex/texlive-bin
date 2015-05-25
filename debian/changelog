@@ -1,4 +1,4 @@
-texlive-bin (2015.20150524.37493-1) UNRELEASED; urgency=medium
+texlive-bin (2015.20150524.37493-1) experimental; urgency=medium
 
   * Imported Upstream version 2015.20150524.37493
   * pin all of own libs to exact version
@@ -9,7 +9,7 @@ texlive-bin (2015.20150524.37493-1) UNRELEASED; urgency=medium
     as we need system xpdf/poppler for pdftex/xetex
   * build libtexlua and libtexluajit libraries
 
- -- Norbert Preining <preining@debian.org>  Mon, 25 May 2015 09:09:23 +0900
+ -- Norbert Preining <preining@debian.org>  Mon, 25 May 2015 09:34:23 +0900
 
 texlive-bin (2014.20140926.35254-6) unstable; urgency=high
 

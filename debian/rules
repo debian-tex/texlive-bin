@@ -73,10 +73,16 @@ override_dh_autoreconf:
 #	--with-system-gd			\
 #	--with-system-cairo 			\
 #
-# poppler is too old in Debian for now, we need to use the shipped one
-#	--with-system-poppler			\
-#	--with-system-xpdf			\
-# add below in inverted meaning --without-..
+# poppler is used two times in TeX Live:
+# once for pdftex/xetex
+# once for luatex
+# - the pdftex/xetex version is controlled via --with-system-xpdf
+# - the luatex version is controlled via --with-system-poppler
+# As poppler in Debian is too old for luatex, we need to use
+#	--without-system-poppler
+# but keep build-dep on poppler and use
+#	--with-system-xpdf
+# so that as much as possible is built from system libs.
 #
 
 # disable-largefile seems to break omegafonts, as they core dump
@@ -108,7 +114,7 @@ override_dh_auto_configure:
 	--with-system-gmp			\
 	--with-system-mpfr			\
 	--without-system-poppler		\
-	--without-system-xpdf			\
+	--with-system-xpdf			\
 	--with-x				\
 	--with-mf-x-toolkit			\
 	--with-xdvi-x-toolkit=xaw		\

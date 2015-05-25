@@ -13,3 +13,6 @@ texlive-binaries binary: embedded-library usr/bin/pmpost: libpng
 texlive-binaries binary: embedded-library usr/bin/upmpost: libpng
 texlive-binaries binary: embedded-library usr/bin/xdvipdfmx: libpng
 texlive-binaries binary: embedded-library usr/bin/xetex: libpng
+texlive-binaries binary: embedded-library usr/bin/xetex: poppler
+texlive-binaries binary: embedded-library usr/bin/luajittex: poppler
+texlive-binaries binary: embedded-library usr/bin/luatex: poppler

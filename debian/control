@@ -22,11 +22,11 @@ Depends: libptexenc1 (>= ${source:Version}),
   libtexluajit2 (>= ${source:Version}), 
   libtexluajit2 (<< ${source:Version}.1~), 
   ${shlibs:Depends}, ${misc:Depends}, 
-  tex-common (>= 5.02), perl, dpkg (>= 1.15.4) | install-info
+  tex-common (>= 6), perl, dpkg (>= 1.15.4) | install-info
 Recommends: texlive-base, python, ruby, wish
 Replaces: texlive-metapost (<< 2010), texlive-base (<< 2010), ptex-bin, mendexk, jmpost, luatex (<< 2014)
 Conflicts: mendexk, makejvf, jmpost
-Breaks: texlive-base (<< 2014), jtex-bin, multex-bin, luatex (<< 2014), tex-common (<< 5)
+Breaks: texlive-base (<< 2014), jtex-bin, multex-bin, luatex (<< 2014), tex-common (<< 6)
 Provides: texlive-base-bin, makejvf, mendexk, jmpost, luatex
 Description: Binaries for TeX Live
  This package contains all the binaries of TeX Live packages.

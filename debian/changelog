@@ -1,3 +1,11 @@
+texlive-bin (2015.20150524.37493-2) UNRELEASED; urgency=medium
+
+  * UNRELEASED
+  * make update-fmtutil silent
+  * bump tex-common dep to 6
+
+ -- Norbert Preining <preining@debian.org>  Wed, 27 May 2015 09:55:49 +0900
+
 texlive-bin (2015.20150524.37493-1) experimental; urgency=medium
 
   * Imported Upstream version 2015.20150524.37493

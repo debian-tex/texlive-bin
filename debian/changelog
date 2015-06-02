@@ -1,17 +1,17 @@
-texlive-bin (2015.20150524.37493-2) UNRELEASED; urgency=medium
+texlive-bin (2015.20150524.37493-2) experimental; urgency=medium
 
-  * UNRELEASED
-  * make update-fmtutil silent
   * bump tex-common dep to 6
+  * remove fmtutil code from postinst and use triggers
+  * add licenses of embedded libraries to debian/copyright
 
- -- Norbert Preining <preining@debian.org>  Wed, 27 May 2015 09:55:49 +0900
+ -- Norbert Preining <preining@debian.org>  Tue, 02 Jun 2015 21:11:06 +0900
 
 texlive-bin (2015.20150524.37493-1) experimental; urgency=medium
 
   * Imported Upstream version 2015.20150524.37493
   * pin all of own libs to exact version
   * add git support in make-orig-tar
-  * unfuzzify patches, disable relaz luazlib version check
+  * unfuzzify patches, disable relax luazlib version check
   * re-include libpoppler in new sources, debian's version is too old
     use --without-system-poppler and --with-system-xpdf
     as we need system xpdf/poppler for pdftex/xetex

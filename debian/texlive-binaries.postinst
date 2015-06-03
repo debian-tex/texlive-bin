@@ -17,7 +17,7 @@ esac
 
 case "$1" in
   configure|reconfigure)
-    dpkg-trigger /var/lib/tex-common/fmtutil-cnf
+    dpkg-trigger texmf-format
     ;;
 esac
 

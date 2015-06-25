@@ -1,3 +1,9 @@
+texlive-bin (2015.20150524.37493-2) unstable; urgency=medium
+
+  * upload to unstable
+
+ -- Norbert Preining <preining@debian.org>  Thu, 25 Jun 2015 14:58:57 +0900
+
 texlive-bin (2015.20150524.37493-1) experimental; urgency=medium
 
   * Imported Upstream version 2015.20150524.37493

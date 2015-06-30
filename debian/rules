@@ -162,7 +162,7 @@ override_dh_auto_install:
 	dh_auto_install -- DESTDIR=$(CURDIR)/debian/tmp
 
 override_dh_install:
-	dh_install --sourcedir=$(CURDIR)/debian/tmp
+	dh_install --fail-missing --sourcedir=$(CURDIR)/debian/tmp
 	# replace xdvi wrapper shell script with perl variant to
 	# allow for opening of gz etc files
 	rm debian/texlive-binaries/usr/bin/xdvi

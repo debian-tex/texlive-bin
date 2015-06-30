@@ -1,3 +1,11 @@
+texlive-bin (2015.20150524.37493-4) unstable; urgency=medium
+
+  * fix missing c-auto.h install (Closes: #790294)
+  * add --fail-missing to dh_install call to make sure that we get
+    warned if new files are installed
+
+ -- Norbert Preining <preining@debian.org>  Tue, 30 Jun 2015 12:21:51 +0900
+
 texlive-bin (2015.20150524.37493-3) unstable; urgency=medium
 
   * fix deps for archs were not luajittex is available (Closes: #790006)

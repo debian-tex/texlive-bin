@@ -8,3 +8,4 @@ fix-manpages
 ac-ctie
 libpng-arm64-neon-fix
 mktexlsr-use-mktemp
+dvihp-use-mktemp

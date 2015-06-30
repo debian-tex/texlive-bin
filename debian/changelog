@@ -4,8 +4,9 @@ texlive-bin (2015.20150524.37493-4) unstable; urgency=medium
   * add --fail-missing to dh_install call to make sure that we get
     warned if new files are installed
   * use mktemp instead of hard-coded tmp dir in dvitohp (Closes: #496899)
+  * do not install texconfig-dialog man page
 
- -- Norbert Preining <preining@debian.org>  Tue, 30 Jun 2015 12:33:57 +0900
+ -- Norbert Preining <preining@debian.org>  Tue, 30 Jun 2015 12:58:41 +0900
 
 texlive-bin (2015.20150524.37493-3) unstable; urgency=medium
 

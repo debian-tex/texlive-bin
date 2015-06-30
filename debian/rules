@@ -179,6 +179,8 @@ override_dh_install:
 	rm debian/texlive-binaries/usr/share/man/man1/amstex.1*
 	# fix EUCJ encoding of mendex.1
 	recode EUC-JP..UTF8 debian/texlive-binaries/usr/share/man/man1/mendex.1
+	# remove texconfig-dialog.1 stuff, as we remove it also in nonbin
+	rm debian/texlive-binaries/usr/share/man/man1/texconfig-dialog.1*
 	# for alternatives treatment we rename usr/bin/bibtex to
 	# usr/bin/bibtex.original
 	mv debian/texlive-binaries/usr/bin/bibtex \

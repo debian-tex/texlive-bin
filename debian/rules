@@ -162,6 +162,9 @@ override_dh_auto_install:
 	dh_auto_install -- DESTDIR=$(CURDIR)/debian/tmp
 
 override_dh_install:
+	# remove .la files which we do not install, so that dh_install
+	# can work with --fail-missing
+	rm -f debian/tmp/usr/lib/*.la
 	dh_install --fail-missing --sourcedir=$(CURDIR)/debian/tmp
 	# replace xdvi wrapper shell script with perl variant to
 	# allow for opening of gz etc files

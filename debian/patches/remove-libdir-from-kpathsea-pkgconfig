@@ -1,0 +1,15 @@
+We move c-auto.h from /usr/lib/kpathsea back to /usr/include/kpathsea,
+so there is no need tp have -I/usr/lib included in the cflags
+---
+ texk/kpathsea/kpathsea.pc.in |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+--- texlive-bin.orig/texk/kpathsea/kpathsea.pc.in
++++ texlive-bin/texk/kpathsea/kpathsea.pc.in
+@@ -7,5 +7,5 @@
+ Description: Kpathsea filename lookup library
+ Version: @KPSEVERSION@
+ Libs: -L${libdir} -lkpathsea
+-Cflags: -I${libdir} -I${includedir}
++Cflags: -I${includedir}
+ 

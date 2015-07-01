@@ -1,3 +1,11 @@
+texlive-bin (2015.20150524.37493-5) unstable; urgency=medium
+
+  * mv c-auto.h back into /usr/include/kpathsea, we need a different
+    approach for multi-arch than upstream TeX Live, thanks Jakub Wilk.
+  * also remove the /usr/lib entry from the pkgconfig file for kpathsea
+
+ -- Norbert Preining <preining@debian.org>  Thu, 02 Jul 2015 08:46:11 +0900
+
 texlive-bin (2015.20150524.37493-4) unstable; urgency=medium
 
   * fix missing c-auto.h install (Closes: #790294)

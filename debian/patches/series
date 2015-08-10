@@ -10,3 +10,4 @@ libpng-arm64-neon-fix
 mktexlsr-use-mktemp
 dvihp-use-mktemp
 remove-libdir-from-kpathsea-pkgconfig
+upstream-svn38091-fix-pltotf-output

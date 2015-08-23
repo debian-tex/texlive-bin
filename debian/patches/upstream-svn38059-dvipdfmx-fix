@@ -1,0 +1,30 @@
+---
+ texk/dvipdfm-x/dvi.c |    9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
+
+--- texlive-bin.orig/texk/dvipdfm-x/dvi.c
++++ texlive-bin/texk/dvipdfm-x/dvi.c
+@@ -932,7 +932,11 @@
+   p = kpse_var_value("SELFAUTOLOC");
+   if (p == NULL)
+     return ret;
++#if defined(_WIN32)
++  cmd = concatn ("\"", p, "/t1disasm.exe\" \"", path, "\"", NULL);
++#else
+   cmd = concat3 (p, "/t1disasm ", path);
++#endif
+   free (p);
+   f = popen (cmd, "r");
+   free (cmd);
+@@ -941,7 +945,10 @@
+       p = strstr (buf, "CharStrings");
+       if (p) {
+         fgets (buf, 2047, f);
+-        if (strncmp (buf, "/.notdef", 8) != 0)
++        p = buf;
++        while (*p == ' ' || *p == '\t')
++          p++;
++        if (strncmp (p, "/.notdef", 8) != 0)
+           ret = 1;
+         break;
+       }

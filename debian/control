@@ -21,6 +21,7 @@ Depends: libptexenc1 (>= ${source:Version}),
   libtexlua52 (<< ${source:Version}.1~), 
   libtexluajit2 (>= ${source:Version}) [amd64 armel armhf hurd-i386 i386 kfreebsd-amd64 kfreebsd-i386 mips mipsel powerpc], 
   libtexluajit2 (<< ${source:Version}.1~) [amd64 armel armhf hurd-i386 i386 kfreebsd-amd64 kfreebsd-i386 mips mipsel powerpc], 
+  t1utils,
   ${shlibs:Depends}, ${misc:Depends}, 
   tex-common (>= 6), perl, dpkg (>= 1.15.4) | install-info
 Recommends: texlive-base, python, ruby, wish

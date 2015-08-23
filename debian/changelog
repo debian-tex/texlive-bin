@@ -3,8 +3,10 @@ texlive-bin (2015.20150524.37493-6) unstable; urgency=medium
   * fix garbled output of vptovf and ovf2ovp (Closes: #795054)
     Note, all the output is going to STDERR now.
   * add several dvipdfm-x and type1 related upstream patches
+  * add dependency on t1utils (t1disasm) as dvipdfm* needs it for
+    the time being.
 
- -- Norbert Preining <preining@debian.org>  Sun, 23 Aug 2015 12:40:27 +0900
+ -- Norbert Preining <preining@debian.org>  Sun, 23 Aug 2015 13:41:45 +0900
 
 texlive-bin (2015.20150524.37493-5) unstable; urgency=medium
 

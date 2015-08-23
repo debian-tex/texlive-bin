@@ -1,4 +1,4 @@
-texlive-bin (2015.20150524.37493-6~1) UNRELEASED; urgency=medium
+texlive-bin (2015.20150524.37493-6) unstable; urgency=medium
 
   * fix garbled output of vptovf and ovf2ovp (Closes: #795054)
     Note, all the output is going to STDERR now.

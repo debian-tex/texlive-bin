@@ -3,10 +3,9 @@ texlive-bin (2015.20150524.37493-7) UNRELEASED; urgency=medium
   * Multi-arch conversion:
     - bump dh dep to >= 9
     - add Pre-Depends: ${misc:Pre-Depends} to all shlibs packages
-    - add DEB_CONFIGURE_EXTRA_FLAGS setting to debian/rules
     - replace usr/lib with usr/lib/* throughout
 
- -- Norbert Preining <preining@debian.org>  Sun, 20 Sep 2015 11:22:52 +0900
+ -- Norbert Preining <preining@debian.org>  Sun, 20 Sep 2015 11:23:49 +0900
 
 texlive-bin (2015.20150524.37493-6) unstable; urgency=medium
 

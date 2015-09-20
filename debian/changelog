@@ -4,8 +4,10 @@ texlive-bin (2015.20150524.37493-7) UNRELEASED; urgency=medium
     - bump dh dep to >= 9
     - add Pre-Depends: ${misc:Pre-Depends} to all shlibs packages
     - replace usr/lib with usr/lib/* throughout
+    - mark texlive-binaries (and dummy luatex) M-A: foreign
+    - mark all shlib packages M-A: same (but leave the -dev packages for now)
 
- -- Norbert Preining <preining@debian.org>  Sun, 20 Sep 2015 11:23:49 +0900
+ -- Norbert Preining <preining@debian.org>  Sun, 20 Sep 2015 11:26:49 +0900
 
 texlive-bin (2015.20150524.37493-6) unstable; urgency=medium
 

@@ -11,6 +11,7 @@ Vcs-Browser: http://anonscm.debian.org/gitweb/?p=debian-tex/texlive-bin.git
 
 Package: texlive-binaries
 Architecture: any
+Multi-Arch: foreign
 Depends: libptexenc1 (>= ${source:Version}), 
   libptexenc1 (<< ${source:Version}.1~), 
   libkpathsea6 (>= ${source:Version}), 
@@ -39,6 +40,7 @@ Description: Binaries for TeX Live
 Package: libkpathsea6
 Section: libs
 Architecture: any
+Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Breaks: texlive-binaries (<< 2014), texlive-base (<< 2014)
@@ -59,6 +61,7 @@ Description: TeX Live: path search library for TeX (development part)
 Package: libptexenc1
 Section: libs
 Architecture: any
+Multi-Arch: same
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Pre-Depends: ${misc:Pre-Depends}
 Breaks: texlive-binaries (<< 2014), texlive-base (<< 2014)
@@ -77,6 +80,7 @@ Description: TeX Live: ptex encoding library (development part)
 Package: libsynctex1
 Section: libs
 Architecture: any
+Multi-Arch: same
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Pre-Depends: ${misc:Pre-Depends}
 Description: TeX Live: SyncTeX parser library
@@ -93,6 +97,7 @@ Description: Tex Live: SyncTeX parser library (development part)
 Package: libtexlua52
 Section: libs
 Architecture: any
+Multi-Arch: same
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Pre-Depends: ${misc:Pre-Depends}
 Description: TeX Live: Lua 5.2, modified for use with LuaTeX
@@ -109,6 +114,7 @@ Description: Tex Live: Lua 5.2, modified for use with LuaTeX (development part)
 Package: libtexluajit2
 Section: libs
 Architecture: amd64 armel armhf hurd-i386 i386 kfreebsd-amd64 kfreebsd-i386 mips mipsel powerpc
+Multi-Arch: same
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Pre-Depends: ${misc:Pre-Depends}
 Description: TeX Live: LuaJIT, modified for use with LuaJITTeX
@@ -126,6 +132,7 @@ Package: luatex
 Section: oldlibs
 Priority: extra
 Architecture: all
+Multi-Arch: foreign
 Depends: texlive-binaries (>= 2014)
 Description: TeX Live: transitional dummy package
  This is a transitional package for luatex to ensure proper upgrade

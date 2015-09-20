@@ -1,3 +1,10 @@
+texlive-bin (2015.20150524.37493-7) UNRELEASED; urgency=medium
+
+  * Multi-arch conversion:
+    - bump dh dep to >= 8.1.3
+
+ -- Norbert Preining <preining@debian.org>  Sun, 20 Sep 2015 11:06:14 +0900
+
 texlive-bin (2015.20150524.37493-6) unstable; urgency=medium
 
   * fix garbled output of vptovf and ovf2ovp (Closes: #795054)

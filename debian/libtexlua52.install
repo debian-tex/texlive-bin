@@ -1,2 +1,2 @@
-usr/lib/libtexlua52.so.5.*.*
-usr/lib/libtexlua52.so.5
+usr/lib/*/libtexlua52.so.5.*.*
+usr/lib/*/libtexlua52.so.5

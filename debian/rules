@@ -170,7 +170,7 @@ override_dh_auto_install:
 override_dh_install:
 	# remove .la files which we do not install, so that dh_install
 	# can work with --fail-missing
-	rm -f debian/tmp/usr/lib/*.la
+	rm -f debian/tmp/usr/lib/*.la debian/tmp/usr/lib/*/*.la
 	# mv c-auto.h back into /usr/include/kpathsea
 	# we don't support this kind of arch-separation by now
 	mv debian/tmp/usr/lib/kpathsea/c-auto.h debian/tmp/usr/include/kpathsea/
@@ -244,13 +244,13 @@ ifeq ($(WITHLUAJIT), yes)
 	dh_makeshlibs -plibtexluajit2
 endif
 
-SHLIBDEPS = -l debian/libkpathsea6/usr/lib \
-		-l debian/libptexenc1/usr/lib \
-		-l debian/libsynctex1/usr/lib \
-		-l debian/libtexlua52/usr/lib
+SHLIBDEPS = -l debian/libkpathsea6/usr/lib/* \
+		-l debian/libptexenc1/usr/lib/* \
+		-l debian/libsynctex1/usr/lib/* \
+		-l debian/libtexlua52/usr/lib/*
 
 ifeq ($(WITHLUAJIT), yes)
-	SHLIBDEPS += -l debian/libtexluajit2/usr/lib
+	SHLIBDEPS += -l debian/libtexluajit2/usr/lib/*
 endif
 override_dh_shlibdeps:
 	dh_shlibdeps $(SHLIBDEPS)

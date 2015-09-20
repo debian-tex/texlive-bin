@@ -4,8 +4,9 @@ texlive-bin (2015.20150524.37493-7) UNRELEASED; urgency=medium
     - bump dh dep to >= 8.1.3
     - add Pre-Depends: ${misc:Pre-Depends} to all shlibs packages
     - add DEB_CONFIGURE_EXTRA_FLAGS setting to debian/rules
+    - replace usr/lib with usr/lib/* throughout
 
- -- Norbert Preining <preining@debian.org>  Sun, 20 Sep 2015 11:08:59 +0900
+ -- Norbert Preining <preining@debian.org>  Sun, 20 Sep 2015 11:21:16 +0900
 
 texlive-bin (2015.20150524.37493-6) unstable; urgency=medium
 

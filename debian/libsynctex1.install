@@ -1,1 +1,1 @@
-usr/lib/libsynctex.so.*
+usr/lib/*/libsynctex.so.*

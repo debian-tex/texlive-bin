@@ -1,2 +1,2 @@
-usr/lib/libtexluajit.so.2.*.*
-usr/lib/libtexluajit.so.2
+usr/lib/*/libtexluajit.so.2.*.*
+usr/lib/*/libtexluajit.so.2

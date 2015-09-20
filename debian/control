@@ -39,6 +39,7 @@ Description: Binaries for TeX Live
 Package: libkpathsea6
 Section: libs
 Architecture: any
+Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Breaks: texlive-binaries (<< 2014), texlive-base (<< 2014)
 Description: TeX Live: path search library for TeX (runtime part)
@@ -59,6 +60,7 @@ Package: libptexenc1
 Section: libs
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}
+Pre-Depends: ${misc:Pre-Depends}
 Breaks: texlive-binaries (<< 2014), texlive-base (<< 2014)
 Description: TeX Live: pTeX encoding library
  library for encoding support in pTeX, a Japanese TeX engine.
@@ -76,6 +78,7 @@ Package: libsynctex1
 Section: libs
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}
+Pre-Depends: ${misc:Pre-Depends}
 Description: TeX Live: SyncTeX parser library
  Library for SyncTeX parsing support.
 
@@ -91,6 +94,7 @@ Package: libtexlua52
 Section: libs
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}
+Pre-Depends: ${misc:Pre-Depends}
 Description: TeX Live: Lua 5.2, modified for use with LuaTeX
  The Lua 5.2 library as used within LuaTeX.
 
@@ -106,6 +110,7 @@ Package: libtexluajit2
 Section: libs
 Architecture: amd64 armel armhf hurd-i386 i386 kfreebsd-amd64 kfreebsd-i386 mips mipsel powerpc
 Depends: ${misc:Depends}, ${shlibs:Depends}
+Pre-Depends: ${misc:Pre-Depends}
 Description: TeX Live: LuaJIT, modified for use with LuaJITTeX
  The LuaJIT library as used within LuaJITTeX.
 

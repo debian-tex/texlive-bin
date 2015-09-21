@@ -8,7 +8,7 @@ export CONFIG_SHELL=/bin/sh
 # as errors
 # DOES NOT WORK ... we need to turn of warning -> errors otherwise
 # tl does not compile - how???
-DEB_BUILD_HARDENING = 0
+export DEB_BUILD_HARDENING=0
 
 #
 # the configure code already checks a lot, but it does not catch

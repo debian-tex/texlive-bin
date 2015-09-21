@@ -4,6 +4,12 @@
 export SHELL=/bin/bash
 export CONFIG_SHELL=/bin/sh
 
+# building texlive with hardening breaks due to too many warnings treated
+# as errors
+# DOES NOT WORK ... we need to turn of warning -> errors otherwise
+# tl does not compile - how???
+DEB_BUILD_HARDENING = 0
+
 #
 # the configure code already checks a lot, but it does not catch
 # all cases. We have now two ways to test for where to build.

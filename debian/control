@@ -52,6 +52,7 @@ Description: TeX Live: path search library for TeX (runtime part)
 Package: libkpathsea-dev
 Section: libdevel
 Architecture: any
+Multi-Arch: same
 Depends: ${misc:Depends}, libkpathsea6 (= ${binary:Version}), ${shlibs:Depends}
 Description: TeX Live: path search library for TeX (development part)
  This package contains the static library and header files for the
@@ -71,6 +72,7 @@ Description: TeX Live: pTeX encoding library
 Package: libptexenc-dev
 Section: libdevel
 Architecture: any
+Multi-Arch: same
 Depends: ${misc:Depends}, libptexenc1 (= ${binary:Version}), ${shlibs:Depends}
 Description: TeX Live: ptex encoding library (development part)
  This package contains the static library and header files for the
@@ -89,6 +91,7 @@ Description: TeX Live: SyncTeX parser library
 Package: libsynctex-dev
 Section: libdevel
 Architecture: any
+Multi-Arch: same
 Depends: ${misc:Depends}, libsynctex1 (= ${binary:Version})
 Description: Tex Live: SyncTeX parser library (development part)
  This package contains the static library and header files for the SyncTex
@@ -106,6 +109,7 @@ Description: TeX Live: Lua 5.2, modified for use with LuaTeX
 Package: libtexlua52-dev
 Section: libdevel
 Architecture: any
+Multi-Arch: same
 Depends: ${misc:Depends}, libtexlua52 (= ${binary:Version})
 Description: Tex Live: Lua 5.2, modified for use with LuaTeX (development part)
  This package contains the static library and header files for the texlua
@@ -123,6 +127,7 @@ Description: TeX Live: LuaJIT, modified for use with LuaJITTeX
 Package: libtexluajit-dev
 Section: libdevel
 Architecture: amd64 armel armhf hurd-i386 i386 kfreebsd-amd64 kfreebsd-i386 mips mipsel powerpc
+Multi-Arch: same
 Depends: ${misc:Depends}, libtexluajit2 (= ${binary:Version})
 Description: Tex Live: LuaJIT, modified for use with LuaJITTeX (development part)
  This package contains the static library and header files for the texluajit

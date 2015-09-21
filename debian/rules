@@ -16,7 +16,9 @@ LUAJIT_GOOD_ARCHS := amd64 armel armhf hurd-i386 i386 kfreebsd-amd64 kfreebsd-i3
 # enough versions of automake and friends
 #export AM_V_P=false
 
-DEB_HOST_ARCH     ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
+DEB_HOST_ARCH      ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
+DEB_HOST_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
+
 
 ifeq ($(DEB_HOST_ARCH), alpha)
   export LDFLAGS = -Wl,--no-relax
@@ -166,9 +168,10 @@ override_dh_install:
 	# remove .la files which we do not install, so that dh_install
 	# can work with --fail-missing
 	rm -f debian/tmp/usr/lib/*.la debian/tmp/usr/lib/*/*.la
-	# mv c-auto.h back into /usr/include/kpathsea
-	# we don't support this kind of arch-separation by now
-	mv debian/tmp/usr/lib/kpathsea/c-auto.h debian/tmp/usr/include/kpathsea/
+	# mv c-auto.h into arch-dependent include path
+	mkdir -p debian/tmp/usr/include/$(DEB_HOST_MULTIARCH)/kpathsea
+	mv debian/tmp/usr/lib/kpathsea/c-auto.h \
+		debian/tmp/usr/include/$(DEB_HOST_MULTIARCH)/kpathsea/
 	rmdir debian/tmp/usr/lib/kpathsea
 	dh_install --fail-missing --sourcedir=$(CURDIR)/debian/tmp
 	# replace xdvi wrapper shell script with perl variant to

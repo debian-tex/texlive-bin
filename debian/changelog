@@ -1,4 +1,4 @@
-texlive-bin (2015.20150524.37493-7) UNRELEASED; urgency=medium
+texlive-bin (2015.20150524.37493-7~1) UNRELEASED; urgency=medium
 
   * Multi-arch conversion:
     - bump dh dep to >= 9
@@ -8,7 +8,7 @@ texlive-bin (2015.20150524.37493-7) UNRELEASED; urgency=medium
     - mark all shlib and dev packages M-A: same
     - move c-auto.h into /u/i/$triplet/kpathsea
 
- -- Norbert Preining <preining@debian.org>  Mon, 21 Sep 2015 09:50:29 +0900
+ -- Norbert Preining <preining@debian.org>  Tue, 22 Sep 2015 20:14:03 +0900
 
 texlive-bin (2015.20150524.37493-6) unstable; urgency=medium
 

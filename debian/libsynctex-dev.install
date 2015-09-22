@@ -1,4 +1,4 @@
-usr/lib/libsynctex.a
-usr/lib/libsynctex.so
-usr/lib/pkgconfig/synctex.pc
+usr/lib/*/libsynctex.a
+usr/lib/*/libsynctex.so
+usr/lib/*/pkgconfig/synctex.pc
 usr/include/synctex/*

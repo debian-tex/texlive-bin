@@ -1,7 +1,7 @@
-# libpng >= 1.4 is necessary for building TeX Live
-# since Debian still ships libpng 1.2 as default, we have
+# libpng >= 1.6 is necessary for building TeX Live
+# since Debian still ships libpng 1.4 as default, we have
 # to include libpng and depending libraries into static builds
-# These embedded copies will be removed as soon as libpng >= 1.4
+# These embedded copies will be removed as soon as libpng >= 1.6
 # will become the default in Debian and all libraries are converted.
 texlive-binaries binary: embedded-library usr/bin/dvipdfmx: libpng
 texlive-binaries binary: embedded-library usr/bin/dvisvgm: freetype
@@ -14,5 +14,9 @@ texlive-binaries binary: embedded-library usr/bin/upmpost: libpng
 texlive-binaries binary: embedded-library usr/bin/xdvipdfmx: libpng
 texlive-binaries binary: embedded-library usr/bin/xetex: libpng
 texlive-binaries binary: embedded-library usr/bin/xetex: poppler
+texlive-binaries binary: embedded-library usr/bin/xetex: freetype
 texlive-binaries binary: embedded-library usr/bin/luajittex: poppler
 texlive-binaries binary: embedded-library usr/bin/luatex: poppler
+texlive-binaries binary: embedded-library usr/bin/ttf2pk: freetype
+texlive-binaries binary: embedded-library usr/bin/ttf2tfm: freetype
+texlive-binaries binary: embedded-library usr/bin/xdvi-xaw: freetype

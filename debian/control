@@ -132,14 +132,3 @@ Depends: ${misc:Depends}, libtexluajit2 (= ${binary:Version})
 Description: Tex Live: LuaJIT, modified for use with LuaJITTeX (development part)
  This package contains the static library and header files for the texluajit
  library.
-
-Package: luatex
-Section: oldlibs
-Priority: extra
-Architecture: all
-Multi-Arch: foreign
-Depends: texlive-binaries (>= 2014)
-Description: TeX Live: transitional dummy package
- This is a transitional package for luatex to ensure proper upgrade
- to texlive-binaries. It can be safely removed after the installation
- is complete.

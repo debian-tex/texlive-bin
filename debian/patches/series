@@ -18,3 +18,4 @@ upstream-svn38059-dvipdfmx-fix
 upstream-svn38068-dvipdfmx-fix
 upstream-svn38091-fix-pltotf-output
 fix-format-gcc-errors
+fix-mktexlsr-bashims

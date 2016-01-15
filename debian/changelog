@@ -1,8 +1,9 @@
 texlive-bin (2015.20150524.37493-8) UNRELEASED; urgency=medium
 
   * drop transitional dummy luatex package (Closes: #804070)
+  * fix bashism in mktexlsr (thanks Thorsten Glaser) (Closes: #811092)
 
- -- Norbert Preining <preining@debian.org>  Thu, 05 Nov 2015 08:06:46 +0900
+ -- Norbert Preining <preining@debian.org>  Sat, 16 Jan 2016 00:32:11 +0900
 
 texlive-bin (2015.20150524.37493-7) unstable; urgency=medium
 

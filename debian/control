@@ -28,7 +28,6 @@ Build-Depends:
   libxi-dev,
   libzzip-dev (>= 0.12),
   m4 (>= 1.4.16),
-  recode,
   sharutils,
   texinfo,
   time,

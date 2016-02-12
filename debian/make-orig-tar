@@ -48,8 +48,6 @@ rm -rf $verstr/Work
 # packaged separately:
 rm -rf $verstr/utils/biber
 rm -rf $verstr/utils/asymptote
-rm -rf $verstr/utils/pmx
-rm -rf $verstr/utils/m-tx
 rm -rf $verstr/utils/xindy
 rm -rf $verstr/utils/ps2eps
 rm -rf $verstr/utils/t1utils

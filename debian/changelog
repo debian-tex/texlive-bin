@@ -1,9 +1,14 @@
-texlive-bin (2015.20150524.37493-8) UNRELEASED; urgency=medium
+texlive-bin (2015.20160213.39691-1) experimental; urgency=medium
 
+  * UNRELEASED
+  * Imported Upstream version 2015.20160213.39691
   * drop transitional dummy luatex package (Closes: #804070)
   * fix bashism in mktexlsr (thanks Thorsten Glaser) (Closes: #811092)
+  * use more external libs: try poppler again and new libteckit
+  * reformat build-deps
+  * build musixtex, pmx, m-tx, add replaces for them
 
- -- Norbert Preining <preining@debian.org>  Sat, 16 Jan 2016 00:32:11 +0900
+ -- Norbert Preining <preining@debian.org>  Sat, 13 Feb 2016 00:10:43 +0900
 
 texlive-bin (2015.20150524.37493-7) unstable; urgency=medium
 

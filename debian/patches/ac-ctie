@@ -7,7 +7,7 @@
 
 --- texlive-bin.orig/texk/web2c/configure.ac
 +++ texlive-bin/texk/web2c/configure.ac
-@@ -351,6 +351,7 @@
+@@ -346,6 +346,7 @@
  KPSE_CROSS_PATH_PROG([CTANGLEBOOT], [ctangle],   [./ctangleboot])
  KPSE_CROSS_PATH_PROG([CTANGLE],     [ctangle],   [./ctangle])
  KPSE_CROSS_PATH_PROG([TIE],         [tie],       [./tie])
@@ -17,10 +17,10 @@
  
 --- texlive-bin.orig/texk/web2c/Makefile.am
 +++ texlive-bin/texk/web2c/Makefile.am
-@@ -138,6 +138,12 @@
- tie_silent_ = $(tie_silent_@AM_DEFAULT_V@)
- tie_silent_0 = @echo "  TIE     " $@; $(SHELL) ./silent-sh $@ #
+@@ -140,6 +140,12 @@
  tie_silent_1 =
+ tie_c = $(tie) -c $@
+ tie_m = $(tie) -m $@
 +#
 +ctie = $(buildenv) $(CTIE)
 +ctie_silent = $(ctie_silent_@AM_V@)

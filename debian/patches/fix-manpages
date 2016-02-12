@@ -2,36 +2,22 @@
  texk/detex/detex-2.8/detex.man       |    2 
  texk/mendexk/mendex.1                |    2 
  texk/web2c/man/mf.man                |   26 +++++-----
- texk/web2c/man/tex.man               |    4 -
  texk/web2c/synctexdir/man5/synctex.5 |    6 +-
  texk/xdvik/xdvi.1.in                 |   88 +++++++++++++++++------------------
- 6 files changed, 64 insertions(+), 64 deletions(-)
+ 5 files changed, 62 insertions(+), 62 deletions(-)
 
---- texlive-bin.orig/texk/web2c/man/tex.man
-+++ texlive-bin/texk/web2c/man/tex.man
-@@ -6,8 +6,8 @@
- .if n .ds TX TeX
- .if n .ds MF Metafont
- .if t .ds MF M\s-2ETAFONT\s0
--.ie t .ds OX \fIT\v'+0.25m'E\v'-0.25m'X\fP for troff
--.el .ds OX TeX for nroff
-+.ie t .ds OX \fIT\v'+0.25m'E\v'-0.25m'X\fP 
-+.el .ds OX TeX 
- .\" the same but obliqued
- .\" BX definition must follow TX so BX can use TX
- .if t .ds BX \fRB\s-2IB\s0\fP\*(TX
 --- texlive-bin.orig/texk/web2c/man/mf.man
 +++ texlive-bin/texk/web2c/man/mf.man
 @@ -2,7 +2,7 @@
  .\"=====================================================================
  .if n .ds MF Metafont
- .if t .ds MF M\s-2ETAFONT\s0
+ .if t .ds MF Metafont
 -.if t .ds TX \fRT\\h'-0.1667m'\\v'0.20v'E\\v'-0.20v'\\h'-0.125m'X\fP
 +.if t .ds TX \fRT\h'-0.1667m'\v'0.20v'E\v'-0.20v'\h'-0.125m'X\fP
  .if n .ds TX TeX
- .ie t .ds OX \fIT\v'+0.25m'E\v'-0.25m'X\fP for troff
- .el .ds OX TeX for nroff
-@@ -11,7 +11,7 @@
+ .ie t .ds OX \fIT\v'+0.25m'E\v'-0.25m'X\fP
+ .el .ds OX TeX
+@@ -10,7 +10,7 @@
  .if t .ds BX \fRB\s-2IB\s0\fP\*(TX
  .if n .ds BX BibTeX
  .\" LX definition must follow TX so LX can use TX
@@ -40,7 +26,7 @@
  .if n .ds LX LaTeX
  .if n .ds WB Web
  .if t .ds WB W\s-2EB\s0
-@@ -55,7 +55,7 @@
+@@ -54,7 +54,7 @@
  it will use the
  .I plain
  base.  When called under any other name, \*(MF will use that name as
@@ -49,7 +35,7 @@
  .B mf
  the
  .I mf
-@@ -91,7 +91,7 @@
+@@ -90,7 +90,7 @@
  .IR mode .
  (Or you can just say
  .I mf
@@ -58,7 +44,7 @@
  control sequences, such as
  .I batchmode
  (for silent operation) can also appear.
-@@ -116,7 +116,7 @@
+@@ -115,7 +115,7 @@
  the name of an actual device or, most commonly, the name
  .I localfont
  (see below) must
@@ -67,7 +53,7 @@
  site, \*(MF will default to
  .I proof
  mode which produces
-@@ -166,7 +166,7 @@
+@@ -165,7 +165,7 @@
  can be
  studied in an appendix to the
  .IR "\*(MF\^book" ;
@@ -76,7 +62,7 @@
  altered except when it is officially upgraded.
  Each
  .I mode_def
-@@ -369,14 +369,14 @@
+@@ -368,14 +368,14 @@
  Search path for
  .I input
  and
@@ -93,7 +79,7 @@
  and DISPLAY is set, the Metafont window support for X is used.
  (DISPLAY must be set to a valid X server specification, as usual.)
  If neither MFTERM nor DISPLAY is set, TERM is used to guess the window
-@@ -435,24 +435,24 @@
+@@ -434,24 +434,24 @@
  .\"=====================================================================
  .SH BUGS
  On January 4, 1986 the ``final'' bug in \*(MF was discovered
@@ -122,7 +108,7 @@
  .I Computer Modern Typefaces
  (Volume E of
  .IR "Computers and Typesetting" ),
-@@ -477,7 +477,7 @@
+@@ -476,7 +476,7 @@
  .BR tftopl (1).
  .\"=====================================================================
  .SH AUTHORS
@@ -525,9 +511,9 @@
  .if t .ds LX L\v'-.22m'a\v'.22m'T\h'-.1667m'\v'.22m'E\h'-.125m'\v'-.22m'X
 -.TH MENDEX L
 +.TH MENDEX 1
- .SH ÃææŒ
- mendex \- ∫˜∞˙¿∞∑¡•ƒ°º•Î
- .SH ª»Õ—À°
+ .SH ÂêçÁß∞
+ mendex \- Á¥¢ÂºïÊï¥ÂΩ¢„ÉÑ„Éº„É´
+ .SH ‰ΩøÁî®Ê≥ï
 --- texlive-bin.orig/texk/detex/detex-2.8/detex.man
 +++ texlive-bin/texk/detex/detex-2.8/detex.man
 @@ -1,4 +1,4 @@

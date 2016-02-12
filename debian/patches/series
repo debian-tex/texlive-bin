@@ -10,12 +10,5 @@ libpng-arm64-neon-fix
 mktexlsr-use-mktemp
 dvihp-use-mktemp
 remove-libdir-from-kpathsea-pkgconfig
-# from here on upstream patches
-upstream-svn37801-xobjcect-typo
-upstream-svn38047-dvipdfmx-fix
-upstream-svn38053-dvipdfmx-fix
-upstream-svn38059-dvipdfmx-fix
-upstream-svn38068-dvipdfmx-fix
-upstream-svn38091-fix-pltotf-output
 fix-format-gcc-errors
 fix-mktexlsr-bashims

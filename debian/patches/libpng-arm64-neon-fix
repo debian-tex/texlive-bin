@@ -5,13 +5,13 @@ Author: Wookey <wookey@debian.org>
 Last-Update: 2014-09-30
 
 ---
- libs/libpng/libpng-1.6.17/pngpriv.h |    2 +-
+ libs/libpng/libpng-src/pngpriv.h |    2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
---- texlive-bin.orig/libs/libpng/libpng-1.6.17/pngpriv.h
-+++ texlive-bin/libs/libpng/libpng-1.6.17/pngpriv.h
-@@ -122,7 +122,7 @@
-     * check both variants.
+--- texlive-bin.orig/libs/libpng/libpng-src/pngpriv.h
++++ texlive-bin/libs/libpng/libpng-src/pngpriv.h
+@@ -126,7 +126,7 @@
+     * or put -DPNG_ARM_NEON_OPT=0 in CPPFLAGS.
      */
  #  if (defined(__ARM_NEON__) || defined(__ARM_NEON)) && \
 -   defined(PNG_ALIGNED_MEMORY_SUPPORTED)

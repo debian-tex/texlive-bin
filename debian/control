@@ -3,7 +3,35 @@ Section: tex
 Priority: optional
 Maintainer: Debian TeX Maintainers <debian-tex-maint@lists.debian.org>
 Uploaders: Norbert Preining <preining@debian.org>, Frank Küster <frank@kuesterei.ch>
-Build-Depends: debhelper (>= 9), sharutils, libncurses5-dev | libncurses-dev, libxaw7-dev, zlib1g-dev | libz-dev, flex, bison, libfontconfig1-dev, dh-autoreconf, time, libgraphite2-dev, libgs-dev, libpixman-1-dev (>= 0.32.4), libzzip-dev (>= 0.12), libharfbuzz-dev (>= 0.9.18-3), libicu-dev, recode, texinfo, automake (>= 1:1.13.1), autoconf (>= 2.69), libtool (>= 2.4.2), m4 (>= 1.4.16), libpotrace-dev (>= 1.11), libxi-dev, libpaper-dev, libmpfr-dev, libgmp-dev, libpoppler-private-dev (>= 0.12.4)
+Build-Depends:
+  autoconf (>= 2.69),
+  automake (>= 1:1.13.1),
+  bison,
+  debhelper (>= 9),
+  dh-autoreconf,
+  flex,
+  libfontconfig1-dev,
+  libgmp-dev,
+  libgraphite2-dev,
+  libgs-dev,
+  libharfbuzz-dev (>= 0.9.18-3),
+  libicu-dev,
+  libmpfr-dev,
+  libncurses5-dev | libncurses-dev,
+  libpaper-dev,
+  libpixman-1-dev (>= 0.32.4),
+  libpoppler-private-dev (>= 0.12.4),
+  libpotrace-dev (>= 1.11),
+  libtool (>= 2.4.2),
+  libxaw7-dev,
+  libxi-dev,
+  libzzip-dev (>= 0.12),
+  m4 (>= 1.4.16),
+  recode,
+  sharutils,
+  texinfo,
+  time,
+  zlib1g-dev | libz-dev,
 Standards-Version: 3.9.6
 Homepage: http://www.tug.org/texlive/
 Vcs-Git: git://anonscm.debian.org/debian-tex/texlive-bin.git

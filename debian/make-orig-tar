@@ -76,6 +76,7 @@ for i in \
 	pixman		\
 	potrace		\
 	poppler		\
+	teckit		\
 	xpdf		\
 	zlib		\
 	zziplib		\

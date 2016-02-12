@@ -1,9 +1,8 @@
 
-if [ "$1" = "-git" ] ; then
-  gitmode=1
-  shift
-else
+gitmode=1
+if [ "$1" = "-svn" ] ; then
   gitmode=0
+  shift
 fi
 
 if [ -n "$1" ] ; then

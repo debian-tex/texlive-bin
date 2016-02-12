@@ -128,7 +128,6 @@ override_dh_auto_configure:
 	--disable-lcdf-typetools		\
 	--disable-biber				\
 	--disable-dvipng			\
-	--disable-musixflx			\
 	--disable-ps2eps			\
 	--disable-psutils			\
 	--disable-t1utils			\
@@ -137,8 +136,6 @@ override_dh_auto_configure:
 	--disable-dvidvi			\
 	--disable-lacheck			\
 	--disable-tex4htk			\
-	--disable-pmx				\
-	--disable-m-tx				\
 	--disable-texdoctk			\
 	--disable-ttf2pk			\
 	--enable-ttf2pk2			\

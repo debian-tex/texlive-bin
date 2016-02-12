@@ -54,7 +54,7 @@ Depends: libptexenc1 (>= ${source:Version}),
   ${shlibs:Depends}, ${misc:Depends}, 
   tex-common (>= 6), perl, dpkg (>= 1.15.4) | install-info
 Recommends: texlive-base, python, ruby, wish
-Replaces: texlive-metapost (<< 2010), texlive-base (<< 2010), ptex-bin, mendexk, jmpost, luatex (<< 2014)
+Replaces: texlive-metapost (<< 2010), texlive-base (<< 2010), ptex-bin, mendexk, jmpost, luatex (<< 2014), pmx (<< 2015), m-tx (<< 2015), musixtex (<< 2015)
 Conflicts: mendexk, makejvf, jmpost
 Breaks: texlive-base (<< 2014), jtex-bin, multex-bin, luatex (<< 2014), tex-common (<< 6)
 Provides: texlive-base-bin, makejvf, mendexk, jmpost, luatex

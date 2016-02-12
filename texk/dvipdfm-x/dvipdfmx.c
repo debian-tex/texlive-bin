@@ -2,7 +2,7 @@
 
     DVIPDFMx, an eXtended version of DVIPDFM by Mark A. Wicks.
 
-    Copyright (C) 2002-2015 by Jin-Hwan Cho, Matthias Franz, and Shunsaku Hirata,
+    Copyright (C) 2002-2016 by Jin-Hwan Cho, Matthias Franz, and Shunsaku Hirata,
     the DVIPDFMx project team.
     
     Copyright (c) 2006 SIL. (xdvipdfmx extensions for XeTeX support)
@@ -65,11 +65,7 @@
 
 int is_xdv = 0;
 
-#ifdef XETEX
-const char *my_name = "xdvipdfmx";
-#else
-const char *my_name = "dvipdfmx";
-#endif
+const char *my_name;
 
 int compat_mode = 0;     /* 0 = dvipdfmx, 1 = dvipdfm */
 
@@ -77,12 +73,14 @@ static int verbose = 0;
 
 static int mp_mode = 0;
 
-static long opt_flags = 0;
+static int opt_flags = 0;
 
 #define OPT_TPIC_TRANSPARENT_FILL (1 << 1)
 #define OPT_CIDFONT_FIXEDPITCH    (1 << 2)
 #define OPT_FONTMAP_FIRST_MATCH   (1 << 3)
 #define OPT_PDFDOC_NO_DEST_REMOVE (1 << 4)
+#define OPT_PDFOBJ_NO_PREDICTOR   (1 << 5)
+#define OPT_PDFOBJ_NO_OBJSTM      (1 << 6)
 
 static char   ignore_colors = 0;
 static double annot_grow    = 0.0;
@@ -103,16 +101,19 @@ static int pdfdecimaldigits = 2;
 static int image_cache_life = -2;
 
 /* Encryption */
-static int do_encryption    = 0;
-static unsigned key_bits    = 40;
-static unsigned permission  = 0x003C;
+static int     do_encryption = 0;
+static int     key_bits      = 40;
+static int32_t permission    = 0x003C;
+
+/* Object stream */
+static int     enable_objstm = 1;
 
 /* Page device */
 double paper_width  = 595.0;
 double paper_height = 842.0;
 static double x_offset = 72.0;
 static double y_offset = 72.0;
-char   landscape_mode    = 0;
+int    landscape_mode  = 0;
 
 int always_embed = 0; /* always embed fonts, regardless of licensing flags */
 
@@ -153,12 +154,11 @@ show_version (void)
   printf ("This is %s Version " VERSION " by the DVIPDFMx project team,\n",
                    my_name);
   printf ("modified for TeX Live,\n");
-#ifdef XETEX
-  printf ("an extended version of DVIPDFMx, which in turn was\n");
-#endif
+  if (*my_name == 'x')
+    printf ("an extended version of DVIPDFMx, which in turn was\n");
   printf ("an extended version of dvipdfm-0.13.2c developed by Mark A. Wicks.\n");
-  printf ("\nCopyright (C) 2002-2015 the DVIPDFMx project team\n");
-  printf ("Copyright (C) 2006 SIL International.\n");
+  printf ("\nCopyright (C) 2002-2016 the DVIPDFMx project team\n");
+  printf ("Copyright (C) 2006-2016 SIL International.\n");
   printf ("\nThis is free software; you can redistribute it and/or modify\n");
   printf ("it under the terms of the GNU General Public License as published by\n");
   printf ("the Free Software Foundation; either version 2 of the License, or\n");
@@ -204,6 +204,8 @@ show_usage (void)
   printf ("\t\t  0x0004 Treat all CIDFont as fixed-pitch font.\n");
   printf ("\t\t  0x0008 Do not replace duplicate fontmap entries.\n");
   printf ("\t\t  0x0010 Do not optimize PDF destinations.\n");
+  printf ("\t\t  0x0020 Do not use predictor filter for Flate compression.\n");
+  printf ("\t\t  0x0040 Do not use object stream.\n");
   printf ("\t\tPositive values are always ORed with previously given flags.\n");
   printf ("\t\tAnd negative values replace old values.\n");
   printf ("  -D template\tPS->PDF conversion command line template [none]\n");
@@ -325,7 +327,7 @@ select_paper (const char *paperspec)
 
 struct page_range 
 {
-  long first, last;
+  int first, last;
 } *page_ranges = NULL;
 
 int num_page_ranges = 0;
@@ -384,33 +386,54 @@ select_pages (const char *pagespec)
   return;
 }
 
-#define POP_ARG() {argv += 1; argc -= 1;}
-/* It doesn't work as expected (due to dvi filename). */
-#define CHECK_ARG(n,m) if (argc < (n) + 1) {\
-  fprintf (stderr, "\nMissing %s after \"-%c\".\n", (m), *flag);\
-  usage();\
-}
+static const char *optstrig = ":hD:r:m:g:x:y:o:s:t:p:clf:i:qvV:z:d:I:S:K:P:O:MC:Ee";
+
+static struct option long_options[] = {
+  {"help", 0, 0, 'h'},
+  {"version", 0, 0, 130},
+  {"showpaper", 0, 0, 131},
+  {"dvipdfm", 0, 0, 132},
+  {"kpathsea-debug", 1, 0, 133},
+  {0, 0, 0, 0}
+};
 
 static void
-set_verbose (int argc, char *argv[])
+do_early_args (int argc, char *argv[])
 {
-  while (argc > 0) {
-    if(*argv[0] == '-') {
-      char *flag;
+  int c;
 
-      for (flag = argv[0] + 1; *flag != 0; flag++) {
-        if (*flag == '-')
-          break;
-        if (*flag == 'q')
-          really_quiet = 2;
-        if (*flag == 'v')
-          verbose++;
-      }
+  while ((c = getopt_long(argc, argv, optstrig, long_options, NULL)) != -1) {
+    switch(c) {
+    case 'h':
+      show_usage();
+      exit(0);
+      break;
+
+    case 130: /* --version */
+      show_version();
+      exit(0);
+      break;
+
+    case 131: /* --showpaper */
+      dumppaperinfo();
+      exit(0);
+      break;
+
+    case 'q':
+      really_quiet = 2;
+      break;
+
+    case 'v':
+      verbose++;
+
+    default: /* ignore everything else */
+      break;
     }
-    POP_ARG();
   }
 
-  if (!really_quiet) {
+  if (really_quiet)
+    shut_up(really_quiet);
+  else {
     int i;
 
     for (i = 0; i < verbose; i++) {
@@ -426,238 +449,192 @@ set_verbose (int argc, char *argv[])
   }
 }
 
-
 static void
-do_args (int argc, char *argv[])
+do_args (int argc, char *argv[], const char *source)
 {
-  while (argc > 0 && *argv[0] == '-') {
-    char *flag, *nextptr;
-    const char *nnextptr;
+  int c;
+  char *nextptr;
+  const char *nnextptr;
 
-    for (flag = argv[0] + 1; *flag != 0; flag++) {
-      switch (*flag) {
-      case '-':
-        if (flag == argv[0] + 1 && ++flag) {
-          if (!strcmp(flag, "help")) {
-            show_usage();
-            exit(0);
-          } else if (!strcmp(flag, "version")) {
-            show_version();
-            exit(0);
-          } else if (!strcmp(flag, "dvipdfm")) {
-            compat_mode = 1;
-            goto Out_of_For_Loop;
-          } else if (!strcmp(flag, "kpathsea-debug")) {
-            int value;
-            CHECK_ARG(1, "kpathsearch debugging flags");
-            value = atoi(argv[1]);
-            if (value < 0)
-              ERROR("Invalid kpathsearch debugging flags specified: %s", argv[1]);
-            kpathsea_debug = value;
-            POP_ARG();
-            goto Out_of_For_Loop;
-          }
-        }
-        fprintf(stderr, "Unknown option \"%s\"", argv[0]);
-        usage();
-      case 'D':
-        CHECK_ARG(1, "PS->PDF conversion command line template");
-        set_distiller_template(argv[1]);
-        POP_ARG();
-        break;
-      case 'r':
-        CHECK_ARG(1, "bitmap font dpi");
-        font_dpi = atoi(argv[1]);
-        if (font_dpi <= 0)
-          ERROR("Invalid bitmap font dpi specified: %s", argv[1]);
-        POP_ARG();
-        break;
-      case 'm':
-        CHECK_ARG(1, "magnification value");
-        mag = strtod(argv[1], &nextptr);
-        if (mag < 0.0 || nextptr == argv[1])
-          ERROR("Invalid magnification specifiied: %s", argv[1]);
-        POP_ARG();
-        break;
-      case 'g':
-        CHECK_ARG(1, "annotation \"grow\" amount");
-        nnextptr = nextptr = argv[1];
-        read_length(&annot_grow, &nnextptr, nextptr + strlen(nextptr));
-        POP_ARG();
-        break;
-      case 'x':
-        CHECK_ARG(1, "horizontal offset value");
-        nnextptr = nextptr = argv[1];
-        read_length(&x_offset, &nnextptr, nextptr + strlen(nextptr));
-        POP_ARG();
-        break;
-      case 'y':
-        CHECK_ARG(1, "vertical offset value");
-        nnextptr = nextptr = argv[1];
-        read_length(&y_offset, &nnextptr, nextptr + strlen(nextptr));
-        POP_ARG();
-        break;
-      case 'o':
-        CHECK_ARG(1, "output file name");
-        pdf_filename = NEW (strlen(argv[1])+1,char);
-        strcpy(pdf_filename, argv[1]);
-        POP_ARG();
-        break;
-      case 's':
-        CHECK_ARG(1, "page selection specification");
-        select_pages(argv[1]);
-        POP_ARG();
-        break;
-      case 't':
-        pdf_doc_enable_manual_thumbnails();
-        break;
-      case 'p':
-        CHECK_ARG(1, "paper format/size");
-        select_paper(argv[1]);
-        POP_ARG();
-        break;
-      case 'c':
-        ignore_colors = 1;
-        break;
-      case 'l':
-        landscape_mode = 1;
-        break;
-      case 'f':
-        CHECK_ARG(1, "fontmap file name");
-        if (opt_flags & OPT_FONTMAP_FIRST_MATCH)
-          pdf_load_fontmap_file(argv[1], FONTMAP_RMODE_APPEND);
-        else
-          pdf_load_fontmap_file(argv[1], FONTMAP_RMODE_REPLACE);
-        POP_ARG();
-        break;
-      case 'i':
-        CHECK_ARG(1, "subsidiary config file");
-        read_config_file(argv[1]);
-        POP_ARG();
-        break;
-      case 'q': case 'v':
-        break;
-      case 'V':
-      {
-        int ver_minor;
+  optind = 1;
 
-        if (isdigit((unsigned char)*(flag+1))) {
-          flag++;
-          ver_minor = atoi(flag);
-        } else {
-          CHECK_ARG(1, "PDF minor version number");
-          ver_minor = atoi(argv[1]);
-          POP_ARG();
-        }
-        if (ver_minor < PDF_VERSION_MIN) {
-          WARN("PDF version 1.%d not supported. Using PDF 1.%d instead.",
-               ver_minor, PDF_VERSION_MIN);
-          ver_minor = PDF_VERSION_MIN;
-        } else if (ver_minor > PDF_VERSION_MAX) {
-          WARN("PDF version 1.%d not supported. Using PDF 1.%d instead.",
-               ver_minor, PDF_VERSION_MAX);
-          ver_minor = PDF_VERSION_MAX;
-        }
-        pdf_set_version((unsigned) ver_minor);
-      }
+  while ((c = getopt_long(argc, argv, optstrig, long_options, NULL)) != -1) {
+    switch(c) {
+    case 'h': case 130: case 131: case 'q': case 'v': /* already done */
       break;
-      case 'z':
-      {
-        int level;
 
-        if (isdigit((unsigned char)*(flag+1))) {
-          flag++;
-          level = atoi(flag);
-        } else {
-          CHECK_ARG(1, "compression level");
-          level = atoi(argv[1]);
-          POP_ARG();
-        }
-        pdf_set_compression(level);
-      }
+    case 132: /* --dvipdfm */
+      compat_mode = 1;
       break;
-      case 'd':
-        if (isdigit((unsigned char)*(flag+1))) {
-          flag++;
-          pdfdecimaldigits = atoi(flag);
-        } else {
-          CHECK_ARG(1, "number of fractional digits");
-          pdfdecimaldigits = atoi(argv[1]);
-          POP_ARG();
-        }
-        break;
-      case 'I':
-        CHECK_ARG(1, "image cache life in hours");
-        image_cache_life = atoi(argv[1]);
-        POP_ARG();
-        break;
-      case 'S':
-        do_encryption = 1;
-        break;
-      case 'K': 
-        CHECK_ARG(1, "encryption key length");
-        key_bits = (unsigned) atoi(argv[1]);
-        if (key_bits < 40 || key_bits > 128 || (key_bits & 0x7))
-          ERROR("Invalid encryption key length specified: %s", argv[1]);
-        POP_ARG();
-        break;
-      case 'P': 
-        CHECK_ARG(1, "encryption permission flag");
-        permission = (unsigned) strtoul(argv[1], &nextptr, 0);
-        if (nextptr == argv[1])
-          ERROR("Invalid encryption permission flag: %s", argv[1]);
-        POP_ARG();
-        break;
-      case 'O':
-        /* Bookmark open level */
-        CHECK_ARG(1, "bookmark open level");
-        bookmark_open = atoi(argv[1]);
-        POP_ARG();
-        break;
-      case 'M':
-        mp_mode = 1;
-        break;
-      case 'C':
-        CHECK_ARG(1, "a number");
-        {
-          long flags;
 
-          flags = (unsigned) strtol(argv[1], &nextptr, 0);
-          if (nextptr == argv[1])
-            ERROR("Invalid flag: %s", argv[1]);
-          if (flags < 0)
-            opt_flags  = -flags;
-          else
-            opt_flags |=  flags;
-        }
-        POP_ARG();
-        break;
-      case 'E':
-        always_embed = 1;
-        break;
-      case 'h':
-        show_usage();
-        exit(0);
-      case 'e':
-        if (compat_mode) {
-          WARN("dvipdfm \"-e\" option not supported.");
-          break;
-        } /* else fall through */
-      default:
-        fprintf (stderr, "Unknown option in \"%s\"", argv[0]);
-        usage();
-      }
+    case 133: /* --kpathsea-debug */
+      kpathsea_debug = atoi(optarg);
+      break;
+
+    case 'D':
+      set_distiller_template(optarg);
+      break;
+
+    case 'r':
+      if ((font_dpi = atoi(optarg)) <= 0)
+        ERROR("Invalid bitmap font dpi specified: %s", optarg);
+      break;
+
+    case 'm':
+      if ((mag = strtod(optarg, &nextptr)) < 0.0 || nextptr == optarg)
+        ERROR("Invalid magnification specified: %s", optarg);
+      break;
+
+    case 'g':
+      nnextptr = nextptr = optarg;
+      read_length(&annot_grow, &nnextptr, nextptr + strlen(nextptr));
+      break;
+
+    case 'x':
+      nnextptr = nextptr = optarg;
+      read_length(&x_offset, &nnextptr, nextptr + strlen(nextptr));
+      break;
+
+    case 'y':
+      nnextptr = nextptr = optarg;
+      read_length(&y_offset, &nnextptr, nextptr + strlen(nextptr));
+      break;
+
+    case 'o':
+      pdf_filename = NEW (strlen(optarg)+1, char);
+      strcpy(pdf_filename, optarg);
+      break;
+
+    case 's':
+      select_pages(optarg);
+      break;
+
+    case 't':
+      pdf_doc_enable_manual_thumbnails();
+      break;
+
+    case 'p':
+      select_paper(optarg);
+      break;
+
+    case 'c':
+      ignore_colors = 1;
+      break;
+
+    case 'l':
+      landscape_mode = 1;
+      break;
+
+    case 'f':
+      if (opt_flags & OPT_FONTMAP_FIRST_MATCH)
+        pdf_load_fontmap_file(optarg, FONTMAP_RMODE_APPEND);
+      else
+        pdf_load_fontmap_file(optarg, FONTMAP_RMODE_REPLACE);
+      break;
+
+    case 'i':
+    {
+      int optind_save= optind;
+      read_config_file(optarg);
+      optind = optind_save;
+      break;
     }
-  Out_of_For_Loop:
-    POP_ARG();
+
+    case 'V':
+    {
+      int ver_minor = atoi(optarg);
+      if (ver_minor < PDF_VERSION_MIN) {
+        WARN("PDF version 1.%d not supported. Using PDF 1.%d instead.",
+             ver_minor, PDF_VERSION_MIN);
+        ver_minor = PDF_VERSION_MIN;
+      } else if (ver_minor > PDF_VERSION_MAX) {
+        WARN("PDF version 1.%d not supported. Using PDF 1.%d instead.",
+             ver_minor, PDF_VERSION_MAX);
+        ver_minor = PDF_VERSION_MAX;
+      }
+      pdf_set_version((unsigned) ver_minor);
+      break;
+    }
+
+    case 'z':
+      pdf_set_compression(atoi(optarg));
+      break;
+
+    case 'd':
+      pdfdecimaldigits = atoi(optarg);
+      break;
+
+    case 'I':
+      image_cache_life = atoi(optarg);
+      break;
+
+    case 'S':
+      do_encryption = 1;
+      break;
+
+    case 'K':
+      key_bits = (unsigned) atoi(optarg);
+      if (!(key_bits >= 40 && key_bits <= 128 && (key_bits % 8 == 0)) &&
+            key_bits != 256)
+        ERROR("Invalid encryption key length specified: %s", optarg);
+      break;
+
+    case 'P':
+      permission = (unsigned) strtoul(optarg, &nextptr, 0);
+      if (nextptr == optarg)
+        ERROR("Invalid encryption permission flag: %s", optarg);
+      break;
+
+    case 'O':
+      bookmark_open = atoi(optarg);
+      break;
+
+    case 'M':
+      mp_mode = 1;
+      break;
+
+    case 'C':
+    {
+      int flags = (unsigned) strtol(optarg, &nextptr, 0);
+      if (nextptr == optarg)
+        ERROR("Invalid flag: %s", optarg);
+      if (flags < 0)
+        opt_flags  = -flags;
+      else
+        opt_flags |=  flags;
+      break;
+    }
+
+    case 'E':
+      always_embed = 1;
+      break;
+
+    case 'e':
+      if (compat_mode) {
+        WARN("dvipdfm \"-e\" option not supported.");
+        break;
+      } /* else fall through */
+
+    default:
+      fprintf(stderr, "%s: %s \"-%c\"\n", source ? source : my_name,
+              c == ':' ? "Missing argument for" : "Unknown option",
+              optopt); 
+      usage();
+    }
   }
 
-  if (argc > 1) {
-    fprintf(stderr, "Multiple dvi filenames?");
+  if (source) {
+    if (argc > optind)
+      fprintf(stderr, "%s: Unexpected argument in \"%s %s\".\n", source, argv[1], argv[2]);
+    return;
+  }
+
+  if (argc > optind + 1) {
+    fprintf(stderr, "%s: Multiple dvi filenames?", my_name);
     usage();
-  } else if (argc > 0) {
-    dvi_filename = NEW(strlen(argv[0]) + 5, char);  /* space to append ".dvi" */
-    strcpy(dvi_filename, argv[0]);
+  } else if (argc > optind) {
+    dvi_filename = NEW(strlen(argv[optind]) + 5, char);  /* space to append ".dvi" */
+    strcpy(dvi_filename, argv[optind]);
   }
 }
 
@@ -678,17 +655,18 @@ read_config_file (const char *config)
   const char *start, *end;
   char *option;
   FILE *fp;
+  static char argv0[] = "config_file";
+  char *argv[3];
 
   fp = DPXFOPEN(config, DPX_RES_TYPE_TEXT);
   if (!fp) {
     WARN("Could not open config file \"%s\".", config);
     return;
   }
+  argv[0] = argv0;
   while ((start = mfgets (work_buffer, WORK_BUFFER_SIZE, fp)) != NULL) {
-    char *argv[2];
-    int   argc;
+    int   argc = 1;
 
-    argc = 0;
     end = work_buffer + strlen(work_buffer);
     skip_white (&start, end);
     if (start >= end)
@@ -696,23 +674,23 @@ read_config_file (const char *config)
     /* Build up an argument list as if it were passed on the command
        line */
     if ((option = parse_ident (&start, end))) {
-      argc = 1;
-      argv[0] = NEW (strlen(option)+2, char);
-      strcpy (argv[0]+1, option);
+      argc = 2;
+      argv[1] = NEW (strlen(option)+2, char);
+      strcpy (argv[1]+1, option);
       RELEASE (option);
-      *argv[0] = '-';
+      *argv[1] = '-';
       skip_white (&start, end);
       if (start < end) {
         argc += 1;
         if (*start == '"') {
-          argv[1] = parse_c_string (&start, end);
+          argv[2] = parse_c_string (&start, end);
         }
         else
-          argv[1] = parse_ident (&start, end);
+          argv[2] = parse_ident (&start, end);
       }
     }
-    do_args (argc, argv);
-    while (argc > 0) {
+    do_args (argc, argv, config);
+    while (argc > 1) {
       RELEASE (argv[--argc]);
     }
   }
@@ -787,14 +765,14 @@ do_dvi_pages (void)
     while (dvi_npages()) {
       if (page_no < dvi_npages()) {
         double w, h, xo, yo;
-        char   lm;
+        int    lm;
 
         MESG("[%d", page_no+1);
         /* Users want to change page size even after page is started! */
         page_width = paper_width; page_height = paper_height;
         w = page_width; h = page_height; lm = landscape_mode;
         xo = x_offset; yo = y_offset;
-        dvi_scan_specials(page_no, &w, &h, &xo, &yo, &lm, NULL, NULL, NULL, NULL, NULL, NULL);
+        dvi_scan_specials(page_no, &w, &h, &xo, &yo, &lm, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
         if (lm != landscape_mode) {
           SWAP(w, h);
           landscape_mode = lm;
@@ -850,7 +828,7 @@ do_mps_pages (void)
     mps_do_page(fp);
     MFCLOSE(fp);
   } else {
-    long  i, page_no, step, page_count = 0;
+    int  i, page_no, step, page_count = 0;
     char *filename;
     /* Process filename.1, filename.2,... */
     filename = NEW(strlen(dvi_filename) + 16 + 1, char);
@@ -861,7 +839,7 @@ do_mps_pages (void)
         if (page_no < 0)
           ERROR("Invalid page number for MPS input: %d", page_no);
 
-        sprintf(filename, "%s.%ld", dvi_filename, page_no + 1);
+        sprintf(filename, "%s.%d", dvi_filename, page_no + 1);
         fp = MFOPEN(filename, FOPEN_RBIN_MODE);
         if (fp) {
           MESG("[%ld<%s>", page_no + 1, filename);
@@ -887,13 +865,9 @@ do_mps_pages (void)
   }
 }
 
-#if defined(XETEX)
-/* At present no DLL for xdvipdfmx */
-#undef DLLPROC
-#else
 /* Support to make DLL in W32TeX */
 #define DLLPROC dlldvipdfmxmain
-#endif
+
 #if defined(WIN32) && !defined(__MINGW32__) && !defined(MIKTEX) && defined(DLLPROC)
 extern __declspec(dllexport) int DLLPROC (int argc, char *argv[]);
 #else
@@ -908,7 +882,7 @@ int
 #if defined(DLLPROC)
 DLLPROC (int argc, char *argv[])
 #else
-CDECL main (int argc, char *argv[])
+main (int argc, char *argv[])
 #endif
 {
   double dvi2pts;
@@ -936,6 +910,7 @@ CDECL main (int argc, char *argv[])
                (STREQ (argv[1], "--xbb") ||
                 STREQ (argv[1], "--extractbb") ||
                 STREQ (argv[1], "--dvipdfm") ||
+                STREQ (argv[1], "--dvipdfmx") ||
                 STREQ (argv[1], "--ebb"))) {
     argc--;
     base = argv++[1]+2;
@@ -951,41 +926,28 @@ CDECL main (int argc, char *argv[])
     compat_mode = 1;
     return extractbb (argc, argv);
   }
-
-  /* Special-case single option --help, --showpaper, or --version, to avoid
-     possible diagnostics about config files, etc.  */
-  if (argc == 2 && STREQ (argv[1], "--help")) {
-    show_usage();
-    exit(0);
-  } else if (argc == 2 && STREQ (argv[1], "--version")) {
-    show_version();
-    exit(0);
-  } else if (argc == 2 && STREQ (argv[1], "--showpaper")) {
-    dumppaperinfo();
-    exit(0);
-  }
-
   if (FILESTRCASEEQ (base, "dvipdfm"))
     compat_mode = 1;
+  if (FILESTRCASEEQ (base, "dvipdfmx"))
+    my_name = "dvipdfmx";
   else
-    free (base);
+    my_name = "xdvipdfmx";
+  
+  opterr = 0;
+
+  /* Special-case single option --help, --showpaper, or --version, to avoid
+     possible diagnostics about config files, etc.
+     Also handle -q and -v that cannot be set in config file. */
+  do_early_args(argc, argv);
 
   paperinit();
   system_default();
-
-  argv+=1;
-  argc-=1;
-
-  set_verbose(argc, argv);
-  /* quiet mode cannot be set in config file */
-  if (really_quiet)
-    shut_up(really_quiet);
 
   pdf_init_fontmaps(); /* This must come before parsing options... */
 
   read_config_file(DPX_CONFIG_FILE);
 
-  do_args (argc, argv);
+  do_args (argc, argv, NULL);
 
 #ifndef MIKTEX
   kpse_init_prog("", font_dpi, NULL, NULL);
@@ -1024,7 +986,7 @@ CDECL main (int argc, char *argv[])
     y_offset = 0.0;
     dvi2pts  = 0.01; /* dvi2pts controls accuracy. */
   } else {
-    unsigned ver_minor = 0;
+    int ver_major = 0,  ver_minor = 0;
     char owner_pw[MAX_PWD_LEN], user_pw[MAX_PWD_LEN];
     /* Dependency between DVI and PDF side is rather complicated... */
     dvi2pts = dvi_init(dvi_filename, mag);
@@ -1033,25 +995,38 @@ CDECL main (int argc, char *argv[])
 
     pdf_doc_set_creator(dvi_comment());
 
-    if (do_encryption)
+    if (do_encryption) {
       /* command line takes precedence */
-      dvi_scan_specials(0, &paper_width, &paper_height, &x_offset, &y_offset, &landscape_mode,
-			&ver_minor, NULL, NULL, NULL, NULL, NULL);
-    else {
-      dvi_scan_specials(0, &paper_width, &paper_height, &x_offset, &y_offset, &landscape_mode,
-			&ver_minor, &do_encryption, &key_bits, &permission, owner_pw, user_pw);
-      if (do_encryption) {
-	if (key_bits < 40 || key_bits > 128 || (key_bits & 0x7))
-	  ERROR("Invalid encryption key length specified: %u", key_bits);
-	else if (key_bits > 40 && pdf_get_version() < 4)
-	  ERROR("Chosen key length requires at least PDF 1.4. "
-		"Use \"-V 4\" to change.");
-	do_encryption = 1;
-	pdf_enc_set_passwd(key_bits, permission, owner_pw, user_pw);
+      dvi_scan_specials(0,
+                        &paper_width, &paper_height,
+                        &x_offset, &y_offset, &landscape_mode,
+                        &ver_major, &ver_minor,
+                        NULL, NULL, NULL, NULL, NULL);
+      /* FIXME: pdf_set_version() should come before ecrcyption setting.
+       *        It's too late to set here...
+       */
+      if (ver_minor >= PDF_VERSION_MIN && ver_minor <= PDF_VERSION_MAX) {
+        pdf_set_version(ver_minor);
       }
-    }
-    if (ver_minor >= PDF_VERSION_MIN && ver_minor <= PDF_VERSION_MAX) {
-      pdf_set_version(ver_minor);
+    } else {
+      dvi_scan_specials(0,
+                        &paper_width, &paper_height,
+                        &x_offset, &y_offset, &landscape_mode,
+                        &ver_major, &ver_minor,
+                        &do_encryption, &key_bits, &permission, owner_pw, user_pw);
+      if (ver_minor >= PDF_VERSION_MIN && ver_minor <= PDF_VERSION_MAX) {
+        pdf_set_version(ver_minor);
+      }
+      if (do_encryption) {
+        if (!(key_bits >= 40 && key_bits <= 128 && (key_bits % 8 == 0)) &&
+              key_bits != 256)
+          ERROR("Invalid encryption key length specified: %u", key_bits);
+        else if (key_bits > 40 && pdf_get_version() < 4)
+          ERROR("Chosen key length requires at least PDF 1.4. " \
+                "Use \"-V 4\" to change.");
+        do_encryption = 1;
+        pdf_enc_set_passwd(key_bits, permission, owner_pw, user_pw);
+      }
     }
     if (landscape_mode) {
       SWAP(paper_width, paper_height);
@@ -1060,11 +1035,14 @@ CDECL main (int argc, char *argv[])
 
   pdf_files_init();
 
+  if (opt_flags & OPT_PDFOBJ_NO_OBJSTM)
+    enable_objstm = 0;
+
   /* Set default paper size here so that all page's can inherite it.
    * annot_grow:    Margin of annotation.
    * bookmark_open: Miximal depth of open bookmarks.
    */
-  pdf_open_document(pdf_filename, do_encryption,
+  pdf_open_document(pdf_filename, do_encryption, enable_objstm,
                     paper_width, paper_height, annot_grow, bookmark_open,
                     !(opt_flags & OPT_PDFDOC_NO_DEST_REMOVE));
 
@@ -1079,6 +1057,9 @@ CDECL main (int argc, char *argv[])
   /* Please move this to spc_init_specials(). */
   if (opt_flags & OPT_TPIC_TRANSPARENT_FILL)
     tpic_set_fill_mode(1);
+
+  if (opt_flags & OPT_PDFOBJ_NO_PREDICTOR)
+    pdf_set_use_predictor(0); /* No prediction */
 
   if (mp_mode) {
     do_mps_pages();

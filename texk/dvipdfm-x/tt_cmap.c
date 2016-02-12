@@ -1,6 +1,6 @@
 /* This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
 
-    Copyright (C) 2007-2014 by Jin-Hwan Cho and Shunsaku Hirata,
+    Copyright (C) 2007-2016 by Jin-Hwan Cho and Shunsaku Hirata,
     the dvipdfmx project team.
     
     This program is free software; you can redistribute it and/or modify
@@ -563,7 +563,7 @@ tt_cmap_release (tt_cmap *cmap)
 
 
 USHORT
-tt_cmap_lookup (tt_cmap *cmap, long cc)
+tt_cmap_lookup (tt_cmap *cmap, ULONG cc)
 {
   USHORT gid = 0;
 
@@ -617,7 +617,7 @@ load_cmap4 (struct cmap4 *map,
   USHORT  c0, c1, gid, cid;
   USHORT  j, d, segCount;
   USHORT  ch;
-  long    i;
+  int     i;
 
   segCount = map->segCountX2 / 2;
   for (i = segCount - 1; i >= 0 ; i--) {
@@ -667,7 +667,7 @@ load_cmap12 (struct cmap12 *map,
     for (ch  = map->groups[i].startCharCode;
 	 ch <= map->groups[i].endCharCode;
 	 ch++) {
-      long  d = ch - map->groups[i].startCharCode;
+      int  d = ch - map->groups[i].startCharCode;
       gid = (USHORT) ((map->groups[i].startGlyphID + d) & 0xffff);
       if (GIDToCIDMap) {
 	cid = ((GIDToCIDMap[2*gid] << 8)|GIDToCIDMap[2*gid+1]);
@@ -704,7 +704,7 @@ handle_CIDFont (sfnt *sfont,
 		unsigned char **GIDToCIDMap, CIDSysInfo *csi)
 {
   cff_font *cffont;
-  long      offset, i;
+  int       offset, i;
   card16    num_glyphs, gid;
   cff_charsets  *charset;
   unsigned char *map;
@@ -876,7 +876,8 @@ handle_subst_glyphs (CMap *cmap,
 
   for (count = 0, i = 0; i < 8192; i++) {
     int   j;
-    long  len, inbytesleft, outbytesleft;
+    int32_t  len;
+    int  inbytesleft, outbytesleft;
     const unsigned char *inbuf;
     unsigned char *outbuf;
 
@@ -893,7 +894,7 @@ handle_subst_glyphs (CMap *cmap,
 #define MAX_UNICODES	16
         /* try to look up Unicode values from the glyph name... */
         char* name;
-        long unicodes[MAX_UNICODES];
+        int32_t unicodes[MAX_UNICODES];
         int  unicode_count = -1;
         name = sfnt_get_glyphname(post, cffont, gid);
         if (name) {
@@ -912,7 +913,7 @@ handle_subst_glyphs (CMap *cmap,
           int  k;
           len = 0;
           for (k = 0; k < unicode_count; ++k) {
-            len += UC_sput_UTF16BE(unicodes[k], &p, wbuf+WBUF_SIZE);
+            len += UC_UTF16BE_encode_char(unicodes[k], &p, wbuf+WBUF_SIZE);
           }
           wbuf[0] = (gid >> 8) & 0xff;
           wbuf[1] =  gid & 0xff;
@@ -937,7 +938,7 @@ handle_subst_glyphs (CMap *cmap,
           count++;
 
           if (verbose > VERBOSE_LEVEL_MIN) {
-            long _i;
+            int _i;
 
             MESG("otf_cmap>> Additional ToUnicode mapping: <%04X> <", gid);
             for (_i = 0; _i < len; _i++) {
@@ -960,7 +961,7 @@ static cff_font *
 prepare_CIDFont_from_sfnt(sfnt* sfont)
 {
   cff_font *cffont;
-  unsigned long offset = 0;
+  unsigned  offset = 0;
 
   if (sfont->type != SFNT_TYPE_POSTSCRIPT     ||
       sfnt_read_table_directory(sfont, 0) < 0 ||
@@ -993,7 +994,7 @@ add_to_cmap_if_used (CMap *cmap,
 
     wbuf[0] = (cid >> 8) & 0xff;
     wbuf[1] = (cid & 0xff);
-    len = UC_sput_UTF16BE((long) ch, &p, wbuf + WBUF_SIZE);
+    len = UC_UTF16BE_encode_char((int32_t) ch, &p, wbuf + WBUF_SIZE);
     CMap_add_bfchar(cmap, wbuf, 2, wbuf + 2, len);
 
     /* Skip PUA characters and alphabetic presentation forms, allowing
@@ -1057,7 +1058,7 @@ create_ToUnicode_cmap12 (CMap *cmap,
   for (i = 0; i < map->nGroups; i++) {
     for (ch  = map->groups[i].startCharCode;
          ch <= map->groups[i].endCharCode; ch++) {
-      long d = ch - map->groups[i].startCharCode;
+      int d = ch - map->groups[i].startCharCode;
       USHORT gid = (USHORT) ((map->groups[i].startGlyphID + d) & 0xffff);
       count += add_to_cmap_if_used(cmap, cffont, used_chars, gid, ch);
     }
@@ -1104,11 +1105,11 @@ create_ToUnicode_cmap (tt_cmap *ttcmap,
 
         ch = CMap_reverse_decode(code_to_cid_cmap, cid);
         if (ch >= 0) {
-          long len;
+          int len;
           unsigned char *p = wbuf + 2;
           wbuf[0] = (cid >> 8) & 0xff;
           wbuf[1] =  cid & 0xff;
-          len = UC_sput_UTF16BE((long)ch, &p, wbuf + WBUF_SIZE);
+          len = UC_UTF16BE_encode_char(ch, &p, wbuf + WBUF_SIZE);
           CMap_add_bfchar(cmap, wbuf, 2, wbuf + 2, len);
           count++;
         }
@@ -1170,7 +1171,7 @@ otf_create_ToUnicode_stream (const char *font_name,
                              int cmap_id)
 {
   pdf_obj    *cmap_ref = NULL;
-  long        res_id;
+  int         res_id;
   pdf_obj    *cmap_obj = NULL;
   CMap       *cmap_add, *code_to_cid_cmap;
   int         cmap_add_id;
@@ -1179,7 +1180,7 @@ otf_create_ToUnicode_stream (const char *font_name,
   char       *cmap_name;
   FILE       *fp = NULL;
   sfnt       *sfont;
-  long        offset = 0;
+  ULONG       offset = 0;
   int         i, cmap_type;
 
   /* replace slash in map name with dash to make the output cmap name valid,
@@ -1293,10 +1294,10 @@ otf_create_ToUnicode_stream (const char *font_name,
 struct gent
 {
   USHORT gid;
-  long   ucv; /* assigned PUA unicode */
+  int32_t ucv; /* assigned PUA unicode */
 
-  int    num_unicodes;
-  long   unicodes[MAX_UNICODES];
+  int     num_unicodes;
+  int32_t unicodes[MAX_UNICODES];
 };
 
 static void
@@ -1339,7 +1340,7 @@ create_cmaps (CMap *cmap, CMap *tounicode,
       endptr  = wbuf + WBUF_SIZE;
       len     = 0;
       for (i = 0; i < glyph->num_unicodes; i++) {
-	len += UC_sput_UTF16BE(glyph->unicodes[i], &p, endptr);
+	      len += UC_UTF16BE_encode_char(glyph->unicodes[i], &p, endptr);
       }
       CMap_add_bfchar(tounicode, wbuf, 2, wbuf + 2, len);
     }
@@ -1352,7 +1353,7 @@ create_cmaps (CMap *cmap, CMap *tounicode,
 
 static void
 add_glyph (struct ht_table *unencoded,
-	   USHORT gid, long ucv, int num_unicodes, long *unicodes)
+	   USHORT gid, int32_t ucv, int num_unicodes, int32_t *unicodes)
 {
   struct gent *glyph;
   int i;
@@ -1381,7 +1382,7 @@ add_glyph (struct ht_table *unencoded,
 
 /* This seriously affects speed... */
 static struct gent *
-find_glyph (struct ht_table *unencoded, long ucv)
+find_glyph (struct ht_table *unencoded, int32_t ucv)
 {
   ASSERT(unencoded);
 
@@ -1399,9 +1400,9 @@ handle_subst (pdf_obj *dst_obj, pdf_obj *src_obj, int flag,
 	      struct ht_table *unencoded)
 {
   pdf_obj *tmp;
-  long     i, j, src_size, dst_size;
-  long     src, dst;
-  long     src_start, src_end, dst_start, dst_end;
+  int32_t     i, j, src_size, dst_size;
+  int32_t     src, dst;
+  int32_t     src_start, src_end, dst_start, dst_end;
 
   src_size = pdf_array_length(src_obj);
   dst_size = pdf_array_length(dst_obj);
@@ -1416,10 +1417,10 @@ handle_subst (pdf_obj *dst_obj, pdf_obj *src_obj, int flag,
 
     tmp = pdf_get_array(src_obj, i);
     if (PDF_OBJ_ARRAYTYPE(tmp)) {
-      src_start = (long) pdf_number_value(pdf_get_array(tmp, 0));
-      src_end   = (long) pdf_number_value(pdf_get_array(tmp, 1));
+      src_start = (int32_t) pdf_number_value(pdf_get_array(tmp, 0));
+      src_end   = (int32_t) pdf_number_value(pdf_get_array(tmp, 1));
     } else {
-      src_start = src_end = (long) pdf_number_value(tmp);
+      src_start = src_end = (int32_t) pdf_number_value(tmp);
     }
     for (src = src_start; src <= src_end; src++) {
       glyph = find_glyph(unencoded, src);
@@ -1432,10 +1433,10 @@ handle_subst (pdf_obj *dst_obj, pdf_obj *src_obj, int flag,
       if (dst > dst_end) {
 	tmp = pdf_get_array(dst_obj, j++);
 	if (PDF_OBJ_ARRAYTYPE(tmp)) {
-	  dst_start = (long) pdf_number_value(pdf_get_array(tmp, 0));
-	  dst_end   = (long) pdf_number_value(pdf_get_array(tmp, 1));
+	  dst_start = (int32_t) pdf_number_value(pdf_get_array(tmp, 0));
+	  dst_end   = (int32_t) pdf_number_value(pdf_get_array(tmp, 1));
 	} else {
-	  dst_start = dst_end = (long) pdf_number_value(tmp);
+	  dst_start = dst_end = (int32_t) pdf_number_value(tmp);
 	}
 	dst = dst_start;
       }
@@ -1498,12 +1499,12 @@ handle_assign (pdf_obj *dst, pdf_obj *src, int flag,
 	       otl_gsub *gsub_list, tt_cmap *ttcmap,
 	       struct ht_table *unencoded)
 {
-  long     unicodes[MAX_UNICODES], ucv;
+  int32_t  unicodes[MAX_UNICODES], ucv;
   int      i, n_unicodes, rv;
   USHORT   gid_in[MAX_UNICODES], lig;
 
   n_unicodes = pdf_array_length(src); /* FIXME */
-  ucv = (long) pdf_number_value(pdf_get_array(dst, 0)); /* FIXME */
+  ucv = (int32_t) pdf_number_value(pdf_get_array(dst, 0)); /* FIXME */
   if (!UC_is_valid(ucv)) {
     if (flag == 'r' || flag == 'p') {
       if (ucv < 0x10000) {
@@ -1513,7 +1514,7 @@ handle_assign (pdf_obj *dst, pdf_obj *src, int flag,
       }
     }
     if (flag == 'r') {
-      ERROR("Invalid Unicode code specified.", ucv);
+      ERROR("Invalid Unicode code specified.");
     }
     return;
   }
@@ -1524,7 +1525,7 @@ handle_assign (pdf_obj *dst, pdf_obj *src, int flag,
 
   for (i = 0; i < n_unicodes; i++) {
     unicodes[i] =
-      (long) pdf_number_value(pdf_get_array(src, i));
+      (int32_t) pdf_number_value(pdf_get_array(src, i));
     gid_in[i] = tt_cmap_lookup(ttcmap, unicodes[i]);
 
     if (verbose > VERBOSE_LEVEL_MIN) {
@@ -1618,7 +1619,7 @@ load_gsub (pdf_obj *conf, otl_gsub *gsub_list, sfnt *sfont)
 {
   pdf_obj  *rule;
   char     *script, *language, *feature;
-  long      i, size;
+  int       i, size;
 
   rule = otl_conf_get_rule(conf);
   if (!rule)
@@ -1631,7 +1632,7 @@ load_gsub (pdf_obj *conf, otl_gsub *gsub_list, sfnt *sfont)
   for (i = 0; i < size; i += 2) {
     pdf_obj   *tmp, *commands;
     int        flag;
-    long       j, num_comms;
+    int        j, num_comms;
 
     tmp  = pdf_get_array(rule, i);
     flag = (int) pdf_number_value(tmp);
@@ -1667,7 +1668,7 @@ handle_gsub (pdf_obj *conf,
 {
   pdf_obj *rule;
   char    *script, *language, *feature;
-  long     i, size;
+  int      i, size;
 
   if (!conf)
     return;
@@ -1687,7 +1688,7 @@ handle_gsub (pdf_obj *conf,
   size = pdf_array_length(rule);
   for (i = 0; i < size; i += 2) {
     pdf_obj  *tmp, *commands;
-    long      j, num_comms;
+    int       j, num_comms;
     int       flag;
 
     tmp  = pdf_get_array(rule, i);
@@ -1743,7 +1744,7 @@ handle_gsub (pdf_obj *conf,
 
 }
 
-static void CDECL
+static inline void
 hval_free (void *hval)
 {
   RELEASE(hval);
@@ -1756,7 +1757,7 @@ otf_load_Unicode_CMap (const char *map_name, int ttc_index, /* 0 for non-TTC fon
   int    cmap_id = -1;
   int    tounicode_id = -1, is_cidfont = 0;
   sfnt  *sfont;
-  unsigned long   offset = 0;
+  ULONG  offset = 0;
   char  *base_name = NULL, *cmap_name = NULL;
   char  *tounicode_name = NULL;
   FILE  *fp = NULL;

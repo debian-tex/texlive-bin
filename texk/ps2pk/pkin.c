@@ -11,7 +11,6 @@
  *	get more modularity in the style of MODULA2.
  * REDESIGN
  *	Piet Tutelaers
- *	rcpt@urc.tue.nl
  */
 
 #ifdef HAVE_CONFIG_H
@@ -335,7 +334,7 @@ unpack(chardesc *cd)
  *   return FALSE (0) otherwise.
  */
 int
-readchar(char *name, shalfword c, chardesc *cd)
+readchar(char *name, integer c, chardesc *cd)
 {
    register shalfword i ;
    register integer k ;

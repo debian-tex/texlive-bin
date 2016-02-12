@@ -1,3 +1,39 @@
+2016-01-19  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* pdftex.web: Avoid to crash for unusual virtual fonts which lead to
+	font size >= 2048pt.
+
+2015-08-27  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* am/libpdftex.am, am/pdftosrc.am: Enable g++ warnings.
+	* pdftoepdf.cc, pdftosrc.cc: Avoid g++ warnings.
+	* tounicode.c: Avoid gcc warnings.
+
+2015-07-28  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* ptexmac.h: Avoid possible integer overflow.
+	* writettf.h: No reason to use 'long' for 32-bit integers.
+	* writettf.c: No reason to use the (possibly 64-bit) 'integer'.
+
+2015-07-10  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* am/pdftex.am, am/pdftosrc.am, am/ttf2afm.am: Dependencies for
+	'make check'.
+
+2015-07-02  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* utils.c: Moved convertStringToHexString() and getmd5sum()
+	from here to ../lib/texmfmp.c.
+
+2015-06-30  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* pdftex.defines, ptexlib.h, pdftex.web, utils.c: Sync with
+	upstream r724.
+
+2015-06-22  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* am/pdftex.am: Use $(tie_c).
+
 2015-03-07  Karl Berry  <karl@tug.org>
 
 	* NEWS,

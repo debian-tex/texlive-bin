@@ -1,3 +1,53 @@
+2016-02-01  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* eptex.ech: Add a new primitive \epTeXinputencoding. (from N. Abe).
+	Change version to 160201 (H. Kitagawa).
+	* eptex.defines: Add a new function setinfileenc() for a new primitive
+	\epTeXinputencoding. (from N. Abe).
+	* eptex_version.h: Change version to 160201 (H. Kitagawa).
+
+2015-09-22  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* eptriptest.test: Also check tripos.tex and etrip.out.
+
+2015-08-06  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* pdfprimitive.test: New shell script testing \pdfprimitive.
+	* tests/pdfprimitive-test.tex tests/pdfprimitive-eptex.log:
+	New test input and expected output data.
+	* am/eptex.am: Added the new files.
+
+2015-08-05  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* pdfutils.ch: Add primitives \pdfprimitive and \ifpdfprimitive 
+	to e-(u)pTeX.
+	* eptex.ech, eptex_version.h: Change version to 150805.
+
+2015-07-28  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* fam256.ch: Fix delcode initialization.
+
+2015-07-10  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* eptriptest (removed): Renamed ...
+	* eptriptest.test (new):  ... into this.
+	* am/eptex.am: Better dependencies for 'make check'.
+
+2015-07-06  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* am/eptex.am: Add libmd5.a to eptex_DEPENDENCIES.
+
+2015-07-02  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* am/eptex.am: Add libmd5.a.
+	* pdfutils.ch: Add primitive \pdfmdfivesum to e-(u)pTeX.
+	* eptex.defines: Add getmd5sum().
+	* eptex.ech, eptex_version.h: Change version to 150702.
+
+2015-06-22  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* am/eptx.am: Use $(tie_c) and $(tie_m).
+
 2015-04-12  Peter Breitenlohner  <peb@mppmu.mpg.de>
 
 	* eptrip/eptrip.diffs: Updated for TL 2015.

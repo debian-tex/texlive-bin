@@ -1,3 +1,22 @@
+2015-09-22  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* ptriptest.test: Also check tripos.tex.
+
+2015-09-10  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* ptex-base.ch: Fix a bug in flushing choice node.
+	* ptex_version.h: pTeX version p3.7.
+
+2015-07-10  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* ptriptest (removed): Renamed ...
+	* ptriptest.test (new):  ... into this.
+	* am/ptex.am: Better dependencies for 'make check'.
+
+2015-06-22  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* am/ptex.am: Use $(tie_c) and $(tie_m).
+
 2015-04-12  Peter Breitenlohner  <peb@mppmu.mpg.de>
 
 	* ptrip/ptrip.diffs: Updated for TL 2015.

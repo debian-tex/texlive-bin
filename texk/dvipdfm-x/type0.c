@@ -1,6 +1,6 @@
 /* This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
 
-    Copyright (C) 2002-2014 by Jin-Hwan Cho and Shunsaku Hirata,
+    Copyright (C) 2002-2016 by Jin-Hwan Cho and Shunsaku Hirata,
     the dvipdfmx project team.
     
     This program is free software; you can redistribute it and/or modify
@@ -236,8 +236,8 @@ add_ToUnicode (Type0Font *font)
       if (CIDFont_get_flag(cidfont, CIDFONT_FLAG_TYPE1C)) { /* FIXME */
         tounicode = Type0Font_create_ToUnicode_stream(font);
       } else if (CIDFont_get_flag(cidfont, CIDFONT_FLAG_TYPE1)) { /* FIXME */
-	/* Font loader will create ToUnicode and set. */
-	return;
+        /* Font loader will create ToUnicode and set. */
+        return;
       } else {
         tounicode = Type0Font_try_load_ToUnicode_stream(font, fontname);
       }
@@ -252,7 +252,7 @@ add_ToUnicode (Type0Font *font)
 
   if (tounicode) {
     pdf_add_dict(font->fontdict,
-		 pdf_new_name("ToUnicode"), tounicode);
+                 pdf_new_name("ToUnicode"), tounicode);
   } else {
     WARN("Failed to load ToUnicode CMap for font \"%s\"", fontname);
   }
@@ -266,7 +266,7 @@ Type0Font_set_ToUnicode (Type0Font *font, pdf_obj *cmap_ref)
   ASSERT(font);
 
   pdf_add_dict(font->fontdict,
-	       pdf_new_name("ToUnicode"), cmap_ref);
+               pdf_new_name("ToUnicode"), cmap_ref);
 }
 
 static void
@@ -662,7 +662,7 @@ static pdf_obj *
 pdf_read_ToUnicode_file (const char *cmap_name)
 {
   pdf_obj *stream;
-  long     res_id = -1;
+  int      res_id = -1;
 
   ASSERT(cmap_name);
 

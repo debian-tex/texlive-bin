@@ -17,7 +17,7 @@ AC_SUBST([KPSEVERSION], [kpse_version])
 KPSE_LT_VERSION([kpse])
 
 m4_include([../../version.ac])[] dnl define tex_live_version
-AC_SUBST([WEB2CVERSION], [tex_live_version])
+AC_SUBST([WEB2CVERSION], [" (TeX Live tex_live_version)"])
 
 dnl Common code for all programs using libkpathsea.
 KPSE_COMMON([kpathsea])
@@ -34,9 +34,6 @@ m4_foreach([Kpse_Mktex], [kpse_mktex_opts],
 AC_PROG_AWK
 
 AC_CHECK_SIZEOF([long])
-
-dnl Check if <ctype.h> declares isascii.
-AC_CHECK_DECLS([isascii], [], [], [[#include <ctype.h>]])
 
 dnl Replacement functions that may be required on ancient broken system.
 AC_CHECK_DECLS([putenv])

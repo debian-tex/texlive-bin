@@ -19,7 +19,6 @@
 
 @ @c
 
-
 #include "ptexlib.h"
 
 @ @c
@@ -32,13 +31,11 @@
 #define vbadness int_par(vbadness_code)
 #define max_dead_cycles int_par(max_dead_cycles_code)
 #define output_box int_par(output_box_code)
-#define body_direction int_par(body_direction_code)
 #define holding_inserts int_par(holding_inserts_code)
 
 #define vsize dimen_par(vsize_code)
 #define vfuzz dimen_par(vfuzz_code)
 #define max_depth dimen_par(max_depth_code)
-#define pdf_ignored_dimen dimen_par(pdf_ignored_dimen_code)
 
 #define output_routine equiv(output_routine_loc)
 #define split_top_skip glue_par(split_top_skip_code)
@@ -96,7 +93,6 @@ halfword best_page_break;       /* break here to get the best page known so far 
 int least_page_cost;            /* the score for this currently best page */
 scaled best_size;               /* its |page_goal| */
 
-
 @ The page builder has another data structure to keep track of insertions.
 This is a list of four-word nodes, starting and ending at |page_ins_head|.
 That is, the first element of the list is node |r@t$_1$@>=vlink(page_ins_head)|;
@@ -128,8 +124,6 @@ such |ins_node| that should actually be inserted, to get the page with
 minimum badness among all page breaks considered so far. We have
 |best_ins_ptr(r)=null| if and only if no insertion for this box should
 be made to produce this optimum page.
-
-
 
 @ Pages are built by appending nodes to the current list in \TeX's
 vertical mode, which is at the outermost level of the semantic nest. This
@@ -196,13 +190,13 @@ scaled last_kern;               /* used to implement \.{\\lastkern} */
 int last_node_type;             /* used to implement \.{\\lastnodetype} */
 int insert_penalties;           /* sum of the penalties for held-over insertions */
 
-#define print_plus(A,B) do {			\
-	if (page_so_far[(A)]!=0) {		\
-	    tprint(" plus ");			\
-	    print_scaled(page_so_far[(A)]);	\
-	    tprint((B));			\
-	}					\
-    } while (0)
+#define print_plus(A,B) do { \
+    if (page_so_far[(A)]!=0) { \
+        tprint(" plus "); \
+        print_scaled(page_so_far[(A)]); \
+        tprint((B)); \
+    } \
+} while (0)
 
 void print_totals(void)
 {
@@ -216,7 +210,6 @@ void print_totals(void)
         print_scaled(page_shrink);
     }
 }
-
 
 @ Here is a procedure that is called when the |page_contents| is changing
 from |empty| to |inserts_only| or |box_there|.
@@ -243,13 +236,11 @@ void freeze_page_specs(int s)
     }
 }
 
-
 @ The global variable |output_active| is true during the time the
 user's output routine is driving \TeX.
 
 @c
 boolean output_active;          /* are we in the midst of an output routine? */
-
 
 @ The page builder is ready to start a fresh page if we initialize
 the following state variables. (However, the page insertion list is initialized
@@ -269,7 +260,6 @@ void start_new_page(void)
     page_max_depth = 0;
 }
 
-
 @ At certain times box \.{\\outputbox} is supposed to be void (i.e., |null|),
 or an insertion box is supposed to be ready to accept a vertical list.
 If not, an error message is printed, and the following subroutine
@@ -286,7 +276,6 @@ static void box_error(int n)
     flush_node_list(box(n));
     box(n) = null;
 }
-
 
 @ The following procedure guarantees that a given box register
 does not contain an \.{\\hbox}.
@@ -305,7 +294,6 @@ static void ensure_vbox(int n)
     }
 }
 
-
 @ \TeX\ is not always in vertical mode at the time |build_page|
 is called; the current mode reflects what \TeX\ should return to, after
 the contribution list has been emptied. A call on |build_page| should
@@ -318,10 +306,9 @@ void build_page(void)
     halfword p;                 /* the node being appended */
     halfword q, r;              /* nodes being examined */
     int b, c;                   /* badness and cost of current page */
-    int pi;                     /* penalty to be added to the badness */
+    int pi = 0;                 /* penalty to be added to the badness */
     int n;                      /* insertion box number */
     scaled delta, h, w;         /* sizes used for insertion calculations */
-    pi = 0;
     if ((vlink(contrib_head) == null) || output_active)
         return;
     do {
@@ -403,16 +390,9 @@ void build_page(void)
 
             }
             break;
+        case boundary_node:
         case whatsit_node:
-            /* Prepare to move whatsit |p| to the current page,
-               then |goto contribute| */
-            if ((subtype(p) == pdf_refxform_node)
-                || (subtype(p) == pdf_refximage_node)) {
-                page_total = page_total + page_depth + height(p);
-                page_depth = depth(p);
-            }
             goto CONTRIBUTE;
-
             break;
         case glue_node:
             if (page_contents < box_there)
@@ -925,9 +905,8 @@ void fire_up(halfword c)
     vbadness = inf_bad;
     save_vfuzz = vfuzz;
     vfuzz = max_dimen;          /* inhibit error messages */
-    box(output_box) =
-        filtered_vpackage(vlink(page_head), best_size, exactly, page_max_depth,
-                          output_group, body_direction);
+    box(output_box) = filtered_vpackage(vlink(page_head),
+        best_size, exactly, page_max_depth, output_group, body_direction, 0);
     vbadness = save_vbadness;
     vfuzz = save_vfuzz;
     if (last_glue != max_halfword)
@@ -971,7 +950,7 @@ void fire_up(halfword c)
             incr(dead_cycles);
             push_nest();
             mode = -vmode;
-            prev_depth = pdf_ignored_dimen;
+            prev_depth = ignore_depth;
             mode_line = -line;
             begin_token_list(output_routine, output_text);
             new_save_level(output_group);
@@ -1000,7 +979,6 @@ void fire_up(halfword c)
     ship_out(static_pdf, box(output_box), SHIPPING_PAGE);
     box(output_box) = null;
 }
-
 
 @ When the user's output routine finishes, it has constructed a vlist
 in internal vertical mode, and \TeX\ will do the following:
@@ -1051,8 +1029,6 @@ void resume_after_output(void)
     flush_node_list(page_disc);
     page_disc = null;
     pop_nest();
-    //lua_node_filter_s(buildpage_filter_callback, "after_output");
     lua_node_filter_s(buildpage_filter_callback,lua_key_index(after_output));
-   build_page();
-
+    build_page();
 }

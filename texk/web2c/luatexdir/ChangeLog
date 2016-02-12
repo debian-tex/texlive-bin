@@ -1,3 +1,101 @@
+2015-11-01  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* luatex.c: Improve a little (w32 only).
+
+2015-10-31  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* tex/inputstack.w: Sync with the upstream.
+
+2015-10-13  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* tex/mlist.w: Sync with the upstream.
+
+2015-10-09  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* luatex.c: Sync with the upstream.
+	* font/luatexfont.h, font/writetype2.w: Sync with the upstream.
+
+2015-10-08  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* lua/lepdflib.cc, tex/texnodes.h, tex/texnodes.w, NEWS:
+	Sync with the upstream.
+	* luatex.c: beta-0.81.0.
+
+2015-10-07  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* am/libluatex.am, am/luafontforge.am: Rearrange to compile the
+	luafontloader/src/* files as part of liblua(jit)tex.a, such that
+	there is only one libff.a used for LuaTeX and LuaJITTeX.
+
+2015-10-07  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* Sync with the upstream trunk.
+	* image/epdf.h: Support Visual Studio 2010 for log().
+
+2015-10-05  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* Completely sync with the upstream trunk.
+	Changed files are
+	font/writecff.w, font/writefont.w,
+	lua/lnodelib.c, lua/lpdflib.c, lua/luatoken.w,
+	luafontloader/fontforge/fontforge/lookups.c,
+	luafontloader/fontforge/fontforge/parsettf.c,
+	luafontloader/fontforge/fontforge/parsettfatt.c,
+	luafontloader/fontforge/fontforge/splinefont.h,
+	luafontloader/fontforge/fontforge/tottf.c,
+	luafontloader/src/luafflib.c,
+	luatex.c,
+	tex/commands.w, tex/dumpdata.w, tex/equivalents.h, tex/filename.w,
+	tex/maincontrol.w, tex/printing.w, tex/texmath.w.
+
+2015-10-01  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* pdf/pdfgen.w: Sync with the upstream trunk.
+
+2015-09-01  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* lua/lepdflib.cc: Drop useless casts 'const char *' -> 'char *'
+	when poppler has Object::initCmd(const char*).
+
+2015-08-31  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* lua/lepdflib.cc: Bugfix: m_Object_dictAdd() must use a copy of
+	the Lua string s, otherwise m_Dict_remove() would destroy it.
+
+2015-08-29  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* image/epdf.h, lua/lepdflib.cc: Drop HAVE_STRUCTTREEROOT_H,
+	we now require poppler 0.30 better.
+	
+2015-08-28  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* am/libluatex.am: Enable g++ warnings.
+	* image/epdf.h, image/pdftoepdf.w, lua/lepdflib.cc: Avoid most
+	g++ warnings.
+
+2015-08-27  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* image/pdftoepdf.w: Drop useless casts to avoid warnings.
+	* lua/lpdfscannerlib.cc: Unconstify Token.string to avoid warning.
+	* lua/lepdflib.cc: Drop useless casts to avoid some warnings.
+
+2015-08-27  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* tex/mlist.w: Sync with the trunk.
+	See http://tug.org/pipermail/luatex/2015-August/005319.html
+	* tex/printing.w: Do not write to a log file for the
+	--[no-]parse-first-line option, since the option actually does not
+	exist in lua(jit)tex, although superficially it remains for compatibility
+	with existing scripts etc.
+
+2015-07-10  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* am/luatex.am: Dependencies for 'make check'.
+
+2015-07-03  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* lua/lkpselib.c: Also used for MFLua and MFLuaJIT.
+
 2015-03-31  Peter Breitenlohner  <peb@mppmu.mpg.de>
 
 	* luazip/src/luazip.c (zip_close): Sync with the upstream.

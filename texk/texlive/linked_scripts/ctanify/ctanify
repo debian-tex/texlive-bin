@@ -7,7 +7,7 @@
 
 use Cwd;
 use File::Basename;
-use File::Copy qw(cp);
+use File::Copy::Recursive qw(fcopy);
 use File::Find;
 use File::Path;
 use File::Spec;
@@ -19,7 +19,7 @@ use warnings;
 use strict;
 
 # Define some global variables.
-our $VERSION = "1.5";          # ctanify version number
+our $VERSION = "1.8.2";        # ctanify version number
 my $progname = basename $0;    # Name of this program
 my $pkgname;                   # Base name of the package to create
 my $miscify = 0;               # 1=replace singletons with misc; 0=don't
@@ -36,6 +36,7 @@ my $pkgdir = "";               # Absolute directory of the package directory
 my $zipname;                   # Name of the TDS zip file
 my $tarname;                   # Name of the package tar file
 my $tdsoutdir;                 # Directory name where to output TDS tree
+my $texmacros = "latex";       # TeX macro package
 
 # Associate file extensions with TDS directories.  "%s" is replaced
 # with the package name.
@@ -48,11 +49,13 @@ my %ext2tds =
      "bst"     => "bibtex/bst/%s",
      "cbx"     => "tex/latex/%s",
      "cls"     => "tex/latex/%s",
+     "dbx"     => "tex/latex/%s",
      "dtx"     => "source/latex/%s",
      "dvi"     => "doc/latex/%s",
      "fd"      => "tex/latex/%s",
      "ins"     => "source/latex/%s",
      "map"     => "fonts/map/dvips/%s",
+     "md"      => "doc/latex/%s",
      "mf"      => "fonts/source/public/%s",
      "mp"      => "metapost/%s",
      "ofm"     => "fonts/ofm/public/%s",
@@ -82,7 +85,7 @@ my %text_ext =
 # aborting on error.
 sub filesize ($)
 {
-    my $finfo = stat($_[0]) || die "${progname}: Failed to stat $_ ($!)\n";
+    my $finfo = lstat($_[0]) || die "${progname}: Failed to stat $_ ($!)\n";
     return $finfo->size;
 }
 
@@ -143,6 +146,7 @@ GetOptions("p|pkgname=s"   => \$pkgname,
            "t|tdsonly=s"   => \@tdsonly,
            "a|auto!"       => \$autoinclude,
            "d|tdsdir=s"    => \$tdsoutdir,
+           "T|tex=s"       => \$texmacros,
            "V|version"     => \$wantversion,
            "h|help"        => \$wanthelp)
     || pod2usage(-verbose => 0,
@@ -169,6 +173,13 @@ foreach my $fname (@ARGV) {
     }
 }
 @tdsonly = map {File::Spec->abs2rel($_)} map {glob} @tdsonly;
+
+# Replace "latex" with something else if --tex was specified.
+if ($texmacros ne "latex") {
+    foreach my $ext (keys %ext2tds) {
+        $ext2tds{$ext} =~ s,\blatex\b,$texmacros,g;
+    }
+}
 
 # Determine the package name if not explicitly specified.
 if (!defined $pkgname) {
@@ -232,7 +243,11 @@ if ($skipdroppings) {
 foreach my $fname (@manifest) {
     next if defined $file2tds{$fname};
     my $fext = ($fname =~ m|([^./]+)$| && $1);
-    if (defined $ext2tds{$fext}) {
+    if ($fname =~ /\.tex$/ && $pkgname eq basename $fname, ".tex") {
+        # <package>.tex -- treat as documentation.
+        $file2tds{$fname} = sprintf $ext2tds{"README"}, $pkgname;
+    }
+    elsif (defined $ext2tds{$fext}) {
         # Most files -- determine the directory based on the file extension.
         $file2tds{$fname} = sprintf $ext2tds{$fext}, $pkgname;
     }
@@ -244,7 +259,7 @@ foreach my $fname (@manifest) {
         # Read the file to determine if it's a Unix script (starts with "#!").
         open(SCRIPT, "<", $fname) || die "${progname}: Failed to open $fname ($!)\n";
         my $shebang;
-        read(SCRIPT, $shebang, 2) || die "${progname}: Failed to read $fname ($!)\n";
+        read(SCRIPT, $shebang, 2);
         close SCRIPT;
         if ($shebang eq "#!") {
             $file2tds{$fname} = "scripts/$pkgname";
@@ -266,7 +281,7 @@ foreach my $fname (@manifest) {
     mkpath "$tdsdir/$subdir";
 
     # Copy the specified file into the subdirectory.
-    cp($fname, "$tdsdir/$subdir/" . basename $fname) || die "${progname}: Failed to copy $fname ($!)\n";
+    fcopy($fname, "$tdsdir/$subdir/" . basename $fname) || die "${progname}: Failed to copy $fname ($!)\n";
 }
 if ($miscify) {
     # Replace package directories containing a single file with "misc".
@@ -293,7 +308,7 @@ if ($unixify) {
 my @bad_docs;
 find(sub {
     return if !-f;
-    push @bad_docs, $_ if $File::Find::name =~ m,\bdoc/latex/$pkgname/.*\.(ps|dvi)$,;
+    push @bad_docs, $_ if $File::Find::name =~ m,\bdoc/[^/]+/$pkgname/.*\.(ps|dvi)$,;
 }, $tdsdir);
 if (@bad_docs) {
     my $bad_docs = join ", ", @bad_docs;
@@ -315,7 +330,7 @@ find(sub {
 # Archive and remove the TDS directory.
 $zipname = "$pkgname.tds.zip";
 my $zip_exclusions = $skipdroppings ? "-x __MACOSX -x .DS_Store" : "";
-run_command "zip -q -r -9 -m $workdir/$zipname . $zip_exclusions", 1;
+run_command "zip -q -r -9 -y -m $workdir/$zipname . $zip_exclusions", 1;
 my $zipsize;
 if (-f "$workdir/$zipname") {
     $zipsize = filesize "$workdir/$zipname";
@@ -336,7 +351,7 @@ foreach my $fname (@manifest) {
     my ($namepart, $pathpart, $suffixpart) = fileparse($relname);
     mkpath "$pkgdir/$pathpart";
     my $targetfile = "$pkgdir/$pathpart/$namepart$suffixpart";
-    cp($fname, $targetfile) || die "${progname}: Failed to copy $fname ($!)\n";
+    fcopy($fname, $targetfile) || die "${progname}: Failed to copy $fname ($!)\n";
 }
 if ($unixify) {
     # Make all text files use Unix line endings.
@@ -390,6 +405,9 @@ ctanify
 [B<--tdsonly>=I<filespec> ...]
 [B<-->[B<no>]B<unixify>]
 [B<-->[B<no>]B<skip>]
+[B<--tdsdir>=I<dirname> ...]
+[B<--tex>=I<macro_pkg>]
+[B<-->[B<no>]B<miscify>]
 I<filespec>[=I<dirname>] ...
 
 ctanify
@@ -464,6 +482,12 @@ They are provided for special circumstances that may arise.
 
 Instead of creating a tarball for CTAN, merely create the package TDS
 tree rooted in directory I<dirname>.
+
+=item B<-T> I<macro_pkg>, B<--tex>=I<macro_pkg>
+
+Assert that the files being packaged for CTAN target a TeX macro
+package other than LaTeX.  Some common examples of I<macro_pkg> are
+C<generic>, C<plain>, and C<context>.
 
 =item B<-nou>, B<--no-unixify>
 
@@ -644,9 +668,10 @@ tarball.  In short, before running B<ctanify> you should manually
 process any F<.ins> files and otherwise generate any files that should
 be sent to CTAN.
 
-B<ctanify> has been tested only on Linux.  It may work on S<OS X>.  It
-probably does not work on Windows.  Volunteers willing to help port
-B<ctanify> to other platforms are extremely welcome.
+B<ctanify> has been tested only on Linux.  It may work on S<OS X>.
+I've been told that it works on Windows when run using Cygwin.
+Volunteers willing to help port B<ctanify> to other platforms are
+extremely welcome.
 
 
 =head1 SEE ALSO
@@ -655,7 +680,7 @@ tar(1),
 zip(1),
 latex(1),
 Guidelines for uploading TDS-Packaged materials to CTAN
-(L<http://www.ctan.org/TDS-guidelines.html>),
+(L<http://www.ctan.org/TDS-guidelines>),
 A Directory Structure for TeX Files (L<http://tug.org/tds/>),
 
 
@@ -666,7 +691,7 @@ Scott Pakin, I<scott+ctify@pakin.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 2014 Scott Pakin
+Copyright 2016 Scott Pakin
 
 This work may be distributed and/or modified under the conditions of
 the LaTeX Project Public License, either S<version 1.3c> of this

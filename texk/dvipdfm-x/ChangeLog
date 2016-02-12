@@ -1,3 +1,255 @@
+2016-02-09  Jiang Jiang  <gzjjgod@gmail.com>
+
+	* dvi.c: Tweak skip_native_font_def() to make it handle more
+	flags.
+	* dpxutil.c: Remove a redundant check found by -Wall.
+
+2016-02-09  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* dvi.c: disable check_postamble() introduced by Peter, because
+	features embolden != 0, slant != 0, and extend != 1 do not work.
+
+2016-01-30  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* tt_post.c: Check post->glyphNamePtr[gid] before an access
+	in tt_get_glyphname(). Reported by Werner LEMBERG:
+	http://tug.org/pipermail/tex-live/2016-January/037696.html.
+
+2016-01-19  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* dpxfile.c: Remove trailing directory separators if any in
+	dpx_get_tmpdir().
+
+2016-01-11  Shunsaku Hirata  <shunsaku.hirata74@gmail.com>
+
+	* pdfobj.c, mfileio.[ch]: Modification on handling of xref table.
+	More permissive on treating white-spaces but more strict on
+	handling tokens.
+
+2016-01-07  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* epdf.c: A typo in a message.
+	* xbb.c: Change copyright year.
+	* tests/: Change test data.
+
+2016-01-06  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* t1_load.c: Avoid to crash for unsupported type1 fonts as native fonts.
+	* configure.ac: version 20160106.
+	* almost all files: change Copyright year.
+
+2016-01-04  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* dvi.c: Symplify support of native type1 fonts in XeTeX.
+
+2016-01-03  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* dpxfile.c: Change \ to / for WIN32 also in the case where
+	HAVE_MKSTEMP is defined (win32 only).
+	* cff.h, dvi.c, t1_load.c: Improve the change made on 2015-08-05.
+	The static function static int is_notdef_notzero() in dvi.c is removed.
+
+2015-12-30  Shunsaku Hirata  <shunsaku.hirata74@gmail.com>
+
+	* epdf.[ch], pdfdoc.[ch], pdfximage.[ch],
+	spc_{dvips,html,misc,pdfm,util}.c, spc_util.h: Don't use global variables
+	for selecting boundary box. Cleanups.
+
+2015-12-29  Shunsaku Hirata  <shunsaku.hirata74@gmail.com>
+
+	* dvipdfmx.c, dvi.c: Allow empty password in pdf:encrypt special.
+	* dvipdfmx.c, pdfdoc.[ch], pdfobj.[ch]: Add option to disable Xref
+	stream and object stream.
+
+2015-12-28  Shunsaku Hirata  <shunsaku.hirata74@gmail.com>
+
+	* bmpimage.c, dvipdfmx.c, pdfobj.[ch], pngimage.c: Support for predictor
+	functions for FlateDecode filter. PNG optimal and TIFF2 predictor functions
+	are currently implemented. It solves the preblem that PNG images become
+	sometimes larger in size when embedded in PDF file.
+
+2015-12-26  Shunsaku Hirata  <shunsaku.hirata74@gmail.com>
+
+	* pngimage.c: Workaround for Adobe Potoshop generated PNGs which have
+	cHRM chunk but not gAMA chunk.
+	* agl.c, spc_pdfm.c, unicode.c, unicode.h: Addition of some
+	Unicode related functions. Try conversion to UTF16BE only for string
+	objects which can be considered as a valid Unicode text.
+
+2015-12-24  Shunsaku Hirata  <shunsaku.hirata74@gmail.com>
+
+	* t1_load.c: Support for get/putinterval and get/put in encoding
+	definition found in some Type1 fonts such as cmctt10.pfb.
+
+2015-11-05  Karl Berry  <karl@tug.org>
+
+	* data/dvipdfmx.cfg (D): add -dAutoRotatePages=/None.
+	Suggestion/request from Akira, 4 Nov 2015 22:41:14.
+
+2015-09-27  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* dvipdfmx.c: Remove conditional error message in kpathsea_debug,
+	since there should be no errors.
+
+2015-08-25  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* Most .c and .h files: Update Copyright years.
+	Replace '(unsigned) long' by '(unsigned) int' or '(u)int32_t'
+	except when needed with for ftell() and fseek().
+
+2015-08-23  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* agl.[ch], cid.[ch], cidtype0.[ch], cidtype2.[ch], cmap_p.h,
+	cs_type2.[ch], dpxcrypt.[ch], dpxutil.[ch], dvi.c, fontmap.[ch],
+	otl_conf.c, pdfcolor..[ch], pdfdev.h, pdfdoc.c, pdfencoding.c,
+	pdfencrypt.[ch], pdfnames.[ch], pdfobj.[ch], sfnt.h, spc_pdfm.c,
+	spc_xtx.c, truetype.c, t1_char.[ch], tt_cmap.[ch], unicode.[ch]:
+	No reason to use 'long' for 32-bit integers.
+
+	* system.h: Moved #undef's for Win32 symbols from here ...
+	* error.h, mpost.c: ... to here.
+
+2015-08-21  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* dvipdfmx.c (main): Drop CDECL.
+	* agl.c, otl_opt.c, pdfencoding.c, pdfnames.c, pdfobj.c,
+	t1_char.c, tt_cmap.c, tt_glyf.c:
+	Replace 'static <TYPE> CDECL' => 'static inline <TYPE>'.
+	* system.h: Drop __cdecl and CDECL.
+
+2015-08-14  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* pdfcolor.[ch]: Drop unused pdf_color_set_default().
+
+	* pdfdev.h: Drop pdf_dev_setfont() and pdf_dev_set_colormode().
+
+	* pdfdoc.[ch]: Drop unused pdf_doc_{end,make}_article().
+	Declare pdf_doc_get_mediabox() as static.
+
+	* pdfdraw.h: Drop pdf_dev_{fill,eofill,stroke,fillstroke}(), and
+	pdf_dev_grestoreall().
+
+	* pdfnames.[ch]: Declare printable_key() as static.
+
+	* pdfximage.h: Drop pdf_ximage_disable_ebb().
+
+	* tfm.[ch]: Drop tfm_get_space(). Skip tfm_string_{depth,height}.
+
+	* tt_table.[ch]: Declare tt_get_name() as static.
+
+2015-08-14  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* cff.[ch]: Declare cff_match_string() as static.
+	* cff.h: Drop unused '#define cff_is_stdstr(s)'.
+
+	* cid.[ch]: Declare CIDFont_new(), CIDFont_release(),
+	CIDFont_flush(), and CIDFont_cache_init() as static.
+
+	* cmap.[ch]: Declare CMap_match_codespace() as static.
+	* cmap_write.h: Put '#if 0...#endif' around Map_ToCode_stream().
+
+2015-08-13  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* agl.[ch]: Declare agl_load_listfile() as static.
+
+	* cff_types.h: Drop unused type l_size.
+
+	* dpxutil.[ch]: Extern sputx(), getxpair(), putxpair(),
+	ostrtouc(), and esctouc() moved from here ...
+	* cmap_write.c: ... to here or ...
+	* pst_obj.c: ... to here as static.
+
+2015-08-12  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* mpost.[ch]: Extern check_for_mp() moved from here ...
+	* pdfximage.c: ... to here as static.
+
+2015-08-05  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* dvi.c: Introduce a new static function static int is_notdef_notzero()
+	to fix the support of native type1 fonts. The t1disasm is required.
+	The fix is intended as an intermediate one until more fine fix is given.
+
+2015-08-03  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* dvi.c: Better detection of bad (inconsistent) DVI files.
+	* xdvipdfm-bad.test: New shell script to test bad DVI files.
+	* tests/ids_2_6.dvi, tests/ids_3_2.dvi, tests/ids_a_b.dvi,
+	tests/opc_fe.dvi, tests/ptx_2_2.dvi, tests/ptx_6_6.dvi,
+	tests/rev_2_2.dvi, tests/rev_2_3.dvi, tests/void.dvi: New test
+	input data (bad DVI files).
+	* Makefile.am: Add the new test and input data.
+
+2015-07-31  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* dvipdfmx.c, xbb.c: Use getopt_long() for option parsing.
+
+2015-07-30  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* xdvipdfm-ptx.test: New shell script to test Ascii pTeX output.
+	* xdvipdfm-rev.test: New shell script to test TeX-XeT output.
+	* tests/ptex.dvi, tests/reverse.dvi: New test input data.
+	* Makefile.am: Add the new tests and input data.
+
+2015-07-29  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* Makefile.am, ac/withenable.ac, configure.ac, dvipdfmx.c,
+	xbb.c: Only one binary and a symlink dvipdfmx->xdvipdfmx.
+	* ac/dvipdfm-x.ac (removed): Obsolete configure options.
+	* dvipdfm*.test (removed): Obsolete tests.
+	* tests/img*.{bb,bbx} (removed): Obsolete test data.
+
+2015-07-29  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	Make dvipdfmx and xdvipdfmx essentially the same.
+	* dvicodes.h: Slightly reformat.
+	* dvi.c: Run-time decision to hanlde XeTeX extensions only for
+	id_byte 6 and Ascii pTeX extension only for post_id_byte 3.
+	* pdfdev.c: Remove '#ifdef XETEX' (one probably a mistake).
+	* pdfdoc.c: New artbox handling only for XDV files (from XeTeX).
+	* system.h: Drop redundant #include <kpathsea/c-auto.h>.
+
+2015-07-28  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* pdfdoc.c: Somewhat simplify to avoid compiler warnings.
+
+2015-07-22  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* epdf.c. pdfdoc.c, pdfobj.h, pdfximage.c, spc_pdfm.c, spc_util.c, xbb.c:
+	Support pagebox=artbox etc. in PDF inclusion. It works with a new
+	dvipdfmx.def. Thanks Y. Terada.
+
+2015-07-18  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* epdf.c, pdfobj.c: Try to embed a PDF image, even if the PDF version
+	is newer than the setting.
+
+2015-07-08  Simon Cozens  <simon@simon-cozens.org>
+
+	* pngimage.c: Fixed a typo "XObjcect" => "XObject".
+
+2015-07-07  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* Makefile.am: Better dependencies for 'make check'.
+	* ac/dvipdfm-x.ac: Fixed a typo.
+	* xdvipdfmx.test: Fixed a typo.
+
+2015-07-06  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* dpxcrypt.c: Bugfix: Replace byte => uint8_t.
+	* dpxcrypt.[ch]: Replace u{8,32,64} => uint{8,32,64}_t.
+	* pdfencrypt.c: Declare pdf_enc_init() as static.
+	drop useless cast (const char *) => (char *).
+	* unicode.h: Drop unnecessary #include <inttypes.h>.
+
+2015-07-04  Shunsaku Hirata  <shunsaku.hirata74@gmail.com>
+
+	* jpegimage.c: Use size_t, uint32_t,... instead of short/long int.
+	* dpxcrypt.c/h, dvi.c/h, pdfencrypt.c/h, dvipdfmx.c, pdfobj.c:
+	Add AES encryption support in PDF ecryption.
+	* pngimage.c : Support images with 16 bit depth.
+	* unicode.c/h: Add UTF-8 decoding function.
+
 2015-05-23  Jiang Jiang  <gzjjgod@gmail.com>
 
 	* dvi.c: Fix Type1 font encoding and metrics.

@@ -174,11 +174,12 @@ void t1_free(void);
 extern int t1_length1, t1_length2, t1_length3;
 
 /* writetype2.c */
-void writetype2(PDF, fd_entry *);
+boolean writetype2(PDF, fd_entry *);
 extern unsigned long cidtogid_obj;
 pdf_obj *pdf_new_stream(void);
 void pdf_add_stream(pdf_obj * stream, unsigned char *buf, long len);
 void pdf_release_obj(pdf_obj * stream);
+unsigned long ttc_read_offset(sfnt * sfont, int ttc_idx, fd_entry *fd);
 
 /* subfont.c */
 void sfd_free(void);
@@ -202,9 +203,7 @@ int readchar(boolean, chardesc *);
 extern char notdef[];
 
 /* vfovf.c */
-internal_font_number letter_space_font(internal_font_number f,
-                                       int e, boolean nolig);
-internal_font_number auto_expand_font(internal_font_number f, int e);
+internal_font_number letter_space_font(internal_font_number f, int e, boolean nolig);
 void pdf_check_vf(internal_font_number f);
 internal_font_number copy_font_info(internal_font_number f);
 

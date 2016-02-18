@@ -508,12 +508,13 @@ modstrings (pdf_obj *kp, pdf_obj *vp, void *dp)
       CMap *cmap = CMap_cache_get(cd->cmap_id);
       if (needreencode(kp, vp, cd))
         r = reencodestring(cmap, vp);
-    } else if (is_xdv) {
+    } else if (is_xdv && cd && cd->taintkeys) {
       /* Please fix this... PDF string object is not always a text string.
        * needreencode() is assumed to do a simple check if given string
        * object is actually a text string.
        */
-      r = maybe_reencode_utf8(vp);
+      if (needreencode(kp, vp, cd))
+        r = maybe_reencode_utf8(vp);
     }
     if (r < 0) /* error occured... */
       WARN("Failed to convert input string to UTF16...");
@@ -1073,8 +1074,10 @@ spc_handler_pdfm_dest (struct spc_env *spe, struct spc_arg *args)
     return  -1;
   }
 
+#if 0
   if (is_xdv && maybe_reencode_utf8(name) < 0)
     WARN("Failed to convert input string to UTF16...");
+#endif
 
   array = parse_pdf_object(&args->curptr, args->endptr, NULL);
   if (!array) {

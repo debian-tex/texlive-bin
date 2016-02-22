@@ -39,7 +39,7 @@
  dvi_locate_native_font (const char *filename, uint32_t index,
                          spt_t ptsize, int layout_dir, int extend, int slant, int embolden)
  {
-@@ -1001,6 +1029,9 @@
+@@ -1000,6 +1028,9 @@
      loaded_fonts[cur_id].numGlyphs = cffont->num_glyphs;
  
      DPXFCLOSE(fp);

@@ -4,7 +4,7 @@
 
 --- texlive-bin.orig/texk/dvipdfm-x/dvi.c
 +++ texlive-bin/texk/dvipdfm-x/dvi.c
-@@ -1026,7 +1026,8 @@
+@@ -1025,7 +1025,8 @@
        ERROR("Failed to read Type 1 font \"%s\".", filename);
  
      loaded_fonts[cur_id].cffont = cffont;

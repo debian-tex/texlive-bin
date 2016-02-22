@@ -284,20 +284,25 @@ else
 fi
 AC_SUBST([KPATHSEA_PATHS_H])
 
-dnl Check for Object::initCmd(const char *) etc
+# Check of poppler 0.25 or better
+AS_CASE([$with_system_poppler],
+        [yes], [dnl
 KPSE_ADD_FLAGS([poppler])
 AC_LANG_PUSH([C++])
-AC_MSG_CHECKING([for Object::[initCmd(const char*)] etc])
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <Object.h>]],
-                                   [[Object *obj; const char *name;
-obj->initCmd(name)->isStream(name);]])],
-                  [kpse_cv_have_Object_initCmd_const_charp=yes],
-                  [kpse_cv_have_Object_initCmd_const_charp=no])
-AC_MSG_RESULT([$kpse_cv_have_Object_initCmd_const_charp])
-AC_LANG_POP([C++])
-if test "x$kpse_cv_have_Object_initCmd_const_charp" = xyes; then
-  AC_DEFINE([HAVE_OBJECT_INITCMD_CONST_CHARP], 1,
-            [Define to 1 if you have the `Object::initCmd(const char*)' function.])
+AC_MSG_CHECKING([for StructTreeRoot.h (poppler 0.25 or better)])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <stdio.h>
+#include <StructTreeRoot.h>]],
+                                   [[PDFDoc *doc;
+                                     Dict *dict;
+                                     StructTreeRoot root(doc, dict);]])],
+                  [kpse_cv_have_StructTreeRoot_h=yes],
+                  [kpse_cv_have_StructTreeRoot_h=no])
+AC_MSG_RESULT([$kpse_cv_have_StructTreeRoot_h])
+AC_LANG_POP([C++])],
+        [kpse_cv_have_StructTreeRoot_h=yes])
+if test "x$kpse_cv_have_StructTreeRoot_h" = xyes; then
+  AC_DEFINE([HAVE_STRUCTTREEROOT_H], 1,
+            [Define to 1 if you have the <StructTreeRoot.h> header file.])
 fi
 KPSE_RESTORE_FLAGS
 

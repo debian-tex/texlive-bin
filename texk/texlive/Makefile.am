@@ -14,7 +14,6 @@ EXTRA_DIST = w32_wrapper w64_wrapper
 
 ## Tests
 ##
-TEST_EXTENSIONS = .pl
 TESTS = tests/updmap-cmdline-test.pl
 EXTRA_DIST += $(TESTS)
 

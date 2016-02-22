@@ -1,6 +1,6 @@
 /* This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
 
-    Copyright (C) 2002-2016 by Jin-Hwan Cho and Shunsaku Hirata,
+    Copyright (C) 2002-2015 by Jin-Hwan Cho and Shunsaku Hirata,
     the dvipdfmx project team.
 
     Copyright (C) 1998, 1999 by Mark A. Wicks <mwicks@kettering.edu>
@@ -269,12 +269,6 @@ bmp_include_image (pdf_ximage *ximage, FILE *fp)
     RELEASE(stream_data_ptr);
   }
 
-  /* Predictor is usually not so efficient for indexed images. */
-  if (hdr.bit_count >= 24 && info.bits_per_component >= 8 &&
-      info.height > 64) {
-    pdf_stream_set_predictor(stream, 15, info.width,
-                             info.bits_per_component, info.num_components);
-  }
   pdf_ximage_set_image(ximage, &info, stream);
 
   return 0;

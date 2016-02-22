@@ -213,7 +213,6 @@ extern void make_subset_tag(fd_entry *);
 extern void setjobid(int, int, int, int);
 extern void writestreamlength(longinteger, longinteger);
 extern void printID(strnumber);
-extern void printIDalt(strnumber);
 extern void printcreationdate(void);
 extern void printmoddate(void);
 extern void escapename(poolpointer in);

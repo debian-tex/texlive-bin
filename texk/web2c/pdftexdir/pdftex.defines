@@ -64,7 +64,6 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 @define procedure printcreationdate;
 @define procedure printmoddate;
 @define procedure printID();
-@define procedure printIDalt();
 @define procedure setjobid();
 @define procedure unescapehex();
 @define procedure writestreamlength();

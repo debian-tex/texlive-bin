@@ -840,15 +840,14 @@ postamble
 /* read postamble from dvi and write in dtl */
 /* return number of bytes */
 {
-  S4 p;
-  U4 num, den, mag, l, u, s, t;
+  U4 p, num, den, mag, l, u, s, t;
 
   fprintf (dtl, "post");
 
   /* p[4] = pointer to final bop */
   fprintf (dtl, " ");
-  p = rsigned (4, dvi);
-  fprintf (dtl, SF4, p);
+  p = runsigned (4, dvi);
+  fprintf (dtl, UF4, p);
 
   /* num[4] = numerator of DVI unit */
   fprintf (dtl, " ");
@@ -902,8 +901,7 @@ postpost
 /* read post_post from dvi and write in dtl */
 /* return number of bytes */
 {
-  S4 q;
-  U4 id;
+  U4 q, id;
   int b223;  /* hope this is 8-bit clean */
   int n223;  /* number of "223" bytes in final padding */
 
@@ -911,8 +909,8 @@ postpost
 
   /* q[4] = pointer to post command */
   fprintf (dtl, " ");
-  q = rsigned (4, dvi);
-  fprintf (dtl, SF4, q);
+  q = runsigned (4, dvi);
+  fprintf (dtl, UF4, q);
 
   /* i[1] = DVI identification byte */
   fprintf (dtl, " ");

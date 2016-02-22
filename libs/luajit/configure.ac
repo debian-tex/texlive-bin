@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
 dnl
-dnl   Copyright (C) 2014, 2015 Peter Breitenlohner <tex-live@tug.org>
+dnl   Copyright (C) 2014 Peter Breitenlohner <tex-live@tug.org>
 dnl
 dnl   This file is free software; the copyright holder
 dnl   gives unlimited permission to copy and/or distribute it,
@@ -9,7 +9,7 @@ dnl
 m4_include([version.ac])[] dnl define luajit_version
 AC_INIT([luajit for TeX Live], luajit_version, [tex-k@tug.org])
 AC_PREREQ([2.65])
-AC_CONFIG_SRCDIR([LuaJIT-src/src/luajit.h])
+AC_CONFIG_SRCDIR([LuaJIT-]luajit_version[/src/luajit.h])
 AC_CONFIG_AUX_DIR([../../build-aux])
 AC_CONFIG_MACRO_DIRS([../../m4 m4])
 
@@ -18,7 +18,6 @@ KPSE_BASIC([luajit])
 KPSE_CANONICAL_HOST
 
 AC_PROG_CC
-AC_PROG_CC_C99
 AM_PROG_AS
 AC_PROG_RANLIB
 AC_PROG_LN_S
@@ -48,23 +47,13 @@ AS_CASE([$host_os],
 LJ_ARCH()
 AS_CASE([$LJHOST],
         [Windows], [LJVM_MODE=peobj
-                    LUAJIT_CFLAGS="$LUAJIT_CFLAGS -malign-double"],
+                    LUAJIT_DEFINES="$LUAJIT_DEFINES -malign-double"],
         [Darwin | iOS], [LJVM_MODE=machasm],
                         [LJVM_MODE=elfasm])
-lj_save_CFLAGS=$CFLAGS
-CFLAGS="$CFLAGS -fno-stack-protector"
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]],[[]])],
-                  [LUAJIT_CFLAGS="$LUAJIT_CFLAGS -fno-stack-protector"])
-CFLAGS=$lj_save_CFLAGS
 AM_CONDITIONAL([PEOBJ], [test "x$LJVM_MODE" = xpeobj])
 
-AC_SUBST([LUAJIT_CFLAGS])
 AC_SUBST([LJHOST])
 AC_SUBST([LJVM_MODE])
-
-AS_CASE([$host_os:$host_cpu],
-        [*darwin*:x86_64], [LIBLUAJIT_LDEXTRA='-image_base 7fff04c4a000'])
-AC_SUBST([LIBLUAJIT_LDEXTRA])
 
 AM_CONDITIONAL([build], [test "x$enable_build" != xno])
 
@@ -76,7 +65,7 @@ AS_IF([test "x$lj_cpp" != xok],
 echo timestamp >config.force
 fi
 
-AC_SUBST([LUAJIT_TREE], [LuaJIT-src])
+AC_SUBST([LUAJIT_TREE], [LuaJIT-]luajit_version)
 
 dnl Not used but avoids putting a zillion useless -D's on the command line.
 AC_CONFIG_HEADERS([config.h])

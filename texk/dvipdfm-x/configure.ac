@@ -6,7 +6,7 @@ dnl   This file is free software; the copyright holder
 dnl   gives unlimited permission to copy and/or distribute it,
 dnl   with or without modifications, as long as this notice is preserved.
 dnl
-AC_INIT([dvipdfm-x (TeX Live)], [20160106], [tex-k@tug.org])
+AC_INIT([dvipdfm-x (TeX Live)], [20150315], [tex-k@tug.org])
 AC_PREREQ([2.65])
 AC_CONFIG_SRCDIR([agl.c])
 AC_CONFIG_AUX_DIR([../../build-aux])
@@ -14,6 +14,8 @@ AC_CONFIG_MACRO_DIR([../../m4])
 
 dnl Common code for all programs using libkpathsea.
 KPSE_COMMON([dvipdfm-x])
+
+m4_include([ac/dvipdfm-x.ac])
 
 AC_CONFIG_HEADERS([config.h])
 
@@ -88,6 +90,9 @@ AC_DEFINE([HAVE_ZLIB_COMPRESS2], 1, [Define if your zlib has the compress2 funct
 AC_DEFINE([HAVE_LIBPNG], 1, [Define if you have libpng and its headers.])
 
 KPSE_WIN32_CALL
+
+AM_CONDITIONAL([DVIPDFMX], [test "x$enable_dvipdfmx" != xno])
+AM_CONDITIONAL([XDVIPDFMX], [test "x$enable_xdvipdfmx" != xno])
 
 AC_CONFIG_FILES([Makefile])
 

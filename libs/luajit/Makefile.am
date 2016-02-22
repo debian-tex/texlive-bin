@@ -10,27 +10,24 @@ EXTRA_DIST = $(LUAJIT_TREE)
 
 ## Changes applied to the original source tree
 ##
-EXTRA_DIST += LuaJIT-PATCHES
+EXTRA_DIST += $(LUAJIT_TREE)-PATCHES
 
 # Files not to be distributed
 include $(srcdir)/../../am/dist_hook.am
 NEVER_NAMES += $(NEVER_NAMES_SUB) $(NEVER_NAMES_LT)
 
-AM_CPPFLAGS = -I$(srcdir)/$(LUAJIT_TREE)/src $(LUAJIT_DEFINES) -U_FORTIFY_SOURCE
-AM_CFLAGS = $(LUAJIT_CFLAGS) -Wall
-AM_CCASFLAGS = $(LUAJIT_CFLAGS)
+AM_CPPFLAGS = -I$(srcdir)/$(LUAJIT_TREE)/src $(LUAJIT_DEFINES)
+AM_CFLAGS = -Wall
 
 SUBDIRS = . native include
 
 lib_LTLIBRARIES = libtexluajit.la
 
-libtexluajit_la_LDFLAGS = -bindir @bindir@ -no-undefined -version-info $(LUAJIT_LT_VERSINFO) $(LIBLUAJIT_LDEXTRA)
-
-dist_libtexluajit_la_SOURCES = \
-	lbitlib.c
+libtexluajit_la_LDFLAGS = -bindir @bindir@ -no-undefined -version-info $(LUAJIT_LT_VERSINFO)
 
 nodist_libtexluajit_la_SOURCES = \
 	$(ljlib_sources) \
+	@LUAJIT_TREE@/src/lbitlib.c \
 	@LUAJIT_TREE@/src/lib_aux.c \
 	@LUAJIT_TREE@/src/lib_init.c \
 	@LUAJIT_TREE@/src/lj_alloc.c \
@@ -39,7 +36,6 @@ nodist_libtexluajit_la_SOURCES = \
 	@LUAJIT_TREE@/src/lj_bc.c \
 	@LUAJIT_TREE@/src/lj_bcread.c \
 	@LUAJIT_TREE@/src/lj_bcwrite.c \
-	@LUAJIT_TREE@/src/lj_buf.c \
 	@LUAJIT_TREE@/src/lj_carith.c \
 	@LUAJIT_TREE@/src/lj_ccall.c \
 	@LUAJIT_TREE@/src/lj_ccallback.c \
@@ -72,12 +68,10 @@ nodist_libtexluajit_la_SOURCES = \
 	@LUAJIT_TREE@/src/lj_opt_sink.c \
 	@LUAJIT_TREE@/src/lj_opt_split.c \
 	@LUAJIT_TREE@/src/lj_parse.c \
-	@LUAJIT_TREE@/src/lj_profile.c \
 	@LUAJIT_TREE@/src/lj_record.c \
 	@LUAJIT_TREE@/src/lj_snap.c \
 	@LUAJIT_TREE@/src/lj_state.c \
 	@LUAJIT_TREE@/src/lj_str.c \
-	@LUAJIT_TREE@/src/lj_strfmt.c \
 	@LUAJIT_TREE@/src/lj_strscan.c \
 	@LUAJIT_TREE@/src/lj_tab.c \
 	@LUAJIT_TREE@/src/lj_trace.c \
@@ -88,7 +82,7 @@ nodist_libtexluajit_la_SOURCES = \
 if PEOBJ
 libtexluajit_la_LIBADD = lj_vm_obj.lo
 else !PEOBJ
-nodist_libtexluajit_la_SOURCES += lj_vm_asm.S
+nodist_libtexluajit_la_SOURCES += lj_vm_asm.s
 endif !PEOBJ
 
 ljlib_sources = \
@@ -108,7 +102,7 @@ $(libtexluajit_la_OBJECTS): $(HDRGEN)
 
 # When cross-compiling, EXEEXT for the build and host systems may differ.
 # Thus we depend on the auxiliary file native/buildvm-stamp.
-native/buildvm-stamp: $(ljlib_sources) lj_opt_fold.c
+native/buildvm-stamp: $(ljlib_sources)
 	cd native && $(MAKE) $(AM_MAKEFLAGS) buildvm-stamp
 
 HDRGEN = lj_bcdef.h lj_ffdef.h lj_libdef.h lj_recdef.h lj_folddef.h
@@ -125,10 +119,10 @@ lj_libdef.h: native/buildvm-stamp
 lj_recdef.h: native/buildvm-stamp
 	$(AM_V_GEN)native/buildvm -m recdef -o $@ $(ljlib_sources)
 
-lj_folddef.h: native/buildvm-stamp
-	$(AM_V_GEN)native/buildvm -m folddef -o $@ lj_opt_fold.c
+lj_folddef.h: native/buildvm-stamp $(LUAJIT_TREE)/src/lj_opt_fold.c
+	$(AM_V_GEN)native/buildvm -m folddef -o $@ $(srcdir)/$(LUAJIT_TREE)/src/lj_opt_fold.c
 
-lj_vm_obj.o lj_vm_asm.S: native/buildvm-stamp
+lj_vm_obj.o lj_vm_asm.s: native/buildvm-stamp
 	$(AM_V_GEN)native/buildvm -m $(LJVM_MODE) -o $@
 
 lj_vm_obj.lo: lj_vm_obj.o lib_base.lo
@@ -136,15 +130,15 @@ lj_vm_obj.lo: lj_vm_obj.o lib_base.lo
 	  && . ./$@ && test x"$$pic_object" == xnone \
 	  || cp lj_vm_obj.o .libs/lj_vm_obj.o
 
-$(ljlib_sources) lj_opt_fold.c: config.force
+$(ljlib_sources): config.force
 	@test -f $@ || { rm -f $@; \
 	  if $(AM_V_P); then echo "$(LN_S) $(srcdir)/$(LUAJIT_TREE)/src/$@ $@"; \
 	    else echo "  LINK     $@"; fi; \
 	  $(LN_S) $(srcdir)/$(LUAJIT_TREE)/src/$@ $@; } || exit 1
 
-CLEANFILES = $(HDRGEN) $(ljlib_sources) lj_opt_fold.c lj_vm_asm.S
+CLEANFILES = $(HDRGEN) $(ljlib_sources) lj_vm_asm.s
 
-CONFIG_CLEAN_FILES = dynasm_flags native_flags system_flags
+CONFIG_CLEAN_FILES = dynasm_flags native_flags
 
 luajitincludedir = ${includedir}/texluajit
 
@@ -165,16 +159,14 @@ check_PROGRAMS = jittest luajittry
 dist_check_SCRIPTS = luajit.test luajiterr.test
 TESTS = luajit.test luajiterr.test
 endif build
-luajit.log: jittest$(EXEEXT)
-luajiterr.log: luajittry$(EXEEXT)
 
 jittest_SOURCES = jittest.c
 
-jittest_CPPFLAGS = -Iinclude $(LUAJIT_DEFINES)
+jittest_CPPFLAGS = -Iinclude
 
 nodist_luajittry_SOURCES = @LUAJIT_TREE@/src/luajit.c
 
-luajittry_CPPFLAGS = -Iinclude $(LUAJIT_DEFINES)
+luajittry_CPPFLAGS = -Iinclude
 luajittry_LDFLAGS = $(LUAJIT_LDEXTRA)
 
 LDADD = libtexluajit.la

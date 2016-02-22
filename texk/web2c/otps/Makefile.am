@@ -55,8 +55,6 @@ outocp_DEPENDENCIES = $(proglib) $(KPATHSEA_DEPEND)
 if OTANGLE
 TESTS = otp2ocp.test outocp.test
 endif OTANGLE
-otp2ocp.log: otp2ocp$(EXEEXT)
-outocp.log: outocp$(EXEEXT)
 
 EXTRA_DIST += \
 	otp2ocp.test \

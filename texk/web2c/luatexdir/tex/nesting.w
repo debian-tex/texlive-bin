@@ -25,6 +25,7 @@
 @ these are for |show_activities|
 @c
 #define page_goal page_so_far[0]
+#define pdf_ignored_dimen dimen_par(pdf_ignored_dimen_code)
 #define count(A) eqtb[count_base+(A)].cint
 
 
@@ -406,7 +407,7 @@ void show_activities(void)
         switch (abs(m) / (max_command_cmd + 1)) {
         case 0:
             tprint_nl("prevdepth ");
-            if (nest[p].prev_depth_field <= ignore_depth)
+            if (nest[p].prev_depth_field <= pdf_ignored_dimen)
                 tprint("ignored");
             else
                 print_scaled(nest[p].prev_depth_field);

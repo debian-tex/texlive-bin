@@ -5,8 +5,7 @@ Extra utilities we (optionally) compile for TeX Live.
 See comments in ../texk/README.
 
 
-asymptote 2.36 - checked 7feb16
-  (this version for dev build testing only, not to be installed)
+asymptote 2.35 - checked 20may15
   update to TL from CTAN, to include prebuilt doc.
   see http://tug.org/texlive/build.html#asymptote
   and tlpkg/bin/tl-update-asy
@@ -15,10 +14,10 @@ devnag - from devanagari package installed in texmf-dist.
 
 lacheck - maintained here, by us
 
-m-tx 0.62 - checked 10feb16
+m-tx 0.60d - checked 16apr12
   http://mirror.ctan.org/support/m-tx/
 
-pmx 2.7.3 - checked 10feb16
+pmx 2.7.0 - checked 25nov14
   http://mirror.ctan.org/support/pmx/
 
 ps2eps 1.68 - checked 10may12

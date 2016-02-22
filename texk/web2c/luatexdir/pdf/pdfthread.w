@@ -19,20 +19,23 @@
 
 @ @c
 
+
 #include "ptexlib.h"
 
 @ @c
+#define pdf_thread_margin        dimen_par(pdf_thread_margin_code)
 #define page_width dimen_par(page_width_code)
 #define page_height dimen_par(page_height_code)
 
-@ Threads are handled in similar way as link annotations
+@ Threads are handled in similar way as link annotations 
 @c
 void append_bead(PDF pdf, halfword p)
 {
     int a, b, c, t;
     if (global_shipping_mode == SHIPPING_FORM)
-        normal_error("pdf backend", "threads cannot be inside an xform");
-    t = pdf_get_obj(pdf, obj_type_thread, pdf_thread_id(p), pdf_thread_named_id(p));
+        pdf_error("ext4", "threads cannot be inside an XForm");
+    t = pdf_get_obj(pdf, obj_type_thread, pdf_thread_id(p),
+                    pdf_thread_named_id(p));
     b = pdf_create_obj(pdf, obj_type_others, 0);
     obj_bead_ptr(pdf, b) = pdf_get_mem(pdf, pdfmem_bead_size);
     set_obj_bead_page(pdf, b, pdf->last_page);
@@ -61,7 +64,7 @@ void do_thread(PDF pdf, halfword p, halfword parent_box, scaledpos cur)
 {
     scaled_whd alt_rule;
     if ((type(p) == hlist_node) && (subtype(p) == pdf_start_thread_node))
-        normal_error("pdf backend", "'startthread' ended up in hlist");
+        pdf_error("ext4", "\\pdfstartthread ended up in hlist");
     if (doing_leaders)
         return;
     if (subtype(p) == pdf_start_thread_node) {
@@ -85,8 +88,9 @@ void do_thread(PDF pdf, halfword p, halfword parent_box, scaledpos cur)
 @ @c
 void append_thread(PDF pdf, halfword parent_box, scaledpos cur)
 {
+    halfword p;
     scaled_whd alt_rule;
-    halfword p = new_node(whatsit_node, pdf_thread_data_node);
+    p = new_node(whatsit_node, pdf_thread_data_node);
     width(p) = pdf->thread.wd;
     height(p) = pdf->thread.ht;
     depth(p) = pdf->thread.dp;
@@ -111,23 +115,24 @@ void end_thread(PDF pdf, halfword p)
 {
     scaledpos pos = pdf->posstruct->pos;
     if (type(p) == hlist_node)
-        normal_error("pdf backend", "'endthread' ended up in hlist");
+        pdf_error("ext4", "\\pdfendthread ended up in hlist");
     if (pdf->thread_level != cur_s)
-        normal_error("pdf backend", "'endthread' ended up in different nesting level than 'startthread'");
+        pdf_error("ext4",
+                  "\\pdfendthread ended up in different nesting level than \\pdfstartthread");
     if (is_running(pdf->thread.dp) && (pdf->last_thread != null)) {
         switch (pdf->posstruct->dir) {
-            case dir_TLT:
-            case dir_TRT:
-                pdf_ann_bottom(pdf->last_thread) = pos.v - pdf_thread_margin;
-                break;
-            case dir_LTL:
-                pdf_ann_right(pdf->last_thread) = pos.h + pdf_thread_margin;
-                break;
-            case dir_RTT:
-                pdf_ann_left(pdf->last_thread) = pos.h - pdf_thread_margin;
-                break;
-            default:
-                formatted_warning("pdf backend","forcing bad dir %i to TLT in end tread",pdf->posstruct->dir);
+        case dir_TLT:
+        case dir_TRT:
+            pdf_ann_bottom(pdf->last_thread) = pos.v - pdf_thread_margin;
+            break;
+        case dir_LTL:
+            pdf_ann_right(pdf->last_thread) = pos.h + pdf_thread_margin;
+            break;
+        case dir_RTT:
+            pdf_ann_left(pdf->last_thread) = pos.h - pdf_thread_margin;
+            break;
+        default:
+            assert(0);
         }
     }
     if (pdf->last_thread_named_id)
@@ -135,7 +140,7 @@ void end_thread(PDF pdf, halfword p)
     pdf->last_thread = null;
 }
 
-@ The following function are needed for outputing article thread.
+@ The following function are needed for outputing article thread. 
 @c
 void thread_title(PDF pdf, int t)
 {
@@ -151,12 +156,18 @@ void thread_title(PDF pdf, int t)
 void pdf_fix_thread(PDF pdf, int t)
 {
     halfword a;
+    pdf_warning("thread", "destination", false, false);
     if (obj_info(pdf, t) < 0) {
-        char *ss = makecstring(-obj_info(pdf, t));
-        formatted_warning("pdf backend", "unknown thread destination name '%s'",ss);
+        tprint("name{");
+        print(-obj_info(pdf, t));
+        tprint("}");
     } else {
-        formatted_warning("pdf backend", "unknown thread destination num '%d'",obj_info(pdf, t));
+        tprint("num");
+        print_int(obj_info(pdf, t));
     }
+    tprint(" has been referenced but does not exist, replaced by a fixed one");
+    print_ln();
+    print_ln();
     a = pdf_create_obj(pdf, obj_type_others, 0);
     pdf_begin_obj(pdf, a, OBJSTM_ALWAYS);
     pdf_begin_dict(pdf);
@@ -173,6 +184,7 @@ void pdf_fix_thread(PDF pdf, int t)
     pdf_end_array(pdf);
     pdf_end_dict(pdf);
     pdf_end_obj(pdf);
+
     pdf_begin_obj(pdf, t, OBJSTM_ALWAYS);
     pdf_begin_dict(pdf);
     pdf_add_name(pdf, "I");
@@ -234,17 +246,17 @@ void scan_thread_id(void)
     if (scan_keyword("num")) {
         scan_int();
         if (cur_val <= 0)
-            normal_error("pdf backend", "num identifier must be positive");
+            pdf_error("ext1", "num identifier must be positive");
         if (cur_val > max_halfword)
-            normal_error("pdf backend", "number too big");
+            pdf_error("ext1", "number too big");
         set_pdf_thread_id(cur_list.tail_field, cur_val);
         set_pdf_thread_named_id(cur_list.tail_field, 0);
     } else if (scan_keyword("name")) {
-        scan_toks(false, true);
+        scan_pdf_ext_toks();
         set_pdf_thread_id(cur_list.tail_field, def_ref);
         set_pdf_thread_named_id(cur_list.tail_field, 1);
     } else {
-        normal_error("pdf backend", "identifier type missing");
+        pdf_error("ext1", "identifier type missing");
     }
 }
 
@@ -266,9 +278,9 @@ void print_bead_rectangles(PDF pdf)
             l = pdf_create_obj(pdf, obj_type_others, 0);
             pdf_begin_obj(pdf, l, OBJSTM_ALWAYS);
             pdf_begin_array(pdf);
-            i = obj_bead_data(pdf, k->info); /* pointer to a whatsit or whatsit-like node */
+            i = obj_bead_data(pdf, k->info);    /* pointer to a whatsit or whatsit-like node */
             pdf_add_rect_spec(pdf, i);
-            if (subtype(i) == pdf_thread_data_node)
+            if (subtype(i) == pdf_thread_data_node)     /* thanh says it mis be destroyed here */
                 flush_node(i);
             pdf_end_array(pdf);
             pdf_end_obj(pdf);

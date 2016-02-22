@@ -28,9 +28,10 @@ incompatible with TeX after |fetch()| has detected an error condition.
 
 \item{} Knuth also had a |font_glue()| optimization. I've removed that
 because it was a bit of dirty programming and it also was
-problematic |if 0 != null|.
+problematic |if 0 != null|. 
 
 @c
+
 
 #include "ptexlib.h"
 #include "lua/luatex-api.h"
@@ -95,7 +96,6 @@ int new_font(void)
     int k;
     int id;
     charinfo *ci;
-    sa_tree_item sa_value = { 0 };
     id = new_font_id();
     font_bytes += (int) sizeof(texfont);
     /* most stuff is zero */
@@ -125,7 +125,8 @@ int new_font(void)
         set_font_param(id, k, 0);
     }
     /* character info zero is reserved for notdef */
-    font_tables[id]->characters = new_sa_tree(1, 1, sa_value);    /* stack size 1, default item value 0 */
+    font_tables[id]->characters = new_sa_tree(1, 0);    /* stack size 1, default item value 0 */
+
     ci = xcalloc(1, sizeof(charinfo));
     set_charinfo_name(ci, xstrdup(".notdef"));
     font_tables[id]->charinfo = ci;
@@ -147,24 +148,23 @@ void font_malloc_charinfo(internal_font_number f, int num)
 }
 
 @ @c
-#define find_charinfo_id(f,c) (get_sa_item(font_tables[f]->characters,c).int_value)
+#define find_charinfo_id(f,c) get_sa_item(font_tables[f]->characters,c)
 
 charinfo *get_charinfo(internal_font_number f, int c)
 {
-    int glyph;
+    sa_tree_item glyph;
     charinfo *ci;
     if (proper_char_index(c)) {
-        glyph = get_sa_item(font_tables[f]->characters, c).int_value;
+        glyph = get_sa_item(font_tables[f]->characters, c);
         if (!glyph) {
-            sa_tree_item sa_value = { 0 };
+
             int tglyph = ++font_tables[f]->charinfo_count;
             if (tglyph >= font_tables[f]->charinfo_size) {
                 font_malloc_charinfo(f, 256);
             }
             font_tables[f]->charinfo[tglyph].ef = 1000; /* init */
-            sa_value.int_value = tglyph;
-            set_sa_item(font_tables[f]->characters, c, sa_value, 1); /* 1 = global */
-            glyph = tglyph;
+            set_sa_item(font_tables[f]->characters, c, (sa_tree_item) tglyph, 1);       /* 1= global */
+            glyph = (sa_tree_item) tglyph;
         }
         return &(font_tables[f]->charinfo[glyph]);
     } else if (c == left_boundarychar) {
@@ -188,13 +188,13 @@ charinfo *get_charinfo(internal_font_number f, int c)
 @ @c
 static void set_charinfo(internal_font_number f, int c, charinfo * ci)
 {
-    int glyph;
+    sa_tree_item glyph;
     if (proper_char_index(c)) {
-        glyph = get_sa_item(font_tables[f]->characters, c).int_value;
+        glyph = get_sa_item(font_tables[f]->characters, c);
         if (glyph) {
             font_tables[f]->charinfo[glyph] = *ci;
         } else {
-            normal_error("font","character insertion failed");
+            luatex_fail("font: %s", "character insertion failed");
         }
     } else if (c == left_boundarychar) {
         set_left_boundary(f, ci);
@@ -259,10 +259,13 @@ charinfo *copy_charinfo(charinfo * ci)
 
     /* horizontal and vertical extenders */
     if (get_charinfo_vert_variants(ci) != NULL) {
-        set_charinfo_vert_variants(co, copy_variants(get_charinfo_vert_variants(ci)));
+        set_charinfo_vert_variants(co,
+                                   copy_variants(get_charinfo_vert_variants
+                                                 (ci)));
     }
     if (get_charinfo_hor_variants(ci) != NULL) {
-        set_charinfo_hor_variants(co, copy_variants(get_charinfo_hor_variants(ci)));
+        set_charinfo_hor_variants(co,
+                                  copy_variants(get_charinfo_hor_variants(ci)));
     }
     x = ci->top_left_math_kerns;
     co->top_left_math_kerns = x;
@@ -270,8 +273,10 @@ charinfo *copy_charinfo(charinfo * ci)
         co->top_left_math_kern_array =
             xmalloc((unsigned) (2 * (int) sizeof(scaled) * x));
         for (k = 0; k < co->top_left_math_kerns; k++) {
-            co->top_left_math_kern_array[(2 * k)] = ci->top_left_math_kern_array[(2 * k)];
-            co->top_left_math_kern_array[(2 * k) + 1] = ci->top_left_math_kern_array[(2 * k) + 1];
+            co->top_left_math_kern_array[(2 * k)] =
+                ci->top_left_math_kern_array[(2 * k)];
+            co->top_left_math_kern_array[(2 * k) + 1] =
+                ci->top_left_math_kern_array[(2 * k) + 1];
         }
     }
     x = ci->top_right_math_kerns;
@@ -280,8 +285,10 @@ charinfo *copy_charinfo(charinfo * ci)
         co->top_right_math_kern_array =
             xmalloc((unsigned) (2 * (int) sizeof(scaled) * x));
         for (k = 0; k < co->top_right_math_kerns; k++) {
-            co->top_right_math_kern_array[(2 * k)] = ci->top_right_math_kern_array[(2 * k)];
-            co->top_right_math_kern_array[(2 * k) + 1] = ci->top_right_math_kern_array[(2 * k) + 1];
+            co->top_right_math_kern_array[(2 * k)] =
+                ci->top_right_math_kern_array[(2 * k)];
+            co->top_right_math_kern_array[(2 * k) + 1] =
+                ci->top_right_math_kern_array[(2 * k) + 1];
         }
     }
     x = ci->bottom_right_math_kerns;
@@ -290,8 +297,10 @@ charinfo *copy_charinfo(charinfo * ci)
         co->bottom_right_math_kern_array =
             xmalloc((unsigned) (2 * (int) sizeof(scaled) * x));
         for (k = 0; k < co->bottom_right_math_kerns; k++) {
-            co->bottom_right_math_kern_array[(2 * k)] = ci->bottom_right_math_kern_array[(2 * k)];
-            co->bottom_right_math_kern_array[(2 * k) + 1] = ci->bottom_right_math_kern_array[(2 * k) + 1];
+            co->bottom_right_math_kern_array[(2 * k)] =
+                ci->bottom_right_math_kern_array[(2 * k)];
+            co->bottom_right_math_kern_array[(2 * k) + 1] =
+                ci->bottom_right_math_kern_array[(2 * k) + 1];
         }
     }
     x = ci->bottom_left_math_kerns;
@@ -300,10 +309,14 @@ charinfo *copy_charinfo(charinfo * ci)
         co->bottom_left_math_kern_array =
             xmalloc((unsigned) (2 * (int) sizeof(scaled) * x));
         for (k = 0; k < co->bottom_left_math_kerns; k++) {
-            co->bottom_left_math_kern_array[(2 * k)] = ci->bottom_left_math_kern_array[(2 * k)];
-            co->bottom_left_math_kern_array[(2 * k) + 1] = ci->bottom_left_math_kern_array[(2 * k) + 1];
+            co->bottom_left_math_kern_array[(2 * k)] =
+                ci->bottom_left_math_kern_array[(2 * k)];
+            co->bottom_left_math_kern_array[(2 * k) + 1] =
+                ci->bottom_left_math_kern_array[(2 * k) + 1];
         }
     }
+
+
     return co;
 }
 
@@ -362,8 +375,8 @@ static int lua_char_exists_callback(internal_font_number f, int c)
             lua_pop(L, 2);
             return 0;
         }
-        lua_pushinteger(L, f);
-        lua_pushinteger(L, c);
+        lua_pushnumber(L, f);
+        lua_pushnumber(L, c);
         if (lua_pcall(L, 2, 1, 0) != 0) {       /* two args, 1 result */
             fprintf(stdout, "error: %s\n", lua_tostring(L, -1));
             lua_pop(L, 2);
@@ -485,6 +498,7 @@ extinfo *copy_variants(extinfo * o)
     return h;
 }
 
+
 @ @c
 static void dump_charinfo_variants(extinfo * o)
 {
@@ -534,11 +548,6 @@ void set_charinfo_depth(charinfo * ci, scaled val)
 void set_charinfo_italic(charinfo * ci, scaled val)
 {
     ci->italic = val;
-}
-
-void set_charinfo_vert_italic(charinfo * ci, scaled val)
-{
-    ci->vert_italic = val;
 }
 
 void set_charinfo_top_accent(charinfo * ci, scaled val)
@@ -825,7 +834,7 @@ void set_charinfo_extensible(charinfo * ci, int top, int bot, int mid, int rep)
     }
 }
 
-@ Note that many more simple things like this are implemented as macros
+@ Note that many more simple things like this are implemented as macros 
 in the header file.
 
 @c
@@ -847,11 +856,6 @@ scaled get_charinfo_depth(charinfo * ci)
 scaled get_charinfo_italic(charinfo * ci)
 {
     return ci->italic;
-}
-
-scaled get_charinfo_vert_italic(charinfo * ci)
-{
-    return ci->vert_italic;
 }
 
 scaled get_charinfo_top_accent(charinfo * ci)
@@ -952,7 +956,8 @@ scaled calc_char_width(internal_font_number f, int c, int ex)
 {
     charinfo *ci = char_info(f, c);
     scaled w = get_charinfo_width(ci);
-    if (ex != 0)
+    //printf("ex=%d\n",ex);
+    if (ex != 0) 
         w = round_xn_over_d(w, 1000 + ex, 1000);
     return w;
 }
@@ -960,29 +965,21 @@ scaled calc_char_width(internal_font_number f, int c, int ex)
 scaled char_depth(internal_font_number f, int c)
 {
     charinfo *ci = char_info(f, c);
-    scaled d = get_charinfo_depth(ci);
-    return d;
+    scaled w = get_charinfo_depth(ci);
+    return w;
 }
 
 scaled char_height(internal_font_number f, int c)
 {
     charinfo *ci = char_info(f, c);
-    scaled h = get_charinfo_height(ci);
-    return h;
+    scaled w = get_charinfo_height(ci);
+    return w;
 }
 
 scaled char_italic(internal_font_number f, int c)
 {
     charinfo *ci = char_info(f, c);
-    scaled i = get_charinfo_italic(ci);
-    return i;
-}
-
-scaled char_vert_italic(internal_font_number f, int c)
-{
-    charinfo *ci = char_info(f, c);
-    scaled i = get_charinfo_vert_italic(ci);
-    return i;
+    return get_charinfo_italic(ci);
 }
 
 scaled char_top_accent(internal_font_number f, int c)
@@ -1083,6 +1080,7 @@ void set_font_math_params(internal_font_number f, int b)
         }
     }
 }
+
 
 @ @c
 int copy_font(int f)
@@ -1251,22 +1249,6 @@ boolean cmp_font_area(int id, str_number t)
     return 1;
 }
 
-@ Here come some subroutines to deal with expanded fonts for HZ-algorithm.
-return 1 == identical
-@c
-static boolean cmp_font_name(int id, char *tt)
-{
-    char *tid;
-    if (!is_valid_font(id))
-        return 0;
-    tid = font_name(id);
-    if (tt == NULL && tid == NULL)
-        return 1;
-    if (tt == NULL || tid == NULL || strcmp(tid, tt) != 0)
-        return 0;
-    return 1;
-}
-
 @ @c
 int test_no_ligatures(internal_font_number f)
 {
@@ -1343,6 +1325,7 @@ void set_tag_code(internal_font_number f, int c, int i)
     }
 }
 
+
 @ @c
 void set_lp_code(internal_font_number f, int c, int i)
 {
@@ -1376,8 +1359,10 @@ void set_no_ligatures(internal_font_number f)
 {
     int c;
     charinfo *co;
+
     if (font_tables[f]->ligatures_disabled)
         return;
+
     co = char_info(f, left_boundarychar);
     set_charinfo_ligatures(co, NULL);
     co = char_info(f, right_boundarychar);      /* this is weird */
@@ -1392,7 +1377,7 @@ void set_no_ligatures(internal_font_number f)
 @ @c
 liginfo get_ligature(internal_font_number f, int lc, int rc)
 {
-    int k = 0;
+    int k;
     liginfo t, u;
     charinfo *co;
     t.lig = 0;
@@ -1400,6 +1385,7 @@ liginfo get_ligature(internal_font_number f, int lc, int rc)
     t.adj = 0;
     if (lc == non_boundarychar || rc == non_boundarychar || (!has_lig(f, lc)))
         return t;
+    k = 0;
     co = char_info(f, lc);
     while (1) {
         u = charinfo_ligature(co, k);
@@ -1417,14 +1403,16 @@ liginfo get_ligature(internal_font_number f, int lc, int rc)
     return t;
 }
 
+
 @ @c
 scaled raw_get_kern(internal_font_number f, int lc, int rc)
 {
-    int k = 0;
+    int k;
     kerninfo u;
     charinfo *co;
     if (lc == non_boundarychar || rc == non_boundarychar)
         return 0;
+    k = 0;
     co = char_info(f, lc);
     while (1) {
         u = charinfo_kern(co, k);
@@ -1440,6 +1428,7 @@ scaled raw_get_kern(internal_font_number f, int lc, int rc)
     }
     return 0;
 }
+
 
 @ @c
 scaled get_kern(internal_font_number f, int lc, int rc)
@@ -1474,7 +1463,6 @@ static void dump_charinfo(int f, int c)
     dump_int(get_charinfo_height(co));
     dump_int(get_charinfo_depth(co));
     dump_int(get_charinfo_italic(co));
-    dump_int(get_charinfo_vert_italic(co));
     dump_int(get_charinfo_top_accent(co));
     dump_int(get_charinfo_bot_accent(co));
     dump_int(get_charinfo_tag(co));
@@ -1539,7 +1527,6 @@ static void dump_font_entry(texfont * f)
     dump_int(f->_font_touched);
     dump_int(f->_font_cache_id);
     dump_int(f->_font_encodingbytes);
-    dump_int(f->_font_oldmath);
     dump_int(f->_font_slant);
     dump_int(f->_font_extend);
     dump_int(f->font_max_shrink);
@@ -1623,8 +1610,6 @@ static int undump_charinfo(int f)
     undump_int(x);
     set_charinfo_italic(co, x);
     undump_int(x);
-    set_charinfo_vert_italic(co, x);
-    undump_int(x);
     set_charinfo_top_accent(co, x);
     undump_int(x);
     set_charinfo_bot_accent(co, x);
@@ -1693,14 +1678,12 @@ static int undump_charinfo(int f)
     return i;
 }
 
-#define undump_font_string(a) \
-    undump_int (x); \
-    if (x>0) { \
-        font_bytes += x; \
-        s = xmalloc((unsigned)x); \
-        undump_things(*s,x); \
-        a(f,s); \
-    }
+#define undump_font_string(a)   undump_int (x);		\
+    if (x>0) {						\
+	font_bytes += x;				\
+    s = xmalloc((unsigned)x); undump_things(*s,x);	\
+    a(f,s); }
+
 
 static void undump_font_entry(texfont * f)
 {
@@ -1716,7 +1699,6 @@ static void undump_font_entry(texfont * f)
     undump_int(x); f->_font_touched = (char)x;
     undump_int(x); f->_font_cache_id = x;
     undump_int(x); f->_font_encodingbytes = (char)x;
-    undump_int(x); f->_font_oldmath = x;
     undump_int(x); f->_font_slant = x;
     undump_int(x); f->_font_extend = x;
     undump_int(x); f->font_max_shrink = x;
@@ -1739,13 +1721,14 @@ static void undump_font_entry(texfont * f)
     /* *INDENT-ON* */
 }
 
+
+
 void undump_font(int f)
 {
     int x, i;
     texfont *tt;
     charinfo *ci;
     char *s;
-    sa_tree_item sa_value = { 0 };
     grow_font_table(f);
     tt = xmalloc(sizeof(texfont));
     memset(tt, 0, sizeof(texfont));
@@ -1775,215 +1758,21 @@ void undump_font(int f)
         undump_things(*math_param_base(f), (font_math_params(f) + 1));
     }
 
-    /* stack size 1, default item value 0 */
-    font_tables[f]->characters = new_sa_tree(1, 1, sa_value);
+    font_tables[f]->characters = new_sa_tree(1, 0);     /* stack size 1, default item value 0 */
     ci = xcalloc(1, sizeof(charinfo));
     set_charinfo_name(ci, xstrdup(".notdef"));
     font_tables[f]->charinfo = ci;
     undump_int(x);
     if (x) {
-        i = undump_charinfo(f); /* left boundary */
-    }
+        i = undump_charinfo(f);
+    }                           /* left boundary */
     undump_int(x);
     if (x) {
-        i = undump_charinfo(f); /* right boundary */
-    }
+        i = undump_charinfo(f);
+    }                           /* right boundary */
 
     i = font_bc(f);
     while (i < font_ec(f)) {
         i = undump_charinfo(f);
     }
-}
-
-/* moved from pdffont.w */
-
-@ @c
-#define font_id_text(A) cs_text(font_id_base+(A)) /* a frozen font identifier's name */
-
-int pk_dpi; /* PK pixel density value from \.{texmf.cnf} */
-
-@ @c
-internal_font_number tfm_lookup(char *s, scaled fs)
-{   /* looks up for a TFM with name |s| loaded at |fs| size; if found then flushes |s| */
-    internal_font_number k;
-    if (fs != 0) {
-        for (k = 1; k <= max_font_id(); k++) {
-            if (cmp_font_name(k, s) && font_size(k) == fs) {
-                return k;
-            }
-        }
-    } else {
-        for (k = 1; k <= max_font_id(); k++) {
-            if (cmp_font_name(k, s)) {
-                return k;
-            }
-        }
-    }
-    return null_font;
-}
-
-@ @c
-int fix_expand_value(internal_font_number f, int e)
-{                               /* return the multiple of |font_step(f)| that is nearest to |e| */
-    int step;
-    int max_expand;
-    boolean neg;
-    if (e == 0)
-        return 0;
-    if (e < 0) {
-        e = -e;
-        neg = true;
-        max_expand = font_max_shrink(f);
-    } else {
-        neg = false;
-        max_expand = font_max_stretch(f);
-    }
-    if (e > max_expand) {
-        e = max_expand;
-    } else {
-        step = font_step(f);
-        if (e % step > 0)
-            e = step * round_xn_over_d(e, 1, step);
-    }
-    if (neg)
-        e = -e;
-    return e;
-}
-
-@ @c
-void set_expand_params(internal_font_number f, boolean auto_expand,
-                       int stretch_limit, int shrink_limit, int font_step)
-{                               /* expand a font with given parameters */
-    set_font_step(f, font_step);
-    set_font_auto_expand(f, auto_expand);
-    set_font_max_shrink(f, shrink_limit);
-    set_font_max_stretch(f, stretch_limit);
-}
-
-@ @c
-void read_expand_font(void)
-{                               /* read font expansion spec and load expanded font */
-    int shrink_limit, stretch_limit, font_step;
-    internal_font_number f;
-    boolean auto_expand;
-    /* read font expansion parameters */
-    scan_font_ident();
-    f = cur_val;
-    if (f == null_font)
-        normal_error("font expansion", "invalid font identifier");
-    /*if (pdf_font_blink(f) != null_font)*/
-    /*    normal_error("font expansion",*/
-    /*              "\\fontexpand cannot be used this way (the base font has been expanded)");*/
-    scan_optional_equals();
-    scan_int();
-    stretch_limit = fix_int(cur_val, 0, 1000);
-    scan_int();
-    shrink_limit = fix_int(cur_val, 0, 500);
-    scan_int();
-    font_step = fix_int(cur_val, 0, 100);
-    if (font_step == 0)
-        normal_error("font expansion", "invalid step");
-    stretch_limit = stretch_limit - stretch_limit % font_step;
-    if (stretch_limit < 0)
-        stretch_limit = 0;
-    shrink_limit = shrink_limit - shrink_limit % font_step;
-    if (shrink_limit < 0)
-        shrink_limit = 0;
-    if ((stretch_limit == 0) && (shrink_limit == 0))
-        normal_error("font expansion", "invalid limit(s)");
-    auto_expand = false;
-    if (scan_keyword("autoexpand")) {
-        auto_expand = true;
-        /* Scan an optional space */
-        get_x_token();
-        if (cur_cmd != spacer_cmd)
-            back_input();
-    }
-
-    if (font_step(f) != 0) {
-        /* this font has been expanded, ensure the expansion parameters are identical */
-        if (font_step(f) != font_step)
-            normal_error("font expansion","font has been expanded with different expansion step");
-
-        if (((font_max_stretch(f) == 0) && (stretch_limit != 0)) ||
-            ((font_max_stretch(f) > 0)
-             && (font_max_stretch(f) != stretch_limit)))
-            normal_error("font expansion","font has been expanded with different stretch limit");
-
-        if (((font_max_shrink(f) == 0) && (shrink_limit != 0)) ||
-            ((font_max_shrink(f) > 0)
-             && (font_max_shrink(f) != shrink_limit)))
-            normal_error("font expansion","font has been expanded with different shrink limit");
-
-        if (font_auto_expand(f) != auto_expand)
-            normal_error("font expansion","font has been expanded with different auto expansion value");
-    } else {
-        if (font_used(f))
-            normal_warning("font expansion", "font should be expanded before its first use");
-        set_expand_params(f, auto_expand, stretch_limit, shrink_limit,
-                          font_step);
-    }
-}
-
-@ @c
-void new_letterspaced_font(small_number a)
-{                               /* letter-space a font by creating a virtual font */
-    pointer u;                  /* user's font identifier */
-    str_number t;               /* name for the frozen font identifier */
-    internal_font_number f, k;
-    boolean nolig = false;
-    get_r_token();
-    u = cur_cs;
-    if (u >= hash_base)
-        t = cs_text(u);
-    else
-        t = maketexstring("FONT");
-    define(u, set_font_cmd, null_font);
-    scan_optional_equals();
-    scan_font_ident();
-    k = cur_val;
-    scan_int();
-    if (scan_keyword("nolig"))
-       nolig=true;
-    f = letter_space_font(k, fix_int(cur_val, -1000, 1000), nolig);
-    equiv(u) = f;
-    eqtb[font_id_base + f] = eqtb[u];
-    font_id_text(f) = t;
-}
-
-@ @c
-void make_font_copy(small_number a)
-{                               /* make a font copy for further use with font expansion */
-    pointer u;                  /* user's font identifier */
-    str_number t;               /* name for the frozen font identifier */
-    internal_font_number f, k;
-    get_r_token();
-    u = cur_cs;
-    if (u >= hash_base)
-        t = cs_text(u);
-    else
-        t = maketexstring("FONT");
-    define(u, set_font_cmd, null_font);
-    scan_optional_equals();
-    scan_font_ident();
-    k = cur_val;
-    f = copy_font_info(k);
-    equiv(u) = f;
-    eqtb[font_id_base + f] = eqtb[u];
-    font_id_text(f) = t;
-}
-
-@ @c
-void glyph_to_unicode(void)
-{
-    str_number s1, s2;
-    scan_toks(false, true);
-    s1 = tokens_to_string(def_ref);
-    delete_token_ref(def_ref);
-    scan_toks(false, true);
-    s2 = tokens_to_string(def_ref);
-    delete_token_ref(def_ref);
-    def_tounicode(s1, s2);
-    flush_str(s2);
-    flush_str(s1);
 }

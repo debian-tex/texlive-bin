@@ -19,18 +19,20 @@
 
 @ @c
 
+
 #include "ptexlib.h"
 #include "lua/luatex-api.h"
 
-/* these will move to equivalents.h */
-
 @ @c
+#define explicit 1
+#define acc_kern 2
 #define lp_code_base 2
 #define rp_code_base 3
 #define ef_code_base 4
 #define tag_code 5
+#define auto_kern explicit
 #define no_lig_code 6
-#define gp_code_base 7
+
 
 #define prev_depth cur_list.prev_depth_field
 #define space_factor cur_list.space_factor_field
@@ -45,16 +47,24 @@
 #define no_local_whatsits int_par(no_local_whatsits_code)
 #define no_local_dirs int_par(no_local_dirs_code)
 #define err_help equiv(err_help_loc)
+#define text_direction int_par(text_direction_code)
 #define every_par equiv(every_par_loc)
+#define pdf_ignored_dimen dimen_par(pdf_ignored_dimen_code)
+#define par_direction int_par(par_direction_code)
 
+#define pdf_first_line_height  dimen_par(pdf_first_line_height_code)
+#define pdf_last_line_depth    dimen_par(pdf_last_line_depth_code)
+#define pdf_each_line_height   dimen_par(pdf_each_line_height_code)
+#define pdf_each_line_depth    dimen_par(pdf_each_line_depth_code)
 #define page_left_offset dimen_par(page_left_offset_code)
 #define page_top_offset dimen_par(page_top_offset_code)
 #define page_right_offset dimen_par(page_right_offset_code)
 #define page_bottom_offset dimen_par(page_bottom_offset_code)
-#define px_dimen dimen_par(px_dimen_code)
+#define pdf_h_origin       dimen_par(pdf_h_origin_code)
+#define pdf_v_origin       dimen_par(pdf_v_origin_code)
+#define pdf_px_dimen       dimen_par(pdf_px_dimen_code)
 
-#define math_eqno_gap_step int_par(math_eqno_gap_step_code)
-
+#define pdf_image_resolution   int_par(pdf_image_resolution_code)
 #define escape_char int_par(escape_char_code)
 #define max_dead_cycles int_par(max_dead_cycles_code)
 #define tolerance int_par(tolerance_code)
@@ -65,7 +75,6 @@
 #define looseness int_par(looseness_code)
 #define space_skip glue_par(space_skip_code)
 #define xspace_skip glue_par(xspace_skip_code)
-#define math_skip glue_par(math_skip_code)
 #define every_vbox equiv(every_vbox_loc)
 
 #define split_top_skip glue_par(split_top_skip_code)
@@ -136,6 +145,7 @@ with particular care.
 static halfword main_p;         /* temporary register for list manipulation */
 static halfword main_s;         /* space factor value */
 
+
 @ We leave the |space_factor| unchanged if |sf_code(cur_chr)=0|; otherwise we
 set it equal to |sf_code(cur_chr)|, except that it should never change
 from a value less than 1000 to a value exceeding 1000. The most common
@@ -157,6 +167,7 @@ void adjust_space_factor(void)
     }
 }
 
+
 @ From Knuth: ``Having |font_glue| allocated for each text font saves
 both time and memory.''  That may be true, but it also punches through
 the API wall for fonts, so I removed that -- Taco. But a bit of caching
@@ -176,6 +187,7 @@ its values.
 #define goto_return 2
 
 static int main_control_state;
+
 
 @* Main control helpers.
 
@@ -208,16 +220,11 @@ see to it later that the corresponding glue specification is precisely
 to be full of zeroes. Therefore it is simple to test whether a glue parameter
 is zero or~not.
 
+
 @c
 static void run_app_space (void) {
-    int method = int_par(disable_space_code) ;
-    if (method == 1) {
-        /* don't inject anything, not even zero skip */
-    } else if (method == 2) {
-        temp_ptr = new_glue(zero_glue);
-        couple_nodes(tail,temp_ptr);
-        tail = temp_ptr;
-    } else if ((abs(mode) + cur_cmd == hmode + spacer_cmd) && (!(space_factor == 1000))) {
+    if ((abs(mode) + cur_cmd == hmode + spacer_cmd)
+        && (!(space_factor == 1000))) {
         app_space();
     } else {
         /* Append a normal inter-word space to the current list */
@@ -234,30 +241,21 @@ static void run_app_space (void) {
                 space_spec_font = cur_font;
             }
             main_p = space_spec_cache;
+
             temp_ptr = new_glue(main_p);
         } else {
             temp_ptr = new_param_glue(space_skip_code);
         }
         couple_nodes(tail,temp_ptr);
         tail = temp_ptr;
+
     }
 }
 
-@ Append a |boundary_node|
+@ Append a |cancel_boundary_node|
 @c
 static void run_no_boundary (void) {
-    halfword n ;
-    n = new_node(boundary_node,cancel_boundary);
-    couple_nodes(tail, n);
-    tail = n;
-}
-static void run_boundary (void) {
-    halfword n ;
-    n = new_node(boundary_node,user_boundary);
-    scan_int();
-    boundary_value(n) = cur_val;
-    couple_nodes(tail, n);
-    tail = n;
+    new_whatsit(cancel_boundary_node);
 }
 
 @ @c
@@ -293,11 +291,12 @@ static void run_ignore_spaces (void) {
         do {
             get_x_token();
         } while (cur_cmd == spacer_cmd);
+
         main_control_state = goto_skip_token;
     } else {
         int t = scanner_status;
         scanner_status = normal;
-        get_next();
+        get_token_lua();
         scanner_status = t;
         cur_cs = prim_lookup(cs_text(cur_cs));
         if (cur_cs != undefined_primitive) {
@@ -330,9 +329,9 @@ static void run_math_char_num (void) {
     if (cur_chr == 0)
         mval = scan_mathchar(tex_mathcode);
     else if (cur_chr == 1)
-        mval = scan_mathchar(umath_mathcode);
+        mval = scan_mathchar(xetex_mathcode);
     else
-        mval = scan_mathchar(umathnum_mathcode);
+        mval = scan_mathchar(xetexnum_mathcode);
     math_char_in_text(mval);
 }
 
@@ -345,7 +344,7 @@ static void run_math_given (void) {
 
 static void run_xmath_given (void) {
     mathcodeval mval;           /* to build up an argument to |set_math_char| */
-    mval = mathchar_from_integer(cur_chr, umath_mathcode);
+    mval = mathchar_from_integer(cur_chr, xetex_mathcode);
     math_char_in_text(mval);
 }
 
@@ -362,13 +361,13 @@ is short, since the |scan_rule_spec| routine already does most of what is
 required; thus, there is no need for a special action procedure.
 
 Note that baselineskip calculations are disabled after a rule in vertical
-mode, by setting |prev_depth:=ignore_depth|.
+mode, by setting |prev_depth:=pdf_ignored_dimen|.
 
 @c
 static void run_rule (void) {
     tail_append(scan_rule_spec());
     if (abs(mode) == vmode)
-        prev_depth = ignore_depth;
+        prev_depth = pdf_ignored_dimen;
     else if (abs(mode) == hmode)
         space_factor = 1000;
 }
@@ -502,7 +501,7 @@ static void run_par_end_hmode (void) {
 
 @ @c
 static void append_italic_correction_mmode (void) {
-    tail_append(new_kern(0)); /* what subtype to use */
+    tail_append(new_kern(0));
 }
 
 @ @c
@@ -548,9 +547,9 @@ static void run_math_char_num_mmode (void) {
     if (cur_chr == 0)
         mval = scan_mathchar(tex_mathcode);
     else if (cur_chr == 1)
-        mval = scan_mathchar(umath_mathcode);
+        mval = scan_mathchar(xetex_mathcode);
     else
-        mval = scan_mathchar(umathnum_mathcode);
+        mval = scan_mathchar(xetexnum_mathcode);
     set_math_char(mval);
 }
 
@@ -563,7 +562,7 @@ static void run_math_given_mmode (void) {
 
 static void run_xmath_given_mmode (void) {
     mathcodeval mval;           /* to build up an argument to |set_math_char| */
-    mval = mathchar_from_integer(cur_chr, umath_mathcode);
+    mval = mathchar_from_integer(cur_chr, xetex_mathcode);
     set_math_char(mval);
 }
 
@@ -573,7 +572,7 @@ static void run_delim_num (void) {
     if (cur_chr == 0)
         mval = scan_delimiter_as_mathchar(tex_mathcode);
     else
-        mval = scan_delimiter_as_mathchar(umath_mathcode);
+        mval = scan_delimiter_as_mathchar(xetex_mathcode);
     set_math_char(mval);
 
 }
@@ -584,7 +583,7 @@ static void run_vcenter (void) {
     normal_paragraph();
     push_nest();
     mode = -vmode;
-    prev_depth = ignore_depth;
+    prev_depth = pdf_ignored_dimen;
     if (every_vbox != null)
         begin_token_list(every_vbox, every_vbox_text);
 }
@@ -630,105 +629,9 @@ static void run_after_group (void) {
 
 @ @c
 static void run_extension (void) {
-    do_extension(0);
+    do_extension(static_pdf);
 }
 
-static void run_normal (void) {
-{
-    switch (cur_chr) {
-        case save_pos_code:
-            new_whatsit(save_pos_node);
-            break;
-        case save_cat_code_table_code:
-            scan_int();
-            if ((cur_val < 0) || (cur_val > 0x7FFF)) {
-                print_err("Invalid \\catcode table");
-                help1("All \\catcode table ids must be between 0 and 0x7FFF");
-                error();
-            } else {
-                if (cur_val == cat_code_table) {
-                    print_err("Invalid \\catcode table");
-                    help1("You cannot overwrite the current \\catcode table");
-                    error();
-                } else {
-                    copy_cat_codes(cat_code_table, cur_val);
-                }
-            }
-            break;
-        case init_cat_code_table_code:
-            scan_int();
-            if ((cur_val < 0) || (cur_val > 0x7FFF)) {
-                print_err("Invalid \\catcode table");
-                help1("All \\catcode table ids must be between 0 and 0x7FFF");
-                error();
-            } else {
-                if (cur_val == cat_code_table) {
-                    print_err("Invalid \\catcode table");
-                    help1("You cannot overwrite the current \\catcode table");
-                    error();
-                } else {
-                    initex_cat_codes(cur_val);
-                }
-            }
-            break;
-        case set_random_seed_code:
-            /*  Negative random seed values are silently converted to positive ones */
-            scan_int();
-            if (cur_val < 0)
-                negate(cur_val);
-            random_seed = cur_val;
-            init_randoms(random_seed);
-            break;
-        case late_lua_code:
-            new_whatsit(late_lua_node); /* type == normal */
-            late_lua_name(tail) = scan_lua_state();
-            (void) scan_toks(false, false);
-            late_lua_data(tail) = def_ref;
-            break;
-        case expand_font_code:
-            read_expand_font();
-            break;
-        default:
-            confusion("int1");
-            break;
-        }
-    }
-}
-
-/*
-    this is experimental and not used for production, only for testing and writing
-    macros
-
-*/
-
-static void run_option(void) {
-    int a = 0 ;
-    switch (cur_chr) {
-        case math_option_code:
-            if (scan_keyword("old")) {
-                scan_int();
-                word_define(int_base+math_old_code, cur_val);
-                /* math_no_char_italic = cur_val; */
-            } else if (scan_keyword("noitaliccompensation")) {
-                scan_int();
-                word_define(int_base+math_no_italic_compensation_code, cur_val);
-                /* math_no_italic_compensation = cur_val; */
-            } else if (scan_keyword("nocharitalic")) {
-                scan_int();
-                word_define(int_base+math_no_char_italic_code, cur_val);
-                /* math_no_char_italic = cur_val; */
-            } else if (scan_keyword("useoldfractionscaling")) {
-                scan_int();
-                word_define(int_base+math_use_old_fraction_scaling_code, cur_val);
-            } else {
-                normal_warning("mathoption","unknown key");
-            }
-            break;
-        default:
-            /* harmless */
-            break;
-    }
-}
 
 @ For mode-independent commands, the following macro is useful.
 
@@ -756,14 +659,12 @@ static void init_main_control (void) {
     jump_table[hmode + spacer_cmd] = run_app_space;
     jump_table[hmode + ex_space_cmd] = run_app_space;
     jump_table[mmode + ex_space_cmd] = run_app_space;
-    jump_table[hmode + boundary_cmd] = run_boundary;
     jump_table[hmode + no_boundary_cmd] = run_no_boundary;
     jump_table[hmode + char_ghost_cmd] = run_char_ghost;
     jump_table[mmode + char_ghost_cmd] = run_char_ghost;
     any_mode(relax_cmd, run_relax);
     jump_table[vmode + spacer_cmd] = run_relax;
     jump_table[mmode + spacer_cmd] = run_relax;
-    jump_table[mmode + boundary_cmd] = run_relax;
     jump_table[mmode + no_boundary_cmd] = run_relax;
     any_mode(ignore_spaces_cmd,run_ignore_spaces);
     jump_table[vmode + stop_cmd] = run_stop;
@@ -806,13 +707,9 @@ static void init_main_control (void) {
     jump_table[mmode + un_vbox_cmd] =  insert_dollar_sign;
     jump_table[mmode + valign_cmd] =  insert_dollar_sign;
     jump_table[mmode + hrule_cmd] =  insert_dollar_sign;
-    jump_table[mmode + no_hrule_cmd] =  insert_dollar_sign;
     jump_table[vmode + hrule_cmd] = run_rule;
-    jump_table[vmode + no_hrule_cmd] = run_rule;
     jump_table[hmode + vrule_cmd] = run_rule;
-    jump_table[hmode + no_vrule_cmd] = run_rule;
     jump_table[mmode + vrule_cmd] = run_rule;
-    jump_table[mmode + no_vrule_cmd] = run_rule;
     jump_table[vmode + vskip_cmd] = append_glue;
     jump_table[hmode + hskip_cmd] = append_glue;
     jump_table[mmode + hskip_cmd] = append_glue;
@@ -841,20 +738,17 @@ static void init_main_control (void) {
     jump_table[vmode + math_shift_cs_cmd] = run_new_graf;
     jump_table[vmode + un_hbox_cmd] = run_new_graf;
     jump_table[vmode + vrule_cmd] = run_new_graf;
-    jump_table[vmode + no_vrule_cmd] = run_new_graf;
     jump_table[vmode + accent_cmd] = run_new_graf;
     jump_table[vmode + discretionary_cmd] = run_new_graf;
     jump_table[vmode + hskip_cmd] = run_new_graf;
     jump_table[vmode + valign_cmd] = run_new_graf;
     jump_table[vmode + ex_space_cmd] = run_new_graf;
-    jump_table[vmode + boundary_cmd] = run_new_graf;
     jump_table[vmode + no_boundary_cmd] = run_new_graf;
     jump_table[vmode + par_end_cmd] = run_par_end_vmode;
     jump_table[hmode + par_end_cmd] = run_par_end_hmode;
     jump_table[hmode + stop_cmd] = head_for_vmode;
     jump_table[hmode + vskip_cmd] = head_for_vmode;
     jump_table[hmode + hrule_cmd] = head_for_vmode;
-    jump_table[hmode + no_hrule_cmd] = head_for_vmode;
     jump_table[hmode + un_vbox_cmd] = head_for_vmode;
     jump_table[hmode + halign_cmd] = head_for_vmode;
     any_mode(insert_cmd,begin_insert_or_adjust);
@@ -936,8 +830,7 @@ static void init_main_control (void) {
     any_mode(set_font_cmd, prefixed_command);
     any_mode(def_font_cmd, prefixed_command);
     any_mode(letterspace_font_cmd, prefixed_command);
-    any_mode(copy_font_cmd, prefixed_command);
-    any_mode(set_font_id_cmd, prefixed_command);
+    any_mode(pdf_copy_font_cmd, prefixed_command);
     any_mode(register_cmd, prefixed_command);
     any_mode(advance_cmd, prefixed_command);
     any_mode(multiply_cmd, prefixed_command);
@@ -956,9 +849,7 @@ static void init_main_control (void) {
     any_mode(message_cmd,issue_message);
     any_mode(case_shift_cmd, shift_case);
     any_mode(xray_cmd, show_whatever);
-    any_mode(normal_cmd, run_normal);
     any_mode(extension_cmd, run_extension);
-    any_mode(option_cmd, run_option);
 }
 
 @ And here is |main_control| itself.  It is quite short nowadays.
@@ -1018,6 +909,7 @@ void app_space(void)
             width(main_p) = width(main_p) + extra_space(cur_font);
         stretch(main_p) = xn_over_d(stretch(main_p), space_factor, 1000);
         shrink(main_p) = xn_over_d(shrink(main_p), 1000, space_factor);
+
         q = new_glue(main_p);
         glue_ref_count(main_p) = null;
     }
@@ -1045,6 +937,10 @@ void insert_dollar_sign_par_end(void)
         insert_dollar_sign() ;
     }
 }
+
+
+
+
 
 @ The `|you_cant|' procedure prints a line saying that the current command
 is illegal in the current mode; it identifies these things symbolically.
@@ -1079,6 +975,7 @@ void report_illegal_case(void)
     error();
 }
 
+
 @ Some operations are allowed only in privileged modes, i.e., in cases
 that |mode>0|. The |privileged| function is used to detect violations
 of this rule; it issues an error message and returns |false| if the
@@ -1094,6 +991,7 @@ boolean privileged(void)
         return false;
     }
 }
+
 
 @ We don't want to leave |main_control| immediately when a |stop| command
 is sensed, because it may be necessary to invoke an \.{\\output} routine
@@ -1136,24 +1034,24 @@ void append_glue(void)
     int s;                      /* modifier of skip command */
     s = cur_chr;
     switch (s) {
-        case fil_code:
-            cur_val = fil_glue;
-            break;
-        case fill_code:
-            cur_val = fill_glue;
-            break;
-        case ss_code:
-            cur_val = ss_glue;
-            break;
-        case fil_neg_code:
-            cur_val = fil_neg_glue;
-            break;
-        case skip_code:
-            scan_glue(glue_val_level);
-            break;
-        case mskip_code:
-            scan_glue(mu_val_level);
-            break;
+    case fil_code:
+        cur_val = fil_glue;
+        break;
+    case fill_code:
+        cur_val = fill_glue;
+        break;
+    case ss_code:
+        cur_val = ss_glue;
+        break;
+    case fil_neg_code:
+        cur_val = fil_neg_glue;
+        break;
+    case skip_code:
+        scan_glue(glue_val_level);
+        break;
+    case mskip_code:
+        scan_glue(mu_val_level);
+        break;
     }                           /* now |cur_val| points to the glue specification */
     tail_append(new_glue(cur_val));
     if (s >= skip_code) {
@@ -1172,6 +1070,7 @@ void append_kern(void)
     tail_append(new_kern(cur_val));
     subtype(tail) = (quarterword) s;
 }
+
 
 @ We have to deal with errors in which braces and such things are not
 properly nested. Sometimes the user makes an error of commission by
@@ -1202,27 +1101,28 @@ void off_save(void)
         /* Prepare to insert a token that matches |cur_group|, and print what it is */
         /* At this point, |link(temp_token_head)=p|, a pointer to an empty one-word node. */
         switch (cur_group) {
-            case semi_simple_group:
-                set_token_info(p, cs_token_flag + frozen_end_group);
-                tprint_esc("endgroup");
-                break;
-            case math_shift_group:
-                set_token_info(p, math_shift_token + '$');
-                print_char('$');
-                break;
-            case math_left_group:
-                set_token_info(p, cs_token_flag + frozen_right);
-                q = get_avail();
-                set_token_link(p, q);
-                p = token_link(p);
-                set_token_info(p, other_token + '.');
-                tprint_esc("right.");
-                break;
-            default:
-                set_token_info(p, right_brace_token + '}');
-                print_char('}');
-                break;
+        case semi_simple_group:
+            set_token_info(p, cs_token_flag + frozen_end_group);
+            tprint_esc("endgroup");
+            break;
+        case math_shift_group:
+            set_token_info(p, math_shift_token + '$');
+            print_char('$');
+            break;
+        case math_left_group:
+            set_token_info(p, cs_token_flag + frozen_right);
+            q = get_avail();
+            set_token_link(p, q);
+            p = token_link(p);
+            set_token_info(p, other_token + '.');
+            tprint_esc("right.");
+            break;
+        default:
+            set_token_info(p, right_brace_token + '}');
+            print_char('}');
+            break;
         }
+
         tprint(" inserted");
         ins_list(token_link(temp_token_head));
         help5("I've inserted something that you may have forgotten.",
@@ -1233,6 +1133,7 @@ void off_save(void)
         error();
     }
 }
+
 
 @ The routine for a |right_brace| character branches into many subcases,
 since a variety of things may happen, depending on |cur_group|. Some
@@ -1249,112 +1150,112 @@ void handle_right_brace(void)
     int f;                      /* holds |floating_penalty| in |insert_group| */
     p = null;
     switch (cur_group) {
-        case simple_group:
-            fixup_directions();
-            break;
-        case bottom_level:
-            print_err("Too many }'s");
-            help2("You've closed more groups than you opened.",
-                  "Such booboos are generally harmless, so keep going.");
-            error();
-            break;
-        case semi_simple_group:
-        case math_shift_group:
-        case math_left_group:
-            extra_right_brace();
-            break;
-        case hbox_group:
-            /* When the right brace occurs at the end of an \.{\\hbox} or \.{\\vbox} or
-               \.{\\vtop} construction, the |package| routine comes into action. We might
-               also have to finish a paragraph that hasn't ended. */
-            package(0);
-            break;
-        case adjusted_hbox_group:
-            adjust_tail = adjust_head;
-            pre_adjust_tail = pre_adjust_head;
-            package(0);
-            break;
-        case vbox_group:
-            end_graf(vbox_group);
-            package(0);
-            break;
-        case vtop_group:
-            end_graf(vtop_group);
-            package(vtop_code);
-            break;
-        case insert_group:
-            end_graf(insert_group);
-            q = split_top_skip;
-            add_glue_ref(q);
-            d = split_max_depth;
-            f = floating_penalty;
-            unsave();
-            save_ptr--;
-            /* now |saved_value(0)| is the insertion number, or the |vadjust| subtype */
-            p = vpack(vlink(head), 0, additional, -1);
-            pop_nest();
-            if (saved_type(0) == saved_insert) {
-                tail_append(new_node(ins_node, saved_value(0)));
-                height(tail) = height(p) + depth(p);
-                ins_ptr(tail) = list_ptr(p);
-                split_top_ptr(tail) = q;
-                depth(tail) = d;
-                float_cost(tail) = f;
-            } else if (saved_type(0) == saved_adjust) {
-                tail_append(new_node(adjust_node, saved_value(0)));
-                adjust_ptr(tail) = list_ptr(p);
-                delete_glue_ref(q);
-            } else {
-                confusion("insert_group");
-            }
-            list_ptr(p) = null;
-            flush_node(p);
-            if (nest_ptr == 0) {
-                check_filter(insert);
-                build_page();
-            }
-            break;
-        case output_group:
-            /* this is needed in case the \.{\\output} executes a \.{\\textdir} command. */
-            if (dir_level(text_dir_ptr) == cur_level) {
-                /* DIR: Remove from |text_dir_ptr| */
-                halfword text_dir_tmp = vlink(text_dir_ptr);
-                flush_node(text_dir_ptr);
-                text_dir_ptr = text_dir_tmp;
-            }
-            resume_after_output();
-            break;
-        case disc_group:
-            build_discretionary();
-            break;
-        case local_box_group:
-            build_local_box();
-            break;
-        case align_group:
-            back_input();
-            cur_tok = cs_token_flag + frozen_cr;
-            print_err("Missing \\cr inserted");
-            help1("I'm guessing that you meant to end an alignment here.");
-            ins_error();
-            break;
-        case no_align_group:
-            end_graf(no_align_group);
-            unsave();
-            align_peek();
-            break;
-        case vcenter_group:
-            end_graf(vcenter_group);
-            finish_vcenter();
-            break;
-        case math_choice_group:
-            build_choices();
-            break;
-        case math_group:
-            close_math_group(p);
-            break;
-        default:
-            confusion("rightbrace");
-            break;
+    case simple_group:
+        fixup_directions();
+        break;
+    case bottom_level:
+        print_err("Too many }'s");
+        help2("You've closed more groups than you opened.",
+              "Such booboos are generally harmless, so keep going.");
+        error();
+        break;
+    case semi_simple_group:
+    case math_shift_group:
+    case math_left_group:
+        extra_right_brace();
+        break;
+    case hbox_group:
+        /* When the right brace occurs at the end of an \.{\\hbox} or \.{\\vbox} or
+           \.{\\vtop} construction, the |package| routine comes into action. We might
+           also have to finish a paragraph that hasn't ended. */
+        package(0);
+        break;
+    case adjusted_hbox_group:
+        adjust_tail = adjust_head;
+        pre_adjust_tail = pre_adjust_head;
+        package(0);
+        break;
+    case vbox_group:
+        end_graf(vbox_group);
+        package(0);
+        break;
+    case vtop_group:
+        end_graf(vtop_group);
+        package(vtop_code);
+        break;
+    case insert_group:
+        end_graf(insert_group);
+        q = split_top_skip;
+        add_glue_ref(q);
+        d = split_max_depth;
+        f = floating_penalty;
+        unsave();
+        save_ptr--;
+        /* now |saved_value(0)| is the insertion number, or the |vadjust| subtype */
+        p = vpack(vlink(head), 0, additional, -1);
+        pop_nest();
+        if (saved_type(0) == saved_insert) {
+            tail_append(new_node(ins_node, saved_value(0)));
+            height(tail) = height(p) + depth(p);
+            ins_ptr(tail) = list_ptr(p);
+            split_top_ptr(tail) = q;
+            depth(tail) = d;
+            float_cost(tail) = f;
+        } else if (saved_type(0) == saved_adjust) {
+            tail_append(new_node(adjust_node, saved_value(0)));
+            adjust_ptr(tail) = list_ptr(p);
+            delete_glue_ref(q);
+        } else {
+            confusion("insert_group");
+        }
+        list_ptr(p) = null;
+        flush_node(p);
+        if (nest_ptr == 0) {
+            check_filter(insert);
+            build_page();
+        }
+        break;
+    case output_group:
+	/* this is needed in case the \.{\\output} executes a \.{\\textdir} command. */
+	if (dir_level(text_dir_ptr) == cur_level) {
+	    /* DIR: Remove from |text_dir_ptr| */
+	    halfword text_dir_tmp = vlink(text_dir_ptr);
+	    flush_node(text_dir_ptr);
+	    text_dir_ptr = text_dir_tmp;
+	}
+        resume_after_output();
+        break;
+    case disc_group:
+        build_discretionary();
+        break;
+    case local_box_group:
+        build_local_box();
+        break;
+    case align_group:
+        back_input();
+        cur_tok = cs_token_flag + frozen_cr;
+        print_err("Missing \\cr inserted");
+        help1("I'm guessing that you meant to end an alignment here.");
+        ins_error();
+        break;
+    case no_align_group:
+        end_graf(no_align_group);
+        unsave();
+        align_peek();
+        break;
+    case vcenter_group:
+        end_graf(vcenter_group);
+        finish_vcenter();
+        break;
+    case math_choice_group:
+        build_choices();
+        break;
+    case math_group:
+        close_math_group(p);
+        break;
+    default:
+        confusion("rightbrace");
+        break;
     }
 }
 
@@ -1363,15 +1264,15 @@ void extra_right_brace(void)
 {
     print_err("Extra }, or forgotten ");
     switch (cur_group) {
-        case semi_simple_group:
-            tprint_esc("endgroup");
-            break;
-        case math_shift_group:
-            print_char('$');
-            break;
-        case math_left_group:
-            tprint_esc("right");
-            break;
+    case semi_simple_group:
+        tprint_esc("endgroup");
+        break;
+    case math_shift_group:
+        print_char('$');
+        break;
+    case math_left_group:
+        tprint_esc("right");
+        break;
     }
     help5("I've deleted a group-closing symbol because it seems to be",
           "spurious, as in `$x}$'. But perhaps the } is legitimate and",
@@ -1381,6 +1282,7 @@ void extra_right_brace(void)
     error();
     incr(align_state);
 }
+
 
 @ Here is where we clear the parameters that are supposed to revert to their
 default values after every paragraph and when internal vertical mode is entered.
@@ -1400,6 +1302,7 @@ void normal_paragraph(void)
         eq_define(inter_line_penalties_loc, shape_ref_cmd, null);
 }
 
+
 @ The global variable |cur_box| will point to a newly-made box. If the box
 is void, we will have |cur_box=null|. Otherwise we will have
 |type(cur_box)=hlist_node| or |vlist_node| or |rule_node|; the |rule_node|
@@ -1407,6 +1310,7 @@ case can occur only with leaders.
 
 @c
 halfword cur_box;               /* box to be placed into its context */
+
 
 @ The |box_end| procedure does the right thing with |cur_box|, if
 |box_context| represents the context as explained above.
@@ -1429,13 +1333,13 @@ void box_end(int box_context)
                         append_list(pre_adjust_head, pre_adjust_tail);
                     pre_adjust_tail = null;
                 }
-                append_to_vlist(cur_box,lua_key_index(box));
+                append_to_vlist(cur_box);
                 if (adjust_tail != null) {
                     if (adjust_head != adjust_tail)
                         append_list(adjust_head, adjust_tail);
                     adjust_tail = null;
                 }
-                if (mode > 0) {
+	        if (mode > 0) {
                     check_filter(box);
                     build_page();
                 }
@@ -1448,12 +1352,15 @@ void box_end(int box_context)
                 tail = cur_box;
             }
         }
+
     } else if (box_context < ship_out_flag) {
         /* Store |cur_box| in a box register */
         if (box_context < global_box_flag)
             eq_define(box_base + box_context - box_flag, box_ref_cmd, cur_box);
         else
-            geq_define(box_base + box_context - global_box_flag, box_ref_cmd, cur_box);
+            geq_define(box_base + box_context - global_box_flag, box_ref_cmd,
+                       cur_box);
+
     } else if (cur_box != null) {
         if (box_context > ship_out_flag) {
             /* Append a new leader node that uses |cur_box| */
@@ -1461,10 +1368,12 @@ void box_end(int box_context)
             do {
                 get_x_token();
             } while ((cur_cmd == spacer_cmd) || (cur_cmd == relax_cmd));
+
             if (((cur_cmd == hskip_cmd) && (abs(mode) != vmode)) ||
                 ((cur_cmd == vskip_cmd) && (abs(mode) == vmode))) {
                 append_glue();
-                subtype(tail) = (quarterword) (box_context - (leader_flag - a_leaders));
+                subtype(tail) =
+                    (quarterword) (box_context - (leader_flag - a_leaders));
                 leader_ptr(tail) = cur_box;
             } else {
                 print_err("Leaders not followed by proper glue");
@@ -1475,9 +1384,9 @@ void box_end(int box_context)
                 back_error();
                 flush_node_list(cur_box);
             }
-        } else {
+
+        } else
             ship_out(static_pdf, cur_box, SHIPPING_PAGE);
-        }
     }
 }
 
@@ -1490,11 +1399,11 @@ void scan_box(int box_context)
     do {
         get_x_token();
     } while ((cur_cmd == spacer_cmd) || (cur_cmd == relax_cmd));
+
     if (cur_cmd == make_box_cmd) {
         begin_box(box_context);
-    } else if ((box_context >= leader_flag) &&
-            ((cur_cmd == hrule_cmd) || (cur_cmd == vrule_cmd) ||
-             (cur_cmd == no_hrule_cmd) || (cur_cmd == no_vrule_cmd))) {
+    } else if ((box_context >= leader_flag)
+               && ((cur_cmd == hrule_cmd) || (cur_cmd == vrule_cmd))) {
         cur_box = scan_rule_spec();
         box_end(box_context);
     } else {
@@ -1520,11 +1429,12 @@ void new_graf(boolean indented)
     space_factor = 1000;
     /* LOCAL: Add local paragraph node */
     tail_append(make_local_par_node());
+
     if (indented) {
         p = new_null_box();
         box_dir(p) = par_direction;
         width(p) = par_indent;
-        subtype(p) = indent_list;
+        subtype(p) = HLIST_SUBTYPE_INDENT;
         q = tail;
         tail_append(p);
     } else {
@@ -1570,7 +1480,7 @@ void indent_in_hmode(void)
 void head_for_vmode(void)
 {
     if (mode < 0) {
-        if ((cur_cmd != hrule_cmd) && (cur_cmd != no_hrule_cmd)) {
+        if (cur_cmd != hrule_cmd) {
             off_save();
         } else {
             print_err("You can't use `\\hrule' here except with leaders");
@@ -1585,6 +1495,7 @@ void head_for_vmode(void)
         token_type = inserted;
     }
 }
+
 
 @ TODO (BUG?): |dir_save| would have been set by |line_break| by means
 of |post_line_break|, but this is not done right now, as it introduces
@@ -1611,6 +1522,7 @@ void end_graf(int line_break_context)
     }
 }
 
+
 @ @c
 void begin_insert_or_adjust(void)
 {
@@ -1635,8 +1547,9 @@ void begin_insert_or_adjust(void)
     normal_paragraph();
     push_nest();
     mode = -vmode;
-    prev_depth = ignore_depth;
+    prev_depth = pdf_ignored_dimen;
 }
+
 
 @ I (TH)'ve renamed the |make_mark| procedure to this, because if the
 current chr code is 1, then the actual command was \.{\\clearmarks},
@@ -1674,6 +1587,7 @@ void handle_mark(void)
     }
 }
 
+
 @ @c
 void append_penalty(void)
 {
@@ -1684,6 +1598,7 @@ void append_penalty(void)
         build_page();
     }
 }
+
 
 @ When |delete_last| is called, |cur_chr| is the |type| of node that
 will be deleted, if present.
@@ -1719,6 +1634,7 @@ void delete_last(void)
             }
             error();
         }
+
     } else {
         /* todo: clean this up */
         if (!is_char_node(tail)) {
@@ -1807,9 +1723,10 @@ void append_italic_correction(void)
             return;
         f = font(p);
         tail_append(new_kern(char_italic(f, character(p))));
-        subtype(tail) = italic_kern;
+        subtype(tail) = explicit;
     }
 }
+
 
 @ @c
 void append_local_box(int kind)
@@ -1822,6 +1739,7 @@ void append_local_box(int kind)
     mode = -hmode;
     space_factor = 1000;
 }
+
 
 @ Discretionary nodes are easy in the common case `\.{\\-}', but in the
 general case we must process three braces full of items.
@@ -1836,7 +1754,6 @@ void append_discretionary(void)
     tail_append(new_disc());
     subtype(tail) = (quarterword) cur_chr;
     if (cur_chr == explicit_disc) {
-        /* \- */
         c = get_pre_hyphen_char(cur_lang);
         if (c != 0) {
             vlink(pre_break(tail)) = new_char(equiv(cur_font_loc), c);
@@ -1849,13 +1766,7 @@ void append_discretionary(void)
             alink(vlink(post_break(tail))) = post_break(tail);
             tlink(post_break(tail)) = vlink(post_break(tail));
         }
-        disc_penalty(tail) = int_par(ex_hyphen_penalty_code);
     } else {
-        /* \discretionary */
-        if (scan_keyword("penalty")) {
-            scan_int();
-            disc_penalty(tail) = cur_val;
-        }
         incr(save_ptr);
         set_saved_record(-1, saved_disc, 0, 0);
         new_save_level(disc_group);
@@ -1863,7 +1774,6 @@ void append_discretionary(void)
         push_nest();
         mode = -hmode;
         space_factor = 1000;
-        /* already preset: disc_penalty(tail) = int_par(hyphen_penalty_code); */
     }
 }
 
@@ -1893,6 +1803,7 @@ void build_local_box(void)
     }
     eq_word_define(int_base + no_local_whatsits_code, no_local_whatsits + 1);
 }
+
 
 @ The three discretionary lists are constructed somewhat as if they were
 hboxes. A~subroutine called |build_discretionary| handles the transitions.
@@ -1977,6 +1888,7 @@ void build_discretionary(void)
     space_factor = 1000;
 }
 
+
 @ The positioning of accents is straightforward but tedious. Given an accent
 of width |a|, designed for characters of height |x| and slant |s|;
 and given a character of width |w|, height |h|, and slant |t|: We will shift
@@ -2032,11 +1944,11 @@ void make_accent(void)
             }
             delta = round(float_cast(w - a) / float_constant(2) + h * t - x * s);       /* real multiplication */
             r = new_kern(delta);
-            subtype(r) = accent_kern;
+            subtype(r) = acc_kern;
             couple_nodes(tail, r);
             couple_nodes(r, p);
             tail = new_kern(-a - delta);
-            subtype(tail) = accent_kern;
+            subtype(tail) = acc_kern;
             couple_nodes(p, tail);
             p = q;
 
@@ -2046,6 +1958,7 @@ void make_accent(void)
         space_factor = 1000;
     }
 }
+
 
 @ When `\.{\\cr}' or `\.{\\span}' or a tab mark comes through the scanner
 into |main_control|, it might be that the user has foolishly inserted
@@ -2096,6 +2009,7 @@ void align_error(void)
     }
 }
 
+
 @ The help messages here contain a little white lie, since \.{\\noalign}
 and \.{\\omit} are allowed also after `\.{\\noalign\{...\}}'.
 
@@ -2115,6 +2029,7 @@ void omit_error(void)
           "an alignment. Proceed, and I'll ignore this case.");
     error();
 }
+
 
 @ We've now covered most of the abuses of \.{\\halign} and \.{\\valign}.
 Let's take a look at what happens when they are used correctly.
@@ -2158,6 +2073,7 @@ void cs_error(void)
     error();
 }
 
+
 @
   Assignments to values in |eqtb| can be global or local. Furthermore, a
   control sequence can be defined to be `\.{\\long}', `\.{\\protected}',
@@ -2172,6 +2088,8 @@ void cs_error(void)
   calls the action procedure |prefixed_command|. This routine accumulates
   a sequence of prefixes until coming to a non-prefix, then it carries out
   the command.
+
+
 
 @ If the user says, e.g., `\.{\\global\\global}', the redundancy is
 silently accepted.
@@ -2194,7 +2112,8 @@ following program is careful to check each case properly.
 	    error();							\
 	    cur_val=0;							\
 	}								\
-} while (0)
+    } while (0)
+
 
 @ @c
 void prefixed_command(void)
@@ -2243,6 +2162,7 @@ void prefixed_command(void)
         help1("I'll pretend you didn't say \\long or \\outer or \\protected here.");
         error();
     }
+
     /* Adjust for the setting of \.{\\globaldefs} */
     if (global_defs != 0) {
         if (global_defs < 0) {
@@ -2254,250 +2174,226 @@ void prefixed_command(void)
         }
     }
     switch (cur_cmd) {
-        case set_font_cmd:
-            /* Here's an example of the way many of the following routines operate.
-               (Unfortunately, they aren't all as simple as this.) */
-            define(cur_font_loc, data_cmd, cur_chr);
-            break;
-        case def_cmd:
-            /* When a |def| command has been scanned,
-               |cur_chr| is odd if the definition is supposed to be global, and
-               |cur_chr>=2| if the definition is supposed to be expanded. */
+    case set_font_cmd:
+        /* Here's an example of the way many of the following routines operate.
+           (Unfortunately, they aren't all as simple as this.) */
+        define(cur_font_loc, data_cmd, cur_chr);
+        break;
+    case def_cmd:
+        /* When a |def| command has been scanned,
+           |cur_chr| is odd if the definition is supposed to be global, and
+           |cur_chr>=2| if the definition is supposed to be expanded. */
 
-            if (odd(cur_chr) && !is_global(a) && (global_defs >= 0))
-                a = a + 4;
-            e = (cur_chr >= 2);
-            get_r_token();
-            p = cur_cs;
-            q = scan_toks(true, e);
-            if (j != 0) {
+        if (odd(cur_chr) && !is_global(a) && (global_defs >= 0))
+            a = a + 4;
+        e = (cur_chr >= 2);
+        get_r_token();
+        p = cur_cs;
+        q = scan_toks(true, e);
+        if (j != 0) {
+            q = get_avail();
+            set_token_info(q, j);
+            set_token_link(q, token_link(def_ref));
+            set_token_link(def_ref, q);
+        }
+        define(p, call_cmd + (a % 4), def_ref);
+        break;
+    case let_cmd:
+        n = cur_chr;
+        get_r_token();
+        p = cur_cs;
+        if (n == normal) {
+            do {
+                get_token();
+            } while (cur_cmd == spacer_cmd);
+            if (cur_tok == other_token + '=') {
+                get_token();
+                if (cur_cmd == spacer_cmd)
+                    get_token();
+            }
+        } else {
+            get_token();
+            q = cur_tok;
+            get_token();
+            back_input();
+            cur_tok = q;
+            back_input();       /* look ahead, then back up */
+        }                       /* note that |back_input| doesn't affect |cur_cmd|, |cur_chr| */
+        if (cur_cmd >= call_cmd)
+            add_token_ref(cur_chr);
+        define(p, cur_cmd, cur_chr);
+        break;
+    case shorthand_def_cmd:
+        /* We temporarily define |p| to be |relax|, so that an occurrence of |p|
+           while scanning the definition will simply stop the scanning instead of
+           producing an ``undefined control sequence'' error or expanding the
+           previous meaning.  This allows, for instance, `\.{\\chardef\\foo=123\\foo}'.
+         */
+        n = cur_chr;
+        get_r_token();
+        p = cur_cs;
+        define(p, relax_cmd, too_big_char);
+        scan_optional_equals();
+        switch (n) {
+        case char_def_code:
+            scan_char_num();
+            define(p, char_given_cmd, cur_val);
+            break;
+        case math_char_def_code:
+            mval = scan_mathchar(tex_mathcode);
+            cur_val =
+                (mval.class_value * 16 + mval.family_value) * 256 +
+                mval.character_value;
+            define(p, math_given_cmd, cur_val);
+            break;
+        case xmath_char_def_code:
+            mval = scan_mathchar(xetex_mathcode);
+            cur_val =
+                (mval.class_value + (8 * mval.family_value)) * (65536 * 32) +
+                mval.character_value;
+            define(p, xmath_given_cmd, cur_val);
+            break;
+        case umath_char_def_code:
+            mval = scan_mathchar(xetexnum_mathcode);
+            cur_val =
+                (mval.class_value + (8 * mval.family_value)) * (65536 * 32) +
+                mval.character_value;
+            define(p, xmath_given_cmd, cur_val);
+            break;
+        default:
+            scan_register_num();
+            switch (n) {
+            case count_def_code:
+                define(p, assign_int_cmd, count_base + cur_val);
+                break;
+            case attribute_def_code:
+                define(p, assign_attr_cmd, attribute_base + cur_val);
+                break;
+            case dimen_def_code:
+                define(p, assign_dimen_cmd, scaled_base + cur_val);
+                break;
+            case skip_def_code:
+                define(p, assign_glue_cmd, skip_base + cur_val);
+                break;
+            case mu_skip_def_code:
+                define(p, assign_mu_glue_cmd, mu_skip_base + cur_val);
+                break;
+            case toks_def_code:
+                define(p, assign_toks_cmd, toks_base + cur_val);
+                break;
+            default:
+                confusion("shorthand_def");
+                break;
+            }
+            break;
+        }
+        break;
+    case read_to_cs_cmd:
+        j = cur_chr;
+        scan_int();
+        n = cur_val;
+        if (!scan_keyword("to")) {
+            print_err("Missing `to' inserted");
+            help2("You should have said `\\read<number> to \\cs'.",
+                  "I'm going to look for the \\cs now.");
+            error();
+        }
+        get_r_token();
+        p = cur_cs;
+        read_toks(n, p, j);
+        define(p, call_cmd, cur_val);
+        break;
+    case toks_register_cmd:
+    case assign_toks_cmd:
+        /* The token-list parameters, \.{\\output} and \.{\\everypar}, etc., receive
+           their values in the following way. (For safety's sake, we place an
+           enclosing pair of braces around an \.{\\output} list.) */
+        q = cur_cs;
+        if (cur_cmd == toks_register_cmd) {
+            scan_register_num();
+            p = toks_base + cur_val;
+        } else {
+            p = cur_chr;        /* |p=every_par_loc| or |output_routine_loc| or \dots */
+        }
+        scan_optional_equals();
+        /* Get the next non-blank non-relax non-call token */
+        do {
+            get_x_token();
+        } while ((cur_cmd == spacer_cmd) || (cur_cmd == relax_cmd));
+
+        if (cur_cmd != left_brace_cmd) {
+            /* If the right-hand side is a token parameter
+               or token register, finish the assignment and |goto done| */
+            if (cur_cmd == toks_register_cmd) {
+                scan_register_num();
+                cur_cmd = assign_toks_cmd;
+                cur_chr = toks_base + cur_val;
+            }
+            if (cur_cmd == assign_toks_cmd) {
+                q = equiv(cur_chr);
+                if (q == null) {
+                    define(p, undefined_cs_cmd, null);
+                } else {
+                    add_token_ref(q);
+                    define(p, call_cmd, q);
+                }
+                goto DONE;
+            }
+        }
+        back_input();
+        cur_cs = q;
+        q = scan_toks(false, false);
+        if (token_link(def_ref) == null) {      /* empty list: revert to the default */
+            define(p, undefined_cs_cmd, null);
+            free_avail(def_ref);
+        } else {
+            if (p == output_routine_loc) {      /* enclose in curlies */
+                p = get_avail();
+                set_token_link(q, p);
+                p = output_routine_loc;
+                q = token_link(q);
+                set_token_info(q, right_brace_token + '}');
                 q = get_avail();
-                set_token_info(q, j);
+                set_token_info(q, left_brace_token + '{');
                 set_token_link(q, token_link(def_ref));
                 set_token_link(def_ref, q);
             }
-            define(p, call_cmd + (a % 4), def_ref);
+            define(p, call_cmd, def_ref);
+        }
+        break;
+    case assign_int_cmd:
+        /* Similar routines are used to assign values to the numeric parameters. */
+        p = cur_chr;
+        scan_optional_equals();
+        scan_int();
+        assign_internal_value(a, p, cur_val);
+        break;
+    case assign_attr_cmd:
+        p = cur_chr;
+        scan_optional_equals();
+        scan_int();
+        if ((p - attribute_base) > max_used_attr)
+            max_used_attr = (p - attribute_base);
+        attr_list_cache = cache_disabled;
+        word_define(p, cur_val);
+        break;
+    case assign_dir_cmd:
+        /* DIR: Assign direction codes */
+        scan_direction();
+        switch (cur_chr) {
+        case int_base + page_direction_code:
+            eq_word_define(int_base + page_direction_code, cur_val);
             break;
-        case let_cmd:
-            n = cur_chr;
-            if (n == normal) {
-                get_r_token();
-                p = cur_cs;
-                do {
-                    get_token();
-                } while (cur_cmd == spacer_cmd);
-                if (cur_tok == other_token + '=') {
-                    get_token();
-                    if (cur_cmd == spacer_cmd)
-                        get_token();
-                }
-            } else if (n == normal + 1) {
-                /* futurelet */
-                get_r_token();
-                p = cur_cs;
-                get_token();
-                q = cur_tok;
-                get_token();
-                back_input();
-                cur_tok = q;
-                /* look ahead, then back up */
-                /* note that |back_input| doesn't affect |cur_cmd|, |cur_chr| */
-                back_input();
-            } else {
-                /* letcharcode */
-                scan_int();
-                if (cur_val > 0) {
-                    cur_cs = active_to_cs(cur_val, true);
-                    set_token_info(cur_cs, cur_cs + cs_token_flag);
-                    p = cur_cs;
-                    do {
-                        get_token();
-                    } while (cur_cmd == spacer_cmd);
-                    if (cur_tok == other_token + '=') {
-                        get_token();
-                        if (cur_cmd == spacer_cmd)
-                            get_token();
-                    }
-                } else {
-                    p = null;
-                    tex_error("invalid number for \\letcharcode",NULL);
-                }
-            }
-            if (cur_cmd >= call_cmd)
-                add_token_ref(cur_chr);
-            define(p, cur_cmd, cur_chr);
+        case int_base + body_direction_code:
+            eq_word_define(int_base + body_direction_code, cur_val);
             break;
-        case shorthand_def_cmd:
-            /* We temporarily define |p| to be |relax|, so that an occurrence of |p|
-               while scanning the definition will simply stop the scanning instead of
-               producing an ``undefined control sequence'' error or expanding the
-               previous meaning.  This allows, for instance, `\.{\\chardef\\foo=123\\foo}'.
-             */
-            n = cur_chr;
-            get_r_token();
-            p = cur_cs;
-            define(p, relax_cmd, too_big_char);
-            scan_optional_equals();
-            switch (n) {
-            case char_def_code:
-                scan_char_num();
-                define(p, char_given_cmd, cur_val);
-                break;
-            case math_char_def_code:
-                mval = scan_mathchar(tex_mathcode);
-                cur_val =
-                    (mval.class_value * 16 + mval.family_value) * 256 +
-                    mval.character_value;
-                define(p, math_given_cmd, cur_val);
-                break;
-            case xmath_char_def_code:
-                mval = scan_mathchar(umath_mathcode);
-                cur_val =
-                    (mval.class_value + (8 * mval.family_value)) * (65536 * 32) +
-                    mval.character_value;
-                define(p, xmath_given_cmd, cur_val);
-                break;
-            case umath_char_def_code:
-                mval = scan_mathchar(umathnum_mathcode);
-                cur_val =
-                    (mval.class_value + (8 * mval.family_value)) * (65536 * 32) +
-                    mval.character_value;
-                define(p, xmath_given_cmd, cur_val);
-                break;
-            default:
-                scan_register_num();
-                switch (n) {
-                case count_def_code:
-                    define(p, assign_int_cmd, count_base + cur_val);
-                    break;
-                case attribute_def_code:
-                    define(p, assign_attr_cmd, attribute_base + cur_val);
-                    break;
-                case dimen_def_code:
-                    define(p, assign_dimen_cmd, scaled_base + cur_val);
-                    break;
-                case skip_def_code:
-                    define(p, assign_glue_cmd, skip_base + cur_val);
-                    break;
-                case mu_skip_def_code:
-                    define(p, assign_mu_glue_cmd, mu_skip_base + cur_val);
-                    break;
-                case toks_def_code:
-                    define(p, assign_toks_cmd, toks_base + cur_val);
-                    break;
-                default:
-                    confusion("shorthand_def");
-                    break;
-                }
-                break;
-            }
+        case int_base + par_direction_code:
+            eq_word_define(int_base + par_direction_code, cur_val);
             break;
-        case read_to_cs_cmd:
-            j = cur_chr;
-            scan_int();
-            n = cur_val;
-            if (!scan_keyword("to")) {
-                print_err("Missing `to' inserted");
-                help2("You should have said `\\read<number> to \\cs'.",
-                      "I'm going to look for the \\cs now.");
-                error();
-            }
-            get_r_token();
-            p = cur_cs;
-            read_toks(n, p, j);
-            define(p, call_cmd, cur_val);
+        case int_base + math_direction_code:
+            eq_word_define(int_base + math_direction_code, cur_val);
             break;
-        case toks_register_cmd:
-        case assign_toks_cmd:
-            /* The token-list parameters, \.{\\output} and \.{\\everypar}, etc., receive
-               their values in the following way. (For safety's sake, we place an
-               enclosing pair of braces around an \.{\\output} list.) */
-            q = cur_cs;
-            if (cur_cmd == toks_register_cmd) {
-                scan_register_num();
-                p = toks_base + cur_val;
-            } else {
-                p = cur_chr;        /* |p=every_par_loc| or |output_routine_loc| or \dots */
-            }
-            scan_optional_equals();
-            /* Get the next non-blank non-relax non-call token */
-            do {
-                get_x_token();
-            } while ((cur_cmd == spacer_cmd) || (cur_cmd == relax_cmd));
-
-            if (cur_cmd != left_brace_cmd) {
-                /* If the right-hand side is a token parameter
-                   or token register, finish the assignment and |goto done| */
-                if (cur_cmd == toks_register_cmd) {
-                    scan_register_num();
-                    cur_cmd = assign_toks_cmd;
-                    cur_chr = toks_base + cur_val;
-                }
-                if (cur_cmd == assign_toks_cmd) {
-                    q = equiv(cur_chr);
-                    if (q == null) {
-                        define(p, undefined_cs_cmd, null);
-                    } else {
-                        add_token_ref(q);
-                        define(p, call_cmd, q);
-                    }
-                    goto DONE;
-                }
-            }
-            back_input();
-            cur_cs = q;
-            q = scan_toks(false, false);
-            if (token_link(def_ref) == null) {      /* empty list: revert to the default */
-                define(p, undefined_cs_cmd, null);
-                free_avail(def_ref);
-            } else {
-                if (p == output_routine_loc) {      /* enclose in curlies */
-                    p = get_avail();
-                    set_token_link(q, p);
-                    p = output_routine_loc;
-                    q = token_link(q);
-                    set_token_info(q, right_brace_token + '}');
-                    q = get_avail();
-                    set_token_info(q, left_brace_token + '{');
-                    set_token_link(q, token_link(def_ref));
-                    set_token_link(def_ref, q);
-                }
-                define(p, call_cmd, def_ref);
-            }
-            break;
-        case assign_int_cmd:
-            /* Similar routines are used to assign values to the numeric parameters. */
-            p = cur_chr;
-            scan_optional_equals();
-            scan_int();
-            assign_internal_value(a, p, cur_val);
-            break;
-        case assign_attr_cmd:
-            p = cur_chr;
-            scan_optional_equals();
-            scan_int();
-            if ((p - attribute_base) > max_used_attr)
-                max_used_attr = (p - attribute_base);
-            attr_list_cache = cache_disabled;
-            word_define(p, cur_val);
-            break;
-        case assign_dir_cmd:
-            /* DIR: Assign direction codes */
-            scan_direction();
-            switch (cur_chr) {
-            case int_base + page_direction_code:
-                eq_word_define(int_base + page_direction_code, cur_val);
-                break;
-            case int_base + body_direction_code:
-                eq_word_define(int_base + body_direction_code, cur_val);
-                break;
-            case int_base + par_direction_code:
-                eq_word_define(int_base + par_direction_code, cur_val);
-                break;
-            case int_base + math_direction_code:
-                eq_word_define(int_base + math_direction_code, cur_val);
-                break;
-            case int_base + text_direction_code:
+        case int_base + text_direction_code:
 #if 0
     /* various tests hint that this is unnecessary and
      * sometimes even produces weird results, eg
@@ -2506,322 +2402,311 @@ void prefixed_command(void)
      *  (DEFCBA)
      * in the output
      */
-                if ((no_local_dirs > 0) && (abs(mode) == hmode)) {
-                    /* DIR: Add local dir node */
-                    tail_append(new_dir(text_direction));
-                }
+            if ((no_local_dirs > 0) && (abs(mode) == hmode)) {
+                /* DIR: Add local dir node */
+                tail_append(new_dir(text_direction));
+            }
 #endif
-                update_text_dir_ptr(cur_val);
-                if (abs(mode) == hmode) {
-                    /* DIR: Add local dir node */
-                    tail_append(new_dir(cur_val));
-                    dir_level(tail) = cur_level;
-                }
-                eq_word_define(int_base + text_direction_code, cur_val);
-                eq_word_define(int_base + no_local_dirs_code, no_local_dirs + 1);
-                break;
+            update_text_dir_ptr(cur_val);
+            if (abs(mode) == hmode) {
+                /* DIR: Add local dir node */
+                tail_append(new_dir(cur_val));
+                dir_level(tail) = cur_level;
             }
+            eq_word_define(int_base + text_direction_code, cur_val);
+            eq_word_define(int_base + no_local_dirs_code, no_local_dirs + 1);
             break;
-        case assign_dimen_cmd:
-            p = cur_chr;
-            scan_optional_equals();
-            scan_normal_dimen();
-            assign_internal_value(a, p, cur_val);
-            break;
-        case assign_glue_cmd:
-        case assign_mu_glue_cmd:
-            p = cur_chr;
-            n = cur_cmd;
-            scan_optional_equals();
-            if (n == assign_mu_glue_cmd)
-                scan_glue(mu_val_level);
-            else
-                scan_glue(glue_val_level);
-            trap_zero_glue();
-            define(p, glue_ref_cmd, cur_val);
-            break;
-        case def_char_code_cmd:
-        case def_del_code_cmd:
-            /* Let |n| be the largest legal code value, based on |cur_chr| */
-            if (cur_chr == cat_code_base)
-                n = max_char_code;
-            else if (cur_chr == sf_code_base)
-                n = 077777;
-            else
-                n = biggest_char;
+        }
+        break;
+    case assign_dimen_cmd:
+        p = cur_chr;
+        scan_optional_equals();
+        scan_normal_dimen();
+        assign_internal_value(a, p, cur_val);
+        break;
+    case assign_glue_cmd:
+    case assign_mu_glue_cmd:
+        p = cur_chr;
+        n = cur_cmd;
+        scan_optional_equals();
+        if (n == assign_mu_glue_cmd)
+            scan_glue(mu_val_level);
+        else
+            scan_glue(glue_val_level);
+        trap_zero_glue();
+        define(p, glue_ref_cmd, cur_val);
+        break;
+    case def_char_code_cmd:
+    case def_del_code_cmd:
+        /* Let |n| be the largest legal code value, based on |cur_chr| */
+        if (cur_chr == cat_code_base)
+            n = max_char_code;
+        else if (cur_chr == sf_code_base)
+            n = 077777;
+        else
+            n = biggest_char;
 
-            p = cur_chr;
-            if (cur_chr == math_code_base) {
-                if (is_global(a))
-                    cur_val1 = level_one;
-                else
-                    cur_val1 = cur_level;
-                scan_extdef_math_code(cur_val1, tex_mathcode);
-            } else if (cur_chr == lc_code_base) {
-                scan_char_num();
-                p = cur_val;
-                scan_optional_equals();
-                scan_int();
-                check_def_code(lc_code_base);
-                define_lc_code(p, cur_val);
-            } else if (cur_chr == uc_code_base) {
-                scan_char_num();
-                p = cur_val;
-                scan_optional_equals();
-                scan_int();
-                check_def_code(uc_code_base);
-                define_uc_code(p, cur_val);
-            } else if (cur_chr == sf_code_base) {
-                scan_char_num();
-                p = cur_val;
-                scan_optional_equals();
-                scan_int();
-                check_def_code(sf_code_base);
-                define_sf_code(p, cur_val);
-            } else if (cur_chr == cat_code_base) {
-                scan_char_num();
-                p = cur_val;
-                scan_optional_equals();
-                scan_int();
-                check_def_code(cat_code_base);
-                define_cat_code(p, cur_val);
-            } else if (cur_chr == del_code_base) {
-                if (is_global(a))
-                    cur_val1 = level_one;
-                else
-                    cur_val1 = cur_level;
-                scan_extdef_del_code(cur_val1, tex_mathcode);
-            }
-            break;
-        case extdef_math_code_cmd:
-        case extdef_del_code_cmd:
+        p = cur_chr;
+        if (cur_chr == math_code_base) {
             if (is_global(a))
                 cur_val1 = level_one;
             else
                 cur_val1 = cur_level;
-            if (cur_chr == math_code_base)
-                scan_extdef_math_code(cur_val1, umath_mathcode);
-            else if (cur_chr == math_code_base + 1)
-                scan_extdef_math_code(cur_val1, umathnum_mathcode);
-            else if (cur_chr == del_code_base)
-                scan_extdef_del_code(cur_val1, umath_mathcode);
-            else if (cur_chr == del_code_base + 1)
-                scan_extdef_del_code(cur_val1, umathnum_mathcode);
-            break;
-        case def_family_cmd:
-            p = cur_chr;
-            scan_math_family_int();
-            cur_val1 = cur_val;
+            scan_extdef_math_code(cur_val1, tex_mathcode);
+        } else if (cur_chr == lc_code_base) {
+            scan_char_num();
+            p = cur_val;
             scan_optional_equals();
-            scan_font_ident();
-            define_fam_fnt(cur_val1, p, cur_val);
-            break;
-        case set_math_param_cmd:
-            p = cur_chr;
-            get_token();
-            if (cur_cmd != math_style_cmd) {
-                print_err("Missing math style, treated as \\displaystyle");
-                help1
-                    ("A style should have been here; I inserted `\\displaystyle'.");
-                cur_val1 = display_style;
-                back_error();
-            } else {
-                cur_val1 = cur_chr;
-            }
+            scan_int();
+            check_def_code(lc_code_base);
+            define_lc_code(p, cur_val);
+        } else if (cur_chr == uc_code_base) {
+            scan_char_num();
+            p = cur_val;
             scan_optional_equals();
-            if (p < math_param_first_mu_glue) {
-                if (p == math_param_radical_degree_raise)
-                    scan_int();
-                else
-                    scan_dimen(false, false, false);
-            } else {
-                scan_glue(mu_val_level);
-                trap_zero_glue();
-                if (cur_val == glue_par(thin_mu_skip_code))
-                    cur_val = thin_mu_skip_code;
-                else if (cur_val == glue_par(med_mu_skip_code))
-                    cur_val = med_mu_skip_code;
-                else if (cur_val == glue_par(thick_mu_skip_code))
-                    cur_val = thick_mu_skip_code;
-            }
-            define_math_param(p, cur_val1, cur_val);
-            break;
-        case register_cmd:
-        case advance_cmd:
-        case multiply_cmd:
-        case divide_cmd:
-            do_register_command(a);
-            break;
-        case set_box_cmd:
-            /* The processing of boxes is somewhat different, because we may need
-               to scan and create an entire box before we actually change the value
-               of the old one. */
-            scan_register_num();
+            scan_int();
+            check_def_code(uc_code_base);
+            define_uc_code(p, cur_val);
+        } else if (cur_chr == sf_code_base) {
+            scan_char_num();
+            p = cur_val;
+            scan_optional_equals();
+            scan_int();
+            check_def_code(sf_code_base);
+            define_sf_code(p, cur_val);
+        } else if (cur_chr == cat_code_base) {
+            scan_char_num();
+            p = cur_val;
+            scan_optional_equals();
+            scan_int();
+            check_def_code(cat_code_base);
+            define_cat_code(p, cur_val);
+        } else if (cur_chr == del_code_base) {
             if (is_global(a))
-                n = global_box_flag + cur_val;
+                cur_val1 = level_one;
             else
-                n = box_flag + cur_val;
-            scan_optional_equals();
-            if (set_box_allowed) {
-                scan_box(n);
-            } else {
-                print_err("Improper \\setbox");
-                help2("Sorry, \\setbox is not allowed after \\halign in a display,",
-                      "or between \\accent and an accented character.");
-                error();
-            }
-            break;
-        case set_aux_cmd:
-            /* The |space_factor| or |prev_depth| settings are changed when a |set_aux|
-               command is sensed. Similarly, |prev_graf| is changed in the presence of
-               |set_prev_graf|, and |dead_cycles| or |insert_penalties| in the presence of
-               |set_page_int|. These definitions are always global. */
-            alter_aux();
-            break;
-        case set_prev_graf_cmd:
-            alter_prev_graf();
-            break;
-        case set_page_dimen_cmd:
-            alter_page_so_far();
-            break;
-        case set_page_int_cmd:
-            alter_integer();
-            break;
-        case set_box_dimen_cmd:
-            /* When some dimension of a box register is changed, the change isn't exactly
-               global; but \TeX\ does not look at the \.{\\global} switch. */
-            alter_box_dimen();
-            break;
-        case set_tex_shape_cmd:
-            q = cur_chr;
-            scan_optional_equals();
-            scan_int();
-            n = cur_val;
-            if (n <= 0) {
-                p = null;
-            } else {
-                p = new_node(shape_node, 2 * (n + 1) + 1);
-                vinfo(p + 1) = n;
-                for (j = 1; j <= n; j++) {
-                    scan_normal_dimen();
-                    varmem[p + 2 * j].cint = cur_val;       /* indentation */
-                    scan_normal_dimen();
-                    varmem[p + 2 * j + 1].cint = cur_val;   /* width */
-                }
-            }
-            define(q, shape_ref_cmd, p);
-            break;
-        case set_etex_shape_cmd:
-            q = cur_chr;
-            scan_optional_equals();
-            scan_int();
-            n = cur_val;
-            if (n <= 0) {
-                p = null;
-            } else {
-                n = (cur_val / 2) + 1;
-                p = new_node(shape_node, 2 * n + 1 + 1);
-                vinfo(p + 1) = n;
-                n = cur_val;
-                varmem[p + 2].cint = n;     /* number of penalties */
-                for (j = p + 3; j <= p + n + 2; j++) {
-                    scan_int();
-                    varmem[j].cint = cur_val;       /* penalty values */
-                }
-                if (!odd(n))
-                    varmem[p + n + 3].cint = 0;     /* unused */
-            }
-            define(q, shape_ref_cmd, p);
-            break;
-        case hyph_data_cmd:
-            /* All of \TeX's parameters are kept in |eqtb| except the font information,
-               the interaction mode, and the hyphenation tables; these are strictly global.
-             */
-            switch (cur_chr) {
-                case 0:
-                    new_hyph_exceptions();
-                    break;
-                case 1:
-                    new_patterns();
-                    break;
-                case 2:
-                    new_pre_hyphen_char();
-                    break;
-                case 3:
-                    new_post_hyphen_char();
-                    break;
-                case 4:
-                    new_pre_exhyphen_char();
-                    break;
-                case 5:
-                    new_post_exhyphen_char();
-                    break;
-                case 6:
-                    new_hyphenation_min();
-                    break;
-                case 7:
-                    new_hj_code();
-                    break;
-            }
-            break;
-        case assign_font_dimen_cmd:
-            set_font_dimen();
-            break;
-        case assign_font_int_cmd:
-            n = cur_chr;
-            scan_font_ident();
-            f = cur_val;
-            if (n == no_lig_code) {
-                set_no_ligatures(f);
-            } else if (n < lp_code_base) {
-                scan_optional_equals();
+                cur_val1 = cur_level;
+            scan_extdef_del_code(cur_val1, tex_mathcode);
+        }
+        break;
+    case extdef_math_code_cmd:
+    case extdef_del_code_cmd:
+        if (is_global(a))
+            cur_val1 = level_one;
+        else
+            cur_val1 = cur_level;
+        if (cur_chr == math_code_base)
+            scan_extdef_math_code(cur_val1, xetex_mathcode);
+        else if (cur_chr == math_code_base + 1)
+            scan_extdef_math_code(cur_val1, xetexnum_mathcode);
+        else if (cur_chr == del_code_base)
+            scan_extdef_del_code(cur_val1, xetex_mathcode);
+        else if (cur_chr == del_code_base + 1)
+            scan_extdef_del_code(cur_val1, xetexnum_mathcode);
+        break;
+    case def_family_cmd:
+        p = cur_chr;
+        scan_math_family_int();
+        cur_val1 = cur_val;
+        scan_optional_equals();
+        scan_font_ident();
+        define_fam_fnt(cur_val1, p, cur_val);
+        break;
+    case set_math_param_cmd:
+        p = cur_chr;
+        get_token();
+        if (cur_cmd != math_style_cmd) {
+            print_err("Missing math style, treated as \\displaystyle");
+            help1
+                ("A style should have been here; I inserted `\\displaystyle'.");
+            cur_val1 = display_style;
+            back_error();
+        } else {
+            cur_val1 = cur_chr;
+        }
+        scan_optional_equals();
+        if (p < math_param_first_mu_glue) {
+            if (p == math_param_radical_degree_raise)
                 scan_int();
-                if (n == 0)
-                    set_hyphen_char(f, cur_val);
-                else
-                    set_skew_char(f, cur_val);
-            } else {
-                scan_char_num();
-                p = cur_val;
-                scan_optional_equals();
-                scan_int();
-                switch (n) {
-                    case lp_code_base:
-                        set_lp_code(f, p, cur_val);
-                        break;
-                    case rp_code_base:
-                        set_rp_code(f, p, cur_val);
-                        break;
-                    case ef_code_base:
-                        set_ef_code(f, p, cur_val);
-                        break;
-                    case tag_code:
-                        set_tag_code(f, p, cur_val);
-                        break;
-                }
+            else
+                scan_dimen(false, false, false);
+        } else {
+            scan_glue(mu_val_level);
+            trap_zero_glue();
+            if (cur_val == glue_par(thin_mu_skip_code))
+                cur_val = thin_mu_skip_code;
+            else if (cur_val == glue_par(med_mu_skip_code))
+                cur_val = med_mu_skip_code;
+            else if (cur_val == glue_par(thick_mu_skip_code))
+                cur_val = thick_mu_skip_code;
+        }
+        define_math_param(p, cur_val1, cur_val);
+        break;
+    case register_cmd:
+    case advance_cmd:
+    case multiply_cmd:
+    case divide_cmd:
+        do_register_command(a);
+        break;
+    case set_box_cmd:
+        /* The processing of boxes is somewhat different, because we may need
+           to scan and create an entire box before we actually change the value
+           of the old one. */
+        scan_register_num();
+        if (is_global(a))
+            n = global_box_flag + cur_val;
+        else
+            n = box_flag + cur_val;
+        scan_optional_equals();
+        if (set_box_allowed) {
+            scan_box(n);
+        } else {
+            print_err("Improper \\setbox");
+            help2("Sorry, \\setbox is not allowed after \\halign in a display,",
+                  "or between \\accent and an accented character.");
+            error();
+        }
+        break;
+    case set_aux_cmd:
+        /* The |space_factor| or |prev_depth| settings are changed when a |set_aux|
+           command is sensed. Similarly, |prev_graf| is changed in the presence of
+           |set_prev_graf|, and |dead_cycles| or |insert_penalties| in the presence of
+           |set_page_int|. These definitions are always global. */
+        alter_aux();
+        break;
+    case set_prev_graf_cmd:
+        alter_prev_graf();
+        break;
+    case set_page_dimen_cmd:
+        alter_page_so_far();
+        break;
+    case set_page_int_cmd:
+        alter_integer();
+        break;
+    case set_box_dimen_cmd:
+        /* When some dimension of a box register is changed, the change isn't exactly
+           global; but \TeX\ does not look at the \.{\\global} switch. */
+        alter_box_dimen();
+        break;
+    case set_tex_shape_cmd:
+        q = cur_chr;
+        scan_optional_equals();
+        scan_int();
+        n = cur_val;
+        if (n <= 0) {
+            p = null;
+        } else {
+            p = new_node(shape_node, 2 * (n + 1) + 1);
+            vinfo(p + 1) = n;
+            for (j = 1; j <= n; j++) {
+                scan_normal_dimen();
+                varmem[p + 2 * j].cint = cur_val;       /* indentation */
+                scan_normal_dimen();
+                varmem[p + 2 * j + 1].cint = cur_val;   /* width */
             }
+        }
+        define(q, shape_ref_cmd, p);
+        break;
+    case set_etex_shape_cmd:
+        q = cur_chr;
+        scan_optional_equals();
+        scan_int();
+        n = cur_val;
+        if (n <= 0) {
+            p = null;
+        } else {
+            n = (cur_val / 2) + 1;
+            p = new_node(shape_node, 2 * n + 1 + 1);
+            vinfo(p + 1) = n;
+            n = cur_val;
+            varmem[p + 2].cint = n;     /* number of penalties */
+            for (j = p + 3; j <= p + n + 2; j++) {
+                scan_int();
+                varmem[j].cint = cur_val;       /* penalty values */
+            }
+            if (!odd(n))
+                varmem[p + n + 3].cint = 0;     /* unused */
+        }
+        define(q, shape_ref_cmd, p);
+        break;
+    case hyph_data_cmd:
+        /* All of \TeX's parameters are kept in |eqtb| except the font information,
+           the interaction mode, and the hyphenation tables; these are strictly global.
+         */
+        switch (cur_chr) {
+        case 0:
+            new_hyph_exceptions();
             break;
-        case def_font_cmd:
-            /* Here is where the information for a new font gets loaded. */
-            tex_def_font((small_number) a);
+        case 1:
+            new_patterns();
             break;
-        case letterspace_font_cmd:
-            new_letterspaced_font((small_number) a);
+        case 2:
+            new_pre_hyphen_char();
             break;
-        case copy_font_cmd:
-            make_font_copy((small_number) a);
+        case 3:
+            new_post_hyphen_char();
             break;
-        case set_font_id_cmd:
+        case 4:
+            new_pre_exhyphen_char();
+            break;
+        case 5:
+            new_post_exhyphen_char();
+            break;
+        }
+        break;
+    case assign_font_dimen_cmd:
+        set_font_dimen();
+        break;
+    case assign_font_int_cmd:
+        n = cur_chr;
+        scan_font_ident();
+        f = cur_val;
+        if (n == no_lig_code) {
+            set_no_ligatures(f);
+        } else if (n < lp_code_base) {
+            scan_optional_equals();
             scan_int();
-            if (is_valid_font(cur_val))
-                zset_cur_font(cur_val);
-            break ;
-        case set_interaction_cmd:
-            new_interaction();
-            break;
-        default:
-            confusion("prefix");
-            break;
+            if (n == 0)
+                set_hyphen_char(f, cur_val);
+            else
+                set_skew_char(f, cur_val);
+        } else {
+            scan_char_num();
+            p = cur_val;
+            scan_optional_equals();
+            scan_int();
+            switch (n) {
+            case lp_code_base:
+                set_lp_code(f, p, cur_val);
+                break;
+            case rp_code_base:
+                set_rp_code(f, p, cur_val);
+                break;
+            case ef_code_base:
+                set_ef_code(f, p, cur_val);
+                break;
+            case tag_code:
+                set_tag_code(f, p, cur_val);
+                break;
+            }
+        }
+        break;
+    case def_font_cmd:
+        /* Here is where the information for a new font gets loaded. */
+        tex_def_font((small_number) a);
+        break;
+    case letterspace_font_cmd:
+        new_letterspaced_font((small_number) a);
+        break;
+    case pdf_copy_font_cmd:
+        make_font_copy((small_number) a);
+        break;
+    case set_interaction_cmd:
+        new_interaction();
+        break;
+    default:
+        confusion("prefix");
+        break;
     }                           /* end of Assignments cases */
   DONE:
     /* Insert a token saved by \.{\\afterassignment}, if any */
@@ -2835,28 +2720,35 @@ void prefixed_command(void)
 @ @c
 void fixup_directions(void)
 {
-    int temp_no_whatsits = no_local_whatsits;
-    int temp_no_dirs = no_local_dirs;
-    int temporary_dir = text_direction;
+    int temp_no_whatsits;
+    int temp_no_dirs;
+    int temporary_dir;
+    temp_no_whatsits = no_local_whatsits;
+    temp_no_dirs = no_local_dirs;
+    temporary_dir = text_direction;
     if (dir_level(text_dir_ptr) == cur_level) {
         /* DIR: Remove from |text_dir_ptr| */
         halfword text_dir_tmp = vlink(text_dir_ptr);
         flush_node(text_dir_ptr);
         text_dir_ptr = text_dir_tmp;
+
     }
     unsave();
     if (abs(mode) == hmode) {
         if (temp_no_dirs != 0) {
             /* DIR: Add local dir node */
             tail_append(new_dir(text_direction));
-            dir_dir(tail) = temporary_dir - dir_swap;
+
+            dir_dir(tail) = temporary_dir - 64;
         }
         if (temp_no_whatsits != 0) {
             /* LOCAL: Add local paragraph node */
             tail_append(make_local_par_node());
+
         }
     }
 }
+
 
 @ When a control sequence is to be defined, by \.{\\def} or \.{\\let} or
 something similar, the |get_r_token| routine will substitute a special
@@ -2935,9 +2827,17 @@ void assign_internal_value(int a, halfword p, int val)
                 word_define(p, val);
             }
             break;
+        case pdf_compress_level_code:
+            static_pdf->compress_level = val;
+            word_define(p, val);
+            break;
+        case pdf_objcompresslevel_code:
+            static_pdf->objcompresslevel = val;
+            word_define(p, val);
+            break;
         case language_code:
             if (val < 0) {
-                word_define(int_base + cur_lang_code, -1);
+	        word_define(int_base + cur_lang_code, -1);
                 word_define(p, -1);
             } else if (val > 16383) {
                 print_err("Invalid \\language");
@@ -2946,7 +2846,7 @@ void assign_internal_value(int a, halfword p, int val)
                      "Your invalid assignment will be ignored.");
                 error();
             } else {
-                word_define(int_base + cur_lang_code, val);
+	        word_define(int_base + cur_lang_code, val);
                 word_define(p, val);
             }
             break;
@@ -2968,6 +2868,7 @@ void assign_internal_value(int a, halfword p, int val)
             eq_word_define(int_base + no_local_whatsits_code,
                            no_local_whatsits + 1);
         }
+
     } else if ((p >= dimen_base) && (p <= eqtb_size)) {
         if (p == (dimen_base + page_left_offset_code)) {
             n = val - one_true_inch;
@@ -2983,12 +2884,14 @@ void assign_internal_value(int a, halfword p, int val)
             word_define(dimen_base + page_top_offset_code, n);
         }
         word_define(p, val);
+
     } else if ((p >= local_base) && (p < toks_base)) {  /* internal locals  */
         define(p, call_cmd, val);
     } else {
         confusion("assign internal value");
     }
 }
+
 
 @ When a glue register or parameter becomes zero, it will always point to
 |zero_glue| because of the following procedure. (Exception: The tabskip
@@ -3007,16 +2910,16 @@ void trap_zero_glue(void)
 
 @ We use the fact that |register<advance<multiply<divide|
 
-Compute the register location |l| and its type |p|; but |return| if invalid
-Here we use the fact that the consecutive codes |int_val..mu_val| and
-|assign_int..assign_mu_glue| correspond to each other nicely.
-
 @c
 void do_register_command(int a)
 {
-    int p;
-    halfword q = cur_cmd;
-    halfword l = 0;
+    halfword l, q, r, s;        /* for list manipulation */
+    int p;                      /* type of register involved */
+    q = cur_cmd;
+    /* Compute the register location |l| and its type |p|; but |return| if invalid */
+    /* Here we use the fact that the consecutive codes |int_val..mu_val| and
+       |assign_int..assign_mu_glue| correspond to each other nicely. */
+    l = 0;
     if (q != register_cmd) {
         get_x_token();
         if ((cur_cmd >= assign_int_cmd) && (cur_cmd <= assign_mu_glue_cmd)) {
@@ -3046,11 +2949,12 @@ void do_register_command(int a)
         l = cur_val + skip_base;
     else if (p == mu_val_level)
         l = cur_val + mu_skip_base;
+
   FOUND:
     if (q == register_cmd) {
         scan_optional_equals();
     } else if (scan_keyword("by")) {
-        /* optional `\.{by}' */
+        ;                       /* optional `\.{by}' */
     }
     arith_error = false;
     if (q < multiply_cmd) {
@@ -3066,8 +2970,8 @@ void do_register_command(int a)
             scan_glue(p);
             if (q == advance_cmd) {
                 /* Compute the sum of two glue specs */
-                halfword r = equiv(l);
                 q = new_spec(cur_val);
+                r = equiv(l);
                 delete_glue_ref(cur_val);
                 width(q) = width(q) + width(r);
                 if (stretch(q) == 0) {
@@ -3093,6 +2997,7 @@ void do_register_command(int a)
                 cur_val = q;
             }
         }
+
     } else {
         /* Compute result of |multiply| or |divide|, put it in |cur_val| */
         scan_int();
@@ -3107,8 +3012,8 @@ void do_register_command(int a)
                 cur_val = x_over_n(eqtb[l].cint, cur_val);
             }
         } else {
-            halfword s = equiv(l);
-            halfword r = new_spec(s);
+            s = equiv(l);
+            r = new_spec(s);
             if (q == multiply_cmd) {
                 width(r) = nx_plus_y(width(s), cur_val, 0);
                 stretch(r) = nx_plus_y(stretch(s), cur_val, 0);
@@ -3120,6 +3025,7 @@ void do_register_command(int a)
             }
             cur_val = r;
         }
+
     }
     if (arith_error) {
         print_err("Arithmetic overflow");
@@ -3145,6 +3051,7 @@ void do_register_command(int a)
         define(l, glue_ref_cmd, cur_val);
     }
 }
+
 
 @ @c
 void alter_aux(void)
@@ -3237,6 +3144,7 @@ void alter_box_dimen(void)
         varmem[box(b) + c].cint = cur_val;
 }
 
+
 @ @c
 void new_interaction(void)
 {
@@ -3249,12 +3157,14 @@ void new_interaction(void)
     fixup_selector(log_opened_global);
 }
 
+
 @ The \.{\\afterassignment} command puts a token into the global
 variable |after_token|. This global variable is examined just after
 every assignment has been performed.
 
 @c
 halfword after_token;           /* zero, or a saved token */
+
 
 @ Here is a procedure that might be called `Get the next non-blank non-relax
 non-call non-assignment token'.
@@ -3267,6 +3177,7 @@ void do_assignments(void)
         do {
             get_x_token();
         } while ((cur_cmd == spacer_cmd) || (cur_cmd == relax_cmd));
+
         if (cur_cmd <= max_non_prefixed_command)
             return;
         set_box_allowed = false;
@@ -3360,6 +3271,7 @@ void issue_message(void)
     flush_str(s);
 }
 
+
 @ The |error| routine calls on |give_err_help| if help is requested from
 the |err_help| parameter.
 
@@ -3368,6 +3280,8 @@ void give_err_help(void)
 {
     token_show(err_help);
 }
+
+
 
 @ The \.{\\uppercase} and \.{\\lowercase} commands are implemented by
 building a token list and then changing the cases of the letters in it.
@@ -3412,6 +3326,7 @@ void shift_case(void)
     back_list(token_link(def_ref));
     free_avail(def_ref);        /* omit reference count */
 }
+
 
 @ We come finally to the last pieces missing from |main_control|, namely the
 `\.{\\show}' commands that are useful when debugging.
@@ -3493,6 +3408,7 @@ void show_whatever(void)
             } while (p != null);
         }
         break;
+
     default:
         /* Show the current value of some parameter or register,
            then |goto common_ending| */
@@ -3515,6 +3431,7 @@ void show_whatever(void)
             selector = term_and_log;
         }
     }
+
   COMMON_ENDING:
     if (interaction < error_stop_mode) {
         help0();
@@ -3532,6 +3449,7 @@ void show_whatever(void)
     }
     error();
 }
+
 
 @ @c
 void initialize(void)
@@ -3566,12 +3484,14 @@ void initialize(void)
     initialize_marks();
     initialize_read();
 
-    static_pdf = init_pdf_struct(static_pdf); /* should be init_backend() */
+    assert(static_pdf == NULL);
+    static_pdf = init_pdf_struct(static_pdf);
 
     format_ident = 0;
     format_name = get_nullstr();
+    for (k = 0; k <= 17; k++)
+        write_open[k] = false;
     initialize_directions();
-    initialize_write_files();
     seconds_and_micros(epochseconds, microseconds);
     init_start_time(static_pdf);
 
@@ -3630,10 +3550,11 @@ void initialize(void)
         initialize_text_codes();
         initex_cat_codes(0);
         for (k = '0'; k <= '9'; k++)
-            set_math_code(k, var_code, 0, k, level_one);
+            set_math_code(k, tex_mathcode, var_code, 0, k, level_one);
         for (k = 'A'; k <= 'Z'; k++) {
-            set_math_code(k, var_code, 1, k, level_one);
-            set_math_code((k + 32), var_code, 1, (k + 32), level_one);
+            set_math_code(k, tex_mathcode, var_code, 1, k, level_one);
+            set_math_code((k + 32), tex_mathcode, var_code, 1, (k + 32),
+                          level_one);
             set_lc_code(k, k + 32, level_one);
             set_lc_code(k + 32, k + 32, level_one);
             set_uc_code(k, k, level_one);
@@ -3650,7 +3571,7 @@ void initialize(void)
         max_dead_cycles = 25;
         escape_char = '\\';
         end_line_char = carriage_return;
-        set_del_code('.', 0, 0, 0, 0, level_one); /* this null delimiter is used in error recovery */
+        set_del_code('.', tex_mathcode, 0, 0, 0, 0, level_one); /* this null delimiter is used in error recovery */
         ex_hyphen_char = '-';
         output_box = 255;
         for (k = dimen_base; k <= eqtb_size; k++)
@@ -3659,6 +3580,11 @@ void initialize(void)
         page_top_offset = one_inch;
         page_right_offset = one_inch;
         page_bottom_offset = one_inch;
+        pdf_ignored_dimen = ignore_depth;
+        pdf_each_line_height = pdf_ignored_dimen;
+        pdf_each_line_depth = pdf_ignored_dimen;
+        pdf_first_line_height = pdf_ignored_dimen;
+        pdf_last_line_depth = pdf_ignored_dimen;
         ini_init_primitives();
         hash_used = frozen_control_sequence;    /* nothing is used */
         hash_high = 0;
@@ -3671,8 +3597,19 @@ void initialize(void)
         cs_text(frozen_primitive) = maketexstring("primitive");
         create_null_font();
         font_bytes = 0;
-        px_dimen = one_bp;
-        math_eqno_gap_step = 1000 ;
+        pdf_h_origin = one_inch;
+        pdf_v_origin = one_inch;
+        pdf_compress_level = 9;
+        pdf_objcompresslevel = 0;
+        pdf_decimal_digits = 3;
+        pdf_image_resolution = 72;
+        pdf_minor_version = 4;
+        pdf_gamma = 1000;
+        pdf_image_gamma = 2200;
+        pdf_image_hicolor = 1;
+        pdf_image_apply_gamma = 0;
+        pdf_px_dimen = one_bp;
+        pdf_draftmode = 0;
         cs_text(frozen_protection) = maketexstring("inaccessible");
         format_ident = maketexstring(" (INITEX)");
         cs_text(end_write) = maketexstring("endwrite");

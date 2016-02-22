@@ -1,6 +1,6 @@
 /* This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
 
-    Copyright (C) 2002-2016 by Jin-Hwan Cho and Shunsaku Hirata,
+    Copyright (C) 2002-2014 by Jin-Hwan Cho and Shunsaku Hirata,
     the dvipdfmx project team.
     
     Copyright (C) 1998, 1999 by Mark A. Wicks <mwicks@kettering.edu>
@@ -32,7 +32,7 @@
 
 #ifdef IODEBUG 
 static FILE *iodebug_file = NULL;
-static int  event = 0;
+static long event = 0;
 static void io_debug_init(void)
 {
   if (!iodebug_file) {
@@ -56,7 +56,7 @@ FILE *mfopen(const char *name, const char *mode, const char *function, int line)
   tmp = fopen (name, mode);
 #endif
   event += 1;
-  fprintf(iodebug_file, "%p %07d [fopen] %s:%d\n", tmp, event,
+  fprintf(iodebug_file, "%p %07ld [fopen] %s:%d\n", tmp, event,
 	  function, line);
   return tmp;
 }
@@ -64,7 +64,7 @@ int mfclose(FILE *file, const char *function, int line)
 {
   io_debug_init();
   event += 1;
-  fprintf(iodebug_file, "%p %07d [fclose] %s:%d\n", file, event,
+  fprintf(iodebug_file, "%p %07ld [fclose] %s:%d\n", file, event,
 	  function, line);
   return fclose(file);
 }
@@ -75,16 +75,16 @@ static void os_error(void)
   ERROR ("io:  An OS command failed that should not have.\n");
 }
 
-void seek_absolute (FILE *file, int32_t pos) 
+void seek_absolute (FILE *file, long pos) 
 {
-  if (fseek(file, (long)pos, SEEK_SET)) {
+  if (fseek(file, pos, SEEK_SET)) {
     os_error();
   }
 }
 
-void seek_relative (FILE *file, int32_t pos)
+void seek_relative (FILE *file, long pos)
 {
-  if (fseek(file, (long)pos, SEEK_CUR)) {
+  if (fseek(file, pos, SEEK_CUR)) {
     os_error();
   }
 }
@@ -97,26 +97,23 @@ void seek_end (FILE *file)
   }
 }
 
-int32_t tell_position (FILE *file) 
+long tell_position (FILE *file) 
 {
-  long size = ftell (file);
-  if (size < 0)
+  long size;
+  if ((size = ftell (file)) < 0) {
     os_error();
-#if LONG_MAX > 0x7fffffff
-  if (size > 0x7fffffff)
-    ERROR ("ftell: file size %ld exceeds 0x7fffffff.\n", size);
-#endif
+  }
   return size;
 }
 
-int32_t file_size (FILE *file)
+long file_size (FILE *file)
 {
-  int32_t size;
+  long size;
   /* Seek to end */
   seek_end (file);
   size = tell_position (file);
   rewind (file);
-  return size;
+  return (size);
 }
 
 off_t xfile_size (FILE *file, const char *name)
@@ -140,32 +137,6 @@ char *mfgets (char *buffer, int length, FILE *file)
   if (ch == '\r' && (ch = fgetc (file)) >= 0 && (ch != '\n'))
     ungetc (ch, file);
   return buffer;
-}
-
-/* As each lines may contain null-characters, so outptr here is NOT
- * null-terminated string.
- * Returns -1 for when EOF is already reached, and -2 if buffer has no
- * enough space.
- */
-int
-mfreadln (char *buf, int size, FILE *fp)
-{
-  int  c;
-  int  len = 0;
-
-  while ((c = fgetc(fp)) != EOF && c != '\n' && c != '\r') {
-    if (len >= size) {
-      return -2;
-    }
-    buf[len++] = (char) c;
-  }
-  if (c == EOF && len == 0) {
-    return -1;
-  }
-  if (c == '\r' && (c = fgetc(fp)) >= 0 && (c != '\n'))
-    ungetc(c, fp);
-
-  return  len;
 }
 
 char work_buffer[WORK_BUFFER_SIZE];

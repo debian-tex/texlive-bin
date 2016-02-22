@@ -1,6 +1,6 @@
 /* This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
 
-    Copyright (C) 2002-2016 by Jin-Hwan Cho and Shunsaku Hirata,
+    Copyright (C) 2002-2014 by Jin-Hwan Cho and Shunsaku Hirata,
     the dvipdfmx project team.
     
     This program is free software; you can redistribute it and/or modify
@@ -142,7 +142,7 @@ dfont_open (FILE *fp, int index)
 static void
 release_directory (struct sfnt_table_directory *td)
 {
-  int i;
+  long i;
 
   if (td) {
     if (td->tables) {
@@ -192,7 +192,7 @@ put_big_endian (void *s, LONG q, int n)
  * in a machine independent way.
  */
 static void
-convert_tag (char *tag, uint32_t u_tag)
+convert_tag (char *tag, unsigned long u_tag)
 {
   int i;
 
@@ -356,8 +356,7 @@ int
 sfnt_read_table_directory (sfnt *sfont, ULONG offset)
 {
   struct sfnt_table_directory *td;
-  int i;
-  uint32_t u_tag;
+  unsigned long i, u_tag;
 
   ASSERT(sfont);
 
@@ -439,7 +438,7 @@ sfnt_create_FontFile_stream (sfnt *sfont)
   pdf_obj *stream;
   pdf_obj *stream_dict;
   struct sfnt_table_directory *td;
-  int      offset, nb_read, length;
+  long     offset, nb_read, length;
   int      i, sr;
   char    *p;
 

@@ -1,19 +1,20 @@
 #!/usr/bin/env perl
 # kanji-config-updmap: setup Japanese font embedding
-# Version 20151002.0
+# Version 20140301.0
 #
 # formerly known as updmap-setup-kanji
 #
 # Copyright 2004-2006 by KOBAYASHI R. Taizo for the shell version (updmap-otf)
-# Copyright 2011-2015 by PREINING Norbert
+# Copyright 2011-2014 by PREINING Norbert
 #
 # This file is licensed under GPL version 3 or any later version.
 # For copyright statements see end of file.
 #
 # For development see
-#  https://github.com/norbusan/jfontmaps
+#  https://git.gitorious.org/tlptexlive/jfontmaps.git
 #
-# For a changelog see the git log
+# For a changelog see
+#  https://gitorious.org/tlptexlive/jfontmaps/blobs/master/ChangeLog
 # 
 
 $^W = 1;
@@ -21,7 +22,7 @@ use Getopt::Long qw(:config no_autoabbrev ignore_case_always);
 use strict;
 
 my $prg = "kanji-config-updmap";
-my $version = '20151002.0';
+my $version = '20140301.0';
 
 my $updmap_real = "updmap";
 my $updmap = $updmap_real;
@@ -65,8 +66,6 @@ if ($opt_help) {
 my %representatives = (
   "hiragino"      => "HiraMinPro-W3.otf",
   "hiragino-pron" => "HiraMinProN-W3.otf",
-  "hiragino-elcapitan" => "HiraginoSerif-W3.ttc",
-  "hiragino-elcapitan-pron" => "HiraginoSerif-W3.ttc",
   "morisawa"      => "A-OTF-RyuminPro-Light.otf",
   "morisawa-pr6n" => "A-OTF-RyuminPr6N-Light.otf",
   "kozuka"        => "KozMinPro-Regular.otf",
@@ -113,10 +112,9 @@ sub Usage {
                  map file otf-<family>.map has to be available.
      auto:       embed one of the following supported font families
                  automatically:
-                   hiragino, hiragino-pron, hiragino-elcapitan,
-                   hiragino-elcapitan-pron, morisawa, morisawa-pr6n,
+                   hiragino, hiragino-pron, morisawa, morisawa-pr6n, 
                    kozuka, kozuka-pr6, kozuka-pr6n, ipaex, ipa, ms, 
-                   yu-osx, yu-win, yu-win10
+                   yu-osx, yu-win
                  and fall back to not embedding any font if none of them
                  is available
      nofont:     embed no fonts (and rely on system fonts when displaying pdfs)
@@ -246,9 +244,8 @@ sub SetupReplacement {
         # then use them
         for my $i (qw/
             morisawa-pr6n yu-osx kozuka-pr6n kozuka-pr6
-            hiragino-pron hiragino-elcapitan-pron hiragino
-            hiragino-elcapitan
-            morisawa kozuka yu-win yu-win10 ipaex ipa ms/) {
+            hiragino-pron hiragino
+            morisawa kozuka yu-win ipaex ipa ms/) {
           if ($available{$i}) {
             return SetupMapFile($i);
           }

@@ -20,21 +20,32 @@
 
 @ @c
 
+
 #include "ptexlib.h"
 
-@ math codes
+@ math codes 
 @c
 static sa_tree mathcode_head = NULL;
 
-/* the 0xFFFFFFFF is a flag value */
+#define MATHCODEHEAP 8
 
+static mathcodeval *mathcode_heap = NULL;
+static int mathcode_heapsize = MATHCODEHEAP;
+static int mathcode_heapptr = 0;
+
+/* the 0xFFFFFFFF is a flag value */
 #define MATHCODESTACK 8
 #define MATHCODEDEFAULT 0xFFFFFFFF
-#define MATHCODEACTIVE  0xFFFFFFFE
 
 @ delcodes
 @c
 static sa_tree delcode_head = NULL;
+
+#define DELCODEHEAP 8
+
+static delcodeval *delcode_heap = NULL;
+static int delcode_heapsize = DELCODEHEAP;
+static int delcode_heapptr = 0;
 
 #define DELCODESTACK 4
 #define DELCODEDEFAULT 0xFFFFFFFF
@@ -64,38 +75,48 @@ static sa_tree delcode_head = NULL;
   } while (0)
 
 @ @c
-mathcodeval mathchar_from_integer(int value, int extcode)
-{
-    mathcodeval mval;
-    if (extcode == tex_mathcode) {
-        mval.class_value = (value / 0x1000);
-        mval.family_value = ((value % 0x1000) / 0x100);
-        mval.character_value = (value % 0x100);
-    } else { /* some xetexended xetex thing */
-        int mfam = (value / 0x200000) & 0x7FF;
-        mval.class_value = mfam % 0x08;
-        mval.family_value = mfam / 0x08;
-        mval.character_value = value & 0x1FFFFF;
-    }
-    return mval;
-}
-
-@ @c
 void show_mathcode_value(mathcodeval c)
 {
-    print_char('"');
-    print_hex_digit(c.class_value);
-    print_char('"');
-    two_hex(c.family_value);
-    print_char('"');
-    six_hex(c.character_value);
+    if (c.origin_value == xetex_mathcode) {
+        print_char('"');
+        print_hex_digit(c.class_value);
+        print_char('"');
+        two_hex(c.family_value);
+        print_char('"');
+        six_hex(c.character_value);
+    } else if (c.origin_value == xetexnum_mathcode) {
+        int m;
+        m = (c.class_value + (c.family_value * 8)) * 2097152 +
+            c.character_value;
+        print_int(m);
+    } else {
+        print_char('"');
+	if (c.class_value) {
+	    print_hex_digit(c.class_value);
+            print_hex_digit(c.family_value);
+            two_hex(c.character_value);
+        } else if (c.family_value) {
+            print_hex_digit(c.family_value);
+            two_hex(c.character_value);
+        } else if (c.character_value >= 16) {
+            two_hex(c.character_value);
+        } else {
+            print_hex_digit(c.character_value);
+        }
+    }
 }
 
 @ @c
 static void show_mathcode(int n)
 {
     mathcodeval c = get_math_code(n);
-    tprint_esc("Umathcode");
+    if (c.origin_value == xetex_mathcode) {
+        tprint_esc("Umathcode");
+    } else if (c.origin_value == xetexnum_mathcode) {
+        tprint_esc("Umathcodenum");
+    } else {
+        tprint_esc("mathcode");
+    }
     print_int(n);
     print_char('=');
     show_mathcode_value(c);
@@ -107,11 +128,14 @@ static void unsavemathcode(quarterword gl)
     sa_stack_item st;
     if (mathcode_head->stack == NULL)
         return;
-    while (mathcode_head->stack_ptr > 0 && abs(mathcode_head->stack[mathcode_head->stack_ptr].level) >= gl) {
+    while (mathcode_head->stack_ptr > 0 &&
+           abs(mathcode_head->stack[mathcode_head->stack_ptr].level)
+           >= (int) gl) {
         st = mathcode_head->stack[mathcode_head->stack_ptr];
         if (st.level > 0) {
             rawset_sa_item(mathcode_head, st.code, st.value);
-            if (int_par(tracing_restores_code) > 1) {
+            /* now do a trace message, if requested */
+            if (int_par(tracing_restores_code) > 0) {
                 begin_diagnostic();
                 print_char('{');
                 tprint("restoring");
@@ -126,18 +150,25 @@ static void unsavemathcode(quarterword gl)
 }
 
 @ @c
-void set_math_code(int n, int mathclass, int mathfamily, int mathcharacter, quarterword level)
+void set_math_code(int n,
+                   int commandorigin,
+                   int mathclass,
+                   int mathfamily, int mathcharacter, quarterword level)
 {
-    sa_tree_item v;
-    if (mathclass == 8 && mathfamily == 0 && mathcharacter == 0) {
-        v.uint_value = MATHCODEACTIVE;
-    } else {
-        v.math_code_value.class_value = mathclass;
-        v.math_code_value.family_value = mathfamily;
-        v.math_code_value.character_value = mathcharacter;
+    mathcodeval d;
+    d.origin_value = commandorigin;
+    d.class_value = mathclass;
+    d.family_value = mathfamily;
+    d.character_value = mathcharacter;
+    if (mathcode_heapptr == mathcode_heapsize) {
+        mathcode_heapsize += MATHCODEHEAP;
+        mathcode_heap =
+            Mxrealloc_array(mathcode_heap, mathcodeval, mathcode_heapsize);
     }
-    set_sa_item(mathcode_head, n, v, level);
-    if (int_par(tracing_assigns_code) > 1) {
+    mathcode_heap[mathcode_heapptr] = d;
+    set_sa_item(mathcode_head, n, (sa_tree_item) mathcode_heapptr, level);
+    mathcode_heapptr++;
+    if (int_par(tracing_assigns_code) > 0) {
         begin_diagnostic();
         print_char('{');
         tprint("assigning");
@@ -149,56 +180,95 @@ void set_math_code(int n, int mathclass, int mathfamily, int mathcharacter, quar
 }
 
 @ @c
-/* we could use two structs ... tex and umath */
-
 mathcodeval get_math_code(int n)
 {
-    mathcodeval d;
-    sa_tree_item v = get_sa_item(mathcode_head, n);
-    if (v.uint_value == MATHCODEDEFAULT) {
+    unsigned int ret;
+    ret = get_sa_item(mathcode_head, n);
+    if (ret == MATHCODEDEFAULT) {
+        mathcodeval d;
         d.class_value = 0;
         d.family_value = 0;
+        d.origin_value = (n < 256 ? tex_mathcode : xetex_mathcode);
         d.character_value = n;
-    } else if (v.uint_value == MATHCODEACTIVE) {
-        d.class_value = 8;
-        d.family_value = 0;
-        d.character_value = 0;
+        return d;
     } else {
-        d.class_value = v.math_code_value.class_value;
-        if (d.class_value == 8) {
-            d.family_value = 0;
-            d.character_value = n;
-        } else {
-            d.family_value = v.math_code_value.family_value;
-            d.character_value = v.math_code_value.character_value;
-        }
+        return mathcode_heap[ret];
     }
-    return d;
 }
 
+
 @ @c
-int get_math_code_num(int n)
+int get_math_code_num(int n, boolean compat)
 {
-    mathcodeval d = get_math_code(n);
-    return (d.class_value + (d.family_value * 8)) * (65536 * 32) + d.character_value;
+    mathcodeval mval;
+    mval = get_math_code(n);
+    if (compat) { /* \.{\\the\\mathcode} */
+        if (mval.class_value > 8
+            || mval.family_value > 15
+            || mval.character_value > 255) {
+            print_err("Extended mathchar used as mathchar");
+            help2("A mathchar number must be between 0 and \"8000.",
+                  "I changed this one to zero.");
+            int_error(get_math_code_num(n, false));
+            return 0;
+        } else
+            return mval.class_value * 4096 + mval.family_value * 256 + mval.character_value;
+    } else { /* \.{\\the\\Umathcodenum} */
+        return (mval.class_value + (mval.family_value * 8)) * (65536 * 32) + mval.character_value;
+    }
+    return 0;
 }
 
 @ @c
 static void initializemathcode(void)
 {
-    sa_tree_item sa_value = { 0 };
-    sa_value.uint_value = MATHCODEDEFAULT;
-    mathcode_head = new_sa_tree(MATHCODESTACK, 1, sa_value);
+    mathcode_head = new_sa_tree(MATHCODESTACK, MATHCODEDEFAULT);
+    mathcode_heap = Mxmalloc_array(mathcodeval, MATHCODEHEAP);
 }
 
+@ @c
 static void dumpmathcode(void)
 {
-    dump_sa_tree(mathcode_head,"mathcodes");
+    int k;
+    mathcodeval d;
+    dump_sa_tree(mathcode_head);
+    dump_int(mathcode_heapsize);
+    dump_int(mathcode_heapptr);
+    for (k = 0; k < mathcode_heapptr; k++) {
+        d = mathcode_heap[k];
+        dump_int(d.origin_value);
+        dump_int(d.class_value);
+        dump_int(d.family_value);
+        dump_int(d.character_value);
+    }
 }
 
 static void undumpmathcode(void)
 {
-    mathcode_head = undump_sa_tree("mathcodes");
+    int k, x;
+    mathcodeval d;
+    mathcode_head = undump_sa_tree();
+    undump_int(mathcode_heapsize);
+    undump_int(mathcode_heapptr);
+    mathcode_heap = Mxmalloc_array(mathcodeval, mathcode_heapsize);
+    for (k = 0; k < mathcode_heapptr; k++) {
+        undump_int(x);
+        d.origin_value = x;
+        undump_int(x);
+        d.class_value = x;
+        undump_int(x);
+        d.family_value = x;
+        undump_int(x);
+        d.character_value = x;
+        mathcode_heap[k] = d;
+    }
+    d.origin_value = 0;
+    d.class_value = 0;
+    d.family_value = 0;
+    d.character_value = 0;
+    for (k = mathcode_heapptr; k < mathcode_heapsize; k++) {
+        mathcode_heap[k] = d;
+    }
 }
 
 @ @c
@@ -206,30 +276,54 @@ static void show_delcode(int n)
 {
     delcodeval c;
     c = get_del_code(n);
-    tprint_esc("Udelcode");
+    if (c.origin_value == tex_mathcode) {
+        tprint_esc("delcode");
+    } else if (c.origin_value == xetex_mathcode) {
+        tprint_esc("Udelcode");
+    } else if (c.origin_value == xetexnum_mathcode) {
+        tprint_esc("Udelcodenum");
+    }
     print_int(n);
     print_char('=');
     if (c.small_family_value < 0) {
         print_char('-');
         print_char('1');
     } else {
-        print_char('"');
-        two_hex(c.small_family_value);
-        six_hex(c.small_character_value);
+        if (c.origin_value == tex_mathcode) {
+            print_char('"');
+            print_hex_digit(c.small_family_value);
+            two_hex(c.small_character_value);
+            print_hex_digit(c.large_family_value);
+            two_hex(c.large_character_value);
+        } else if (c.origin_value == xetex_mathcode) {
+            print_char('"');
+            two_hex(c.small_family_value);
+            six_hex(c.small_character_value);
+        } else if (c.origin_value == xetexnum_mathcode) {
+            int m;
+            m = c.small_family_value * 2097152 + c.small_character_value;
+            print_int(m);
+        }
     }
 }
 
-@ @c
+
+
+@ TODO: clean up the heap
+@c
 static void unsavedelcode(quarterword gl)
 {
     sa_stack_item st;
     if (delcode_head->stack == NULL)
         return;
-    while (delcode_head->stack_ptr > 0 && abs(delcode_head->stack[delcode_head->stack_ptr].level) >= gl) {
+    while (delcode_head->stack_ptr > 0 &&
+           abs(delcode_head->stack[delcode_head->stack_ptr].level)
+           >= (int) gl) {
         st = delcode_head->stack[delcode_head->stack_ptr];
         if (st.level > 0) {
             rawset_sa_item(delcode_head, st.code, st.value);
-            if (int_par(tracing_restores_code) > 1) {
+            /* now do a trace message, if requested */
+            if (int_par(tracing_restores_code) > 0) {
                 begin_diagnostic();
                 print_char('{');
                 tprint("restoring");
@@ -239,22 +333,33 @@ static void unsavedelcode(quarterword gl)
                 end_diagnostic(false);
             }
         }
-        (mathcode_head->stack_ptr)--;
+        (delcode_head->stack_ptr)--;
     }
+
 }
 
 @ @c
-void set_del_code(int n, int smathfamily, int smathcharacter, int lmathfamily, int lmathcharacter, quarterword gl)
+void set_del_code(int n,
+                  int commandorigin,
+                  int smathfamily,
+                  int smathcharacter,
+                  int lmathfamily, int lmathcharacter, quarterword gl)
 {
-    sa_tree_item v;
-    v.del_code_value.class_value = 0;
-    v.del_code_value.small_family_value = smathfamily;
-    v.del_code_value.small_character_value = smathcharacter;
-    v.del_code_value.dummy_value = 0;
-    v.del_code_value.large_family_value = lmathfamily;
-    v.del_code_value.large_character_value = lmathcharacter;
-    set_sa_item(delcode_head, n, v, gl); /* always global */
-    if (int_par(tracing_assigns_code) > 1) {
+    delcodeval d;
+    d.class_value = 0;
+    d.origin_value = commandorigin;
+    d.small_family_value = smathfamily;
+    d.small_character_value = smathcharacter;
+    d.large_family_value = lmathfamily;
+    d.large_character_value = lmathcharacter;
+    if (delcode_heapptr == delcode_heapsize) {
+        delcode_heapsize += DELCODEHEAP;
+        delcode_heap =
+            Mxrealloc_array(delcode_heap, delcodeval, delcode_heapsize);
+    }
+    delcode_heap[delcode_heapptr] = d;
+    set_sa_item(delcode_head, n, (sa_tree_item) delcode_heapptr, gl);
+    if (int_par(tracing_assigns_code) > 0) {
         begin_diagnostic();
         print_char('{');
         tprint("assigning");
@@ -263,27 +368,26 @@ void set_del_code(int n, int smathfamily, int smathcharacter, int lmathfamily, i
         print_char('}');
         end_diagnostic(false);
     }
+    delcode_heapptr++;
 }
 
 @ @c
 delcodeval get_del_code(int n)
 {
-    delcodeval d;
-    sa_tree_item v = get_sa_item(delcode_head, n);
-    if (v.uint_value == DELCODEDEFAULT) {
+    unsigned ret;
+    ret = get_sa_item(delcode_head, n);
+    if (ret == DELCODEDEFAULT) {
+        delcodeval d;
         d.class_value = 0;
+        d.origin_value = tex_mathcode;
         d.small_family_value = -1;
         d.small_character_value = 0;
         d.large_family_value = 0;
         d.large_character_value = 0;
+        return d;
     } else {
-        d.class_value = v.del_code_value.class_value;
-        d.small_family_value = v.del_code_value.small_family_value;
-        d.small_character_value = v.del_code_value.small_character_value;
-        d.large_family_value = v.del_code_value.large_family_value;
-        d.large_character_value = v.del_code_value.large_character_value;
+        return delcode_heap[ret];
     }
-    return d;
 }
 
 @ this really only works for old-style delcodes!
@@ -291,32 +395,74 @@ delcodeval get_del_code(int n)
 @c
 int get_del_code_num(int n)
 {
-    delcodeval d = get_del_code(n);
-    if (d.small_family_value < 0) {
+    unsigned ret;
+    ret = get_sa_item(delcode_head, n);
+    if (ret == DELCODEDEFAULT) {
         return -1;
     } else {
-        return ((d.small_family_value * 256  + d.small_character_value) * 4096 +
-                (d.large_family_value * 256) + d.large_character_value);
+        delcodeval d = delcode_heap[ret];
+        if (d.origin_value == tex_mathcode) {
+            return ((d.small_family_value * 256 +
+                     d.small_character_value) * 4096 +
+                    (d.large_family_value * 256) + d.large_character_value);
+        } else {
+            return -1;
+        }
     }
 }
 
 @ @c
 static void initializedelcode(void)
 {
-    sa_tree_item sa_value = { 0 };
-    sa_value.uint_value = DELCODEDEFAULT;
-    delcode_head = new_sa_tree(DELCODESTACK, 2, sa_value);
+    delcode_head = new_sa_tree(DELCODESTACK, DELCODEDEFAULT);
+    delcode_heap = Mxmalloc_array(delcodeval, DELCODEHEAP);
 }
 
 @ @c
 static void dumpdelcode(void)
 {
-    dump_sa_tree(delcode_head,"delcodes");
+    int k;
+    delcodeval d;
+    dump_sa_tree(delcode_head);
+    dump_int(delcode_heapsize);
+    dump_int(delcode_heapptr);
+    for (k = 0; k < delcode_heapptr; k++) {
+        d = delcode_heap[k];
+        dump_int(d.origin_value);
+        dump_int(d.class_value);
+        dump_int(d.small_family_value);
+        dump_int(d.small_character_value);
+        dump_int(d.large_family_value);
+        dump_int(d.large_character_value);
+    }
 }
 
 static void undumpdelcode(void)
 {
-    delcode_head = undump_sa_tree("delcodes");
+    int k;
+    delcodeval d;
+    delcode_head = undump_sa_tree();
+    undump_int(delcode_heapsize);
+    undump_int(delcode_heapptr);
+    delcode_heap = Mxmalloc_array(delcodeval, delcode_heapsize);
+    for (k = 0; k < delcode_heapptr; k++) {
+        undump_int(d.origin_value);
+        undump_int(d.class_value);
+        undump_int(d.small_family_value);
+        undump_int(d.small_character_value);
+        undump_int(d.large_family_value);
+        undump_int(d.large_character_value);
+        delcode_heap[k] = d;
+    }
+    d.origin_value = tex_mathcode;
+    d.class_value = 0;
+    d.small_family_value = -1;
+    d.small_character_value = 0;
+    d.large_family_value = 0;
+    d.large_character_value = 0;
+    for (k = delcode_heapptr; k < delcode_heapsize; k++) {
+        delcode_heap[k] = d;
+    }
 }
 
 @ @c
@@ -337,7 +483,9 @@ void initialize_math_codes(void)
 void free_math_codes(void)
 {
     destroy_sa_tree(mathcode_head);
+    xfree(mathcode_heap);
     destroy_sa_tree(delcode_head);
+    xfree(delcode_heap);
 }
 
 @ @c

@@ -1,6 +1,6 @@
 /* This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
 
-    Copyright (C) 2007-2016 by Jin-Hwan Cho and Shunsaku Hirata,
+    Copyright (C) 2007-2014 by Jin-Hwan Cho and Shunsaku Hirata,
     the dvipdfmx project team.
     
     Copyright (C) 1998, 1999 by Mark A. Wicks <mwicks@kettering.edu>
@@ -767,7 +767,7 @@ dpx_find_dfont_file (const char *filename)
   return fqpn;
 }
  
-static char *
+static const char *
 dpx_get_tmpdir (void)
 {
 #ifdef WIN32
@@ -775,8 +775,6 @@ dpx_get_tmpdir (void)
 #else /* WIN32 */
 #  define __TMPDIR     "/tmp"
 #endif /* WIN32 */
-    size_t i;
-    char *ret;
     const char *_tmpd;
 
 #ifdef  HAVE_GETENV
@@ -792,13 +790,7 @@ dpx_get_tmpdir (void)
 #else /* HAVE_GETENV */
     _tmpd = __TMPDIR;
 #endif /* HAVE_GETENV */
-    ret = xstrdup(_tmpd);
-    i = strlen(ret);
-    while(i > 1 && IS_DIR_SEP(ret[i-1])) {
-      ret[i-1] = '\0';
-      i--;
-    }
-    return ret;
+    return _tmpd;
 }
 
 #ifdef  HAVE_MKSTEMP
@@ -818,28 +810,20 @@ dpx_create_temp_file (void)
 #elif defined(HAVE_MKSTEMP)
 #  define TEMPLATE     "/dvipdfmx.XXXXXX"
   {
-    char *_tmpd;
-    int  _fd = -1;
+    const char *_tmpd;
+    int   _fd = -1;
     _tmpd = dpx_get_tmpdir();
     tmp = NEW(strlen(_tmpd) + strlen(TEMPLATE) + 1, char);
     strcpy(tmp, _tmpd);
-    RELEASE(_tmpd);
     strcat(tmp, TEMPLATE);
     _fd  = mkstemp(tmp);
-    if (_fd != -1) {
+    if (_fd != -1)
 #  ifdef WIN32
-      char *p;
-      for (p = tmp; *p; p++) {
-        if (IS_KANJI (p))
-          p++;
-        else if (*p == '\\')
-          *p = '/';
-      }
       _close(_fd);
 #  else
       close(_fd);
 #  endif /* WIN32 */
-    } else {
+    else {
       RELEASE(tmp);
       tmp = NULL;
     }
@@ -847,13 +831,12 @@ dpx_create_temp_file (void)
 #else /* use _tempnam or tmpnam */
   {
 #  ifdef WIN32
-    char *_tmpd;
+    const char *_tmpd;
     char *p;
     _tmpd = dpx_get_tmpdir();
     tmp = _tempnam (_tmpd, "dvipdfmx.");
-    RELEASE(_tmpd);
     for (p = tmp; *p; p++) {
-      if (IS_KANJI(p))
+      if (IS_KANJI (p))
         p++;
       else if (*p == '\\')
         *p = '/';
@@ -874,7 +857,7 @@ char *
 dpx_create_fix_temp_file (const char *filename)
 {
 #define PREFIX "dvipdfm-x."
-  static char *dir = NULL;
+  static const char *dir = NULL;
   static char *cwd = NULL;
   char *ret, *s;
   int i;
@@ -927,7 +910,7 @@ dpx_clear_cache_filter (const struct dirent *ent) {
 void
 dpx_delete_old_cache (int life)
 {
-  char *dir;
+  const char *dir;
   char *pathname;
   DIR *dp;
   struct dirent *de;
@@ -957,7 +940,6 @@ dpx_delete_old_cache (int life)
       }
       closedir(dp);
   }
-  RELEASE(dir);
   RELEASE(pathname);
 }
 
@@ -1156,7 +1138,7 @@ static int
 isdfont (FILE *fp)
 {
   int i, n;
-  uint32_t pos;
+  unsigned long pos;
 
   rewind(fp);
 

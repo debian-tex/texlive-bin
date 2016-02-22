@@ -1,6 +1,6 @@
 /* This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
 
-    Copyright (C) 2002-2016 by Jin-Hwan Cho and Shunsaku Hirata,
+    Copyright (C) 2002-2015 by Jin-Hwan Cho and Shunsaku Hirata,
     the dvipdfmx project team.
     
     Copyright (C) 1998, 1999 by Mark A. Wicks <mwicks@kettering.edu>
@@ -320,6 +320,12 @@ pdf_color default_color = {
   {0.0, 0.0, 0.0, 0.0}
 };
 
+void
+pdf_color_set_default (const pdf_color *color)
+{
+  pdf_color_copycolor(&default_color, color);
+}
+
 #define DEV_COLOR_STACK_MAX 128
 
 static struct {
@@ -618,7 +624,7 @@ iccp_version_supported (int major, int minor)
   return 0;
 }
 
-typedef uint32_t iccSig;
+typedef unsigned long iccSig;
 static iccSig
 str2iccSig (const void *s)
 {
@@ -631,14 +637,14 @@ str2iccSig (const void *s)
 
 typedef struct
 {
-  int32_t X, Y, Z; /* s15Fixed16Number */
+  long X, Y, Z; /* s15Fixed16Numeber */
 } iccXYZNumber;
 
 typedef struct
 {
-  int           size;
+  long          size;
   iccSig        CMMType;
-  int32_t       version;
+  long          version;
   iccSig        devClass;
   iccSig        colorSpace;
   iccSig        PCS;    /* Profile Connection Space */
@@ -649,7 +655,7 @@ typedef struct
   iccSig        devMnfct;
   iccSig        devModel;
   char          devAttr[8];
-  int32_t       intent;
+  long          intent;
   iccXYZNumber  illuminant;
   iccSig        creator;
   unsigned char ID[16]; /* MD5 checksum with Rendering intent,
@@ -700,7 +706,7 @@ iccp_init_iccHeader (iccHeader *icch)
  */
 struct iccbased_cdata
 {
-  int32_t        sig; /* 'i' 'c' 'c' 'b' */
+  long           sig; /* 'i' 'c' 'c' 'b' */
 
   unsigned char  checksum[16]; /* 16 bytes MD5 Checksum   */
   int            colorspace;   /* input colorspace:
@@ -785,7 +791,7 @@ compare_iccbased (const char *ident1, const struct iccbased_cdata *cdata1,
 }
 
 int
-iccp_check_colorspace (int colortype, const void *profile, int proflen)
+iccp_check_colorspace (int colortype, const void *profile, long proflen)
 {
   iccSig  colorspace;
   const unsigned char  *p;
@@ -823,11 +829,11 @@ iccp_check_colorspace (int colortype, const void *profile, int proflen)
 }
 
 pdf_obj *
-iccp_get_rendering_intent (const void *profile, int proflen)
+iccp_get_rendering_intent (const void *profile, long proflen)
 {
   pdf_obj       *ri = NULL;
   const unsigned char *p;
-  int32_t        intent;
+  long           intent;
 
   if (!profile || proflen < 128)
     return NULL;
@@ -856,13 +862,13 @@ iccp_get_rendering_intent (const void *profile, int proflen)
   return ri;
 }
 
-#define sget_signed_long(p)  ((int32_t)   ((p)[0] << 24|(p)[1] << 16|(p)[2] << 8|(p)[3]))
+#define sget_signed_long(p)  ((long)   ((p)[0] << 24|(p)[1] << 16|(p)[2] << 8|(p)[3]))
 #define sget_signed_short(p) ((short)  ((p)[0] << 8|(p)[1]))
 #define get_iccSig(p)        ((iccSig) ((p)[0] << 24|(p)[1] << 16|(p)[2] << 8|(p)[3]))
 
 static int
 iccp_unpack_header (iccHeader *icch,
-		    const void *profile, int proflen, int check_size)
+		    const void *profile, long proflen, int check_size)
 {
   const unsigned char *p, *endptr;
 
@@ -931,8 +937,8 @@ iccp_unpack_header (iccHeader *icch,
   /* 28 bytes reserved - must be set to zeros */
   for (; p < endptr; p++) {
     if (*p != '\0') {
-      WARN("Reserved pad not zero: %02x (at offset %d in ICC profile header.)",
-	   *p, 128 - ((int) (endptr - p)));
+      WARN("Reserved pad not zero: %02x (at offset %ld in ICC profile header.)",
+	   *p, 128 - ((long) (endptr - p)));
       return -1;
     }
   }
@@ -955,7 +961,7 @@ iccp_unpack_header (iccHeader *icch,
 
 #include "dpxcrypt.h"
 static void
-iccp_get_checksum (unsigned char *checksum, const void *profile, int proflen)
+iccp_get_checksum (unsigned char *checksum, const void *profile, long proflen)
 {
   const unsigned char *p;
   MD5_CONTEXT    md5;
@@ -1115,7 +1121,7 @@ iccp_devClass_allowed (int dev_class)
 
 int
 iccp_load_profile (const char *ident,
-		   const void *profile, int proflen)
+		   const void *profile, long proflen)
 {
   int       cspc_id;
   pdf_obj  *resource;
@@ -1213,11 +1219,11 @@ iccp_load_profile (const char *ident,
 static unsigned char wbuf[WBUF_SIZE];
 
 static pdf_obj *
-iccp_load_file_stream (unsigned char *checksum, int length, FILE *fp)
+iccp_load_file_stream (unsigned char *checksum, long length, FILE *fp)
 {
   pdf_obj       *stream;
   MD5_CONTEXT    md5;
-  int            nb_read;
+  long           nb_read;
 
   rewind(fp);
 
@@ -1261,7 +1267,7 @@ pdf_colorspace_load_ICCBased (const char *ident, const char *filename)
   pdf_obj  *stream_dict;
   iccHeader icch;
   int       colorspace;
-  int       size;
+  long      size;
   unsigned char checksum[16];
   struct iccbased_cdata *cdata;
 

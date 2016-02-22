@@ -19,6 +19,7 @@
 
 @ @c
 
+
 #include "ptexlib.h"
 #include "lua/luatex-api.h"
 
@@ -59,8 +60,6 @@ command_item command_names[] = {
     {"halign", halign_cmd, NULL},
     {"valign", valign_cmd, NULL},
     {"no_align", no_align_cmd, NULL},
-    {"novrule", no_vrule_cmd, NULL},
-    {"nohrule", no_hrule_cmd, NULL},
     {"vrule", vrule_cmd, NULL},
     {"hrule", hrule_cmd, NULL},
     {"insert", insert_cmd, NULL},
@@ -85,15 +84,12 @@ command_item command_names[] = {
     {"vcenter", vcenter_cmd, NULL},
     {"case_shift", case_shift_cmd, NULL},
     {"message", message_cmd, NULL},
-    {"normal", normal_cmd, NULL},
     {"extension", extension_cmd, NULL},
-    {"option", option_cmd, NULL},
     {"in_stream", in_stream_cmd, NULL},
     {"begin_group", begin_group_cmd, NULL},
     {"end_group", end_group_cmd, NULL},
     {"omit", omit_cmd, NULL},
     {"ex_space", ex_space_cmd, NULL},
-    {"boundary", boundary_cmd, NULL},
     {"no_boundary", no_boundary_cmd, NULL},
     {"radical", radical_cmd, NULL},
     {"super_sub_script", super_sub_script_cmd, NULL},
@@ -144,9 +140,7 @@ command_item command_names[] = {
     {"hyph_data", hyph_data_cmd, NULL},
     {"set_interaction", set_interaction_cmd, NULL},
     {"letterspace_font", letterspace_font_cmd, NULL},
-    {"expand_font",expand_font_cmd, NULL},
-    {"copy_font", copy_font_cmd, NULL},
-    {"set_font_id", set_font_id_cmd, NULL},
+    {"pdf_copy_font", pdf_copy_font_cmd, NULL},
     {"undefined_cs", undefined_cs_cmd, NULL},
     {"expand_after", expand_after_cmd, NULL},
     {"no_expand", no_expand_cmd, NULL},
@@ -155,10 +149,7 @@ command_item command_names[] = {
     {"fi_or_else", fi_or_else_cmd, NULL},
     {"cs_name", cs_name_cmd, NULL},
     {"convert", convert_cmd, NULL},
-    {"variable", variable_cmd, NULL},
-    {"feedback", feedback_cmd, NULL},
     {"the", the_cmd, NULL},
-    {"combinetoks", combine_toks_cmd, NULL},
     {"top_bot_mark", top_bot_mark_cmd, NULL},
     {"call", call_cmd, NULL},
     {"long_call", long_call_cmd, NULL},
@@ -189,7 +180,7 @@ int get_command_id(const char *s)
     return cmd;
 }
 
-/*
+@ @c
 static int get_cur_cmd(lua_State * L)
 {
     int r = 0;
@@ -213,7 +204,7 @@ static int get_cur_cmd(lua_State * L)
     }
     return r;
 }
-*/
+
 
 @ @c
 static int token_from_lua(lua_State * L)
@@ -240,7 +231,7 @@ static int token_from_lua(lua_State * L)
     return -1;
 }
 
-/*
+@ @c
 static int get_cur_cs(lua_State * L)
 {
     const char *s;
@@ -252,7 +243,7 @@ static int get_cur_cs(lua_State * L)
     ret = 0;
     cur_cs = 0;
     lua_getfield(L, -1, "name");
-    if (lua_type(L, -1) == LUA_TSTRING) {
+    if (lua_isstring(L, -1)) {
         s = lua_tolstring(L, -1, &l);
         if (l > 0) {
             if ((last + (int) l) > buf_size)
@@ -273,7 +264,6 @@ static int get_cur_cs(lua_State * L)
     lua_pop(L, 1);
     return ret;
 }
-*/
 
 @ @c
 void tokenlist_to_lua(lua_State * L, int p)
@@ -311,7 +301,6 @@ void tokenlist_to_luastring(lua_State * L, int p)
     char *s;
     s = tokenlist_to_cstring(p, 1, &l);
     lua_pushlstring(L, s, (size_t) l);
-    free(s);
 }
 
 
@@ -319,15 +308,14 @@ void tokenlist_to_luastring(lua_State * L, int p)
 int tokenlist_from_lua(lua_State * L)
 {
     const char *s;
-    int tok, t;
+    int tok;
     size_t i, j;
     halfword p, q, r;
     r = get_avail();
     token_info(r) = 0;          /* ref count */
     token_link(r) = null;
     p = r;
-    t = lua_type(L, -1);
-    if (t == LUA_TTABLE) {
+    if (lua_istable(L, -1)) {
         j = lua_rawlen(L, -1);
         if (j > 0) {
             for (i = 1; i <= j; i++) {
@@ -340,7 +328,7 @@ int tokenlist_from_lua(lua_State * L)
             };
         }
         return r;
-    } else if (t == LUA_TSTRING) {
+    } else if (lua_isstring(L, -1)) {
         s = lua_tolstring(L, -1, &j);
         for (i = 0; i < j; i++) {
             if (s[i] == 32) {
@@ -359,28 +347,28 @@ int tokenlist_from_lua(lua_State * L)
     }
 }
 
-/*
-
-static void do_get_token_lua(int callback_id)
+@ @c
+void do_get_token_lua(int callback_id)
 {
     lua_State *L = Luas;
     while (1) {
         if (!get_callback(L, callback_id)) {
             get_next();
-            lua_pop(L, 2);
+            lua_pop(L, 2);      /* the not-a-function callback and the container */
             break;
         }
-        if (lua_pcall(L, 0, 1, 0) != 0) {
+        if (lua_pcall(L, 0, 1, 0) != 0) {       /* no arg, 1 result */
             tex_error(lua_tostring(L, -1), NULL);
-            lua_pop(L, 2);
+            lua_pop(L, 2);      /* container and result */
             break;
         }
         if (lua_istable(L, -1)) {
             lua_rawgeti(L, -1, 1);
-            if (lua_istable(L, -1)) {
+            if (lua_istable(L, -1)) {   /* container, result, result[1] */
                 int p, q, r;
                 size_t i, j;
-                lua_pop(L, 1);
+                lua_pop(L, 1);  /* container, result */
+                /* build a token list */
                 r = get_avail();
                 p = r;
                 j = lua_rawlen(L, -1);
@@ -405,8 +393,8 @@ static void do_get_token_lua(int callback_id)
                 }
                 lua_pop(L, 2);
                 break;
-            } else {
-                lua_pop(L, 1);
+            } else {            /* container, result, whatever */
+                lua_pop(L, 1);  /* container, result */
                 if (get_cur_cmd(L) || get_cur_cs(L)) {
                     lua_pop(L, 2);
                     break;
@@ -416,10 +404,8 @@ static void do_get_token_lua(int callback_id)
                 }
             }
         } else {
-            lua_pop(L, 2);
+            lua_pop(L, 2);      /* container, result */
         }
     }
     return;
 }
-
-*/

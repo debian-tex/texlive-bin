@@ -15,13 +15,12 @@
    License for more details.
 
    You should have received a copy of the GNU General Public License along
-   with LuaTeX; if not, see <http://www.gnu.org/licenses/>.
-*/
+   with LuaTeX; if not, see <http://www.gnu.org/licenses/>. */
 
 
 #ifndef PDFRULE_H
 #  define PDFRULE_H
 
-void pdf_place_rule(PDF pdf, halfword p, scaledpos size, int callback_id);
+void pdf_place_rule(PDF pdf, halfword p, scaledpos size);
 
 #endif

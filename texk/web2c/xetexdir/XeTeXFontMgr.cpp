@@ -235,6 +235,7 @@ XeTeXFontMgr::findFont(const char* name, char* variant, double ptSize)
                 goto skip_to_slash;
             }
             if (*cp == 'S') {
+                char* start = cp;
                 ++cp;
                 if (*cp == '=')
                     ++cp;

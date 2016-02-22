@@ -303,10 +303,7 @@ static SplineFont *SearchPostscriptResources(FILE * f, long rlistpos,
                 exit(1);
             }
         }
-        if(fread(buffer, 1, rlen, f) != ((size_t)rlen) ) {
-	  LogError(_("Unable to read %u bytes for buffer\n"),rlen);
-          exit(1);
-         }
+        fread(buffer, 1, rlen, f);
         fwrite(buffer, 1, rlen, pfb);
     }
     free(buffer);
@@ -583,9 +580,7 @@ static FOND *BuildFondList(FILE * f, long rlistpos, int subcnt, long rdata_pos,
         if (rname != -1) {
             fseek(f, name_list + rname, SEEK_SET);
             ch1 = getc(f);
-            if( fread(name, 1, ch1, f) != ((size_t)ch1)) {
-	      LogError(_("Unable to read %u bytes for name, but going on.\n"),ch1);
-            }
+            fread(name, 1, ch1, f);
             name[ch1] = '\0';
             cur->fondname = copy(name);
         }
@@ -1048,9 +1043,7 @@ static SplineFont *IsResourceInBinary(FILE * f, char *filename, int flags,
 /* Look for a bare truetype font in a binhex/macbinary wrapper */
     if (dlen != 0 && rlen <= dlen) {
         int pos = ftell(f);
-        if (fread(header, 1, 4, f) != ((size_t)4)) {
-           LogError(_("Unable to read 4 bytes for header, but going on.\n"));
-        }
+        fread(header, 1, 4, f);
         header[5] = '\0';
         if (strcmp((char *) header, "OTTO") == 0
             || strcmp((char *) header, "true") == 0
@@ -1148,10 +1141,7 @@ static SplineFont *IsResourceInHex(FILE * f, char *filename, int flags,
         fclose(binary);
         return (NULL);
     }
-    if ( fread(header, 1, 20, binary) != 20 ) {
-        LogError(_("Can't read 20 bytes for header\n"));
-        return (NULL);
-    }
+    fread(header, 1, 20, binary);
     dlen =
         (header[10] << 24) | (header[11] << 16) | (header[12] << 8) |
         header[13];
@@ -1161,10 +1151,7 @@ static SplineFont *IsResourceInHex(FILE * f, char *filename, int flags,
 /* Look for a bare truetype font in a binhex/macbinary wrapper */
     if (dlen != 0 && rlen < dlen) {
         int pos = ftell(binary);
-        if (fread(header, 1, 4, binary) != 4) {
-	  LogError(_("Can't read 4 bytes for header\n"));
-	  return (NULL);
-	}
+        fread(header, 1, 4, binary);
         header[5] = '\0';
         if (strcmp((char *) header, "OTTO") == 0
             || strcmp((char *) header, "true") == 0

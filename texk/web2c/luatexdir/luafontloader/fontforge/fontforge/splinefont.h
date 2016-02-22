@@ -771,7 +771,7 @@ typedef struct bdfprops {
 
 typedef struct bdffont {
     struct splinefont *sf;
-    int glyphcnt, glyphmax,glyphmin;	/* used & allocated sizes of glyphs array */
+    int glyphcnt, glyphmax;	/* used & allocated sizes of glyphs array */
     BDFChar **glyphs;		/* an array of charcnt entries */
     int16 pixelsize;
     int16 ascent, descent;
@@ -1484,7 +1484,7 @@ typedef struct splinefont {
     struct splinefont *next;
     int ascent, descent;
     int uniqueid;				/* Not copied when reading in!!!! */
-  int glyphcnt, glyphmax,glyphmin;			/* allocated size of glyphs array */
+    int glyphcnt, glyphmax;			/* allocated size of glyphs array */
     SplineChar **glyphs;
     unsigned int changed: 1;
     unsigned int changed_since_autosave: 1;
@@ -1764,7 +1764,7 @@ extern char *strconcat3(const char *str, const char *str2, const char *str3);
 
 extern char *XUIDFromFD(int xuid[20]);
 extern SplineFont *SplineFontFromPSFont(struct fontdict *fd);
-extern int CheckAfmOfPostscript(SplineFont *sf, const char *psname,EncMap *map);
+extern int CheckAfmOfPostscript(SplineFont *sf,char *psname,EncMap *map);
 extern int LoadKerningDataFromAmfm(SplineFont *sf, char *filename, EncMap *map);
 extern int LoadKerningDataFromAfm(SplineFont *sf, char *filename, EncMap *map);
 extern int LoadKerningDataFromTfm(SplineFont *sf, char *filename, EncMap *map);

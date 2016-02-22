@@ -119,7 +119,6 @@ CLEANFILES = $(nodist_bin_SCRIPTS) ChkTeX.aux ChkTeX.dvi ChkTeX.log ChkTeX.ps st
 ## Tests
 ##
 TESTS = chktex.test
-chktex.log: chktex$(EXEEXT)
 EXTRA_DIST += $(TESTS)
 TESTS_ENVIRONMENT = CHKTEX_TREE=$(CHKTEX_TREE) TEXMFCNF=$(abs_srcdir)/../kpathsea
 

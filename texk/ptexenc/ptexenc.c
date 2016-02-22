@@ -616,18 +616,16 @@ static unsigned char *buffer;
 static long first, last;
 static boolean combin_voiced_sound(boolean semi)
 {
-    int i, mblen;
+    int i;
 
-    mblen = is_internalUPTEX() ? 3 : 2;
-    if (last-mblen < first) return false;
-    if (multistrlen(buffer,last,last-mblen) != mblen) return false;
-    i = toUCS(fromBUFF(buffer,last,last-mblen));
+    if (last-2 < first) return false;
+    if (multistrlen(buffer,last,last-2) != 2) return false;
+    i = toUCS(fromBUFF(buffer,last,last-2));
     i = get_voiced_sound(i, semi);
     if (i == 0) return false;
     i = toBUFF(fromUCS(i));
-    if (BYTE2(i) != 0) buffer[last-3] = BYTE2(i);
-    /* always */       buffer[last-2] = BYTE3(i);
-    /* always */       buffer[last-1] = BYTE4(i);
+    buffer[last-2] = HI(i);
+    buffer[last-1] = LO(i);
     return true;
 }
 
@@ -744,7 +742,7 @@ static boolean isUTF8Nstream(FILE *fp)
     for (i=0; i<MARK_LEN; i++) {
         c[i] = getc4(fp);
         if (!(bom_l[i] <= c[i] && c[i] <= bom_u[i])) {
-            do { ungetc4(c[i], fp); } while (i-- > 0);
+            do { ungetc4(c[i], fp); } while (--i>0);
             return false;
         }
     }
@@ -838,15 +836,6 @@ long input_line2(FILE *fp, unsigned char *buff, long pos,
     if (lastchar != NULL) *lastchar = i;
 
     return last;
-}
-
-boolean setinfileenc(FILE *fp, const char *str)
-{
-    int enc;
-    enc = string_to_enc(str);
-    if (enc < 0) return false;
-    infile_enc[fileno(fp)] = enc;
-    return true;
 }
 
 #ifdef WIN32

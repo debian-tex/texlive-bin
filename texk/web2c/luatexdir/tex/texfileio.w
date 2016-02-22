@@ -138,7 +138,7 @@ char *luatex_find_file(const char *s, int callback_index)
     char *ftemp = NULL;
     int callback_id = callback_defined(callback_index);
     if (callback_id > 0) {
-        (void) run_callback(callback_id, "S->R", s, &ftemp);
+        (void) run_callback(callback_id, "S->S", s, &ftemp);
 
     } else {
         /* use kpathsea here */
@@ -839,7 +839,7 @@ void open_log_file(void)
     log_opened_global = true;
     if (callback_defined(start_run_callback) == 0) {
         /* Print the banner line, including current date and time */
-        log_banner(luatex_version_string);
+        log_banner(luatex_version_string, luatex_svn);
 
         input_stack[input_ptr] = cur_input;     /* make sure bottom level is in memory */
         tprint_nl("**");
@@ -1220,10 +1220,11 @@ int readbinfile(FILE * f, unsigned char **tfm_buffer, int *tfm_size)
     return 0;
 }
 
-@ Like |os.execute()|, the |runpopen()| function is called only when
-|shellenabledp == 1|. Unlike |os.execute()| we write errors to stderr, since we
-have nowhere better to use; and of course we return a file handle (or NULL)
-instead of a status indicator.
+
+@ Like |runsystem()|, the |runpopen()| function is called only when
+   |shellenabledp == 1|.   Unlike |runsystem()|, here we write errors to
+   stderr, since we have nowhere better to use; and of course we return
+   a file handle (or NULL) instead of a status indicator.
 
 @c
 static FILE *runpopen(char *cmd, const char *mode)

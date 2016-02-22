@@ -1,6 +1,6 @@
 /* This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
 
-    Copyright (C) 2002-2016 by Jin-Hwan Cho and Shunsaku Hirata,
+    Copyright (C) 2002-2014 by Jin-Hwan Cho and Shunsaku Hirata,
     the dvipdfmx project team.
     
     Copyright (C) 1998, 1999 by Mark A. Wicks <mwicks@kettering.edu>
@@ -27,9 +27,6 @@
 
 extern void error_cleanup (void);
 
-/* Acoid conflict with NO_ERROR from <winerror.h>.  */
-#undef NO_ERROR
-
 #define FATAL_ERROR -1
 #define NO_ERROR 0
 
@@ -37,9 +34,6 @@ extern void error_cleanup (void);
 #include <stdio.h>
 
 extern void shut_up (int quietness);
-
-/* Acoid conflict with ERROR from <winnt.h>.  */
-#undef ERROR
 
 extern void ERROR (const char *fmt, ...);
 extern void MESG  (const char *fmt, ...);

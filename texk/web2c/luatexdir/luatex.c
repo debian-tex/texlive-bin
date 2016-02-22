@@ -2,7 +2,7 @@
    written by Tim Morgan, drawing from other Unix ports of TeX.  This is
    a collection of miscellany, everything that's easier (or only
    possible) to do in C.
-
+   
    This file is public domain.  */
 
 /* This file is used to create texextra.c etc., with this line
@@ -21,17 +21,16 @@
 #include "ptexlib.h"
 #include "luatex.h"
 #include "lua/luatex-api.h"
-/*
 #include "luatex_svnversion.h"
-*/
 
 
 #define TeX
 
-int luatex_version = 89;        /* \.{\\luatexversion}  */
-int luatex_revision = '1';      /* \.{\\luatexrevision}  */
-int luatex_date_info = 2016020500;     /* the compile date is now hardwired */
-const char *luatex_version_string = "beta-0.89.1";
+int luatex_svn = 5238;
+int luatex_version = 80;        /* \.{\\luatexversion}  */
+int luatex_revision = '0';      /* \.{\\luatexrevision}  */
+int luatex_date_info = 2015051900;     /* the compile date is now hardwired */
+const char *luatex_version_string = "beta-0.80.0";
 const char *engine_name = my_name;     /* the name of this engine */
 
 #include <kpathsea/c-ctype.h>
@@ -82,7 +81,8 @@ const char *engine_name = my_name;     /* the name of this engine */
 
      Internally, all arguments are quoted by ' (Unix) or " (Windows)
      before calling the system() function in order to forbid execution
-     of any embedded command.
+     of any embedded command.  In addition, on Windows, special
+     characters of cmd.exe are escaped by using (^).
 
    If the --shell-escape option is given, we set
      shellenabledp = 1 and restrictedshell = 0, i.e., any command is allowed.
@@ -184,7 +184,6 @@ void init_shell_escape(void)
 #    define QUOTE '\''
 #  endif
 
-#  if 0
 #  ifdef WIN32
 static int char_needs_quote(int c)
 {
@@ -193,7 +192,6 @@ static int char_needs_quote(int c)
     return (c == '&' || c == '|' || c == '%' || c == '<' ||
             c == '>' || c == ';' || c == ',' || c == '(' || c == ')');
 }
-#  endif
 #  endif
 
 static int Isspace(char c)
@@ -205,7 +203,7 @@ static int Isspace(char c)
   -1 : invalid quotation of an argument
    0 : command is not allowed
    2 : restricted shell escape, CMD is allowed.
-
+   
    We set *SAFECMD to a safely-quoted version of *CMD; this is what
    should get executed.  And we set CMDNAME to its first word; this is
    what is checked against the shell_escape_commands list.  */
@@ -291,20 +289,10 @@ int shell_cmd_is_allowed(const char *cmd, char **safecmd, char **cmdname)
                    example:
                    --format="other text files" becomes
                    '--format=''other text files' (Unix)
-                   "--format"="other text files" (Windows) */
+                   "--format=""other test files" (Windows) */
 
-                if (pre == 0) {
-#  ifdef WIN32
-                    if (*(s-1) == '=') {
-                        *(d-1) = QUOTE;
-                        *d++ = '=';
-                    } else {
-                      *d++ = QUOTE;
-                    }
-#  else
+                if (pre == 0)
                     *d++ = QUOTE;
-#  endif
-                }
 
                 pre = 0;
                 /* output the quotation mark for the quoted argument */
@@ -315,11 +303,9 @@ int shell_cmd_is_allowed(const char *cmd, char **safecmd, char **cmdname)
                     /* Illegal use of ', or closing quotation mark is missing */
                     if (*s == '\'' || *s == '\0')
                         return -1;
-#  if 0
 #  ifdef WIN32
                     if (char_needs_quote(*s))
                         *d++ = '^';
-#  endif
 #  endif
                     *d++ = *s++;
                 }
@@ -337,11 +323,9 @@ int shell_cmd_is_allowed(const char *cmd, char **safecmd, char **cmdname)
             } else if (pre == 1 && !Isspace(*s)) {
                 pre = 0;
                 *d++ = QUOTE;
-#  if 0
 #  ifdef WIN32
                 if (char_needs_quote(*s))
                     *d++ = '^';
-#  endif
 #  endif
                 *d++ = *s++;
                 /* Ending of a usual argument */
@@ -353,11 +337,9 @@ int shell_cmd_is_allowed(const char *cmd, char **safecmd, char **cmdname)
                 *d++ = *s++;
             } else {
                 /* Copy a character from cmd to *safecmd. */
-#  if 0
 #  ifdef WIN32
                 if (char_needs_quote(*s))
                     *d++ = '^';
-#  endif
 #  endif
                 *d++ = *s++;
             }
@@ -380,7 +362,7 @@ int shell_cmd_is_allowed(const char *cmd, char **safecmd, char **cmdname)
               strcat (q, (p + 2));
               free (*safecmd);
               *safecmd = q;
-          } else if (!IS_DIR_SEP (p[0]) && !(p[1] == ':' && IS_DIR_SEP (p[2]))) {
+          } else if (!IS_DIR_SEP (p[0]) && !(p[1] == ':' && IS_DIR_SEP (p[2]))) { 
             p = kpse_var_value ("SELFAUTOLOC");
             if (p) {
               r = *safecmd;
@@ -406,6 +388,43 @@ int shell_cmd_is_allowed(const char *cmd, char **safecmd, char **cmdname)
         }
 #endif
     }
+
+    return allow;
+}
+
+/* We should only be called with shellenabledp == 1.
+   Return value:
+   -1 if a quotation syntax error.
+   0 if CMD is not allowed; given shellenabledp==1, this is because
+      shell escapes are restricted and CMD is not allowed.
+   1 if shell escapes are not restricted, hence any command is allowed.
+   2 if shell escapes are restricted and CMD is allowed.  */
+
+int runsystem(const char *cmd)
+{
+    int allow = 0;
+    char *safecmd = NULL;
+    char *cmdname = NULL;
+
+    if (shellenabledp <= 0) {
+        return 0;
+    }
+
+    /* If restrictedshell == 0, any command is allowed. */
+    if (restrictedshell == 0)
+        allow = 1;
+    else
+        allow = shell_cmd_is_allowed(cmd, &safecmd, &cmdname);
+
+    if (allow == 1)
+        (void) system(cmd);
+    else if (allow == 2)
+        (void) system(safecmd);
+
+    if (safecmd)
+        free(safecmd);
+    if (cmdname)
+        free(cmdname);
 
     return allow;
 }
@@ -441,7 +460,7 @@ static void myInvalidParameterHandler(const wchar_t * expression,
 /*
    I return silently to avoid an exit with the error 0xc0000417
    (invalid parameter) when we use non-embedded fonts in luatex-ja,
-   which works without any problem on Unix systems.
+   which works without any problem on Unix systems. 
    I hope it is not dangerous.
 */
    return;
@@ -589,7 +608,7 @@ struct msg
   int   namelength; /* length of auxiliary data */
   int   eof;        /* new eof for dvi file */
 #if 0  /* see usage of struct msg below */
-  char more_data[0]; /* where the rest of the stuff goes */
+  char more_data[0]; /* where the rest of the stuff goes */ 
 #endif
 };
 
@@ -760,7 +779,7 @@ ipcpage (int is_eof)
   if (!begun) {
     string name; /* Just the filename.  */
     string cwd = xgetcwd ();
-
+    
     ipc_open_out ();
 
     /* Have to pass whole filename to the other end, since it may have
@@ -785,7 +804,7 @@ ipcpage (int is_eof)
     begun = true;
   }
   ipc_snd (len, is_eof, p);
-
+  
   if (p)
     free (p);
 }

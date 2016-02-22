@@ -1,27 +1,12 @@
-/* mktexupd.c
-
-   Copyright 2000, 2015 Akira Kakuto.
-
-   This library is free software; you can redistribute it and/or
-   modify it under the terms of the GNU Lesser General Public
-   License as published by the Free Software Foundation; either
-   version 2.1 of the License, or (at your option) any later version.
-
-   This library is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-   Lesser General Public License for more details.
-
-   You should have received a copy of the GNU Lesser General Public License
-   along with this library; if not, see <http://www.gnu.org/licenses/>.
-*/
-
 #include <kpathsea/kpathsea.h>
-#include "mktex.h"
 
-#define  MBUF     512
-#define  SBUF     512
+#include "mktexupd.h"
+
+#define  MBUF     128
+#define  SBUF     256
 #define  LBUF     512
+#define  DBS      "TEXMFDBS"
+#define  MAXTREE  16
 
 void
 mktexupd (char *s)
@@ -29,30 +14,64 @@ mktexupd (char *s)
   char fname[MBUF];
   char lsrname[SBUF];
   char path[LBUF];
-  char **pathbuff;
-  int i, j, numtree;
-  char *pa, *pb;
+  char *rootdir[MAXTREE];
+  int i, j, treenum;
+  char *pa, *pb, *pc;
   int existflag = 0;
   FILE *f;
 
-  if (!(pathbuff = mkpaths (&numtree))) {
+  pa = kpse_var_value (DBS);
+  if (pa == NULL) {
+    fprintf (stderr, "No definition of TEXMFDBS.\n");
     fprintf (stderr, "Maybe you are not using ls-R.\n");
     return;
   }
 
-  for (i = 0; i < numtree; i++) {
-    j = (int)strlen (pathbuff[i]);
-    if (pathbuff[i][j - 1] == '/')
-      pathbuff[i][j - 1] = '\0';
+  pb = kpse_brace_expand (pa);
+  free (pa);
+  if (pb == NULL) {
+    fprintf (stderr, "I cannot expand braces in TEXMFDBS.\n");
+    fprintf (stderr, "Maybe you are not using ls-R.\n");
+    return;
+  }
+
+  for (i = 0; i < MAXTREE; i++)
+    rootdir[i] = (char *) malloc (MBUF);
+
+  pa = pb;
+  i = 0;
+
+  while (*pa && i < MAXTREE) {
+    if (*pa == '!' && *(pa + 1) == '!') {
+      pa++;
+      pa++;
+    }
+    pc = rootdir[i];
+    while (*pa != ';' && *pa)
+      *pc++ = *pa++;
+    *pc = '\0';
+    if (*pa == ';') {
+      pa++;
+      i++;
+    }
+  }
+
+  i++;
+  treenum = i;
+  free (pb);
+
+  for (i = 0; i < treenum; i++) {
+    j = strlen (rootdir[i]);
+    if (rootdir[i][j - 1] == '/')
+      rootdir[i][j - 1] = '\0';
   }
 
   strcpy (path, s);
   pa = strrchr (path, '/');
   if (pa == NULL) {
     fprintf (stderr, "Path name of the file may be incorrect.\n");
-    for (i = 0; i < numtree; i++)
-      free (pathbuff[i]);
-    free (pathbuff);
+    for (i = 0; i < MAXTREE; i++)
+      free (rootdir[i]);
     return;
   }
 
@@ -60,25 +79,24 @@ mktexupd (char *s)
   pa++;
   strcpy (fname, pa);
 
-  for (i = 0; i < numtree; i++) {
-    j = (int)strlen (pathbuff[i]);
-    if (j && strnicmp (path, pathbuff[i], j) == 0) {
+  for (i = 0; i < treenum; i++) {
+    j = strlen (rootdir[i]);
+    if (j && strnicmp (path, rootdir[i], j) == 0) {
       existflag = 1;
       break;
     }
   }
 
   if (existflag) {
-    strcpy (lsrname, pathbuff[i]);
+    strcpy (lsrname, rootdir[i]);
     strcat (lsrname, "/ls-R");
     if (_access (lsrname, 0) != 0) {
-      for (j = 0; j < numtree; j++)
-        free (pathbuff[j]);
-      free (pathbuff);
+      for (j = 0; j < MAXTREE; j++)
+        free (rootdir[j]);
       return;
     }
     pa = path;
-    pb = pathbuff[i];
+    pb = rootdir[i];
     while (tolower (*pa) == tolower (*pb) && *pb) {
       pa++;
       pb++;
@@ -86,9 +104,9 @@ mktexupd (char *s)
     f = fopen (lsrname, "ab");
     fprintf (f, "\n.%s:\n%s\n", pa, fname);
     fclose (f);
-  } else
+  } else {
     fprintf(stderr, "mktexupd failed\n");
-  for (i = 0; i < numtree; i++)
-    free (pathbuff[i]);
-  free (pathbuff);
+  }
+  for (i = 0; i < MAXTREE; i++)
+    free (rootdir[i]);
 }

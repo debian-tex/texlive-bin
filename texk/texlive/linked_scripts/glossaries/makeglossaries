@@ -2,7 +2,7 @@
 
 # File    : makeglossaries
 # Author  : Nicola Talbot
-# Version : 2.18
+# Version : 2.15 (2014/07/30)
 # Description: simple Perl script that calls makeindex or xindy.
 # Intended for use with "glossaries.sty" (saves having to remember
 # all the various switches)
@@ -27,20 +27,9 @@
 # glossary-super.sty, glossaries.perl.
 # Also makeglossaries and makeglossaries.
 
-my $version="2.18 (2016-01-24)";
+my $version="2.15 (2014-07-30)";
 
 # History:
-# v2.18 (2016/01/24)
-#   * Added &parse_for_xindy_nosort to help diagnose xindy's empty
-#     index key warning/error.
-#   * Added check for makeindex's multiple encap warning.
-# v2.17 (2015/11/30)
-#   * Escaped { in regular expressions.
-#     http://www.dickimaw-books.com/cgi-bin/bugtracker.cgi?action=view&key=101
-# v2.16 (2015/06/28)
-#   * Added check for "german" and codepage that doesn't contain
-#   "din5007", "duden" or "braille". If missing, "din5007-" is
-#   prefixed to the codepage.
 # v2.15 (2014/07/30)
 #   * Removed hard-coded three character extension assumption
 #     www.dickimaw-books.com/cgi-bin/bugtracker.cgi?action=view&key=55
@@ -154,7 +143,6 @@ my %languagemap =
   'magyar'    => 'hungarian',
   'naustrian' => 'german',
   'ngermanb'  => 'german',
-  'ngerman'   => 'german', # v2.16
   'norsk'     => 'norwegian',
   'portuges'  => 'portuguese',
   'russianb'  => 'russian',
@@ -495,7 +483,7 @@ if ($ext)
    else
    {
       &makeindex("$name.$ext",$outfile,$transcript,$istfile,
-                 $mkidxopts,$opt_q, $opt_n, $makeindexapp, 1);
+                 $mkidxopts,$opt_q, $opt_n, $makeindexapp);
    }
 
 
@@ -620,7 +608,7 @@ else
       else
       {
          &makeindex($inputfile,$outfile,$transcript,
-                    $istfile,$mkidxopts,$opt_q,$opt_n, $makeindexapp, 1);
+                    $istfile,$mkidxopts,$opt_q,$opt_n, $makeindexapp);
       }
    }
 }
@@ -643,8 +631,7 @@ sub scan_aux{
         }
 
         # v1.9 added
-        # v2.17 escaped { in regex
-        if (m/\\\@input\{(.+)\.aux\}/)
+        if (m/\\\@input{(.+)\.aux}/)
         {
            &scan_aux($1);
 
@@ -653,8 +640,7 @@ sub scan_aux{
            next;
         }
 
-        # v2.17 escaped { in regex
-        if (m/\\\@newglossary\s*\{(.*)\}\{(.*)\}\{(.*)\}\{(.*)\}/)
+        if (m/\\\@newglossary\s*\{(.*)\}{(.*)}{(.*)}{(.*)}/)
         {
            $exttype{$1}{'log'} = $2;
            $exttype{$1}{'out'} = $3;
@@ -666,8 +652,7 @@ sub scan_aux{
            }
         }
 
-        # v2.17 escaped { in regex
-        if (m/\\\@istfilename\s*\{([^}]*)\}/)
+        if (m/\\\@istfilename\s*{([^}]*)}/)
         {
            $istfile = $1;
 
@@ -686,15 +671,13 @@ sub scan_aux{
         }
 
         # v1.5 added
-        # v2.17 escaped { in regex
-        if (m/\\\@xdylanguage\s*\{([^}]+)\}\{([^}]*)\}/)
+        if (m/\\\@xdylanguage\s*{([^}]+)}{([^}]*)}/)
         {
            $language{$1} = $2;
         }
 
         # v1.5 added
-        # v2.17 escaped { in regex
-        if (m/\\\@gls\@codepage\s*\{([^}]+)\}\{([^}]*)\}/)
+        if (m/\\\@gls\@codepage\s*{([^}]+)}{([^}]*)}/)
         {
            $codepage{$1} = $2;
         }
@@ -703,8 +686,7 @@ sub scan_aux{
         # Allow -l switch to override specification in aux file
         unless (defined($opt_l))
         {
-           # v2.17 escaped { in regex
-           if (m/\\\@glsorder\s*\{([^}]+)\}/)
+           if (m/\\\@glsorder\s*{([^}]+)}/)
            {
               my $ordering = $1;
 
@@ -856,8 +838,7 @@ sub run_app{
       }
    }
 
-   if ($log=~/\(0 entries accepted,/
-    or ( ($log=~/(\d+) warnings?/ and $1 gt 0)))
+   if ($log=~/\(0 entries accepted,/)
    {
       # Attempt to diagnose what's gone wrong
 
@@ -868,14 +849,14 @@ sub run_app{
             if (/Index style file .* not found/)
             {
                $errno = $istnotfound;
+               last;
             }
-            elsif (/Unknown specifier ;/)
+
+            if (/Unknown specifier ;/)
             {
                $errno = $xdynotist;
-            }
-            elsif (/## Warning \(.*\):\s*$/)
-            {
-               $warnings .= $_ . <TRANS>;
+
+               last;
             }
          }
 
@@ -889,7 +870,7 @@ sub run_app{
 
 # v2.08 added $app parameter
 sub makeindex{
-   my($in,$out,$trans,$ist,$rest,$quiet,$dontexec,$app,$repairencaps) = @_;
+   my($in,$out,$trans,$ist,$rest,$quiet,$dontexec,$app) = @_;
 
    my $args = "$rest -s \"$ist\" -t \"$trans\" -o \"$out\" \"$in\"";
 
@@ -920,113 +901,6 @@ sub makeindex{
         ),
         "Check '$trans' for details\n";
    }
-
-   # 2.18: added check and repair for multiple encaps
-   if ($warnings)
-   {
-      warn $warnings unless $quiet;
-
-      if ($repairencaps and $warnings=~/multiple encaps/)
-      {
-         unless ($quiet)
-         {
-            print "Multiple encaps detected. Attempting to remedy.\n";
-            print "Reading $in...\n";
-         }
-
-         # if $in can't be opened at this point something wrong
-         # has occurred (otherwise how did makeindex manage to open
-         # it?)
-
-         open INFD, $in or die "Can't open '$in' $!\n";
-
-         my @entries = ();
-
-         while (<INFD>)
-         {
-            if (/\\glossaryentry\{(.*)\|([^\|]*)\}\{(.*?)\}/)
-            {
-               my %entry = 
-                (
-                   'entry' => $1,
-                   'encap' => $2,
-                   'location' => $3
-                );
-
-               my $add = 1;
-
-               for (my $idx = 0; $idx <= $#entries; $idx++)
-               {
-                  my $existing = $entries[$idx];
-
-                  if ($entry{'entry'} eq $existing->{'entry'}
-                  and $entry{'location'} eq $existing->{'location'}
-                  and $entry{'encap'} ne $existing->{'encap'})
-                  {
-                     if (&encap_overrides($entry{'encap'},
-                           $existing->{'encap'}))
-                     {
-                        $entries[$idx] = \%entry;
-                     }
-
-                     $add = 0;
-                  } 
-               }
-
-               push @entries, \%entry if $add;
-            }
-            else
-            {
-               warn "Abandoning attempt. Can't parse: $_" unless $quiet;
-
-               close INFD;
-               return;
-            }
-         }
-
-         close INFD;
-
-         if (open OUTFD, ">$in")
-         {
-            print "Writing $in...\n" unless $quiet;
-
-            foreach my $entry (@entries)
-            {
-               print OUTFD '\\glossaryentry{',
-                 $entry->{'entry'}, '|',
-                 $entry->{'encap'}, '}{',
-                 $entry->{'location'}, '}', "\n";
-            }
-
-            close OUTFD;
-
-            print "Retrying\n" unless $quiet;
-
-            &makeindex($in,$out,$trans,$ist,$rest,$quiet,$dontexec,$app,0);
-         }
-         else
-         {
-            warn "Can't open '$in' $!\n" unless $quiet;
-         }
-      }
-   }
-}
-
-# 2.18 new
-# This is a subroutine in case of possible extension.
-# For example, what happens in the event of 'textbf' and 'emph'?
-# Should one override the other or be combined? Combining is harder
-# as it would need a corresponding LaTeX command.
-# Range encaps should take precedence.
-
-sub encap_overrides{
-  my ($newencap, $existing) = @_;
-
-  return 0 if ($existing=~/^[\(\)]/);
-
-  return 1 if ($newencap=~/^[\(\)]/);
-
-  ($existing=~/\\glsnumberformat\s*$/ or $newencap!~/\\glsnumberformat\s*$/ )
 }
 
 # v2.08 added $app parameter
@@ -1069,7 +943,7 @@ sub xindy{
       }
       elsif ($language eq 'german')
       {
-         $codepage = "din5007";
+         $codepage = "din";
       }
       elsif ($language eq 'gypsy')
       {
@@ -1104,13 +978,6 @@ sub xindy{
          $codepage = "utf";
       }
    }
-   elsif ($language eq 'german' and $codepage!~/(din5007|duden|braille)/)
-   {
-#v2.16 added check for german din/duden
-
-      $codepage = "din5007-$codepage";
-   }
-
 
    my $codepageparam = "";
 
@@ -1180,8 +1047,6 @@ sub xindy{
       if ($status=~/index 0 should be less than the length of the string/m)
       {
          $diagnostic = $xindy_error_text{nosort};
-
-         $diagnostic .= &parse_for_xindy_nosort($in);
       }
       elsif ($status=~/variable % has no value/m)
       {
@@ -1234,12 +1099,6 @@ sub xindy{
          $diagwarn .= $xindy_error_text{comp207};
       }
 
-      if ($status=~/Would replace complete index key by empty string, ignoring/m)
-      {
-         $diagwarn .= $xindy_error_text{nosort};
-         $diagwarn .= &parse_for_xindy_nosort($in);
-      }
-
       if ($diagwarn)
       {
          warn "\n**Warning:**\n\n", $diagwarn, "\n";
@@ -1269,63 +1128,6 @@ sub xindy{
    }
 }
 
-# v2.18 added:
-sub parse_for_xindy_nosort{
-  my ($in) = @_;
-
-  my $msg = join("\n", "", 
-                 "Attempting to determine which entries have problem sort keys",
-                 "Parsing '$in'");
-
-  my %entries = ();
-
-  if (open FD, $in)
-  {
-     while (<FD>)
-     {
-        if (/:tkey \(\("(\\\\[a-zA-Z@]+ *)" "\\\\glossentry\{(.*)\}"\) \)/)
-        {
-           unless ($entries{$2})
-           {
-              $entries{$2} = $1;
-           }
-        }
-     }
-
-     close FD;
-
-     my @labels = keys %entries;
-
-     my $n = $#labels+1;
-
-     if ($n == 0)
-     {
-        $msg .= "\nCouldn't find anything! Sorry, I'm stumped.";
-     }
-     else
-     {
-        $msg .= ($n == 1 ? "\n1 problematic entry found:\n"
-                         : "\n$n problematic entries found:\n");
-
-        foreach my $label (@labels)
-        {
-           my $sort = $entries{$label};
-
-           $sort=~s/^\\\\([a-zA-Z@]+) *$/$1/;
-
-           $msg .= "\nLabel: '$label'. Sort value : '$entries{$label}'";
-           $msg .= "\n(Try adding sort={$sort} to the definition.)";
-        }
-     }
-  }
-  else
-  {
-     $msg .= "\nFailed to open '$in' $!\n";
-  }
-
-  $msg;
-}
-
 sub HELP_MESSAGE{
    print "\nSyntax : makeglossaries [options] <filename>\n\n";
    print "For use with the glossaries package to pass relevant\n";
@@ -1339,7 +1141,6 @@ sub HELP_MESSAGE{
    print "-q\t\tQuiet mode.\n";
    print "-Q\t\tSilence unable to fork warning.\n";
    print "-k\t\tDon't try to use piped redirection.\n";
-   print "-l\t\tLetter ordering.\n";   
    print "-s <sty>\tEmploy <sty> as the style file.\n";
    print "-t <log>\tEmploy <log> as the transcript file.\n";
    print "\t\t(Don't use -t if you have more than one glossary\n";
@@ -1359,6 +1160,7 @@ sub HELP_MESSAGE{
    print "options.)\n\n";
    print "-c\t\tCompress intermediate blanks.\n";
    print "-g\t\tEmploy German word ordering.\n";
+   print "-l\t\tLetter ordering.\n";   
    print "-p <num>\tSet the starting page number to be <num>.\n";
    print "-r\t\tDisable implicit page range formation.\n";
    print "-m <file>\tFull path to makeindex executable.\n",
@@ -1428,10 +1230,6 @@ they have different style files.
 
 Use I<file> as the transcript file.
 
-=item B<-l>
-
-Letter ordering.
-
 =item B<-L> I<language>
 
 This option only has an effect if B<xindy> is called. Sets the
@@ -1444,6 +1242,10 @@ Compress intermediate blanks (B<makeindex> only).
 =item B<-g>
 
 Employ German word ordering (B<makeindex> only).
+
+=item B<-l>
+
+Letter ordering (B<makeindex> only).
 
 =item B<-p> I<num>
 

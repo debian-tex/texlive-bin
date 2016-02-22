@@ -1,13 +1,13 @@
 #!/usr/bin/env perl
-# $Id: tlmgr.pl 39410 2016-01-17 00:07:22Z karl $
+# $Id: tlmgr.pl 37488 2015-05-23 17:58:40Z karl $
 #
-# Copyright 2008-2016 Norbert Preining
+# Copyright 2008-2015 Norbert Preining
 # This file is licensed under the GNU General Public License version 2
 # or any later version.
 #
 
-my $svnrev = '$Revision: 39410 $';
-my $datrev = '$Date: 2016-01-17 01:07:22 +0100 (Sun, 17 Jan 2016) $';
+my $svnrev = '$Revision: 37488 $';
+my $datrev = '$Date: 2015-05-23 19:58:40 +0200 (Sat, 23 May 2015) $';
 my $tlmgrrevision;
 my $prg;
 if ($svnrev =~ m/: ([0-9]+) /) {
@@ -124,6 +124,20 @@ our $FLAG_REINSTALL = "I";
 # keep in sync with install-tl.
 our $common_fmtutil_args = 
   "--no-error-if-no-engine=$TeXLive::TLConfig::PartialEngineSupport";
+
+# return flags for error handling
+#
+# all fine
+our $F_OK = 0;
+#
+# some warnings, but we still try to run post actions
+our $F_WARNING = 1;
+#
+# error, terminating
+our $F_ERROR = 2;
+#
+# all fine, but no need to run post actions
+our $F_NOPOSTACTION = 4;
 
 # option variables
 $::gui_mode = 0;
@@ -325,8 +339,8 @@ my %action_specification = (
 
 main() if $ismain;
 
-
-### main ##################################################################
+#####################################################################
+
 
 sub main {
   my %options;       # TL options from local tlpdb
@@ -411,7 +425,6 @@ sub main {
 
   if (defined($action) && $action eq "help") {
     $opts{"help"} = 1;
-    $action = undef;  # an option not an action
   }
 
   if (defined($action) && $action eq "print-platform") {
@@ -419,19 +432,19 @@ sub main {
     exit 0;
   }
 
+  #
   # ACTION massaging
   # for backward compatibility and usability
 
   # unify arguments so that the $action contains paper in all cases
   # and push the first arg back to @ARGV for action_paper processing
-  if (defined $action 
-      && $action =~ /^(paper|xdvi|psutils|pdftex|dvips|dvipdfmx?|context)$/) {
+  if ($action =~ /^(paper|xdvi|psutils|pdftex|dvips|dvipdfmx?|context)$/) {
     unshift(@ARGV, $action);
     $action = "paper";
   }
 
   # backward compatibility with action "show" and "list" from before
-  if (defined $action && $action =~ /^(show|list)$/) {
+  if ($action =~ /^(show|list)$/) {
     $action = "info";
   }
 
@@ -624,13 +637,7 @@ for the full story.\n";
 
   my $ret = execute_action($action, @ARGV);
 
-  # F_ERROR stops processing immediately, and prevents postactions from
-  # being run (e.g., untar fails).  F_WARNING continues on, including
-  # postactions (e.g., user tries to install 10 packages and the
-  # checksum fails for one, but the others are ok), but still ends the
-  # program by exiting unsuccessfully.  So call them both "errors" 
-  # as far as the user is concerned.
-  if ($ret & ($F_ERROR | $F_WARNING)) {
+  if ($ret & $F_ERROR) {
     tlwarn("$prg: An error has occurred. See above messages. Exiting.\n");
   }
 
@@ -695,7 +702,7 @@ sub execute_action {
       return($foo);
     }
     if ($foo & $F_WARNING) {
-      tlwarn("$prg: action $action returned an error; continuing.\n");
+      tlwarn("$prg: action $action returned a warning.\n");
       $ret = $foo;
     }
   } else {
@@ -731,7 +738,8 @@ sub execute_action {
 # run CMD with notice to the user and if exit status is nonzero, complain.
 # return exit status.
 # 
-sub do_cmd_and_check {
+sub do_cmd_and_check
+{
   my $cmd = shift;
   # we output the pre-running notice on a separate line so that
   # tlmgr front ends (MacOSX's TeX Live Utility) can read it
@@ -750,7 +758,7 @@ sub do_cmd_and_check {
     return ($F_OK);
   } else {
     info("\n");
-    tlwarn("$prg: $cmd failed (status $ret), output:\n$out\n");
+    tlwarn("$cmd failed (status $ret), output:\n$out\n");
     return ($F_ERROR);
   }
 }
@@ -826,6 +834,32 @@ sub handle_execute_actions {
         } else {
           TeXLive::TLUtils::create_language_lua($localtlpdb, $arg1, $arg2);
         }
+      }
+    }
+
+    #
+    # check if *depending* formats have been changed
+    # we are currently only caring for package "latex" and "tex". If
+    # one of these has changed, we search for all packages *depending*
+    # on latex/tex and regenerate all formats in these packages.
+    #
+    # do this only if we are not in --list or --dry-run mode
+    if (!$opts{"list"}) {
+      my @check_indirect_formats;
+      # TODO:
+      # in case that hyphenation patterns are changed, ie $regenerate_language
+      # then maybe we don't need to update latex based ones?
+      push @check_indirect_formats, $localtlpdb->needed_by("latex")
+        if ($::latex_updated);
+      push @check_indirect_formats, $localtlpdb->needed_by("tex")
+        if ($::tex_updated);
+      for my $p (@check_indirect_formats) {
+          my $tlp = $localtlpdb->get_package($p);
+          if (!defined($tlp)) {
+            tlwarn("$p mentioned but not found in local tlpdb, strange!\n");
+            next;
+          }
+          TeXLive::TLUtils::announce_execute_actions("enable", $tlp, "format");
       }
     }
 
@@ -956,8 +990,8 @@ sub action_include_tlpobj {
       my $mothership = $1;
       my $mothertlp = $localtlpdb->get_package($mothership);
       if (!defined($mothertlp)) {
-        tlwarn("$prg: We are trying to add ${type} files to a nonexistent package $mothership!\n");
-        tlwarn("$prg: Trying to continue!\n");
+        tlwarn("We are trying to add ${type} files to a nonexistent package $mothership!\n");
+        tlwarn("Trying to continue!\n");
         # the best we can do is rename that package to $mothername and add it!
         $tlpobj->name($mothership);
         # add the src/docfiles tlpobj under the mothership name
@@ -1165,15 +1199,7 @@ sub action_paper {
       return($F_ERROR)
 
     } elsif (!defined($newpaper)) {  # tlmgr paper => show all current sizes.
-      my $ret = $F_OK;
-      for my $prog (sort keys %TeXLive::TLPaper::paper) {
-        my $pkg = $TeXLive::TLPaper::paper{$prog}{'pkg'};
-        if ($localtlpdb->get_package($pkg)) {
-          $ret |= TeXLive::TLPaper::do_paper($prog,$texmfconfig,undef);
-        }
-      }
-      return($ret);
-      # return TeXLive::TLPaper::paper_all($texmfconfig,undef);
+      return TeXLive::TLPaper::paper_all($texmfconfig,undef);
 
     } elsif ($newpaper !~ /^(a4|letter)$/) {  # tlmgr paper junk => complain.
       $newpaper = "the empty string" if !defined($newpaper);
@@ -1182,24 +1208,11 @@ sub action_paper {
 
     } else { # tlmgr paper {a4|letter} => do it.
       return ($F_ERROR) if !check_on_writable();
-      my $ret = $F_OK;
-      for my $prog (sort keys %TeXLive::TLPaper::paper) {
-        my $pkg = $TeXLive::TLPaper::paper{$prog}{'pkg'};
-        if ($localtlpdb->get_package($pkg)) {
-          $ret |= TeXLive::TLPaper::do_paper($prog,$texmfconfig,$newpaper);
-        }
-      }
-      return($ret);
-      # return (TeXLive::TLPaper::paper_all($texmfconfig,$newpaper));
+      return (TeXLive::TLPaper::paper_all($texmfconfig,$newpaper));
     }
 
   } else {  # program-specific paper
     my $prog = $action;     # first argument is the program to change
-    my $pkg = $TeXLive::TLPaper::paper{$prog}{'pkg'};
-    if (!$localtlpdb->get_package($pkg)) {
-      tlwarn("$prg: package $pkg is not installed - cannot adjust paper size!\n");
-      return ($F_ERROR);
-    }
     my $arg = shift @ARGV;  # get "paper" argument
     if (!defined($arg) || $arg ne "paper") {
       $arg = "the empty string." if ! $arg;
@@ -1223,7 +1236,7 @@ sub action_paper {
 #
 sub action_path {
   if ($opts{"usermode"}) {
-    tlwarn("$prg: action `path' not supported in usermode!\n");
+    tlwarn("action `path' not supported in usermode!\n");
     exit 1;
   }
   my $what = shift @ARGV;
@@ -1274,7 +1287,7 @@ sub action_path {
         } elsif ($opts{"w32mode"} eq "admin") {
           $winadminmode = 1;
         } else {
-          tlwarn("$prg: Unknown --w32admin mode: $opts{w32mode}, should be 'admin' or 'user'\n");
+          tlwarn("Unknown --w32admin mode: $opts{w32mode}, should be 'admin' or 'user'\n");
           return ($F_ERROR);
         }
       } else {
@@ -1282,10 +1295,10 @@ sub action_path {
         if ($opts{"w32mode"} eq "user") {
           $winadminmode = 0;
         } elsif ($opts{"w32mode"} eq "admin") {
-          tlwarn("$prg: You don't have the privileges to work in --w32mode admin\n");
+          tlwarn("You don't have the privileges to work in --w32mode admin\n");
           return ($F_ERROR);
         } else {
-          tlwarn("$prg: Unknown --w32admin mode: $opts{w32mode}, should be 'admin' or 'user'\n");
+          tlwarn("Unknown --w32admin mode: $opts{w32mode}, should be 'admin' or 'user'\n");
           return ($F_ERROR);
         }
       }
@@ -1349,7 +1362,7 @@ sub action_dumptlpdb {
     $remotetlpdb->writeout;
 
   } else {
-    tlwarn("$prg dump-tlpdb: need exactly one of --local and --remote.\n");
+    tlwarn("tlmgr dump-tlpdb: need exactly one of --local and --remote.\n");
     return ($F_ERROR);
   }
   
@@ -1387,7 +1400,7 @@ sub action_info {
       }
       if (defined($tag)) {
         if (!$remotetlpdb->is_virtual) {
-          tlwarn("$prg: specifying implicit tags not allowed for non-virtual databases!\n");
+          tlwarn("$prg: specifying implicit tags is not allowed for non-virtual databases!\n");
           $ret |= $F_WARNING;
           next;
         } else {
@@ -1416,7 +1429,7 @@ sub action_info {
           if (@cand) {
             my $first = shift @cand;
             if (defined($first)) {
-              tlwarn("$prg: strange, we have a first candidate but no tlp: $pkg\n");
+              tlwarn("strange, we have a first candidate but no tlp: $pkg\n");
               $ret |= $F_WARNING;
               next;
             }
@@ -1435,18 +1448,18 @@ sub action_info {
               $ret |= action_info(@aaa);
               next;
             } else {
-              tlwarn("$prg: strange, package listed but no residual candidates: $pkg\n");
+              tlwarn("strange, package listed but no residual candidates: $pkg\n");
               next;
             }
           } else {
-            tlwarn("$prg: strange, package listed but no candidates: $pkg\n");
+            tlwarn("strange, package listed but no candidates: $pkg\n");
             $ret |= $F_WARNING;
             next;
           }
         }
         # we didn't find a package like this, so use search
         info("$prg: cannot find package $pkg, searching for other matches:\n");
-        my ($foundfile, $founddesc) = search_tlpdb($remotetlpdb,$pkg,1,1,0);
+        my ($foundfile, $founddesc) = search_tlpdb($remotetlpdb, $pkg, 1, 1, 0);
         print "\nPackages containing \`$pkg\' in their title/description:\n";
         print $founddesc;
         print "\nPackages containing files matching \`$pkg\':\n";
@@ -1540,10 +1553,6 @@ sub action_info {
       if $tlp->cataloguedata->{'date'};
     print "cat-license: ", $tlp->cataloguedata->{'license'}, "\n"
       if $tlp->cataloguedata->{'license'};
-    print "cat-topics:  ", $tlp->cataloguedata->{'topics'}, "\n"
-      if $tlp->cataloguedata->{'topics'};
-    print "cat-related: ", $tlp->cataloguedata->{'also'}, "\n"
-      if $tlp->cataloguedata->{'also'};
     print "collection:  ", @colls, "\n" if (@colls);
     if ($opts{"list"}) {
       if ($tlp->category eq "Collection" || $tlp->category eq "Scheme") {
@@ -1563,7 +1572,7 @@ sub action_info {
       for my $d (sort @todo) {
         my $foo = $tlpdb->get_package($d);
         if (!$foo) {
-          tlwarn ("$prg: Should not happen, no dependent package $d\n");
+          tlwarn ("\nShould not happen, no dependent package $d\n");
           $ret |= $F_WARNING;
           next;
         }
@@ -1676,7 +1685,6 @@ sub search_pkg_desc {
   my $t = "$pkg\n";
   $t = $t . $tlp->shortdesc . "\n" if (defined($tlp->shortdesc));
   $t = $t . $tlp->longdesc . "\n" if (defined($tlp->longdesc));
-  $t = $t . $tlp->cataloguedata->{'topics'} . "\n" if (defined($tlp->cataloguedata->{'topics'}));
   my $pat = $what;
   $pat = '\W' . $what . '\W' if ($inword);
   my $matched = "";
@@ -1753,7 +1761,7 @@ sub restore_one_package {
   # this way we get rid of useless files
   my $restore_file = "$bd/${pkg}.r${rev}.tar.xz";
   if (! -r $restore_file) {
-    tlwarn("$prg: Cannot read $restore_file, no action taken\n");
+    tlwarn("Cannot read $restore_file, no action taken\n");
     return ($F_ERROR);
   }
   $localtlpdb->remove_package($pkg);
@@ -1945,8 +1953,8 @@ sub action_backup {
       # we need to check the tlpdb
       my $tlpdb_option = $localtlpdb->option("autobackup");
       if (!defined($tlpdb_option)) {
-        tlwarn ("$prg: --clean given without an argument, but no default clean\n");
-        tlwarn ("$prg: mode specified in the tlpdb.\n");
+        tlwarn ("--clean given without an argument, but no default clean\n");
+        tlwarn ("mode specified in the tlpdb.\n");
         return ($F_ERROR);
       }
       $opts{"clean"} = $tlpdb_option;
@@ -1957,8 +1965,8 @@ sub action_backup {
       # get rid of leading zeros etc etc
       $opts{"clean"} = $opts{"clean"} + 0;
     } else {
-      tlwarn ("$prg: clean mode as specified on the command line or as given by default\n");
-      tlwarn ("$prg: must be an integer larger or equal than -1, terminating.\n");
+      tlwarn ("clean mode as specified on the command line or as given by default\n");
+      tlwarn ("must be an integer larger or equal than -1, terminating.\n");
       return($F_ERROR);
     }
   }
@@ -2079,10 +2087,10 @@ sub write_w32_updater {
   my $root = $localtlpdb->root;
   my $temp = "$root/temp";
   TeXLive::TLUtils::mkdirhier($temp);
-  tlwarn("$prg: Backup option not implemented for infrastructure update.\n") if ($opts{"backup"});
+  tlwarn("Backup option not implemented for infrastructure update.\n") if ($opts{"backup"});
   if ($media eq 'local_uncompressed') {
-    tlwarn("$prg: Creating updater from local_uncompressed currently not implemented!\n");
-    tlwarn("$prg: But it should not be necessary!\n");
+    tlwarn("Creating updater from local_uncompressed currently not implemented!\n");
+    tlwarn("But it should not be necessary!\n");
     return 1; # abort
   }
   my (@upd_tar, @upd_tlpobj, @upd_info, @rst_tar, @rst_tlpobj, @rst_info);
@@ -2122,7 +2130,7 @@ sub write_w32_updater {
     # create backup; make_container expects file name in a format: some-name.r[0-9]+
     my ($size, $md5, $fullname) = $localtlp->make_container("tar", $root, $temp, "__BACKUP_$pkg.r$oldrev");
     if ($size <= 0) {
-      tlwarn("$prg: Creation of backup container of $pkg failed.\n");
+      tlwarn("Creation of backup container of $pkg failed.\n");
       return 1; # backup failed? abort
     }
     foreach my $pkg_part (@pkg_parts) {
@@ -2133,13 +2141,13 @@ sub write_w32_updater {
       }
       # now we should have the file present
       if (!-r "$temp/$pkg_part.tar.xz") {
-        tlwarn("$prg: Couldn't get $pkg_part.tar.xz, that is bad\n");
+        tlwarn("Couldn't get $pkg_part.tar.xz, that is bad\n");
         return 1; # abort
       }
       # unpack xz archive
       my $sysret = system("$::progs{'xzdec'} < \"$temp/$pkg_part.tar.xz\" > \"$temp/$pkg_part.tar\"");
       if ($sysret) {
-        tlwarn("$prg: Couldn't unpack $pkg_part.tar.xz\n");
+        tlwarn("Couldn't unpack $pkg_part.tar.xz\n");
         return 1; # unpack failed? abort
       }
       unlink("$temp/$pkg_part.tar.xz"); # we don't need that archive anymore
@@ -2243,7 +2251,7 @@ EOF
     copy("$root/tlpkg/installer/tar.exe", "$temp");
     # make sure copied tar is working
     if (system("\"$temp/tar.exe\" --version >nul")) {
-      tlwarn("$prg: Could not copy tar.exe, that is bad.\n");
+      tlwarn("Could not copy tar.exe, that is bad.\n");
       return 1; # abort
     }
     open UPDATER, ">$temp/updater-w32" or die "Cannot create updater script: $!";
@@ -2310,7 +2318,7 @@ sub auto_remove_install_force_packages {
     next if $removals_full{$p};
     my $remotetlp = $remotetlpdb->get_package($p);
     if (!defined($remotetlp)) {
-      tlwarn("$prg: Strange, $p mentioned but not found anywhere!\n");
+      tlwarn("Strange, $p mentioned but not found anywhere!\n");
       next;
     }
     next if ($remotetlp->category ne "Collection");
@@ -2461,7 +2469,7 @@ sub action_update {
   # if --list is given:    nothing
   # other options just change the behaviour
   if (!($opts{"list"} || @ARGV || $opts{"all"} || $opts{"self"})) {
-    tlwarn("$prg update: specify --list, --all, --self, or a list of package names.\n");
+    tlwarn("tlmgr update: specify --list, --all, --self, or a list of package names.\n");
     return ($F_ERROR);
   }
 
@@ -2511,8 +2519,8 @@ sub action_update {
         debug ("Automatic backups activated, keeping $autobackup backups.\n");
         $opts{"backup"} = 1;
       } else {
-        tlwarn ("$prg: Option autobackup can only be an integer >= -1.\n");
-        tlwarn ("$prg: Disabling auto backups.\n");
+        tlwarn ("Option autobackup can only be an integer >= -1.\n");
+        tlwarn ("Disabling auto backups.\n");
         $localtlpdb->option("autobackup", 0);
         $autobackup = 0;
         $ret |= $F_WARNING;
@@ -2573,7 +2581,7 @@ sub action_update {
     if ($opts{"self"}) {
       info("$prg: no updates for tlmgr present.\n");
     } else {
-      tlwarn("$prg update: please specify a list of packages, --all, or --self.\n");
+      tlwarn("tlmgr update: please specify a list of packages, --all, or --self.\n");
       return ($F_ERROR);
     }
   }
@@ -2637,9 +2645,9 @@ sub action_update {
     }
   }
   if ($in_conflict) {
-    tlwarn("$prg: Conflicts have been found:\n");
+    tlwarn("Conflicts have been found:\n");
     for (@option_conflict_lines) { tlwarn("  $_"); }
-    tlwarn("$prg: Please resolve these conflicts!\n");
+    tlwarn("Please resolve these conflicts!\n");
     return ($F_ERROR);
   }
       
@@ -2696,7 +2704,7 @@ sub action_update {
       # install new packages
       my $mediatlp = $remotetlpdb->get_package($pkg);
       if (!defined($mediatlp)) {
-        tlwarn("\n$prg: Should not happen: $pkg not found in $location\n");
+        tlwarn("\nShould not happen: $pkg not found in $location\n");
         $ret |= $F_WARNING;
         next;
       }
@@ -2809,7 +2817,7 @@ sub action_update {
     # are actually disabled?!?!?!
     for my $p (@updated, @removals) {
       my $pkg = $localtlpdb->get_package($p);
-      tlwarn("$prg: Should not happen: $p not found in local tlpdb\n") if (!$pkg);
+      tlwarn("Should not happen: $p not found in local tlpdb\n") if (!$pkg);
       next;
       for my $f ($pkg->all_files) {
         push @{$old_files_to_pkgs{$f}}, $p;
@@ -2817,7 +2825,7 @@ sub action_update {
     }
     for my $p (@updated, @new) {
       my $pkg = $remotetlpdb->get_package($p);
-      tlwarn("$prg: Should not happen: $p not found in $location\n") if (!$pkg);
+      tlwarn("Should not happen: $p not found in $location\n") if (!$pkg);
       next;
       for my $f ($pkg->all_files) {
         if ($pkg->relocated) {
@@ -3003,9 +3011,7 @@ sub action_update {
       # - then it is tried to be updated here, which is not working!
       # report that and ask for report
       if (!defined($tlp)) {
-        my %servers = repository_to_array($location);
-        my $servers = join("\n ", values(%servers));
-        tlwarn("$prg: inconsistency on (one of) the server(s): $servers\n");
+        tlwarn("$prg: inconsistency on the server:\n");
         tlwarn("$prg: tlp for package $pkg cannot be found, please report.\n");
         $ret |= $F_WARNING;
         next;
@@ -3123,7 +3129,7 @@ sub action_update {
                                       $tlp->relocated);
         if ($s <= 0) {
           tlwarn("\n$prg: Creation of backup container of $pkg failed.\n");
-          tlwarn("$prg: Continuing to update other packages, please retry...\n");
+          tlwarn("Continuing to update other packages, please retry...\n");
           $ret |= $F_WARNING;
           # we should try to update other packages at least
           next;
@@ -3174,7 +3180,7 @@ sub action_update {
         # dirs from the new package before re-installing the old one.
         # TODO
         logpackage("failed update: $pkg ($rev -> $mediarevstr)");
-        tlwarn("$prg: Installation of new version of $pkg did fail, trying to unwind.\n");
+        tlwarn("\n\nInstallation of new version of $pkg did fail, trying to unwind.\n");
         if (win32()) {
           # w32 is notorious for not releasing a file immediately
           # we experienced permission denied errors
@@ -3187,9 +3193,8 @@ sub action_update {
           $remove_unwind_container = 1;
           $unwind_package = $newname;
         }
-
-        my ($instret, $msg) = TeXLive::TLUtils::unpack("$unwind_package",
-          $localtlpdb->root);
+        my $instret = TeXLive::TLPDB->_install_package("$unwind_package", 0,
+                                                       [], $localtlpdb);
         if ($instret) {
           # now we have to include the tlpobj
           my $tlpobj = TeXLive::TLPOBJ->new;
@@ -3198,12 +3203,11 @@ sub action_update {
           $localtlpdb->save;
           logpackage("restore: $pkg ($rev)");
           $ret |= $F_WARNING;
-          tlwarn("$prg: Restoring old package state succeeded.\n");
+          tlwarn("Restoring old package state succeeded.\n");
         } else {
           logpackage("failed restore: $pkg ($rev)");
-          tlwarn("$prg: Restoring of old package did NOT succeed.\n");
-          tlwarn("$prg: Error message from unpack: $msg\n");
-          tlwarn("$prg: Most likely repair: run tlmgr install $pkg and hope.\n");
+          tlwarn("Restoring of old package did NOT succeed.\n");
+          tlwarn("Most likely repair: run tlmgr install $pkg and hope.\n");
           # TODO_ERRORCHECKING
           # should we return F_ERROR here??? If we would do this, then
           # no postactions at all would run? Maybe better only to give
@@ -3231,7 +3235,7 @@ sub action_update {
           $mediatlp = $remotetlpdb->get_package($pkg);
         }
         if (!defined($mediatlp)) {
-          tlwarn("\n$prg: Should not happen: $pkg not found in $location\n");
+          tlwarn("\nShould not happen: $pkg not found in $location\n");
           $ret |= $F_WARNING;
           next;
         }
@@ -3283,8 +3287,10 @@ sub action_update {
   # special check for depending format updates:
   # if one of latex or tex has been updated, we rebuild the formats
   # defined in packages *depending* on these packages.
-  check_announce_format_triggers(@inst_packs, @new_packs)
-    if (!$opts{"list"});
+  if (!$opts{"list"}) {
+    TeXLive::TLUtils::announce_execute_actions("latex-updated") if ($updated{"latex"});
+    TeXLive::TLUtils::announce_execute_actions("tex-updated") if ($updated{"tex"});
+  }
 
   print "end-of-updates\n" if $::machinereadable;
 
@@ -3440,27 +3446,6 @@ END_DISK_WARN
 }
 
 
-sub check_announce_format_triggers {
-  # we treat new and updated packages the same as updated 
-  # when it comes to triggers
-  my %updpacks = map { $_ => 1 } @_;
-
-  # search all format definitions in the tlpdb
-  FMTDEF: for my $fmtdef ($localtlpdb->format_definitions) {
-    # if by default they are activated, check the whether the
-    # trigger packages appear in the list of updated/new packages
-    if (($fmtdef->{'mode'} == 1) && $fmtdef->{'fmttriggers'}) {
-      for my $trigger (@{$fmtdef->{'fmttriggers'}}) {
-        if ($updpacks{$trigger}) {
-          TeXLive::TLUtils::announce_execute_actions("rebuild-format",
-            0, $fmtdef);
-          next FMTDEF;
-        }
-      }
-    }
-  }
-}
-
 #  INSTALL
 #
 # tlmgr install foo bar baz
@@ -3514,7 +3499,7 @@ sub action_install {
     if (check_for_critical_updates( $localtlpdb, $remotetlpdb)) {
       critical_updates_warning();
       if ($opts{"force"}) {
-        tlwarn("$prg: Continuing due to --force\n");
+        tlwarn("Continuing due to --force\n");
       } else {
         if ($::gui_mode) {
           # return here and don't do any updates
@@ -3675,12 +3660,9 @@ sub action_install {
       info("[$currnr/$totalnr, $estrem/$esttot] ${re}install: $pkg$tagstr [${kb}k]\n");
     }
     if (!$opts{"dry-run"}) {
-      if ($remotetlpdb->install_package($pkg, $localtlpdb,
-            ($packs{$pkg} ? $packs{$pkg} : undef) )) {
-        logpackage("${re}install: $pkg$tagstr");
-      } else {
-        logpackage("failed ${re}install: $pkg$tagstr");
-      }
+      $remotetlpdb->install_package($pkg, $localtlpdb,
+        ($packs{$pkg} ? $packs{$pkg} : undef) );
+      logpackage("${re}install: $pkg$tagstr");
     }
     $donesize += $sizes{$pkg};
     $currnr++;
@@ -3744,7 +3726,7 @@ sub show_list_of_packages {
         if (@cand) {
           my $first = shift @cand;
           if (defined($first)) {
-            tlwarn("$prg: strange, we have a first candidate but no tlp: $_\n");
+            tlwarn("strange, we have a first candidate but no tlp: $_\n");
             next;
           }
           # already shifted away the first element
@@ -3761,15 +3743,15 @@ sub show_list_of_packages {
             }
             next;
           } else {
-            tlwarn("$prg: strange, package listed but no residual candidates: $_\n");
+            tlwarn("strange, package listed but no residual candidates: $_\n");
             next;
           }
         } else {
-          tlwarn("$prg: strange, package listed but no candidates: $_\n");
+          tlwarn("strange, package listed but no candidates: $_\n");
           next;
         }
       } else {
-        tlwarn("$prg: strange, package cannot be found in remote tlpdb: $_\n");
+        tlwarn("strange, package cannot be found in remote tlpdb: $_\n");
         next;
       }
     }
@@ -3975,7 +3957,7 @@ sub action_repository {
         }
         my ($tlpdb, $errormsg) = setup_one_remotetlpdb($loc);
         if (!defined($tlpdb)) {
-          tlwarn("$prg: cannot get TLPDB from location $loc\n\n");
+          tlwarn("cannot get TLPDB from location $loc\n\n");
         } else {
           print "Packages at $loc:\n";
           my %pkgs = merge_sub_packages($tlpdb->list_packages);
@@ -4132,7 +4114,7 @@ sub action_option {
   init_local_db();
   my $ret = $F_OK;
   if ($what =~ m/^show$/i) {
-    for my $o (sort keys %{$localtlpdb->options}) {
+    for my $o (keys %{$localtlpdb->options}) {
       # ignore some things which are w32 specific
       next if ($o eq "desktop_integration" && !win32());
       next if ($o eq "file_assocs" && !win32());
@@ -4245,14 +4227,14 @@ sub action_option {
                 if (defined($2)) {
                   # lower border
                   if ($2 > $n) {
-                    tlwarn("$prg: value $n for $what out of range ($TLPDBOptions{$opt}->[0])\n");
+                    tlwarn("value $n for $what out of range ($TLPDBOptions{$opt}->[0])\n");
                     $isgood = 0;
                   }
                 }
                 if (defined($4)) {
                   # upper border
                   if ($4 < $n) {
-                    tlwarn("$prg: value $n for $what out of range ($TLPDBOptions{$opt}->[0])\n");
+                    tlwarn("value $n for $what out of range ($TLPDBOptions{$opt}->[0])\n");
                     $isgood = 0;
                   }
                 }
@@ -4262,7 +4244,7 @@ sub action_option {
                 $localtlpdb->option($opt, $n);
               }
             } else {
-              tlwarn ("$prg: Unknown type of option $opt: $TLPDBOptions{$opt}->[0]\n");
+              tlwarn ("Unknown type of option $opt: $TLPDBOptions{$opt}->[0]\n");
               return ($F_ERROR);
             }
           }
@@ -4274,7 +4256,7 @@ sub action_option {
               $tlpo->writeout(\*TOFD);
               close(TOFD);
             } else {
-              tlwarn("$prg: Cannot save 00texlive.installation to $::maintree/tlpkg/tlpobj/00texlive.installation.tlpobj\n");
+              tlwarn("Cannot save 00texlive.installation to $::maintree/tlpkg/tlpobj/00texlive.installation.tlpobj\n");
               $ret |= $F_WARNING;
             }
           }
@@ -4302,17 +4284,16 @@ sub action_option {
 #  ARCH
 #
 sub action_platform {
-  my $ret = $F_OK;
   my @extra_w32_packs = qw/tlperl.win32 tlgs.win32 tlpsv.win32
                            collection-wintools
                            dviout.win32 wintools.win32/;
   if ($^O=~/^MSWin(32|64)$/i) {
     warn("action `platform' not supported on Windows\n");
-    return ($F_WARNING);
+    return();
   }
   if ($opts{"usermode"}) {
-    tlwarn("$prg: action `platform' not supported in usermode\n");
-    return ($F_ERROR);
+    tlwarn("action `platform' not supported in usermode\n");
+    exit 1;
   }
   my $what = shift @ARGV;
   init_local_db(1);
@@ -4335,18 +4316,18 @@ sub action_platform {
     print "You can add new platforms with: tlmgr platform add ARCH1 ARCH2...\n";
     return ($F_OK | $F_NOPOSTACTION);
   } elsif ($what =~ m/^add$/i) {
-    return ($F_ERROR) if !check_on_writable();
+    return if !check_on_writable();
     init_tlmedia_or_die();
     my @already_installed_arch = $localtlpdb->available_architectures;
     my @available_arch = $remotetlpdb->available_architectures;
     my @todoarchs;
     foreach my $a (@ARGV) {
       if (TeXLive::TLUtils::member($a, @already_installed_arch)) {
-        info("Platform $a is already installed\n");
+        print "Platform $a is already installed\n";
         next;
       }
       if (!TeXLive::TLUtils::member($a, @available_arch)) {
-        info("Platform $a not available, use 'tlmgr platform list'!\n");
+        print "Platform $a not available, use 'tlmgr platform list'!\n";
         next;
       }
       push @todoarchs, $a;
@@ -4360,14 +4341,8 @@ sub action_platform {
           foreach my $a (@todoarchs) {
             if ($remotetlpdb->get_package("$pkg.$a")) {
               info("install: $pkg.$a\n");
-              if (!$opts{'dry-run'}) {
-                if (! $remotetlpdb->install_package("$pkg.$a", $localtlpdb)) {
-                  $ret |= $F_ERROR;
-                }
-              }
-            } else {
-              tlwarn("$prg: action platform add, cannot find package $pkg.$a\n");
-              $ret |= $F_WARNING;
+              $remotetlpdb->install_package("$pkg.$a", $localtlpdb)
+                if (!$opts{"dry-run"});
             }
           }
         }
@@ -4377,11 +4352,7 @@ sub action_platform {
       # install the necessary w32 stuff
       for my $p (@extra_w32_packs) {
         info("install: $p\n");
-        if (!$opts{'dry-run'}) {
-          if (! $remotetlpdb->install_package($p, $localtlpdb)) {
-            $ret |= $F_ERROR;
-          }
-        }
+        $remotetlpdb->install_package($p, $localtlpdb) if (!$opts{"dry-run"});
       }
     }
     # update the option("available_architectures") list of installed archs
@@ -4392,19 +4363,17 @@ sub action_platform {
       $localtlpdb->save;
     }
   } elsif ($what =~ m/^remove$/i) {
-    return ($F_ERROR) if !check_on_writable();
+    return if !check_on_writable();
     my @already_installed_arch = $localtlpdb->available_architectures;
     my @todoarchs;
     my $currentarch = $localtlpdb->platform();
     foreach my $a (@ARGV) {
       if (!TeXLive::TLUtils::member($a, @already_installed_arch)) {
-        tlwarn("$prg: Platform $a not installed, use 'tlmgr platform list'!\n");
-        $ret |= $F_WARNING;
+        print "Platform $a not installed, use 'tlmgr platform list'!\n";
         next;
       }
       if ($currentarch eq $a) {
         info("You are running on platform $a, you cannot remove that one!\n");
-        $ret |= $F_WARNING;
         next;
       }
       push @todoarchs, $a;
@@ -4423,7 +4392,6 @@ sub action_platform {
           foreach my $a (@todoarchs) {
             if ($localtlpdb->get_package("$pkg.$a")) {
               info("remove: $pkg.$a\n");
-              # assume that this works out
               $localtlpdb->remove_package("$pkg.$a") if (!$opts{"dry-run"});
             }
           }
@@ -4440,8 +4408,7 @@ sub action_platform {
       # try to remove bin/$a dirs
       for my $a (@todoarchs) {
         if (!rmdir("$Master/bin/$a")) {
-          tlwarn("$prg: binary directory $Master/bin/$a not empty after removal of $a.\n");
-          $ret |= $F_WARNING;
+          tlwarn("binary directory $Master/bin/$a not empty after removal of $a.\n");
         }
       }
       # update the option("available_architectures") list of installed archs
@@ -4464,17 +4431,15 @@ sub action_platform {
       $localtlpdb->save;
     } else {
       if (!TeXLive::TLUtils::member($arg, @already_installed_arch)) {
-        tlwarn("$prg: cannot set platform to a not installed one.\n");
-        return ($F_ERROR);
+        tlwarn("cannot set platform to a not installed one.\n");
+        return;
       }
       $localtlpdb->setting('platform', $arg);
       $localtlpdb->save;
     }
   } else {
-    tlwarn("$prg: Unknown option for platform: $what\n");
-    $ret |= $F_ERROR;
+    die "Unknown option for platform: $what";
   }
-  return ($ret);
 }
 
 
@@ -4482,7 +4447,7 @@ sub action_platform {
 #
 sub action_generate {
   if ($opts{"usermode"}) {
-    tlwarn("$prg: action `generate' not supported in usermode!\n");
+    tlwarn("action `generate' not supported in usermode!\n");
     return $F_ERROR;
   }
   my $what = shift @ARGV;
@@ -4508,7 +4473,7 @@ sub action_generate {
     # if --rebuild-sys is given *and* --dest we warn that this might not
     # work if the destination is not the default one
     if ($opts{"rebuild-sys"} && $opts{"dest"}) {
-      tlwarn("$prg generate $what: warning: both --rebuild-sys and --dest\n",
+      tlwarn("tlmgr generate $what: warning: both --rebuild-sys and --dest\n",
              "given; the call to fmtutil-sys can fail if the given\n",
              "destination is different from the default.\n");
     }
@@ -4758,13 +4723,13 @@ sub action_recreate_tlpdb {
         if (member($opts{"platform"}, @archs)) {
           push @deps, "setting_platform:" . $opts{"platform"};
         } else {
-          tlwarn("$prg: The platform you passed in with --platform is not present in $Master/bin\n");
-          tlwarn("$prg: Please specify one of the available ones: @archs\n");
+          tlwarn("The platform you passed in with --platform is not present in $Master/bin\n");
+          tlwarn("Please specify one of the available ones: @archs\n");
           exit(1);
         }
       } else {
-        tlwarn("$prg: More than one platform available: @archs\n");
-        tlwarn("$prg: Please pass one as the default you are running on with --platform=...\n");
+        tlwarn("More than one platform available: @archs\n");
+        tlwarn("Please pass one as the default you are running on with --platform=...\n");
         exit(1);
       }
     }
@@ -4843,7 +4808,7 @@ sub action_check {
     my $tltree = init_tltree($svn);
     $ret |= check_files($tltree);
   } elsif ($what =~ m/^collections/i) {
-    tlwarn("$prg: the \"collections\" check is replaced by the \"depends\" check.\n");
+    tlwarn("the \"collections\" check is replaced by the \"depends\" check.\n");
     $ret |= check_depends();
   } elsif ($what =~ m/^depends/i) {
     $ret |= check_depends();
@@ -4994,7 +4959,7 @@ sub check_runfiles {
   foreach my $f (@duplicates) {
     # assume tex4ht, xdy, afm stuff is ok, and don't worry about
     # Changes, README et al.  Other per-format versions.
-    next if $f =~ /\.(afm|cfg|dll|exe|4hf|htf|pm|xdy)$/;
+    next if $f =~ /\.(afm|cfg|dll|exe|4hf|htf|xdy)$/;
     next if $f
       =~ /^((czech|slovak)\.sty
             |Changes
@@ -5002,7 +4967,6 @@ sub check_runfiles {
             |README
             |cid2code\.txt
             |etex\.src
-            |fithesis.*
             |kinsoku\.tex
             |language\.dat
             |language\.def
@@ -5074,7 +5038,7 @@ sub check_executes {
   foreach my $mf (keys %maps) {
     my @pkgsfound = @{$maps{$mf}};
     if ($#pkgsfound > 0) {
-      tlwarn ("$prg: map file $mf is referenced in the executes of @pkgsfound\n");
+      tlwarn ("map file $mf is referenced in the executes of @pkgsfound\n");
     } else {
       # less then 1 occurrences is not possible, so we have only one
       # package that contains the reference to that map file
@@ -5092,7 +5056,7 @@ sub check_executes {
         foreach my $k (keys %mapfn) {
           my @bla = @{$mapfn{$k}};
           if ($#bla > 0) {
-            tlwarn ("$prg: map file $mf occurs multiple times (in pkgs: @bla)!\n");
+            tlwarn ("map file $mf occurs multiple times (in pkgs: @bla)!\n");
           }
         }
       } else {
@@ -5100,7 +5064,7 @@ sub check_executes {
         # in the right package!
         my ($pkgcontained) = ( $found[0] =~ m/^(.*):.*$/ );
         if ($pkgcontained ne $pkgfoundexecute) {
-          tlwarn("$prg: map file $mf: execute in $pkgfoundexecute, map file in $pkgcontained\n");
+          tlwarn("map file $mf: execute in $pkgfoundexecute, map file in $pkgcontained\n");
         }
       }
     }
@@ -5343,7 +5307,7 @@ sub check_depends {
 sub action_postaction {
   my $how = shift @ARGV;
   if (!defined($how) || ($how !~ m/^(install|remove)$/i)) {
-    tlwarn("$prg: action postaction needs at least two arguments, first being either 'install' or 'remove'\n");
+    tlwarn("action postaction needs at least two arguments, first being either 'install' or 'remove'\n");
     return;
   }
   my $type = shift @ARGV;
@@ -5354,7 +5318,7 @@ sub action_postaction {
     $badtype = 1;
   }
   if ($badtype) {
-    tlwarn("$prg: action postaction needs as second argument one from 'shortcut', 'fileassoc', 'script'\n");
+    tlwarn("action postaction needs as second argument one from 'shortcut', 'fileassoc', 'script'\n");
     return;
   }
   if (win32()) {
@@ -5369,11 +5333,11 @@ sub action_postaction {
         chomp($ENV{"TEXMFSYSVAR"} = `kpsewhich -var-value TEXMFVAR`);
       } elsif ($opts{"w32mode"} eq "admin") {
         if (!TeXLive::TLWinGoo::admin()) {
-          tlwarn("$prg: You don't have the permissions for --w32mode=admin\n");
+          tlwarn("You don't have the permissions for --w32mode=admin\n");
           return;
         }
       } else {
-        tlwarn("$prg: action postaction --w32mode can only be 'admin' or 'user'\n");
+        tlwarn("action postaction --w32mode can only be 'admin' or 'user'\n");
         return;
       }
     }
@@ -5384,7 +5348,7 @@ sub action_postaction {
     @todo = $localtlpdb->list_packages;
   } else {
     if ($#ARGV < 0) {
-      tlwarn("$prg: action postaction: need either --all or a list of packages\n");
+      tlwarn("action postaction: need either --all or a list of packages\n");
       return;
     }
     init_local_db();
@@ -5393,13 +5357,13 @@ sub action_postaction {
   }
   if ($type =~ m/^shortcut$/i) {
     if (!win32()) {
-      tlwarn("$prg: action postaction shortcut only works on windows.\n");
+      tlwarn("action postaction shortcut only works on windows.\n");
       return;
     }
     for my $p (@todo) {
       my $tlp = $localtlpdb->get_package($p);
       if (!defined($tlp)) {
-        tlwarn("$prg: $p is not installed, ignoring it.\n");
+        tlwarn("$p is not installed, ignoring it.\n");
       } else {
         # run all shortcut actions, desktop and menu integration
         TeXLive::TLUtils::do_postaction($how, $tlp, 0, 1, 1, 0);
@@ -5407,13 +5371,13 @@ sub action_postaction {
     }
   } elsif ($type =~ m/^fileassoc$/i) {
     if (!win32()) {
-      tlwarn("$prg: action postaction fileassoc only works on windows.\n");
+      tlwarn("action postaction fileassoc only works on windows.\n");
       return;
     }
     my $fa = $localtlpdb->option("file_assocs");
     if ($opts{"fileassocmode"}) {
       if ($opts{"fileassocmode"} < 1 || $opts{"fileassocmode"} > 2) {
-        tlwarn("$prg: action postaction: value of --fileassocmode can only be 1 or 2\n");
+        tlwarn("action postaction: value of --fileassocmode can only be 1 or 2\n");
         return;
       }
       $fa = $opts{"fileassocmode"};
@@ -5421,7 +5385,7 @@ sub action_postaction {
     for my $p (@todo) {
       my $tlp = $localtlpdb->get_package($p);
       if (!defined($tlp)) {
-        tlwarn("$prg: $p is not installed, ignoring it.\n");
+        tlwarn("$p is not installed, ignoring it.\n");
       } else {
         TeXLive::TLUtils::do_postaction($how, $tlp, $fa, 0, 0, 0);
       }
@@ -5430,13 +5394,13 @@ sub action_postaction {
     for my $p (@todo) {
       my $tlp = $localtlpdb->get_package($p);
       if (!defined($tlp)) {
-        tlwarn("$prg: $p is not installed, ignoring it.\n");
+        tlwarn("$p is not installed, ignoring it.\n");
       } else {
         TeXLive::TLUtils::do_postaction($how, $tlp, 0, 0, 0, 1);
       }
     }
   } else {
-    tlwarn("$prg: action postaction needs one of 'shortcut', 'fileassoc', 'script'\n");
+    tlwarn("action postaction needs one of 'shortcut', 'fileassoc', 'script'\n");
     return;
   }
 }
@@ -5585,7 +5549,7 @@ sub texconfig_conf_mimic {
     info("$m: " . `kpsewhich $m`);
   }
 
-  #tlwarn("$prg: missing finding of XDvi, config!\n");
+  #tlwarn("missing finding of XDvi, config!\n");
 
   info("============================= font map files =============================\n");
   for my $m (qw/psfonts.map pdftex.map ps2pk.map kanjix.map/) {
@@ -5650,11 +5614,11 @@ sub init_local_db {
   # setup the programs, for w32 we need the shipped wget/xz etc, so we
   # pass the location of these files to setup_programs.
   if (!setup_programs("$Master/tlpkg/installer", $localtlpdb->platform)) {
-    tlwarn("$prg: Couldn't set up the necessary programs.\nInstallation of packages is not supported.\nPlease report to texlive\@tug.org.\n");
+    tlwarn("Couldn't set up the necessary programs.\nInstallation of packages is not supported.\nPlease report to texlive\@tug.org.\n");
     if (defined($should_i_die) && $should_i_die) {
       return ($F_ERROR);
     } else {
-      tlwarn("$prg: Continuing anyway ...\n");
+      tlwarn("Continuing anyway ...\n");
       return ($F_WARNING);
     }
   }
@@ -5696,7 +5660,8 @@ sub init_tlmedia_or_die {
   }
 }
 
-sub init_tlmedia {
+sub init_tlmedia
+{
   # first check if $location contains multiple locations
   # in this case we go to virtual mode
   #my %repos = repository_to_array($localtlpdb->option("location"));
@@ -5769,7 +5734,12 @@ sub init_tlmedia {
   return 1;
 }
 
-sub _init_tlmedia {
+
+
+
+sub _init_tlmedia
+{
+
   # if we are already initialized to the same location, nothing
   # needs to be done.
   # if we are initialized to a virtual tlpdb, then we have to 
@@ -5802,7 +5772,8 @@ sub _init_tlmedia {
   return 1;
 }
 
-sub setup_one_remotetlpdb {
+sub setup_one_remotetlpdb
+{
   my $location = shift;
   my $remotetlpdb;
 
@@ -5843,8 +5814,7 @@ sub setup_one_remotetlpdb {
       my $rem_digest;
       if (read ($fh, $rem_digest, 32) != 32) {
         info(<<END_NO_INTERNET);
-No connection to the internet.
-Unable to download the checksum of the remote TeX Live database,
+Unable to download the remote TeX Live database,
 but found a local copy so using that.
 
 You may want to try specifying an explicit or different CTAN mirror;
@@ -6023,14 +5993,14 @@ sub load_config_file {
       } elsif ($val eq "1") {
         $config{"gui-expertmode"} = 1;
       } else {
-        tlwarn("$prg: $fn: Unknown value for gui-expertmode: $val\n");
+        tlwarn("$fn: Unknown value for gui-expertmode: $val\n");
       }
 
     } elsif ($key eq "persistent-downloads") {
       if (($val eq "0") || ($val eq "1")) {
         $config{'persistent-downloads'} = $val;
       } else {
-        tlwarn("$prg: $fn: Unknown value for persistent-downloads: $val\n");
+        tlwarn("$fn: Unknown value for persistent-downloads: $val\n");
       }
 
     } elsif ($key eq "gui-lang") {
@@ -6042,11 +6012,11 @@ sub load_config_file {
       } elsif ($val eq "1") {
         $config{"auto-remove"} = 1;
       } else {
-        tlwarn("$prg: $fn: Unknown value for auto-remove: $val\n");
+        tlwarn("$fn: Unknown value for auto-remove: $val\n");
       }
 
     } else {
-      tlwarn("$prg: $fn: Unknown tlmgr configuration variable: $key\n");
+      tlwarn("$fn: Unknown tlmgr configuration variable: $key\n");
     }
   }
 }
@@ -6077,7 +6047,8 @@ sub write_config_file {
 
 # if the packagelog variable is set then write to PACKAGELOG filehandle
 #
-sub logpackage {
+sub logpackage
+{
   if ($packagelogfile) {
     $packagelogged++;
     my $tim = localtime();
@@ -6086,7 +6057,8 @@ sub logpackage {
 }
 
 # resolve relative paths from tlpdb wrt tlroot 
-sub norm_tlpdb_path {
+sub norm_tlpdb_path
+{
   my ($path) = @_;
   return if (!defined($path));
   $path =~ s!\\!/!;
@@ -6098,8 +6070,8 @@ sub norm_tlpdb_path {
 
 # clear the backup dir for $pkg and keep only $autobackup packages
 # mind that with $autobackup == 0 all packages are cleared
-#
-sub clear_old_backups {
+sub clear_old_backups
+{
   my ($pkg, $backupdir, $autobackup, $dry) = @_;
 
   my $dryrun = 0;
@@ -6128,7 +6100,8 @@ sub clear_old_backups {
 
 # check for updates to tlcritical packages
 #
-sub check_for_critical_updates {
+sub check_for_critical_updates
+{
   my ($localtlpdb, $mediatlpdb) = @_;
 
   my $criticalupdate = 0;
@@ -6141,7 +6114,7 @@ sub check_for_critical_updates {
       # that should not happen, we expanded in the localtlpdb so why
       # should it not be present, any anyway, those are so fundamental
       # so they have to be there
-      tlwarn("\n$prg: Fundamental package $pkg not present, uh oh, goodbye");
+      tlwarn("\nFundamental package $pkg not present, uh oh, goodbye");
       die "Should not happen, $pkg not found";
     }
     my $localrev = $tlp->revision;
@@ -6209,7 +6182,7 @@ sub check_on_writable {
     tlwarn("specifically, the directory $Master/tlpkg/ is not writable.\n");
     tlwarn("Please run this program as administrator, or contact your local admin.\n");
     if ($opts{"dry-run"}) {
-      tlwarn("$prg: Continuing due to --dry-run\n");
+      tlwarn("Continuing due to --dry-run\n");
       return 1;
     } else {
       return 0;

@@ -585,7 +585,7 @@ PACKAGE_STRING='gd (TeX Live) 2.1.1'
 PACKAGE_BUGREPORT='tex-k@tug.org'
 PACKAGE_URL=''
 
-ac_unique_file="libgd-src/src/gd.c"
+ac_unique_file="libgd-2.1.1/src/gd.c"
 # Factoring default headers for most tests.
 ac_includes_default="\
 #include <stdio.h>
@@ -3986,13 +3986,13 @@ else
 if test "x$enable_compiler_warnings" != xno; then
   kpse_cv_warning_cflags="-Wimplicit -Wreturn-type"
   case `$CC -dumpversion` in #(
-  3.4.* | 4.* | 5.*) :
+  3.4.* | 4.*) :
     kpse_cv_warning_cflags="$kpse_cv_warning_cflags -Wdeclaration-after-statement" ;; #(
   *) :
      ;;
 esac
   case `$CC -dumpversion` in #(
-  3.[234].* | 4.* | 5.*) :
+  3.[234].* | 4.*) :
     kpse_cv_warning_cflags="$kpse_cv_warning_cflags -Wno-unknown-pragmas" ;; #(
   *) :
      ;;
@@ -4004,7 +4004,7 @@ esac
       kpse_cv_warning_cflags="$kpse_cv_warning_cflags -Wparentheses -Wswitch -Wtrigraphs -Wpointer-arith"
       kpse_cv_warning_cflags="$kpse_cv_warning_cflags -Wcast-qual -Wcast-align -Wwrite-strings"
       case `$CC -dumpversion` in #(
-  3.4.* | 4.* | 5.*) :
+  3.4.* | 4.*) :
     kpse_cv_warning_cflags="$kpse_cv_warning_cflags -Wold-style-definition" ;; #(
   *) :
      ;;
@@ -5961,7 +5961,7 @@ $as_echo "#define HAVE_LIBFREETYPE 1" >>confdefs.h
 $as_echo "#define HAVE_FT2BUILD_H 1" >>confdefs.h
 
 
-GD_TREE=libgd-src
+GD_TREE=libgd-2.1.1
 
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for native WIN32 or MINGW32" >&5

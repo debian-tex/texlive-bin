@@ -46,13 +46,14 @@ unsigned char *t3_buffer = NULL;
 int t3_size = 0;
 int t3_curbyte = 0;
 
-#define t3_check_eof() \
-    if (t3_eof()) \
-        normal_error("type 3","unexpected end of file");
+#define t3_check_eof()                                     \
+    if (t3_eof())                                          \
+        luatex_fail("unexpected end of file");
 
 @
 @c
-static void update_bbox(int llx, int lly, int urx, int ury, boolean is_first_glyph)
+static void update_bbox(int llx, int lly, int urx, int ury,
+                        boolean is_first_glyph)
 {
     if (is_first_glyph) {
         t3_b0 = llx;
@@ -71,13 +72,22 @@ static void update_bbox(int llx, int lly, int urx, int ury, boolean is_first_gly
     }
 }
 
-/* fixed precision 3 (+5 in pdfgen.w)*/
+static int get_pk_font_scale(internal_font_number f, int precision,
+                             int scale_factor)
+{
+    return
+        divide_scaled(scale_factor,
+                      divide_scaled(font_size(f), one_hundred_bp,
+                                    precision + 2), 0);
+}
 
-#define get_pk_font_scale(pdf,f,scale_factor) \
-    divide_scaled(scale_factor, divide_scaled(font_size(f),one_hundred_bp,pk_decimal_digits(pdf,2)), 0)
-
-#define pk_char_width(pdf,f,w,scale_factor) \
-    divide_scaled(divide_scaled(w,font_size(f),pk_decimal_digits(pdf,4)), get_pk_font_scale(pdf,f,scale_factor), 0)
+static int pk_char_width(internal_font_number f, scaled w, int precision,
+                         int scale_factor)
+{
+    return
+        divide_scaled(divide_scaled(w, font_size(f), 7),
+                      get_pk_font_scale(f, precision, scale_factor), 0);
+}
 
 @
 @c
@@ -89,50 +99,56 @@ static boolean writepk(PDF pdf, internal_font_number f)
     pdffloat pf;
     halfword *row;
     char *name;
+    char *ftemp = NULL;
     chardesc cd;
     boolean is_null_glyph, check_preamble;
-    int dpi = 0;
-    int newdpi = 0;
+    int dpi;
     int callback_id = 0;
     int file_opened = 0;
+    unsigned mallocsize = 0;
     xfree(t3_buffer);
     t3_curbyte = 0;
     t3_size = 0;
 
     callback_id = callback_defined(find_pk_file_callback);
 
-    if (pdf->pk_fixed_dpi) {
-        newdpi = pdf->pk_resolution;
-    } else {
-        newdpi = dpi;
-    }
-
     if (callback_id > 0) {
+        dpi = round((float) pdf->pk_resolution *
+                    (((float) font_size(f)) / (float) font_dsize(f)));
         /* <base>.dpi/<fontname>.<tdpi>pk */
-        dpi = round((float) pdf->pk_resolution * (((float) font_size(f)) / (float) font_dsize(f)));
         cur_file_name = font_name(f);
-        run_callback(callback_id, "Sd->S", cur_file_name, (int) newdpi, &name);
-        if (name == NULL || strlen(name) == 0) {
-            formatted_warning("type 3","font %s at %i not found", cur_file_name, (int) dpi);
-            return false;
+        mallocsize = (unsigned) (strlen(cur_file_name) + 24 + 9);
+        name = xmalloc(mallocsize);
+        snprintf(name, (size_t) mallocsize, "%ddpi/%s.%dpk",
+                 (int) pdf->pk_resolution, cur_file_name, (int) dpi);
+        if (run_callback(callback_id, "S->S", name, &ftemp)) {
+            if (ftemp != NULL && strlen(ftemp)) {
+                free(name);
+                name = xstrdup(ftemp);
+                free(ftemp);
+            }
         }
     } else {
-        dpi = (int) kpse_magstep_fix(
-            (unsigned) round ((float)pdf->pk_resolution * ((float)font_size(f)/(float)font_dsize(f))),
-            (unsigned) pdf->pk_resolution, NULL
-        );
+        dpi = (int)
+            kpse_magstep_fix((unsigned) round
+                             ((float) pdf->pk_resolution *
+                              ((float) font_size(f) / (float) font_dsize(f))),
+                             (unsigned) pdf->pk_resolution, NULL);
         cur_file_name = font_name(f);
         name = kpse_find_pk(cur_file_name, (unsigned) dpi, &font_ret);
-        if (name == NULL || !FILESTRCASEEQ(cur_file_name, font_ret.name)
-            || !kpse_bitmap_tolerance((float) font_ret.dpi, (float) dpi)) {
-                formatted_error("type 3","font %s at %i not found", cur_file_name, (int) dpi);
-                return false;
+        if (name == NULL ||
+            !FILESTRCASEEQ(cur_file_name, font_ret.name) ||
+            !kpse_bitmap_tolerance((float) font_ret.dpi, (float) dpi)) {
+            luatex_fail("Font %s at %i not found", cur_file_name, (int) dpi);
         }
     }
     callback_id = callback_defined(read_pk_file_callback);
     if (callback_id > 0) {
-        if (!(run_callback(callback_id, "S->bSd", name, &file_opened, &t3_buffer, &t3_size) && file_opened && t3_size > 0)) {
-            formatted_warning("type 3","font %s at %i not found", cur_file_name, (int) dpi);
+        if (!
+            (run_callback
+             (callback_id, "S->bSd", name, &file_opened, &t3_buffer, &t3_size)
+             && file_opened && t3_size > 0)) {
+            luatex_warn("Font %s at %i not found", cur_file_name, (int) dpi);
             cur_file_name = NULL;
             return false;
         }
@@ -152,7 +168,9 @@ static boolean writepk(PDF pdf, internal_font_number f)
         check_preamble = false;
         if (!pdf_char_marked(f, cd.charcode))
             continue;
-        t3_char_widths[cd.charcode] = (float) pk_char_width(pdf, f, get_charwidth(f, cd.charcode), pdf->pk_scale_factor);
+        t3_char_widths[cd.charcode] = (float)
+            pk_char_width(f, get_charwidth(f, cd.charcode),
+                          pdf->decimal_digits, pdf->pk_scale_factor);
         if (cd.cwidth < 1 || cd.cheight < 1) {
             cd.xescape = cd.cwidth = round(t3_char_widths[cd.charcode] / 100.0);
             cd.cheight = 1;
@@ -175,13 +193,12 @@ static boolean writepk(PDF pdf, internal_font_number f)
         pdf_begin_stream(pdf);
         setpdffloat(pf, (int64_t) t3_char_widths[cd.charcode], 2);
         print_pdffloat(pdf, pf);
-        pdf_printf(pdf, " 0 %i %i %i %i d1\n", (int) llx, (int) lly, (int) urx, (int) ury);
+        pdf_printf(pdf, " 0 %i %i %i %i d1\n",
+                   (int) llx, (int) lly, (int) urx, (int) ury);
         if (is_null_glyph)
             goto end_stream;
-        pdf_printf(pdf, "q\n%i 0 0 %i %i %i cm\nBI\n",
-            (int) (dpi * cd.cwidth  / newdpi),
-            (int) (dpi * cd.cheight / newdpi),
-            (int) llx, (int) lly);
+        pdf_printf(pdf, "q\n%i 0 0 %i %i %i cm\nBI\n", (int) cd.cwidth,
+                   (int) cd.cheight, (int) llx, (int) lly);
         pdf_printf(pdf, "/W %i\n/H %i\n", (int) cd.cwidth, (int) cd.cheight);
         pdf_puts(pdf, "/IM true\n/BPC 1\n/D [1 0]\nID ");
         cw = (cd.cwidth + 7) / 8;
@@ -255,7 +272,8 @@ void writet3(PDF pdf, internal_font_number f)
         pdf_out(pdf, '\n');
     }
     if (is_pk_font) {
-        pk_font_scale = get_pk_font_scale(pdf,f,pdf->pk_scale_factor);
+        pk_font_scale =
+            get_pk_font_scale(f, pdf->decimal_digits, pdf->pk_scale_factor);
         pdf_add_name(pdf, "FontMatrix");
         pdf_begin_array(pdf);
         setpdffloat(pf, (int64_t) pk_font_scale, 5);
@@ -267,7 +285,8 @@ void writet3(PDF pdf, internal_font_number f)
     } else {
         pdf_add_name(pdf, "FontMatrix");
         pdf_begin_array(pdf);
-        pdf_printf(pdf, "%g 0 0 %g 0 0", (double) t3_font_scale, (double) t3_font_scale);
+        pdf_printf(pdf, "%g 0 0 %g 0 0",
+                   (double) t3_font_scale, (double) t3_font_scale);
         pdf_end_array(pdf);
     }
     pdf_add_name(pdf, font_key[FONTBBOX1_CODE].pdfname);
@@ -282,9 +301,8 @@ void writet3(PDF pdf, internal_font_number f)
     pdf_add_name(pdf, "ProcSet");
     pdf_begin_array(pdf);
     pdf_add_name(pdf, "PDF");
-    if (t3_image_used) {
+    if (t3_image_used)
         pdf_add_name(pdf, "ImageB");
-    }
     pdf_end_array(pdf);
     pdf_end_dict(pdf);
     pdf_dict_add_int(pdf, "FirstChar", first_char);
@@ -301,17 +319,14 @@ void writet3(PDF pdf, internal_font_number f)
     /* chars width array */
     pdf_begin_obj(pdf, wptr, OBJSTM_ALWAYS);
     pdf_begin_array(pdf);
-    if (is_pk_font) {
+    if (is_pk_font)
         for (i = first_char; i <= last_char; i++) {
             setpdffloat(pf, (int64_t) t3_char_widths[i], 2);
             print_pdffloat(pdf, pf);
             pdf_out(pdf, ' ');
-        }
-    } else {
-        for (i = first_char; i <= last_char; i++) {
+    } else
+        for (i = first_char; i <= last_char; i++)
             pdf_add_int(pdf, (int) t3_char_widths[i]);
-        }
-    }
     pdf_end_array(pdf);
     pdf_end_obj(pdf);
 
@@ -353,12 +368,11 @@ void writet3(PDF pdf, internal_font_number f)
     /* CharProcs dictionary */
     pdf_begin_obj(pdf, cptr, OBJSTM_ALWAYS);
     pdf_begin_dict(pdf);
-    for (i = first_char; i <= last_char; i++) {
+    for (i = first_char; i <= last_char; i++)
         if (t3_char_procs[i] != 0) {
             snprintf(s, 31, "a%i", (int) i);
             pdf_dict_add_ref(pdf, s, (int) t3_char_procs[i]);
         }
-    }
     pdf_end_dict(pdf);
     pdf_end_obj(pdf);
     report_stop_file(filetype_font);

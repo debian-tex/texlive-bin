@@ -121,28 +121,26 @@ AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
-am_mktexlsr_OBJECTS = dirutil.$(OBJEXT) mkpaths.$(OBJEXT) \
-	mktexlsr.$(OBJEXT)
+am_mktexlsr_OBJECTS = dirutil.$(OBJEXT) mktexlsr.$(OBJEXT)
 mktexlsr_OBJECTS = $(am_mktexlsr_OBJECTS)
 mktexlsr_LDADD = $(LDADD)
 mktexlsr_DEPENDENCIES = ../libkpathsea.la
 am_mktexmf_OBJECTS = dirutil.$(OBJEXT) getdestdir.$(OBJEXT) \
-	mkpaths.$(OBJEXT) mktexmf.$(OBJEXT) mktexupd.$(OBJEXT)
+	mktexmf.$(OBJEXT) mktexupd.$(OBJEXT)
 mktexmf_OBJECTS = $(am_mktexmf_OBJECTS)
 mktexmf_LDADD = $(LDADD)
 mktexmf_DEPENDENCIES = ../libkpathsea.la
 am_mktexpk_OBJECTS = dirutil.$(OBJEXT) getdestdir.$(OBJEXT) \
-	mkpaths.$(OBJEXT) mktexpk.$(OBJEXT) mktexupd.$(OBJEXT)
+	mktexpk.$(OBJEXT) mktexupd.$(OBJEXT)
 mktexpk_OBJECTS = $(am_mktexpk_OBJECTS)
 mktexpk_LDADD = $(LDADD)
 mktexpk_DEPENDENCIES = ../libkpathsea.la
 am_mktextfm_OBJECTS = dirutil.$(OBJEXT) getdestdir.$(OBJEXT) \
-	mkpaths.$(OBJEXT) mktextfm.$(OBJEXT) mktexupd.$(OBJEXT)
+	mktextfm.$(OBJEXT) mktexupd.$(OBJEXT)
 mktextfm_OBJECTS = $(am_mktextfm_OBJECTS)
 mktextfm_LDADD = $(LDADD)
 mktextfm_DEPENDENCIES = ../libkpathsea.la
-am_mktexupd_OBJECTS = mkpaths.$(OBJEXT) mktexupdmain.$(OBJEXT) \
-	mktexupd.$(OBJEXT)
+am_mktexupd_OBJECTS = mktexupdmain.$(OBJEXT) mktexupd.$(OBJEXT)
 mktexupd_OBJECTS = $(am_mktexupd_OBJECTS)
 mktexupd_LDADD = $(LDADD)
 mktexupd_DEPENDENCIES = ../libkpathsea.la
@@ -335,46 +333,48 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AM_CPPFLAGS = -I$(top_builddir)/.. -I$(top_srcdir)/.. \
-	-DWEB2CVERSION='"$(WEB2CVERSION)"'
+	-DWEB2C_KPSE_VERSION='"Web2C-$(WEB2CVERSION) \
+	Kpathsea-$(KPSEVERSION)"'
 AM_CFLAGS = $(WARNING_CFLAGS)
 mktexfmt_SOURCES = \
 	mktexfmt.c
 
 mktexlsr_SOURCES = \
 	dirutil.c \
-	mkpaths.c \
-	mktex.h \
+	dirutil.h \
 	mktexlsr.c
 
 mktexmf_SOURCES = \
 	dirutil.c \
+	dirutil.h \
 	getdestdir.c \
-	mkpaths.c \
-	mktex.h \
+	getdestdir.h \
 	mktexmf.c \
-	mktexupd.c
+	mktexupd.c \
+	mktexupd.h
 
 mktexpk_SOURCES = \
 	dirutil.c \
+	dirutil.h \
 	getdestdir.c \
-	mkpaths.c \
-	mktex.h \
+	getdestdir.h \
 	mktexpk.c \
-	mktexupd.c
+	mktexupd.c \
+	mktexupd.h
 
 mktextfm_SOURCES = \
 	dirutil.c \
+	dirutil.h \
 	getdestdir.c \
-	mkpaths.c \
-	mktex.h \
+	getdestdir.h \
 	mktextfm.c \
-	mktexupd.c
+	mktexupd.c \
+	mktexupd.h
 
 mktexupd_SOURCES = \
-	mkpaths.c \
-	mktex.h \
 	mktexupdmain.c \
-	mktexupd.c
+	mktexupd.c \
+	mktexupd.h
 
 LDADD = ../libkpathsea.la
 EXTRA_DIST = ChangeLog
@@ -493,7 +493,6 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dirutil.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/getdestdir.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mkpaths.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mktexfmt.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mktexlsr.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mktexmf.Po@am__quote@

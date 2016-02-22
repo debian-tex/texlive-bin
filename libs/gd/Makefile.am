@@ -12,7 +12,7 @@ EXTRA_DIST = $(GD_TREE)
 
 ## Changes applied to the original source tree
 ##
-EXTRA_DIST += libgd-PATCHES
+EXTRA_DIST += $(GD_TREE)-PATCHES
 
 # Files not to be distributed
 include $(srcdir)/../../am/dist_hook.am
@@ -84,7 +84,6 @@ check_PROGRAMS = gdtest
 dist_check_SCRIPTS = libgd.test
 TESTS = libgd.test
 endif build
-libgd.log: gdtest$(EXEEXT)
 
 gdtest_SOURCES = gdtest.c
 

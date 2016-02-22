@@ -1,6 +1,6 @@
 /* This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
 
-    Copyright (C) 2002-2016 by Jin-Hwan Cho and Shunsaku Hirata,
+    Copyright (C) 2002-2014 by Jin-Hwan Cho and Shunsaku Hirata,
     the dvipdfmx project team.
     
     This program is free software; you can redistribute it and/or modify
@@ -185,7 +185,7 @@ static struct {
 /* Parse DICT data */
 static double get_integer (card8 **data, card8 *endptr, int *status)
 {
-  int result = 0;
+  long result = 0;
   card8 b0, b1, b2;
 
   b0 = *(*data)++;
@@ -393,9 +393,9 @@ cff_dict *cff_dict_unpack (card8 *data, card8 *endptr)
 }
 
 /* Pack DICT data */
-static int pack_integer (card8 *dest, int destlen, int value)
+static long pack_integer (card8 *dest, long destlen, long value)
 {
-  int len = 0;
+  long len = 0;
 
   if (value >= -107 && value <= 107) {
     if (destlen < 1)
@@ -437,7 +437,7 @@ static int pack_integer (card8 *dest, int destlen, int value)
   return len;
 }
 
-static int pack_real (card8 *dest, int destlen, double value)
+static long pack_real (card8 *dest, long destlen, double value)
 {
   int i = 0, pos = 2;
   char buffer[32];
@@ -499,19 +499,19 @@ static int pack_real (card8 *dest, int destlen, double value)
   return pos/2;
 }
 
-static int cff_dict_put_number (double value,
-				 card8 *dest, int destlen,
+static long cff_dict_put_number (double value,
+				 card8 *dest, long destlen,
 				 int type)
 {
-  int    len = 0;
+  long   len = 0;
   double nearint;
 
   nearint = floor(value+0.5);
   /* set offset to longint */
   if (type == CFF_TYPE_OFFSET) {
-    int lvalue;
+    long lvalue;
 
-    lvalue = (int) value;
+    lvalue = (long) value;
     if (destlen < 5)
       ERROR("%s: Buffer overflow.", CFF_DEBUG_STR);
     dest[0] = 29;
@@ -524,17 +524,17 @@ static int cff_dict_put_number (double value,
 	     (fabs(value - nearint) > 1.0e-5)) { /* real */
     len = pack_real(dest, destlen, value);
   } else { /* integer */
-    len = pack_integer(dest, destlen, (int) nearint);
+    len = pack_integer(dest, destlen, (long) nearint);
   }
 
   return len;
 }
 
-static int
+static long
 put_dict_entry (cff_dict_entry *de,
-		card8 *dest, int destlen)
+		card8 *dest, long destlen)
 {
-  int  len = 0;
+  long len = 0;
   int  i, type, id;
 
   if (de->count > 0) {
@@ -567,9 +567,9 @@ put_dict_entry (cff_dict_entry *de,
   return len;
 }
 
-int cff_dict_pack (cff_dict *dict, card8 *dest, int destlen)
+long cff_dict_pack (cff_dict *dict, card8 *dest, long destlen)
 {
-  int  len = 0;
+  long len = 0;
   int  i;
 
   for (i = 0; i < dict->count; i++) {

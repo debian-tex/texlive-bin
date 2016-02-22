@@ -1,5 +1,5 @@
 /* This is extractbb, a bounding box extraction program.
-    Copyright (C) 2008-2016 by Jin-Hwan Cho and Matthias Franz
+    Copyright (C) 2008-2015 by Jin-Hwan Cho and Matthias Franz
     and the dvipdfmx project team.
 
     This program is free software; you can redistribute it and/or modify
@@ -41,22 +41,14 @@
 #include "dvipdfmx.h"
 #include "pdflimits.h"
 
-int PageBox = 0;
-/*
- PageBox=0 :default
- PageBox=1 :cropbox
- PageBox=2 :mediabox
- PageBox=3 :artbox
- PageBox=4 :trimbox
- PageBox=5 :bleedbox
-*/
+#define XBB_PROGRAM "extractbb"
 
-static int Include_Page = 1;
+static long Include_Page = 1;
 
 static void show_version(void)
 {
-  fprintf (stdout, "\nThis is %s Version " VERSION "\n", my_name);
-  fprintf (stdout, "\nCopyright (C) 2008-2016 by Jin-Hwan Cho and Matthias Franz\n");
+  fprintf (stdout, "\nThis is " XBB_PROGRAM " Version " VERSION "\n");
+  fprintf (stdout, "\nCopyright (C) 2008-2015 by Jin-Hwan Cho and Matthias Franz\n");
   fprintf (stdout, "\nThis is free software; you can redistribute it and/or modify\n");
   fprintf (stdout, "it under the terms of the GNU General Public License as published by\n");
   fprintf (stdout, "the Free Software Foundation; either version 2 of the License, or\n");
@@ -65,25 +57,23 @@ static void show_version(void)
 
 static void show_usage(void)
 {
-  printf ("\nUsage: %s [-B pagebox] [-p page] [-q|-v] [-O] [-m|-x] FILE...\n", my_name);
-  printf ("       %s --help|--version\n", my_name);
-  printf ("Extract bounding box from PDF, PNG, JPEG, JP2, or BMP file; default output below.\n");
-  printf ("\nOptions:\n");
-  printf ("  -B pagebox\tSpecify a PDF pagebox for bounding box\n");
-  printf ("            \tpagebox=cropbox, mediabox, artbox, trimbox, bleedbox\n");
-  printf ("  -h | --help\tShow this help message and exit\n");
-  printf ("  --version\tOutput version information and exit\n");
-  printf ("  -p page\tSpecify a PDF page to extract bounding box\n");
-  printf ("  -q\t\tBe quiet\n");
-  printf ("  -v\t\tBe verbose\n");
-  printf ("  -O\t\tWrite output to stdout\n");
-  printf ("  -m\t\tOutput .bb  file used in DVIPDFM%s\n", my_name[1] == 'b' ? " (default)" : "");
-  printf ("  -x\t\tOutput .xbb file used in DVIPDFMx%s\n", my_name[1] == 'b' ? "" : " (default)");
+  fprintf (stdout, "\nUsage: " XBB_PROGRAM " [-p page] [-q|-v] [-O] [-m|-x] FILE...\n");
+  fprintf (stdout, "       " XBB_PROGRAM " --help|--version\n");
+  fprintf (stdout, "Extract bounding box from PDF, PNG, or JPEG file; default output below.\n");
+  fprintf (stdout, "\nOptions:\n");
+  fprintf (stdout, "  -h | --help\tShow this help message and exit\n");
+  fprintf (stdout, "  --version\tOutput version information and exit\n");
+  fprintf (stdout, "  -p page\tSpecify a PDF page to extract bounding box\n");
+  fprintf (stdout, "  -q\t\tBe quiet\n");
+  fprintf (stdout, "  -v\t\tBe verbose\n");
+  fprintf (stdout, "  -O\t\tWrite output to stdout\n");
+  fprintf (stdout, "  -m\t\tOutput .bb  file used in DVIPDFM%s\n", compat_mode ? " (default)" : "");
+  fprintf (stdout, "  -x\t\tOutput .xbb file used in DVIPDFMx%s\n", compat_mode ? "" : " (default)");
 }
 
 static void usage(void)
 {
-  fprintf(stdout, "\nTry \"%s --help\" for more information.\n", my_name);
+  fprintf(stdout, "\nTry \"" XBB_PROGRAM " --help\" for more information.\n");
   exit(1);
 }
 
@@ -113,7 +103,7 @@ static char *make_xbb_filename(const char *name)
 
   for (i = 0; i < sizeof(extensions) / sizeof(extensions[0]); i++) {
     if (strlen(extensions[i]) < strlen(name) &&
-        strncmp(name+strlen(name)-strlen(extensions[i]), extensions[i], strlen(extensions[i])) == 0)
+	strncmp(name+strlen(name)-strlen(extensions[i]), extensions[i], strlen(extensions[i])) == 0)
       break;
   }
   if (i == sizeof(extensions) / sizeof(extensions[0])) {
@@ -130,15 +120,15 @@ static char *make_xbb_filename(const char *name)
 }
 
 static void write_xbb(char *fname,
-                      double bbllx_f, double bblly_f,
-                      double bburx_f, double bbury_f,
-                      int pdf_version, int pagecount)
+		      double bbllx_f, double bblly_f,
+		      double bburx_f, double bbury_f,
+		      int pdf_version, long pagecount)
 {
   char *outname = NULL;
   FILE *fp = NULL;
 
-  int bbllx = ROUND(bbllx_f, 1.0), bblly = ROUND(bblly_f, 1.0);
-  int bburx = ROUND(bburx_f, 1.0), bbury = ROUND(bbury_f, 1.0);
+  long bbllx = ROUND(bbllx_f, 1.0), bblly = ROUND(bblly_f, 1.0);
+  long bburx = ROUND(bburx_f, 1.0), bbury = ROUND(bbury_f, 1.0);
 
   if (xbb_to_file) {
     outname = make_xbb_filename(fname);
@@ -158,8 +148,8 @@ static void write_xbb(char *fname,
   }
 
   fprintf(fp, "%%%%Title: %s\n", fname);
-  fprintf(fp, "%%%%Creator: extractbb %s\n", VERSION);
-  fprintf(fp, "%%%%BoundingBox: %d %d %d %d\n", bbllx, bblly, bburx, bbury);
+  fprintf(fp, "%%%%Creator: %s %s\n", XBB_PROGRAM, VERSION);
+  fprintf(fp, "%%%%BoundingBox: %ld %ld %ld %ld\n", bbllx, bblly, bburx, bbury);
 
   if (!compat_mode) {
     /* Note:
@@ -170,10 +160,10 @@ static void write_xbb(char *fname,
      * it seems illegal to replace "0.0" by "0".
      */
     fprintf(fp, "%%%%HiResBoundingBox: %f %f %f %f\n",
-            bbllx_f, bblly_f, bburx_f, bbury_f);
+	    bbllx_f, bblly_f, bburx_f, bbury_f);
     if (pdf_version >= 0) {
       fprintf(fp, "%%%%PDFVersion: 1.%d\n", pdf_version);
-      fprintf(fp, "%%%%Pages: %d\n", pagecount);
+      fprintf(fp, "%%%%Pages: %ld\n", pagecount);
     }
   }
 
@@ -247,8 +237,8 @@ static void do_pdf (FILE *fp, char *filename)
 {
   pdf_obj *page;
   pdf_file *pf;
-  int page_no = Include_Page;
-  int count;
+  long page_no = Include_Page;
+  long count;
   pdf_rect bbox;
 
   pf = pdf_open(filename, fp);
@@ -256,8 +246,8 @@ static void do_pdf (FILE *fp, char *filename)
     WARN("%s does not look like a PDF file...\n", filename);
     return;
   }
-  count = pdf_doc_get_page_count(pf);
-  page  = pdf_doc_get_page(pf, page_no, PageBox, &bbox, NULL);
+
+  page = pdf_doc_get_page(pf, page_no, &count, &bbox, NULL);
 
   pdf_close(pf);
 
@@ -266,97 +256,91 @@ static void do_pdf (FILE *fp, char *filename)
 
   pdf_release_obj(page);
   write_xbb(filename, bbox.llx, bbox.lly, bbox.urx, bbox.ury,
-            pdf_file_get_version(pf), count);
+	    pdf_file_get_version(pf), count);
 }
-
-static const char *optstrig = ":hB:p:qvObmx";
-
-static struct option long_options[] = {
-  {"help", 0, 0, 'h'},
-  {"version", 0, 0, 130},
-  {0, 0, 0, 0}
-};
 
 int extractbb (int argc, char *argv[])
 {
-  int c;
-
   pdf_files_init();
 
   pdf_set_version(PDF_VERSION_MAX);
 
-  opterr = 0;
-  
-  while ((c = getopt_long(argc, argv, optstrig, long_options, NULL)) != -1) {
-    switch(c) {
-    case 'h':
-      show_usage();
-      exit(0);
+  argc -= 1; argv += 1;
 
-    case 130:
-      show_version();
-      exit(0);
+  while (argc > 0 && *argv[0] == '-') {
+    char *flag;
 
-    case 'B':
-      if (strcasecmp (optarg, "cropbox") == 0) PageBox = 1;
-      else if (strcasecmp (optarg, "mediabox") == 0) PageBox = 2;
-      else if (strcasecmp (optarg, "artbox") == 0) PageBox = 3; 
-      else if (strcasecmp (optarg, "trimbox") == 0) PageBox = 4;
-      else if (strcasecmp (optarg, "bleedbox") == 0) PageBox = 5;
-      else {
-        fprintf(stderr, "%s: Invalid argument \"-B %s\"", my_name, optarg);
+    for (flag = argv[0] + 1; *flag != 0; flag++) {
+      switch (*flag) {
+      case '-':
+        if (flag == argv[0] + 1) {
+          ++flag;
+          if (!strcmp(flag, "help")) {
+            show_usage();
+            exit(0);
+          } else if (!strcmp(flag, "version")) {
+            show_version();
+            exit(0);
+          }
+        }
+        fprintf(stderr, "Unknown option \"%s\"", argv[0]);
+        usage();
+      case 'O':
+        xbb_to_file = 0;
+        break;
+      case 'b':  /* Ignored for backward compatibility */
+        break;
+      case 'm':
+        compat_mode = 1;
+        break;
+      case 'x':
+        compat_mode = 0;
+        break;
+      case 'q':
+        verbose = 0;
+        break;
+      case 'v':
+        verbose = 1;
+        break;
+      case 'h':
+        show_usage();
+        exit (0);
+      case 'p':
+        argc--;
+        argv++;
+        Include_Page = atol (argv[0]);
+        if (Include_Page == 0)
+          Include_Page = 1;
+        break;
+      default:
+        fprintf (stderr, "Unknown option in \"%s\"", argv[0]);
         usage();
       }
-      break;
-
-    case 'p':
-      Include_Page = atol(optarg);
-      if (Include_Page == 0)
-        Include_Page = 1;
-      break;
-
-    case 'q': case 'v':
-      verbose = c == 'v';
-      break;
-
-    case 'O':
-      xbb_to_file = 0;
-    case 'b':  /* Ignored for backward compatibility */
-      break;
-
-    case 'm': case 'x':
-      compat_mode = c == 'm';
-      break;
-
-    default:
-      fprintf(stderr, "%s: %s \"-%c\"", my_name,
-              c == ':' ? "Missing argument for" : "Unknown option",
-              optopt); 
-      usage();
     }
+    argc -= 1; argv += 1;
   }
 
-  if (optind >= argc) {
-    fprintf (stderr, "%s: Missing filename argument", my_name);
+  if (argc == 0) {
+    fprintf (stderr, "Missing filename argument\n");
     usage();
   }
 
-  for (; optind < argc; optind++) {
+  for (; argc > 0; argc--, argv++) {
     FILE *infile = NULL;
     char *kpse_file_name = NULL;
 
-    if (kpse_in_name_ok(argv[optind])) {
-      infile = MFOPEN(argv[optind], FOPEN_RBIN_MODE);
+    if (kpse_in_name_ok(argv[0])) {
+      infile = MFOPEN(argv[0], FOPEN_RBIN_MODE);
       if (infile) {
-        kpse_file_name = xstrdup(argv[optind]);
+        kpse_file_name = xstrdup(argv[0]);
       } else {
-        kpse_file_name = kpse_find_pict(argv[optind]);
+        kpse_file_name = kpse_find_pict(argv[0]);
         if (kpse_file_name && kpse_in_name_ok(kpse_file_name))
           infile = MFOPEN(kpse_file_name, FOPEN_RBIN_MODE);
       }
     }
     if (infile == NULL) {
-      WARN("Can't find file (%s), or it is forbidden to read ...skipping\n", argv[optind]);
+      WARN("Can't find file (%s), or it is forbidden to read ...skipping\n", argv[0]);
       goto cont;
     }
     if (check_for_bmp(infile)) {
@@ -381,7 +365,7 @@ int extractbb (int argc, char *argv[])
       goto cont;
     }
 #endif /* HAVE_LIBPNG */
-    WARN("Can't handle file type for file named %s\n", argv[optind]);
+    WARN("Can't handle file type for file named %s\n", argv[0]);
   cont:
     if (kpse_file_name)
       RELEASE(kpse_file_name);

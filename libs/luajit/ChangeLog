@@ -1,36 +1,3 @@
-2016-02-18  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
-
-	* Makefile.am, configure.ac: New convention.
-
-2015-09-28  Peter Breitenlohner  <peb@mppmu.mpg.de>
-
-	* Makefile.am, configure.ac, m4/lj-system.m4: Try to stay
-	closer to the distributed build system.
-
-2015-09-09  Peter Breitenlohner  <peb@mppmu.mpg.de>
-
-	* Makefile.am, m4/lj-system.m4: Keep preprocessed src/lj_arch.h
-	as system_flags for better diagnostics.
-
-2015-09-07  Peter Breitenlohner  <peb@mppmu.mpg.de>
-
-	Import LuaJIT-2.1.0-beta1.
-	* version.ac: Adjusted.
-	* Makefile.am, configure.ac, m4/lj-system.m4: Adapted.
-
-2015-07-06  Peter Breitenlohner  <peb@mppmu.mpg.de>
-
-	* Makefile.am: Better dependencies for 'make check'.
-
-2015-06-16  Peter Breitenlohner  <peb@mppmu.mpg.de>
-
-	* lbitlib.c (new): Moved from LuaJIT-2.0.4/src/ to here.
-
-2015-06-12  Peter Breitenlohner  <peb@mppmu.mpg.de>
-
-	Import LuaJIT-2.0.4.
-	* version.ac: Adjust.
-
 2015-02-16  Peter Breitenlohner  <peb@mppmu.mpg.de>
 
 	* Makefile.am: Use the fragment ../../am/dist_hook.am.
@@ -39,7 +6,7 @@
 
 	* Makefile.am, configure.ac: Build luajit as (possibly shared)
 	Libtool library, install headers, library, and .pc file.
-	* luajiterr.test: Adapted.
+	* luajiterror.test: Adapted.
 
 2014-09-20  Peter Breitenlohner  <peb@mppmu.mpg.de>
 

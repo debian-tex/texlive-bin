@@ -1,6 +1,6 @@
 /* This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
 
-    Copyright (C) 2002-2016 by Jin-Hwan Cho and Shunsaku Hirata,
+    Copyright (C) 2002-2014 by Jin-Hwan Cho and Shunsaku Hirata,
     the dvipdfmx project team.
     
     Copyright (C) 1998, 1999 by Mark A. Wicks <mwicks@kettering.edu>
@@ -31,22 +31,22 @@
 #include "mem.h"
 #include "error.h"
 
-void *new (uint32_t size)
+void *new (size_t size)
 {
-  void *result = malloc ((size_t)size);
+  void *result = malloc (size);
   if (!result) {
-    ERROR("Out of memory - asked for %u bytes\n", size);
+    ERROR("Out of memory - asked for %lu bytes\n", (unsigned long) size);
   }
 
   return result;
 }
 
-void *renew (void *mem, uint32_t size)
+void *renew (void *mem, size_t size)
 {
   if (size) {
-    void *result = realloc (mem, (size_t)size);
+    void *result = realloc (mem, size);
     if (!result) {
-      ERROR("Out of memory - asked for %u bytes\n", size);
+      ERROR("Out of memory - asked for %lu bytes\n", (unsigned long) size);
     }
     return result;
   } else {

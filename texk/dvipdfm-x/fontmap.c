@@ -1,6 +1,6 @@
 /* This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
 
-    Copyright (C) 2002-2016 by Jin-Hwan Cho and Shunsaku Hirata,
+    Copyright (C) 2002-2015 by Jin-Hwan Cho and Shunsaku Hirata,
     the dvipdfmx project team.
     
     Copyright (C) 1998, 1999 by Mark A. Wicks <mwicks@kettering.edu>
@@ -358,7 +358,7 @@ fontmap_parse_mapdef_dpm (fontmap_rec *mrec,
   while (p + 1 < endptr &&
          *p != '\r' && *p != '\n' && *p == '-') {
     char  *q, mopt = p[1];
-    int    v;
+    long   v;
 
     p += 2; skip_blank(&p, endptr);
     switch (mopt) {
@@ -878,7 +878,7 @@ pdf_insert_fontmap_record (const char *kp, const fontmap_rec *vp)
 
 
 int
-pdf_read_fontmap_line (fontmap_rec *mrec, const char *mline, int mline_len, int format)
+pdf_read_fontmap_line (fontmap_rec *mrec, const char *mline, long mline_len, int format)
 {
   int    error;
   char  *q;
@@ -965,7 +965,7 @@ pdf_load_fontmap_file (const char *filename, int mode)
   fontmap_rec *mrec;
   FILE        *fp;
   const char  *p = NULL, *endptr;
-  int          llen, lpos  = 0;
+  long         llen, lpos  = 0;
   int          error = 0, format = 0;
 
   ASSERT(filename);

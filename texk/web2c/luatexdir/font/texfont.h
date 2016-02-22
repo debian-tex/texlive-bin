@@ -22,9 +22,8 @@
    main pascal program. There is a companion list in luatex.defines to
    keep web2c happy */
 
-/*
-    This file is read at the end of ptexlib.h, which is called for at
-    the end of luatexcoerce.h, as well as from the C sources.
+/* this file is read at the end of ptexlib.h, which is called for at
+   the end of luatexcoerce.h, as well as from the C sources
 */
 
 #ifndef TEXFONT_H
@@ -33,7 +32,6 @@
 #  define pointer halfword
 
 /* these are dumped en block, so they need endianness tests */
-
 typedef struct liginfo {
 #  ifdef WORDS_BIGENDIAN
     int adj;
@@ -47,7 +45,6 @@ typedef struct liginfo {
 } liginfo;
 
 /* these are dumped en block, so they need endianness tests */
-
 typedef struct kerninfo {
 #  ifdef WORDS_BIGENDIAN
     int adj;
@@ -66,9 +63,7 @@ typedef struct extinfo {
     int advance;
     int extender;
 } extinfo;
-
 /* todo: maybe create a 'math info structure' */
-
 typedef struct charinfo {
     char *name;                 /* postscript character name */
     liginfo *ligatures;         /* ligature items */
@@ -80,7 +75,6 @@ typedef struct charinfo {
     scaled height;              /* height */
     scaled depth;               /* depth */
     scaled italic;              /* italic correction */
-    scaled vert_italic;         /* italic correction */
     scaled top_accent;          /* top accent alignment */
     scaled bot_accent;          /* bot accent alignment */
     int ef;                     /* font expansion factor */
@@ -113,9 +107,12 @@ extern void add_charinfo_hor_variant(charinfo * ci, extinfo * ext);
 
 extern extinfo *copy_variants(extinfo * o);
 
-extern extinfo *new_variant(int glyph, int startconnect, int endconnect, int advance, int repeater);
+extern extinfo *new_variant(int glyph, int startconnect, int endconnect,
+                            int advance, int repeater);
 
 extern scaled_whd get_charinfo_whd(internal_font_number f, int c);
+
+
 
 typedef struct texfont {
     int _font_size;
@@ -138,7 +135,6 @@ typedef struct texfont {
     char _font_touched;         /* internal information */
     int _font_cache_id;         /* internal information */
     char _font_encodingbytes;   /* 1 or 2 bytes */
-    boolean _font_oldmath;      /* default to false when MathConstants seen */
 
     int _font_slant;            /* a slant in ppt */
     int _font_extend;           /* an extension in ppt, or 1000 */
@@ -202,31 +198,32 @@ extern const char *font_type_strings[];
 extern const char *font_format_strings[];
 extern const char *font_embedding_strings[];
 
-#  define font_checksum(a)           font_tables[a]->_font_checksum
-#  define set_font_checksum(a,b)     font_checksum(a) = b
 
-#  define font_check_0(a)            ((font_tables[a]->_font_checksum&0xFF000000)>>24)
-#  define font_check_1(a)            ((font_tables[a]->_font_checksum&0x00FF0000)>>16)
-#  define font_check_2(a)            ((font_tables[a]->_font_checksum&0x0000FF00)>>8)
-#  define font_check_3(a)             (font_tables[a]->_font_checksum&0x000000FF)
+#  define font_checksum(a)          font_tables[a]->_font_checksum
+#  define set_font_checksum(a,b)    font_checksum(a) = b
 
-#  define font_size(a)               font_tables[a]->_font_size
-#  define set_font_size(a,b)         font_size(a) = b
-#  define font_dsize(a)              font_tables[a]->_font_dsize
-#  define set_font_dsize(a,b)        font_dsize(a) = b
+#  define font_check_0(a)           ((font_tables[a]->_font_checksum&0xFF000000)>>24)
+#  define font_check_1(a)           ((font_tables[a]->_font_checksum&0x00FF0000)>>16)
+#  define font_check_2(a)           ((font_tables[a]->_font_checksum&0x0000FF00)>>8)
+#  define font_check_3(a)            (font_tables[a]->_font_checksum&0x000000FF)
 
-#  define font_units_per_em(a)       font_tables[a]->_font_units_per_em
-#  define set_font_units_per_em(a,b) font_units_per_em(a) = b
+#  define font_size(a)              font_tables[a]->_font_size
+#  define set_font_size(a,b)        font_size(a) = b
+#  define font_dsize(a)             font_tables[a]->_font_dsize
+#  define set_font_dsize(a,b)       font_dsize(a) = b
 
-#  define font_name(a)               font_tables[a]->_font_name
-#  define get_font_name(a)           (unsigned char *)font_name(a)
-#  define set_font_name(f,b)         font_name(f) = b
-#  define tex_font_name(a)           maketexstring(font_name(a))
+#  define font_units_per_em(a)             font_tables[a]->_font_units_per_em
+#  define set_font_units_per_em(a,b)       font_units_per_em(a) = b
 
-#  define font_area(a)               font_tables[a]->_font_area
-#  define get_font_area(a)           (unsigned char *)font_area(a)
-#  define set_font_area(f,b)         font_area(f) = b
-#  define tex_font_area(a)           maketexstring(font_area(a))
+#  define font_name(a)              font_tables[a]->_font_name
+#  define get_font_name(a)          (unsigned char *)font_name(a)
+#  define set_font_name(f,b)        font_name(f) = b
+#  define tex_font_name(a)          maketexstring(font_name(a))
+
+#  define font_area(a)              font_tables[a]->_font_area
+#  define get_font_area(a)          (unsigned char *)font_area(a)
+#  define set_font_area(f,b)        font_area(f) = b
+#  define tex_font_area(a)          maketexstring(font_area(a))
 
 boolean cmp_font_area(int, str_number);
 
@@ -264,7 +261,8 @@ boolean cmp_font_area(int, str_number);
 #  define set_font_touched(a,b)       font_touched(a) = b
 
 #  define font_type(a)                font_tables[a]->_font_type
-#  define set_font_type(a,b)          font_type(a) = b;
+#  define set_font_type(a,b)          {  /* fprintf(stdout,"set font type of %s to %i: %s\n",font_name(a),b,__FILE__); */   \
+                                       font_type(a) = b; }
 
 #  define font_format(a)              font_tables[a]->_font_format
 #  define font_format_name(a)         font_format_strings[font_tables[a]->_font_format]
@@ -293,9 +291,6 @@ boolean cmp_font_area(int, str_number);
 
 #  define font_encodingbytes(a)       font_tables[a]->_font_encodingbytes
 #  define set_font_encodingbytes(a,b) font_encodingbytes(a) = b
-
-#  define font_oldmath(a)             font_tables[a]->_font_oldmath
-#  define set_font_oldmath(a,b)       font_oldmath(a) = b
 
 #  define font_slant(a)               font_tables[a]->_font_slant
 #  define set_font_slant(a,b)         font_slant(a) = b
@@ -339,44 +334,43 @@ boolean cmp_font_area(int, str_number);
 #  define pdf_font_attr(a)            font_tables[a]->_pdf_font_attr
 #  define set_pdf_font_attr(a,b)      pdf_font_attr(a) = b
 
+
 #  define left_boundarychar  -1
 #  define right_boundarychar -2
-#  define non_boundarychar   -3
+#  define non_boundarychar -3
 
-#  define left_boundary(a)        font_tables[a]->_left_boundary
-#  define has_left_boundary(a)    (left_boundary(a)!=NULL)
-#  define set_left_boundary(a,b)  font_reassign(left_boundary(a),b)
+#  define left_boundary(a)              font_tables[a]->_left_boundary
+#  define has_left_boundary(a)          (left_boundary(a)!=NULL)
+#  define set_left_boundary(a,b)        font_reassign(left_boundary(a),b)
 
-#  define right_boundary(a)       font_tables[a]->_right_boundary
-#  define has_right_boundary(a)   (right_boundary(a)!=NULL)
-#  define set_right_boundary(a,b) font_reassign(right_boundary(a),b)
+#  define right_boundary(a)             font_tables[a]->_right_boundary
+#  define has_right_boundary(a)         (right_boundary(a)!=NULL)
+#  define set_right_boundary(a,b)       font_reassign(right_boundary(a),b)
 
-#  define font_bchar(a) (right_boundary(a)!=NULL ? right_boundarychar : non_boundarychar)
+#  define font_bchar(a)       (right_boundary(a)!=NULL ? right_boundarychar : non_boundarychar)
 
 /* font parameters */
 
-#  define font_params(a)  font_tables[a]->_font_params
-#  define param_base(a)   font_tables[a]->_param_base
-#  define font_param(a,b) font_tables[a]->_param_base[b]
+#  define font_params(a)       font_tables[a]->_font_params
+#  define param_base(a)        font_tables[a]->_param_base
+#  define font_param(a,b)      font_tables[a]->_param_base[b]
 
 extern void set_font_params(internal_font_number f, int b);
 
-#  define set_font_param(f,n,b) { \
-    if (font_params(f)<n) \
-        set_font_params(f,n); \
-    font_param(f,n) = b; \
-}
-#  define font_math_params(a)  font_tables[a]->_font_math_params
-#  define math_param_base(a)   font_tables[a]->_math_param_base
-#  define font_math_param(a,b) font_tables[a]->_math_param_base[b]
+#  define set_font_param(f,n,b)                                 \
+  { if (font_params(f)<n) set_font_params(f,n);                 \
+    font_param(f,n) = b; }
+
+
+#  define font_math_params(a)       font_tables[a]->_font_math_params
+#  define math_param_base(a)        font_tables[a]->_math_param_base
+#  define font_math_param(a,b)      font_tables[a]->_math_param_base[b]
 
 extern void set_font_math_params(internal_font_number f, int b);
 
-#  define set_font_math_param(f,n,b) { \
-    if (font_math_params(f)<n) \
-        set_font_math_params(f,n); \
-    font_math_param(f,n) = b; \
-}
+#  define set_font_math_param(f,n,b)                                   \
+  { if (font_math_params(f)<n) set_font_math_params(f,n);              \
+    font_math_param(f,n) = b; }
 
 /* Font parameters are sometimes referred to as |slant(f)|, |space(f)|, etc.*/
 
@@ -414,19 +408,16 @@ extern charinfo *get_charinfo(internal_font_number f, int c);
 extern int char_exists(internal_font_number f, int c);
 extern charinfo *char_info(internal_font_number f, int c);
 
-/*
-    Here is a quick way to test if a glyph exists, when you are
-    already certain the font |f| exists, and that the |c| is a regular
-    glyph id, not one of the two special boundary objects.
+/* Here is a quick way to test if a glyph exists, when you are
+already certain the font |f| exists, and that the |c| is a regular
+glyph id, not one of the two special boundary objects.
 */
-
-#  define quick_char_exists(f,c) (get_sa_item(font_tables[f]->characters,c).int_value)
+#  define quick_char_exists(f,c) get_sa_item(font_tables[f]->characters,c)
 
 extern void set_charinfo_width(charinfo * ci, scaled val);
 extern void set_charinfo_height(charinfo * ci, scaled val);
 extern void set_charinfo_depth(charinfo * ci, scaled val);
 extern void set_charinfo_italic(charinfo * ci, scaled val);
-extern void set_charinfo_vert_italic(charinfo * ci, scaled val);
 extern void set_charinfo_top_accent(charinfo * ci, scaled val);
 extern void set_charinfo_bot_accent(charinfo * ci, scaled val);
 extern void set_charinfo_tag(charinfo * ci, scaled val);
@@ -443,19 +434,19 @@ extern void set_charinfo_ef(charinfo * ci, scaled val);
 extern void set_charinfo_lp(charinfo * ci, scaled val);
 extern void set_charinfo_rp(charinfo * ci, scaled val);
 
-extern void add_charinfo_math_kern(charinfo * ci, int type, scaled ht, scaled krn);
+extern void add_charinfo_math_kern(charinfo * ci, int type, scaled ht,
+                                   scaled krn);
 extern int get_charinfo_math_kerns(charinfo * ci, int id);
 
-#  define set_char_used(f,a,b) do { \
-    if (char_exists(f,a)) \
-        set_charinfo_used(char_info(f,a),b); \
-} while (0)
+#  define set_char_used(f,a,b)  do {                            \
+        if (char_exists(f,a))                                   \
+            set_charinfo_used(char_info(f,a),b);                \
+    } while (0)
 
 extern scaled get_charinfo_width(charinfo * ci);
 extern scaled get_charinfo_height(charinfo * ci);
 extern scaled get_charinfo_depth(charinfo * ci);
 extern scaled get_charinfo_italic(charinfo * ci);
-extern scaled get_charinfo_vert_italic(charinfo * ci);
 extern scaled get_charinfo_top_accent(charinfo * ci);
 extern scaled get_charinfo_bot_accent(charinfo * ci);
 extern char get_charinfo_tag(charinfo * ci);
@@ -477,30 +468,35 @@ extern int ext_bot(internal_font_number f, int c);
 extern int ext_rep(internal_font_number f, int c);
 extern int ext_mid(internal_font_number f, int c);
 
-#  define set_ligature_item(f,b,c,d) { f.type = b; f.adj = c;  f.lig = d; }
-#  define set_kern_item(f,b,c) { f.adj = b;  f.sc = c; }
+#  define set_ligature_item(f,b,c,d)  { f.type = b; f.adj = c;  f.lig = d; }
+
+#  define set_kern_item(f,b,c)      { f.adj = b;  f.sc = c; }
+
 
 /* character information */
 
-#  define non_char    65536 /* a code that can't match a real character */
-#  define non_address     0 /* a spurious |bchar_label| */
+#  define non_char 65536        /* a code that can't match a real character */
+#  define non_address 0         /* a spurious |bchar_label| */
+
 
 /* character kerns and ligatures */
 
-#  define end_kern     0x7FFFFF /* otherchar value meaning "stop" */
-#  define ignored_kern 0x800000 /* otherchar value meaning "disabled" */
+#  define end_kern               0x7FFFFF
+                                        /* otherchar value meaning "stop" */
+#  define ignored_kern           0x800000
+                                        /* otherchar value meaning "disabled" */
 
-#  define charinfo_kern(b,c) b->kerns[c]
+#  define charinfo_kern(b,c)        b->kerns[c]
 
-#  define kern_char(b)       (b).adj
-#  define kern_kern(b)       (b).sc
-#  define kern_end(b)        ((b).adj == end_kern)
-#  define kern_disabled(b)   ((b).adj > end_kern)
+#  define kern_char(b)          (b).adj
+#  define kern_kern(b)          (b).sc
+#  define kern_end(b)          ((b).adj == end_kern)
+#  define kern_disabled(b)     ((b).adj > end_kern)
 
 /* character ligatures */
 
-#  define end_ligature     0x7FFFFF /* otherchar value meaning "stop" */
-#  define ignored_ligature 0x800000 /* otherchar value meaning "disabled" */
+#  define end_ligature          0x7FFFFF        /* otherchar value meaning "stop" */
+#  define ignored_ligature      0x800000        /* otherchar value meaning "disabled" */
 
 #  define charinfo_ligature(b,c)     b->ligatures[c]
 
@@ -511,17 +507,16 @@ extern int ext_mid(internal_font_number f, int c);
 #  define lig_end(a)             (lig_char(a) == end_ligature)
 #  define lig_disabled(a)        (lig_char(a) > end_ligature)
 
-#  define no_tag   0 /* vanilla character */
-#  define lig_tag  1 /* character has a ligature/kerning program */
-#  define list_tag 2 /* character has a successor in a charlist */
-#  define ext_tag  3 /* character is extensible */
+#  define no_tag 0              /* vanilla character */
+#  define lig_tag 1             /* character has a ligature/kerning program */
+#  define list_tag 2            /* character has a successor in a charlist */
+#  define ext_tag 3             /* character is extensible */
 
 extern scaled char_height(internal_font_number f, int c);
 extern scaled calc_char_width(internal_font_number f, int c, int ex);
 extern scaled char_width(internal_font_number f, int c);
 extern scaled char_depth(internal_font_number f, int c);
 extern scaled char_italic(internal_font_number f, int c);
-extern scaled char_vert_italic(internal_font_number f, int c);
 extern scaled char_top_accent(internal_font_number f, int c);
 extern scaled char_bot_accent(internal_font_number f, int c);
 
@@ -529,9 +524,9 @@ extern liginfo *char_ligatures(internal_font_number f, int c);
 extern kerninfo *char_kerns(internal_font_number f, int c);
 extern eight_bits *char_packets(internal_font_number f, int c);
 
-#  define has_lig(f,b)    (char_exists(f,b) &&( char_ligatures(f,b) != NULL))
-#  define has_kern(f,b)   (char_exists(f,b) && (char_kerns(f,b) != NULL))
-#  define has_packet(f,b) (char_exists(f,b) && (char_packets(f,b) != NULL))
+#  define has_lig(f,b)          (char_exists(f,b) &&( char_ligatures(f,b) != NULL))
+#  define has_kern(f,b)         (char_exists(f,b) && (char_kerns(f,b) != NULL))
+#  define has_packet(f,b)       (char_exists(f,b) && (char_packets(f,b) != NULL))
 
 extern int char_remainder(internal_font_number f, int c);
 extern char char_tag(internal_font_number f, int c);
@@ -579,6 +574,7 @@ extern void set_ef_code(internal_font_number f, int c, int i);
 
 int read_tfm_info(internal_font_number f, const char *nom, scaled s);
 
+
 /* from dofont.c */
 
 extern int read_font_info(pointer u, char *cnom, scaled s, int ndir);
@@ -610,7 +606,6 @@ extern int vf_packet_bytes(charinfo * co);
 extern charinfo *copy_charinfo(charinfo * ci);
 
 /* this function is in vfovf.c for the moment */
-
 extern int make_vf_table(lua_State * L, const char *name, scaled s);
 
 /* some bits of the old interface, used by e.g. writet3.c */
@@ -622,20 +617,4 @@ extern int make_vf_table(lua_State * L, const char *name, scaled s);
 #  define get_charheight(f,c) (char_exists(f,c) ? char_height(f,c) : 0)
 #  define get_chardepth(f,c) (char_exists(f,c) ? char_depth(f,c) : 0)
 
-extern int pk_dpi; /* PK pixel density value from \.{texmf.cnf} */
-
-extern internal_font_number tfm_lookup(char *s, scaled fs);
-
-extern int fix_expand_value(internal_font_number f, int e);
-
-extern void set_expand_params(internal_font_number f, boolean auto_expand,
-                              int stretch_limit, int shrink_limit,
-                              int font_step);
-
-extern void read_expand_font(void);
-extern void new_letterspaced_font(small_number a);
-extern void make_font_copy(small_number a);
-
-extern void glyph_to_unicode(void);
-
-#endif
+#endif                          /* TEXFONT_H */

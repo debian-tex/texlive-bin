@@ -1,6 +1,5 @@
 ## Wrapper Makefile.am to build FreeType for TeX Live.
 ##
-##   Copyright (C) 2016 Karl Berry <tex-live@tug.org>
 ##   Copyright (C) 2009-2015 Peter Breitenlohner <tex-live@tug.org>
 ##
 ##   This file is free software; the copyright holder
@@ -13,7 +12,7 @@ EXTRA_DIST = $(FREETYPE_TREE)
 
 ## Changes applied to the original source tree
 ##
-EXTRA_DIST += freetype-PATCHES
+EXTRA_DIST += $(FREETYPE_TREE)-PATCHES
 
 # Files not to be distributed
 include $(srcdir)/../../am/dist_hook.am

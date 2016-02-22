@@ -47,7 +47,7 @@ static USHORT find_empty_slot(struct tt_glyphs *g)
             break;
     }
     if (gid == NUM_GLYPH_LIMIT)
-        normal_error("ttf","no empty glyph slot available.");
+        TT_ERROR("No empty glyph slot available.");
 
     return gid;
 }
@@ -89,10 +89,10 @@ USHORT tt_add_glyph(struct tt_glyphs * g, USHORT gid, USHORT new_gid)
     ASSERT(g);
 
     if (g->used_slot[new_gid / 8] & (1 << (7 - (new_gid % 8)))) {
-        formatted_warning("ttf","slot %u already used", new_gid);
+        WARN("Slot %u already used.", new_gid);
     } else {
         if (g->num_glyphs + 1 >= NUM_GLYPH_LIMIT)
-            normal_error("ttf","too many glyphs");
+            TT_ERROR("Too many glyphs.");
 
         if (g->num_glyphs >= g->max_glyphs) {
             g->max_glyphs = (USHORT) (g->max_glyphs + GLYPH_ARRAY_ALLOC_SIZE);
@@ -193,20 +193,20 @@ int tt_build_tables(sfnt * sfont, struct tt_glyphs *g)
     ASSERT(g);
 
     if (sfont->type != SFNT_TYPE_TRUETYPE && sfont->type != SFNT_TYPE_TTC)
-        normal_error("ttf","invalid font type");
+        TT_ERROR("Invalid font type");
 
     if (g->num_glyphs > NUM_GLYPH_LIMIT)
-        normal_error("ttf","too many glyphs");
+        TT_ERROR("Too many glyphs.");
 
     /*
      Read head, hhea, maxp, loca:
-
+     
      unitsPerEm       --> head
 
      numHMetrics      --> hhea
 
      indexToLocFormat --> head
-
+     
      numGlyphs        --> maxp
      */
     head = tt_read_head_table(sfont);
@@ -214,7 +214,7 @@ int tt_build_tables(sfnt * sfont, struct tt_glyphs *g)
     maxp = tt_read_maxp_table(sfont);
 
     if (hhea->metricDataFormat != 0)
-        normal_error("ttf","unknown metricDataFormat");
+        TT_ERROR("Unknown metricDataFormat.");
 
     g->emsize = head->unitsPerEm;
 
@@ -252,7 +252,7 @@ int tt_build_tables(sfnt * sfont, struct tt_glyphs *g)
         for (i = 0; i <= maxp->numGlyphs; i++)
             location[i] = sfnt_get_ulong(sfont);
     } else {
-        normal_error("ttf","unknown IndexToLocFormat");
+        TT_ERROR("Unknown IndexToLocFormat.");
     }
 
     w_stat = NEW(g->emsize + 2, USHORT);
@@ -280,7 +280,7 @@ int tt_build_tables(sfnt * sfont, struct tt_glyphs *g)
 
         gid = g->gd[i].ogid;
         if (gid >= maxp->numGlyphs)
-            formatted_error("ttf","invalid glyph index (gid %u)", gid);
+            TT_ERROR("Invalid glyph index (gid %u)", gid);
 
         loc = location[gid];
         len = location[gid + 1] - loc;
@@ -304,7 +304,7 @@ int tt_build_tables(sfnt * sfont, struct tt_glyphs *g)
         if (len == 0) {         /* Does not contains any data. */
             continue;
         } else if (len < 10) {
-            formatted_error("ttf","invalid glyph data (gid %u)", gid);
+            TT_ERROR("Invalid TrueType glyph data (gid %u).", gid);
         }
 
         g->gd[i].data = p = NEW(len, BYTE);
@@ -339,7 +339,8 @@ int tt_build_tables(sfnt * sfont, struct tt_glyphs *g)
             USHORT flags, cgid, new_gid;        /* flag, gid of a component */
             do {
                 if (p >= endptr)
-                    formatted_error("ttf","invalid glyph data (gid %u): %u bytes", gid, (unsigned int) len);
+                    TT_ERROR("Invalid TrueType glyph data (gid %u): %u bytes",
+                             gid, (unsigned int) len);
                 /*
                  * Flags and gid of component glyph are both USHORT.
                  */
@@ -347,7 +348,8 @@ int tt_build_tables(sfnt * sfont, struct tt_glyphs *g)
                 p += 2;
                 cgid = (USHORT) (((*p) << 8) | *(p + 1));
                 if (cgid >= maxp->numGlyphs) {
-                    formatted_error("ttf","invalid gid (%u > %u) in composite glyph %u", cgid, maxp->numGlyphs, gid);
+                    TT_ERROR("Invalid gid (%u > %u) in composite glyph %u.",
+                             cgid, maxp->numGlyphs, gid);
                 }
                 new_gid = tt_find_glyph(g, cgid);
                 if (new_gid == 0) {
@@ -369,7 +371,7 @@ int tt_build_tables(sfnt * sfont, struct tt_glyphs *g)
              TrueType instructions comes here:
 
              |length_of_instruction| (|ushort|)
-
+              
              instruction (|byte * length_of_instruction|)
              */
         }
@@ -525,14 +527,14 @@ int tt_get_metrics(sfnt * sfont, struct tt_glyphs *g)
         sfont->stream == NULL
 #endif
         )
-        normal_error("ttf","file not opened");
+        TT_ERROR("File not opened.");
 
     if (sfont->type != SFNT_TYPE_TRUETYPE && sfont->type != SFNT_TYPE_TTC)
-        normal_error("ttf","invalid font type");
+        TT_ERROR("Invalid font type");
 
     /*
      Read head, hhea, maxp, loca:
-
+     
      unitsPerEm       --> head
 
      numHMetrics      --> hhea
@@ -546,7 +548,7 @@ int tt_get_metrics(sfnt * sfont, struct tt_glyphs *g)
     maxp = tt_read_maxp_table(sfont);
 
     if (hhea->metricDataFormat != 0)
-        normal_error("ttf","unknown metricDataFormat");
+        TT_ERROR("Unknown metricDataFormat.");
 
     g->emsize = head->unitsPerEm;
 
@@ -578,7 +580,7 @@ int tt_get_metrics(sfnt * sfont, struct tt_glyphs *g)
         for (i = 0; i <= maxp->numGlyphs; i++)
             location[i] = sfnt_get_ulong(sfont);
     } else {
-        normal_error("ttf","inknown IndexToLocFormat");
+        TT_ERROR("Unknown IndexToLocFormat.");
     }
 
     w_stat = NEW(g->emsize + 2, USHORT);
@@ -590,11 +592,11 @@ int tt_get_metrics(sfnt * sfont, struct tt_glyphs *g)
     for (i = 0; i < g->num_glyphs; i++) {
         USHORT gid;             /* old gid */
         ULONG loc, len;
-        /*SHORT number_of_contours;*/
+        //SHORT number_of_contours;
 
         gid = g->gd[i].ogid;
         if (gid >= maxp->numGlyphs)
-            formatted_error("ttf","invalid glyph index (gid %u)", gid);
+            TT_ERROR("Invalid glyph index (gid %u)", gid);
 
         loc = location[gid];
         len = location[gid + 1] - loc;
@@ -619,7 +621,7 @@ int tt_get_metrics(sfnt * sfont, struct tt_glyphs *g)
         if (len == 0) {         /* Does not contains any data. */
             continue;
         } else if (len < 10) {
-            formatted_error("ttf","invalid glyph data (gid %u)", gid);
+            TT_ERROR("Invalid TrueType glyph data (gid %u).", gid);
         }
 
         sfnt_seek_set(sfont, (long) (offset + loc));

@@ -31,6 +31,8 @@ typedef const char *(*charfunc) (void);
 typedef lua_Number(*numfunc) (void);
 typedef int (*intfunc) (void);
 
+const char *last_lua_error;
+
 static const char *getbanner(void)
 {
     return (const char *) luatex_banner;
@@ -41,6 +43,12 @@ static const char *getlogname(void)
     return (const char *) texmf_log_name;
 }
 
+/* Obsolete in 0.80.0                         */
+/* static const char *get_pdftex_banner(void) */
+/* { */
+/*     return (const char *) pdftex_banner; */
+/* } */
+
 static const char *get_output_file_name(void)
 {
     if (static_pdf != NULL)
@@ -48,43 +56,17 @@ static const char *get_output_file_name(void)
     return NULL;
 }
 
-/*
 static const char *getfilename(void)
 {
     int t = 0;
     int level = in_open;
     while ((level > 0)) {
         t = input_stack[level--].name_field;
-        if (t >= STRING_OFFSET) {
+        if (t >= STRING_OFFSET)
             return (const char *) str_string(t);
-        }
     }
     return "";
 }
-*/
-
-static const char *getfilename(void)
-{
-    const char * s;
-    int level, t;
-    level = in_open;
-    while ((level > 0)) {
-        s = full_source_filename_stack[level--];
-        if (s != NULL) {
-            return s;
-        }
-    }
-    /* old method */
-    level = in_open;
-    while ((level > 0)) {
-        t = input_stack[level--].name_field;
-        if (t >= STRING_OFFSET) {
-            return (const char *) str_string(t);
-        }
-    }
-    return "";
-}
-
 
 static const char *getlasterror(void)
 {
@@ -96,20 +78,7 @@ static const char *getlastluaerror(void)
     return last_lua_error;
 }
 
-static const char *getlastwarningtag(void)
-{
-    return last_warning_tag;
-}
 
-static const char *getlastwarningstr(void)
-{
-    return last_warning_str;
-}
-
-static const char *getlasterrorcontext(void)
-{
-    return last_error_context;
-}
 
 static const char *luatexrevision(void)
 {
@@ -173,6 +142,7 @@ static lua_Number get_pdf_mem_ptr(void)
     return (lua_Number) 0;
 }
 
+
 static lua_Number get_obj_ptr(void)
 {
     if (static_pdf != NULL)
@@ -206,17 +176,6 @@ static int get_hash_size(void)
     return hash_size;           /* is a #define */
 }
 
-static lua_Number shell_escape_state(void)
-{
-    if (shellenabledp <= 0) {
-        return (lua_Number) 0;
-    } else if (restrictedshell == 0) {
-        return (lua_Number) 1;
-    } else {
-        return (lua_Number) 2;
-    }
-}
-
 static int luastate_max = 1;    /* fixed value */
 
 /* temp, for backward compat */
@@ -235,9 +194,6 @@ static struct statistic stats[] = {
 
     {"lasterrorstring", 'S', (void *) &getlasterror},
     {"lastluaerrorstring", 'S', (void *) &getlastluaerror},
-    {"lastwarningtag", 'S', (void *) &getlastwarningtag},
-    {"lastwarningstring", 'S', (void *) &getlastwarningstr},
-    {"lasterrorcontext", 'S', (void *) &getlasterrorcontext},
 
     /* seldom or never accessed */
 
@@ -249,14 +205,14 @@ static struct statistic stats[] = {
     {"output_file_name", 'S', (void *) &get_output_file_name},
     {"log_name", 'S', (void *) &getlogname},
     {"banner", 'S', (void *) &getbanner},
+    {"pdftex_banner", 'S', (void *) &getbanner},
+    {"luatex_svn", 'G', &get_luatexsvn},
     {"luatex_version", 'G', &get_luatexversion},
     {"luatex_revision", 'S', (void *) &luatexrevision},
     {"luatex_hashtype", 'S', (void *) &get_luatexhashtype},
     {"luatex_hashchars", 'N',  &get_luatexhashchars},
 
     {"ini_version", 'b', &ini_version},
-
-    {"shell_escape", 'N', &shell_escape_state}, /* be easy on old time usage */
     /*
      * mem stat
      */
@@ -290,7 +246,7 @@ static struct statistic stats[] = {
     {"param_size", 'g', &param_size},
     {"buf_size", 'g', &buf_size},
     {"save_size", 'g', &save_size},
-    {"input_ptr", 'g', &input_ptr},
+    /* pdf stats */
     {"obj_ptr", 'N', &get_obj_ptr},
     {"obj_tab_size", 'N', &get_obj_tab_size},
     {"pdf_os_cntr", 'N', &get_pdf_os_cntr},
@@ -299,7 +255,9 @@ static struct statistic stats[] = {
     {"dest_names_size", 'N', &get_dest_names_size},
     {"pdf_mem_ptr", 'N', &get_pdf_mem_ptr},
     {"pdf_mem_size", 'N', &get_pdf_mem_size},
+
     {"largest_used_mark", 'g', &biggest_used_mark},
+
     {"luabytecodes", 'g', &luabytecode_max},
     {"luabytecode_bytes", 'g', &luabytecode_bytes},
     {"luastates", 'g', &luastate_max},
@@ -347,14 +305,14 @@ static int do_getstat(lua_State * L, int i)
         break;
     case 'N':
         n = stats[i].value;
-        lua_pushinteger(L, n());
+        lua_pushnumber(L, n());
         break;
     case 'G':
         g = stats[i].value;
-        lua_pushinteger(L, g());
+        lua_pushnumber(L, g());
         break;
     case 'g':
-        lua_pushinteger(L, *(int *) (stats[i].value));
+        lua_pushnumber(L, *(int *) (stats[i].value));
         break;
     case 'B':
         g = stats[i].value;
@@ -379,7 +337,7 @@ static int getstats(lua_State * L)
 {
     const char *st;
     int i;
-    if (lua_type(L,-1) == LUA_TSTRING) {
+    if (lua_isstring(L, -1)) {
         st = lua_tostring(L, -1);
         i = stats_name_to_id(st);
         if (i >= 0) {
@@ -409,22 +367,10 @@ static int statslist(lua_State * L)
     return 1;
 }
 
-static int resetmessages(lua_State * L)
-{
-    xfree(last_warning_str);
-    xfree(last_warning_tag);
-    xfree(last_error);
-    xfree(last_lua_error);
-    last_warning_str = NULL;
-    last_warning_tag = NULL;
-    last_error = NULL;
-    last_lua_error = NULL;
-    return 0;
-}
+
 
 static const struct luaL_Reg statslib[] = {
     {"list", statslist},
-    {"resetmessages", resetmessages},
     {NULL, NULL}                /* sentinel */
 };
 

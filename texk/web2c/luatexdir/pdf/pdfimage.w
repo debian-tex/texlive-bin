@@ -19,6 +19,7 @@
 
 @ @c
 
+
 #include "ptexlib.h"
 
 @ @c
@@ -33,9 +34,11 @@ void place_img(PDF pdf, image_dict * idict, scaled_whd dim, int transform)
     scaledpos tmppos;
     pdffloat cm[6];
     int groupref;               /* added from web for 1.40.8 */
+    assert(idict != 0);
+    assert(p != NULL);
     a[0] = a[3] = 1.0e6;
     a[1] = a[2] = 0;
-    if (img_type(idict) == IMG_TYPE_PDF || img_type(idict) == IMG_TYPE_PDFMEMSTREAM
+    if (img_type(idict) == IMG_TYPE_PDF
         || img_type(idict) == IMG_TYPE_PDFSTREAM) {
         a[0] /= (float) img_xsize(idict);
         a[3] /= (float) img_ysize(idict);
@@ -55,7 +58,7 @@ void place_img(PDF pdf, image_dict * idict, scaled_whd dim, int transform)
         xoff = yoff = 0;
         r = 4;
     }
-    if ((transform & 7) > 3) { /* mirror cases */
+    if ((transform & 7) > 3) {  // mirror cases
         a[0] *= -1;
         xoff *= -1;
     }
@@ -142,9 +145,10 @@ void place_img(PDF pdf, image_dict * idict, scaled_whd dim, int transform)
 void pdf_place_image(PDF pdf, halfword p)
 {
     scaled_whd dim;
-    image_dict *idict = idict_array[rule_index(p)];
+    image_dict *idict = idict_array[pdf_ximage_index(p)];
+    assert(idict != NULL);
     dim.wd = width(p);
     dim.ht = height(p);
     dim.dp = depth(p);
-    place_img(pdf, idict, dim, rule_transform(p));
+    place_img(pdf, idict, dim, pdf_ximage_transform(p));
 }

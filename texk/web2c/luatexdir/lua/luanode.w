@@ -18,15 +18,47 @@
 % with LuaTeX; if not, see <http://www.gnu.org/licenses/>.
 
 /* hh-ls: we make sure that lua never sees prev of head but also that when
-nodes are removed or inserted, temp nodes don't interfere */
+nodes are removedor inserted, temp nodes don't interfere */
 
 @ @c
+
 
 #include "ptexlib.h"
 #include "lua/luatex-api.h"
 
+/* TO BE REMOVED
+static const char *group_code_names[] = {
+    "",
+    "simple",
+    "hbox",
+    "adjusted_hbox",
+    "vbox",
+    "vtop",
+    "align",
+    "no_align",
+    "output",
+    "math",
+    "disc",
+    "insert",
+    "vcenter",
+    "math_choice",
+    "semi_simple",
+    "math_shift",
+    "math_left",
+    "local_box",
+    "split_off",
+    "split_keep",
+    "preamble",
+    "align_set",
+    "fin_row"
+};
+
+const char *pack_type_name[] = { "exactly", "additional" };
+*/
+
 @ @c
-void lua_node_filter_s(int filterid, int extrainfo)
+void
+lua_node_filter_s(int filterid, int extrainfo)
 {
     lua_State *L = Luas;
     int callback_id = callback_defined(filterid);
@@ -50,8 +82,10 @@ void lua_node_filter_s(int filterid, int extrainfo)
     return;
 }
 
+
 @ @c
-void lua_node_filter(int filterid, int extrainfo, halfword head_node, halfword * tail_node)
+void
+lua_node_filter(int filterid, int extrainfo, halfword head_node, halfword * tail_node)
 {
     halfword ret;
     int a;
@@ -100,7 +134,8 @@ void lua_node_filter(int filterid, int extrainfo, halfword head_node, halfword *
 }
 
 @ @c
-int lua_linebreak_callback(int is_broken, halfword head_node, halfword * new_head)
+int
+lua_linebreak_callback(int is_broken, halfword head_node, halfword * new_head)
 {
     int a;
     register halfword *p;
@@ -125,6 +160,7 @@ int lua_linebreak_callback(int is_broken, halfword head_node, halfword * new_hea
         error();
         return ret;
     }
+
     p = lua_touserdata(L, -1);
     if (p != NULL) {
         a = nodelist_from_lua(L);
@@ -135,48 +171,12 @@ int lua_linebreak_callback(int is_broken, halfword head_node, halfword * new_hea
     return ret;
 }
 
-@ @c
-int lua_appendtovlist_callback(halfword box, int location, halfword prev_depth, boolean is_mirrored, halfword * result, int * next_depth, boolean * prev_set)
-{
-    register halfword *p;
-    lua_State *L = Luas;
-    int s_top = lua_gettop(L);
-    int callback_id = callback_defined(append_to_vlist_filter_callback);
-    if (box == null || callback_id <= 0) {
-        lua_settop(L, s_top);
-        return 0;
-    }
-    if (!get_callback(L, callback_id)) {
-        lua_settop(L, s_top);
-        return 0;
-    }
-    nodelist_to_lua(L, box);
-    lua_push_string_by_index(L,location);
-    lua_pushinteger(L, (int) prev_depth);
-    lua_pushboolean(L, is_mirrored);
-    if (lua_pcall(L, 4, 2, 0) != 0) {
-        fprintf(stdout, "error: %s\n", lua_tostring(L, -1));
-        lua_settop(L, s_top);
-        error();
-        return 0;
-    }
-    if (lua_type(L,-1) == LUA_TNUMBER) {
-        *next_depth = lua_tointeger(L,-1);
-        *prev_set = true;
-        if (lua_type(L, -2) != LUA_TNIL) {
-            p = check_isnode(L, -2);
-            *result = *p;
-        }
-    } else if (lua_type(L, -1) != LUA_TNIL) {
-        p = check_isnode(L, -1);
-        *result = *p;
-    }
-    lua_settop(L, s_top);
-    return 1;
-}
+
 
 @ @c
-halfword lua_hpack_filter(halfword head_node, scaled size, int pack_type, int extrainfo, int pack_direction)
+halfword
+lua_hpack_filter(halfword head_node, scaled size, int pack_type, int extrainfo,
+                 int pack_direction)
 {
     halfword ret;
     lua_State *L = Luas;
@@ -193,7 +193,7 @@ halfword lua_hpack_filter(halfword head_node, scaled size, int pack_type, int ex
     alink(head_node) = null ; /* hh-ls */
     nodelist_to_lua(L, head_node);
     lua_push_group_code(L,extrainfo);
-    lua_pushinteger(L, size);
+    lua_pushnumber(L, size);
     lua_push_pack_type(L,pack_type);
     if (pack_direction >= 0)
         lua_push_dir_par(L, pack_direction);
@@ -224,7 +224,8 @@ halfword lua_hpack_filter(halfword head_node, scaled size, int pack_type, int ex
 }
 
 @ @c
-halfword lua_vpack_filter(halfword head_node, scaled size, int pack_type, scaled maxd,
+halfword
+lua_vpack_filter(halfword head_node, scaled size, int pack_type, scaled maxd,
                  int extrainfo, int pack_direction)
 {
     halfword ret;
@@ -251,9 +252,9 @@ halfword lua_vpack_filter(halfword head_node, scaled size, int pack_type, scaled
     alink(head_node) = null ; /* hh-ls */
     nodelist_to_lua(L, head_node);
     lua_push_group_code(L,extrainfo);
-    lua_pushinteger(L, size);
+    lua_pushnumber(L, size);
     lua_push_pack_type(L,pack_type);
-    lua_pushinteger(L, maxd);
+    lua_pushnumber(L, maxd);
     if (pack_direction >= 0)
          lua_push_dir_par(L, pack_direction);
     else
@@ -282,6 +283,7 @@ halfword lua_vpack_filter(halfword head_node, scaled size, int pack_type, scaled
     return ret;
 }
 
+
 @ This is a quick hack to fix etex's \.{\\lastnodetype} now that
   there are many more visible node types. TODO: check the
   eTeX manual for the expected return values.
@@ -290,12 +292,20 @@ halfword lua_vpack_filter(halfword head_node, scaled size, int pack_type, scaled
 int visible_last_node_type(int n)
 {
     int i = type(n);
-    if (i != glyph_node) {
-        return get_etex_code(i);
-    } else if (is_ligature(n)) {
-        return 7; /* old ligature value */
+    if (i == whatsit_node && subtype(n) == local_par_node)
+        return -1;
+    if (i == glyph_node) {
+        if (is_ligature(n))
+            return 7;           /* old ligature value */
+        else
+            return 0;           /* old character value */
+    }
+    if (i <= unset_node) {
+        return i + 1;
+    } else if (i <= delim_node) {
+        return 15;              /* so-called math nodes */
     } else {
-        return 0; /* old character value */
+        return -1;
     }
 }
 
@@ -349,6 +359,7 @@ void copy_user_lua(pointer r, pointer p)
     }
 }
 
+
 @ @c
 void free_pdf_literal(pointer p)
 {
@@ -378,22 +389,23 @@ void free_user_lua(pointer p)
     }
 }
 
+
 @ @c
 void show_pdf_literal(pointer p)
 {
     tprint_esc("pdfliteral");
     switch (pdf_literal_mode(p)) {
-        case set_origin:
-            break;
-        case direct_page:
-            tprint(" page");
-            break;
-        case direct_always:
-            tprint(" direct");
-            break;
-        default:
-            confusion("literal2");
-            break;
+    case set_origin:
+        break;
+    case direct_page:
+        tprint(" page");
+        break;
+    case direct_always:
+        tprint(" direct");
+        break;
+    default:
+        confusion("literal2");
+        break;
     }
     if (pdf_literal_type(p) == normal) {
         print_mark(pdf_literal_data(p));

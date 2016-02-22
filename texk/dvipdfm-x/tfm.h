@@ -1,6 +1,6 @@
 /* This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
 
-    Copyright (C) 2002-2016 by Jin-Hwan Cho and Shunsaku Hirata,
+    Copyright (C) 2002-2014 by Jin-Hwan Cho and Shunsaku Hirata,
     the dvipdfmx project team.
     
     Copyright (C) 1998, 1999 by Mark A. Wicks <mwicks@kettering.edu>
@@ -41,10 +41,10 @@ extern fixword tfm_get_fw_height (int font_id, int32_t ch);
 extern fixword tfm_get_fw_depth  (int font_id, int32_t ch);
 
 extern fixword tfm_string_width  (int font_id, const unsigned char *s, unsigned len);
-#if 0
 extern fixword tfm_string_depth  (int font_id, const unsigned char *s, unsigned len);
 extern fixword tfm_string_height (int font_id, const unsigned char *s, unsigned len);
-#endif
+
+extern double tfm_get_space (int font_id);
 
 /* From TFM header */
 extern double tfm_get_design_size  (int font_id);

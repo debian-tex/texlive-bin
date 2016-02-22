@@ -1,6 +1,6 @@
 /* This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
 
-    Copyright (C) 2002-2016 by Jin-Hwan Cho and Shunsaku Hirata,
+    Copyright (C) 2002-2014 by Jin-Hwan Cho and Shunsaku Hirata,
     the dvipdfmx project team.
     
     This program is free software; you can redistribute it and/or modify
@@ -237,16 +237,16 @@ otl_release_opt (otl_opt *opt)
 #if 0
 struct lv_range
 {
-  int start, end;
+  long start, end;
 };
 
 struct uc_coverage
 {
-  int    count;
+  long   count;
   struct lv_range *ranges;
 };
 
-static inline int
+static int CDECL
 range_cmp (const void *v1, const void *v2)
 {
   struct lv_range *sv1, *sv2;
@@ -262,7 +262,7 @@ range_cmp (const void *v1, const void *v2)
   return 0;
 }
 
-static inline int
+static int CDECL
 range_overlap (const void *v1, const void *v2)
 {
   struct lv_range *sv1, *sv2;
@@ -283,7 +283,7 @@ static void
 check_uc_coverage (struct uc_coverage *coverage)
 {
   struct lv_range *r1, *r2;
-  int i;
+  long i;
 
   for (i = 0; i < coverage->count; i++) {
     r1 = &coverage->ranges[i];

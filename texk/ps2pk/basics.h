@@ -1,7 +1,7 @@
 /* FILE:    basics.h
  * PURPOSE: basic definitions
  * AUTHOR:  Piet Tutelaers
- * (see README for license)
+ * VERSION: 1.7 (December 2014)
  */
 
 #ifdef HAVE_CONFIG_H

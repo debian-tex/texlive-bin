@@ -55,10 +55,6 @@
 /* Define to 1 if you have the `atoi' function. */
 #undef HAVE_ATOI
 
-/* Define to 1 if you have the declaration of `isascii', and to 0 if you
-   don't. */
-#undef HAVE_DECL_ISASCII
-
 /* Define to 1 if you have the declaration of `strndup', and to 0 if you
    don't. */
 #undef HAVE_DECL_STRNDUP
@@ -139,9 +135,6 @@
 /* Define to 1 if you have the <ndir.h> header file, and it defines `DIR'. */
 #undef HAVE_NDIR_H
 
-/* Define to 1 if you have the `Object::initCmd(const char*)' function. */
-#undef HAVE_OBJECT_INITCMD_CONST_CHARP
-
 /* Define to 1 if you have the `putenv' function. */
 #undef HAVE_PUTENV
 
@@ -183,6 +176,9 @@
 
 /* Define to 1 if you have the `strrchr' function. */
 #undef HAVE_STRRCHR
+
+/* Define to 1 if you have the <StructTreeRoot.h> header file. */
+#undef HAVE_STRUCTTREEROOT_H
 
 /* Define to 1 if `st_mtim' is a member of `struct stat'. */
 #undef HAVE_STRUCT_STAT_ST_MTIM

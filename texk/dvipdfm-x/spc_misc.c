@@ -1,6 +1,6 @@
 /* This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
 
-    Copyright (C) 2002-2016 by Jin-Hwan Cho and Shunsaku Hirata,
+    Copyright (C) 2002-2014 by Jin-Hwan Cho and Shunsaku Hirata,
     the dvipdfmx project team.
     
     Copyright (C) 1998, 1999 by Mark A. Wicks <mwicks@kettering.edu>
@@ -52,7 +52,6 @@ spc_handler_postscriptbox (struct spc_env *spe, struct spc_arg *ap)
 {
   int            form_id, len;
   transform_info ti;
-  load_options   options = {1, 0, NULL};
   char           filename[256], *fullname;
   char           buf[512];
   FILE          *fp;
@@ -110,7 +109,7 @@ spc_handler_postscriptbox (struct spc_env *spe, struct spc_arg *ap)
   }
   MFCLOSE(fp);
 
-  form_id = pdf_ximage_findresource(filename, options);
+  form_id = pdf_ximage_findresource(filename, 0, NULL);
   if (form_id < 0) {
     spc_warn(spe, "Failed to load image file: %s", filename);
     return  -1;
@@ -140,7 +139,7 @@ static struct spc_handler misc_handlers[] = {
 
 
 int
-spc_misc_check_special (const char *buffer, int size)
+spc_misc_check_special (const char *buffer, long size)
 {
   const char *p, *endptr;
   int    i;
@@ -149,7 +148,7 @@ spc_misc_check_special (const char *buffer, int size)
   endptr = p + size;
 
   skip_white(&p, endptr);
-  size   = (int) (endptr - p);
+  size   = (long) (endptr - p);
   for (i = 0;
        i < sizeof(misc_handlers)/sizeof(struct spc_handler); i++) {
     if (size >= strlen(misc_handlers[i].key) &&

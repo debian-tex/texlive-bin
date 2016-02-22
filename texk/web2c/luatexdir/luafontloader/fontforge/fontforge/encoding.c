@@ -541,8 +541,6 @@ return( NULL );
 	base = 256;
     else if ( enc->char_cnt<=0x10000 )
 	base = 0x10000;
-    if (base==0) 
-return( NULL );
     encoded = galloc(base*sizeof(int));
     memset(encoded,-1,base*sizeof(int));
     unencoded = galloc(sf->glyphcnt*sizeof(int));

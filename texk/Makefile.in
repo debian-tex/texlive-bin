@@ -145,6 +145,7 @@ am__aclocal_m4_deps = $(top_srcdir)/../m4/kpse-cairo-flags.m4 \
 	$(top_srcdir)/../texk/dvidvi/ac/withenable.ac \
 	$(top_srcdir)/../texk/dviljk/ac/withenable.ac \
 	$(top_srcdir)/../texk/dvipdfm-x/ac/withenable.ac \
+	$(top_srcdir)/../texk/dvipdfm-x/ac/dvipdfm-x.ac \
 	$(top_srcdir)/../texk/dvipng/ac/withenable.ac \
 	$(top_srcdir)/../texk/dvipng/ac/dvipng.ac \
 	$(top_srcdir)/../texk/dvipos/ac/withenable.ac \
@@ -152,7 +153,6 @@ am__aclocal_m4_deps = $(top_srcdir)/../m4/kpse-cairo-flags.m4 \
 	$(top_srcdir)/../texk/dvisvgm/ac/withenable.ac \
 	$(top_srcdir)/../texk/dvisvgm/ac/dvisvgm.ac \
 	$(top_srcdir)/../texk/dvisvgm/ac/libgs.ac \
-	$(top_srcdir)/../texk/gregorio/ac/withenable.ac \
 	$(top_srcdir)/../texk/gsftopk/ac/withenable.ac \
 	$(top_srcdir)/../texk/lcdf-typetools/ac/withenable.ac \
 	$(top_srcdir)/../texk/lcdf-typetools/ac/lcdf-typetools.ac \
@@ -166,7 +166,6 @@ am__aclocal_m4_deps = $(top_srcdir)/../m4/kpse-cairo-flags.m4 \
 	$(top_srcdir)/../texk/tex4htk/ac/withenable.ac \
 	$(top_srcdir)/../texk/ttf2pk2/ac/withenable.ac \
 	$(top_srcdir)/../texk/ttfdump/ac/withenable.ac \
-	$(top_srcdir)/../texk/upmendex/ac/withenable.ac \
 	$(top_srcdir)/../texk/xdvik/ac/withenable.ac \
 	$(top_srcdir)/../texk/xdvik/ac/xdvik.ac \
 	$(top_srcdir)/../texk/texlive/ac/withenable.ac \
@@ -930,8 +929,10 @@ $(CONFIG_AUX):
 
 # Special target to run TRIP and TRAP tests and create diffs.
 .PHONY: triptrap
-triptrap:
+triptrap: web2c/Makefile
 	cd web2c && $(MAKE) $(AM_MAKEFLAGS) $@
+web2c/Makefile:
+	$(MAKE) $(AM_MAKEFLAGS) CONF_SUBDIRS=web2c subtexk
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

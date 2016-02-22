@@ -14,7 +14,7 @@
  *	With the -v option you get some information about what the 
  *	program is doing.
  * AUTHOR
- *	Piet Tutelaers
+ *	Piet Tutelaers (rcpt@urc.tue.nl)
  */
 
 #include "basics.h"	/* basic definitions and fatal() */
@@ -45,14 +45,11 @@ int main (int argc, char *argv[])
       	 case 'v':
       	    verbose = 1; break;
       	 default:
-      	    fatal("%s: %c invalid option\n", myname, c);
+      	    fatal("%s: %c illegal option\n", myname, c);
       	 }
       }
 
-   if (argc < 1) {
-     msg  ("pfb2pfa (ps2pk) version " PACKAGE_VERSION "\n");
-     fatal("Usage: %s [-v] pfbfile [pfafile]\n", myname);
-   }
+   if (argc < 1) fatal("Usage: %s [-v] pfbfile [pfafile]\n", myname);
    
    pfbname = argv[0]; argc--; argv++;
    if (argc < 1) pfaname = newname(pfbname, ".pfa");

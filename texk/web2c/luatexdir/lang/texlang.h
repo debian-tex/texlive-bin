@@ -1,5 +1,5 @@
 /* texlang.h
-
+   
    Copyright 2009 Taco Hoekwater <taco@luatex.org>
 
    This file is part of LuaTeX.
@@ -38,7 +38,6 @@ struct tex_language {
     int post_hyphen_char;
     int pre_exhyphen_char;
     int post_exhyphen_char;
-    int hyphenation_min;
 };
 
 #  define MAX_WORD_LEN 65536      /* in chars */
@@ -53,7 +52,7 @@ extern int hyphenate_string(struct tex_language *lang, char *w, char **ret);
 extern void new_hyphenation(halfword h, halfword t);
 extern void clear_patterns(struct tex_language *lang);
 extern void clear_hyphenation(struct tex_language *lang);
-extern const char *clean_hyphenation(int id, const char *buffer, char **cleaned);
+extern const char *clean_hyphenation(const char *buffer, char **cleaned);
 extern void hnj_hyphenation(halfword head, halfword tail);
 
 extern void set_pre_hyphen_char(int lan, int val);
@@ -65,10 +64,6 @@ extern void set_pre_exhyphen_char(int lan, int val);
 extern void set_post_exhyphen_char(int lan, int val);
 extern int get_pre_exhyphen_char(int lan);
 extern int get_post_exhyphen_char(int lan);
-
-extern void set_hyphenation_min(int lan, int val);
-extern int get_hyphenation_min(int lan);
-
 extern halfword compound_word_break(halfword t, int clang);
 
 extern void dump_language_data(void);
@@ -81,8 +76,6 @@ extern void new_pre_hyphen_char(void);
 extern void new_post_hyphen_char(void);
 extern void new_pre_exhyphen_char(void);
 extern void new_post_exhyphen_char(void);
-extern void new_hyphenation_min(void);
-extern void new_hj_code(void);
 
 
 #endif

@@ -114,7 +114,6 @@ dvipng
 dvipos
 dvipsk
 dvisvgm
-gregorio
 gsftopk
 lcdf-typetools
 makeindexk
@@ -127,7 +126,6 @@ seetexk
 tex4htk
 ttf2pk2
 ttfdump
-upmendex
 xdvik
 texlive
 ])]) # KPSE_TEXK_PKGS

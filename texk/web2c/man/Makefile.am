@@ -1,6 +1,6 @@
 ## Makefile.am for the TeX Live subdirectory texk/web2c/man/
 ##
-## Copyright (C) 2009-2015 Peter Breitenlohner <tex-live@tug.org>
+## Copyright (C) 2009-2014 Peter Breitenlohner <tex-live@tug.org>
 ## You may freely use, modify and/or distribute this file.
 ##
 man_sources = $(bootstrap_man_sources)
@@ -20,13 +20,11 @@ web_man_sources = bibtex.man dvicopy.man dvitomp.man dvitype.man gftodvi.man \
 
 if TEX
 man_sources += tex.man
-man1_links += tex:initex
 endif TEX
 EXTRA_DIST += tex.man
 
 if MF
 man_sources += mf.man
-man1_links += mf:inimf
 if MFN
 man1_links += mf:mf-nowin
 endif MFN
@@ -89,5 +87,13 @@ install-data-hook: install-man1-links
 
 uninstall-hook: uninstall-man1-links
 
+## Obsolete ?
+##
 EXTRA_DIST += \
-	spell.add
+	amslatex.min \
+	initex.min \
+	lamstex.min \
+	slitex.min \
+	spell.add \
+	virtex.min
+

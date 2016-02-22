@@ -39,7 +39,6 @@ man1_MANS = \
 dist_check_SCRIPTS = detex.test
 
 TESTS = detex.test
-detex.log: detex$(EXEEXT)
 
 EXTRA_DIST += test.lout test.tex test.tout
 

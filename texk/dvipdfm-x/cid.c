@@ -1,6 +1,6 @@
 /* This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
 
-    Copyright (C) 2002-2016 by Jin-Hwan Cho and Shunsaku Hirata,
+    Copyright (C) 2002-2014 by Jin-Hwan Cho and Shunsaku Hirata,
     the dvipdfmx project team.
     
     This program is free software; you can redistribute it and/or modify
@@ -109,7 +109,7 @@ static void release_opt (cid_opt *opt);
 static CIDSysInfo *get_cidsysinfo (const char *map_name, fontmap_opt *fmap_opt);
 
 static int   __verbose   = 0;
-static int   cidoptflags = 0;
+static long  cidoptflags = 0;
 
 void
 CIDFont_set_verbose (void)
@@ -127,7 +127,7 @@ CIDFont_require_version (void)
 }
 #endif
 
-static CIDFont *
+CIDFont *
 CIDFont_new (void)
 {
   CIDFont *font = NULL;
@@ -159,7 +159,7 @@ CIDFont_new (void)
 }
 
 /* It does write PDF objects. */
-static void
+void
 CIDFont_flush (CIDFont *font)
 {
   if (font) {
@@ -172,7 +172,7 @@ CIDFont_flush (CIDFont *font)
   }
 }
 
-static void
+void
 CIDFont_release (CIDFont *font)
 {
   if (font) {
@@ -522,7 +522,7 @@ static struct FontCache *__cache   = NULL;
                            ERROR("%s: Invalid ID %d", CIDFONT_DEBUG_STR, (n));\
                     } while (0)
 
-static void
+void
 CIDFont_cache_init (void)
 {
   if (__cache)
@@ -799,7 +799,7 @@ get_cidsysinfo (const char *map_name, fontmap_opt *fmap_opt)
 }
 
 void
-CIDFont_set_flags (int flags)
+CIDFont_set_flags (long flags)
 {
   CIDFont_type0_set_flags(flags);
   CIDFont_type2_set_flags(flags);

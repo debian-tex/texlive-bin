@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-# $Id: fmtutil.pl 39056 2015-12-08 23:55:42Z karl $
+# $Id: fmtutil.pl 37485 2015-05-23 16:52:36Z karl $
 # fmtutil - utility to maintain format files.
 # (Maintained in TeX Live:Master/texmf-dist/scripts/texlive.)
 # 
@@ -24,11 +24,12 @@ BEGIN {
   TeX::Update->import();
 }
 
-my $svnid = '$Id: fmtutil.pl 39056 2015-12-08 23:55:42Z karl $';
-my $lastchdate = '$Date: 2015-12-09 00:55:42 +0100 (Wed, 09 Dec 2015) $';
+
+my $svnid = '$Id: fmtutil.pl 37485 2015-05-23 16:52:36Z karl $';
+my $lastchdate = '$Date: 2015-05-23 18:52:36 +0200 (Sat, 23 May 2015) $';
 $lastchdate =~ s/^\$Date:\s*//;
 $lastchdate =~ s/ \(.*$//;
-my $svnrev = '$Revision: 39056 $';
+my $svnrev = '$Revision: 37485 $';
 $svnrev =~ s/^\$Revision:\s*//;
 $svnrev =~ s/\s*\$$//;
 my $version = "r$svnrev ($lastchdate)";
@@ -39,11 +40,18 @@ use File::Basename;
 use File::Copy;
 use Cwd;
 
+
+#
 # don't import anything automatically, this requires us to explicitly
 # call functions with TeXLive::TLUtils prefix, and makes it easier to
 # find and if necessary remove references to TLUtils
 use TeXLive::TLUtils qw();
 
+#use Data::Dumper;
+#$Data::Dumper::Indent = 1;
+
+
+#
 # numerical constants
 my $FMT_NOTSELECTED = 0;
 my $FMT_DISABLED    = 1;
@@ -89,12 +97,20 @@ our $texmfconfig = $TEXMFCONFIG;
 our $texmfvar    = $TEXMFVAR;
 our $alldata;
 our %opts = ( quiet => 0 );
-
-# make a list of all the commands (as opposed to options), so we can
-# reasonably check for multiple commands being (erroneously) given.
-my @cmdline_cmds = (  # in same order as help message
+our @cmdline_options = (
+  "sys",
+  "cnffile=s@", 
+  "fmtdir=s",
+  "no-engine-subdir",
+  "no-error-if-no-engine=s",
+  "no-error-if-no-format",
+  "quiet|silent|q",
+  "test",
+  "dolinks",
+  "force",
   "all",
   "missing",
+  "nohash",
   "refresh",
   "byengine=s",
   "byfmt=s",
@@ -102,44 +118,24 @@ my @cmdline_cmds = (  # in same order as help message
   "enablefmt=s",
   "disablefmt=s",
   "listcfg",
-  "showhyphen=s",
-);
-
-our @cmdline_options = (  # in same order as help message
-  "sys",
-  "cnffile=s@", 
-  "fmtdir=s",
-  "no-engine-subdir",
-  "no-error-if-no-engine=s",
-  "no-error-if-no-format",
-  "nohash",
-  "recorder",
-  "strict",
-  "quiet|silent|q",
   "catcfg",
-  "dolinks",
-  "force",
-  "test",
-#
-  @cmdline_cmds,
+  "showhyphen=s",
+  "edit",
   "version",
   "help|h",
-#
-  "edit",		# omitted from help to discourage use
-  "_dumpdata",		# omitted from help, data structure dump for debugging
+  "strict",
+  "_dumpdata",
   );
 
 my $updLSR;
 my $mktexfmtMode = 0;
-# make sure we echo only *one* line in mktexfmt mode
+# make sure we only echo out *one* line in mktexfmt mode
 my $mktexfmtFirst = 1;
 
-my $status = &main();
-print_info("exiting with status $status\n");
-exit $status;
+&main();
 
+###############
 
-# 
 sub main {
   if ($prg eq "mktexfmt") {
     # mktexfmtMode: if called as mktexfmt, set to true. Will echo the
@@ -147,9 +143,9 @@ sub main {
     # (and nothing else), since kpathsea can only deal with one.
     $mktexfmtMode = 1;
     GetOptions ( "help" => \$opts{'help'}, "version" => \$opts{'version'} )
-        or die "Unknown option in mktexfmt command line arguments\n";
+        or die "Unknown option in command line arguments\n";
     if ($ARGV[0]) {
-      if ($ARGV[0] =~ m/^(.*)\.(fmt|mem|base?)$/) {
+      if ($ARGV[0] =~ m/^(.*)\.(fmt|mem|base)$/) {
         $opts{'byfmt'} = $1;
       } elsif ($ARGV[0] =~ m/\./) {
         die "unknown format type: $ARGV[0]";
@@ -157,63 +153,43 @@ sub main {
         $opts{'byfmt'} = $ARGV[0];
       }
     } else {
-      die "missing argument to mktexfmt";
+      die "missing argument to mktexmft";
     }
   } else {
-    # fmtutil mode.
-    GetOptions(\%opts, @cmdline_options)
-      || die "Try \"$prg --help\" for more information.\n";
-    if (@ARGV) {
-      die "$0: Unexpected non-option argument(s): @ARGV\n"
-          . "Try \"$prg --help\" for more information.\n";
-    }
-  }
-
-  help() if $opts{'help'};
-  if ($opts{'version'}) {
-    print version();
-    exit 0;  # no final print_info
-  }
-
-  { # if two commands were given, complain and give up.
-    my @cmds = ();
-    for my $c (@cmdline_cmds) {
-      $c =~ s,=.*$,,;                       # remove =s getopt spec
-      push(@cmds, $c) if exists $opts{$c};  # remember if getopt found it
-      # we could save/report the specified arg too, but maybe not worth it.
-    }
-    if (@cmds > 1) {
-      print_error("multiple commands found: @cmds\n"
-                  . "Try $prg --help if you need it.\n");
-      return 1;
-    } elsif (@cmds == 0) {
-      print_error("no command specified; try $prg --help if you need it.\n");
-      return 1;
-    }
+    GetOptions(\%opts, @cmdline_options) or 
+        die "Try \"$prg --help\" for more information.\n";
   }
   
-  # these two functions should go to TLUtils (for use in updmap)
+  help() if $opts{'help'};
+
+  if ($opts{'version'}) {
+    print version();
+    exit (0);
+  }
+
+
+  # these two functions should go to TLUtils!
   check_hidden_sysmode();
   determine_config_files("fmtutil.cnf");
   my $changes_config_file = $alldata->{'changes_config'};
-  # we do changes always in the used config file with the highest priority
+
+  read_fmtutil_files(@{$opts{'cnffile'}});
+
+  # we do changes always in the used config file with the highest
+  # priority
   my $bakFile = $changes_config_file;
   $bakFile =~ s/\.cfg$/.bak/;
   my $changed = 0;
 
-  read_fmtutil_files(@{$opts{'cnffile'}});
-
-  unless ($opts{"nohash"}) {
-    # should be replaced by new mktexlsr perl version
-    $updLSR = new TeX::Update;
-    $updLSR->mustexist(0);
-  }
+  # should be replaces by new mktexlsr perl version
+  $updLSR = new TeX::Update;
+  $updLSR->mustexist(0);
 
   my $cmd;
   if ($opts{'edit'}) {
     if ($opts{"dry-run"}) {
       printf STDERR "No, are you joking, you want to edit with --dry-run?\n";
-      return 1;
+      exit 1;
     }
     # it's not a good idea to edit fmtutil.cnf manually these days,
     # but for compatibility we'll silently keep the option.
@@ -228,7 +204,6 @@ sub main {
     }
     system($editor, $changes_config_file);
     $changed = files_are_different($bakFile, $changes_config_file);
-
   } elsif ($opts{'showhyphen'}) {
     my $f = $opts{'showhyphen'};
     if ($alldata->{'merged'}{$f}) {
@@ -236,7 +211,7 @@ sub main {
       for my $e (sort @all_engines) {
         my $hf = $alldata->{'merged'}{$f}{$e}{'hyphen'};
         next if ($hf eq '-');
-        my $ff = `kpsewhich -progname='$f' -format=tex '$hf'`;
+        my $ff = `kpsewhich -progname=$f -format=tex $hf`;
         chomp($ff);
         if ($ff ne "") {
           if ($#all_engines > 0) {
@@ -244,57 +219,48 @@ sub main {
           }
           printf "$ff\n";
         } else {
-          print_warning("hyphenfile (for $f/$e) not found: $hf\n");
-          return 1;
+          print_warning("hyphenfile $hf (for $f/$e) not found!\n");
+          abort();
         }
       }
     }
-
+  } elsif ($opts{'catcfg'}) {
+    print_warning("--catcfg command not supported anymore!\n");
+    exit(1);
   } elsif ($opts{'listcfg'}) {
-    return callback_list_cfg();
-
+    print_warning("--listcfg currently not implemented, be patient!\n");
+    exit(1);
   } elsif ($opts{'disablefmt'}) {
     return callback_enable_disable_format($changes_config_file, 
-                                          $opts{'disablefmt'}, 'disabled');
+                                          $opts{'enablefmt'}, 'disabled');
   } elsif ($opts{'enablefmt'}) {
     return callback_enable_disable_format($changes_config_file, 
                                           $opts{'enablefmt'}, 'enabled');
+  } elsif ($opts{'byfmt'}) {
+    return callback_build_formats('byfmt', $opts{'byfmt'});
   } elsif ($opts{'byengine'}) {
     return callback_build_formats('byengine', $opts{'byengine'});
-
-  } elsif ($opts{'byfmt'}) {
-    # for this option, allow/ignore an extension.
-    (my $fmtname = $opts{'byfmt'}) =~ s,\.(fmt|mem|base?)$,,;
-    return callback_build_formats('byfmt', $fmtname);
-
   } elsif ($opts{'byhyphen'}) {
     return callback_build_formats('byhyphen', $opts{'byhyphen'});
-
   } elsif ($opts{'refresh'}) {
     return callback_build_formats('refresh');
-
   } elsif ($opts{'missing'}) {
     return callback_build_formats('missing');
-
   } elsif ($opts{'all'}) {
     return callback_build_formats('all');
-
   } elsif ($opts{'_dumpdata'}) {
     dump_data();
-
+    exit(0);
   } else {
-    # redundant with check above, but just in case ...
-    print_error("missing command; try $prg --help if you need it.\n");
-    return 1;
+    print_error("missing command; try fmtutil --help if you need it.\n");
+    exit(1);
   }
 
-  unless ($opts{'nohash'}) {
-    # TODO should only do this if built something, e.g., not --listcfg
-    print_info("updating ls-R files\n");
+  if (!$opts{'nohash'}) {
+    print "$prg: Updating ls-R files.\n" if !$opts{'quiet'};
     $updLSR->exec() unless $opts{"dry-run"};
   }
 
-  # some simpler options 
   return 0;
 }
 
@@ -306,14 +272,17 @@ sub dump_data {
 }
 
 
-#  callback_build_formats - (re)builds the formats as selected,
-# returns exit status or dies.  Exit status is always zero unless
-# --strict is specified, in which case it's the number of failed builds
-# (presumably always less than 256 :).
-#
+# build_formats
+# (re)builds the formats as selected
+
 sub callback_build_formats {
   my ($what, $whatarg) = @_;
-
+  my $suc = 0;
+  my $err = 0;
+  my $disabled = 0;
+  my $nobuild = 0;
+  my $notavail = 0;
+  #
   # set up a tmp dir
   # On W32 it seems that File::Temp creates restrictive permissions (ok)
   # that are copied over with the files created inside it (not ok).
@@ -337,18 +306,17 @@ sub callback_build_formats {
     $tmpdir = File::Temp::tempdir(CLEANUP => 1);
   }
   # set up destination directory
-  $opts{'fmtdir'} ||= "$texmfvar/web2c";
+  $opts{'fmtdir'} || ( $opts{'fmtdir'} = "$texmfvar/web2c" ) ;
   TeXLive::TLUtils::mkdirhier($opts{'fmtdir'}) if (! -d $opts{'fmtdir'});
   if (! -w $opts{'fmtdir'}) {
-    print_error("format directory not writable: $opts{fmtdir}\n");
-    exit 1;
+    print_error("format directory \`" . $opts{'fmtdir'} ."' is not writable\n");
+    exit (1);
   }
   # since the directory does not exist, we can make it absolute with abs_path
   # without any trickery around non-existing dirs
   $opts{'fmtdir'} = Cwd::abs_path($opts{'fmtdir'});
   # for safety, check again
-  die "abs_path failed, strange: $!" if !$opts{'fmtdir'};
-  print_info("writing formats under $opts{fmtdir}\n"); # report
+  die ("abs_path didn't succeed, that is strange: $?") if !$opts{'fmtdir'};
    
   # code taken over from the original shell script for KPSE_DOT etc
   my $thisdir = cwd();
@@ -356,89 +324,68 @@ sub callback_build_formats {
 
   # due to KPSE_DOT, we don't search the current directory, so include
   # it explicitly for formats that \write and later on \read
-  $ENV{'TEXINPUTS'} ||= "";
-  $ENV{'TEXINPUTS'} = "$tmpdir$sep$ENV{TEXINPUTS}";
-  #
+  $ENV{'TEXINPUTS'} = "$tmpdir$sep" . ($ENV{'TEXINPUTS'} ? $ENV{'TEXINPUTS'} : "");
   # for formats that load other formats (e.g., jadetex loads latex.fmt),
   # add the current directory to TEXFORMATS, too.  Currently unnecessary
   # for MFBASES and MPMEMS.
-  $ENV{'TEXFORMATS'} ||= "";
-  $ENV{'TEXFORMATS'} = "$tmpdir$sep$ENV{TEXFORMATS}";
+  $ENV{'TEXFORMATS'} = "$tmpdir$sep" . ($ENV{'TEXFORMATS'} ? $ENV{'TEXFORMATS'} : "");
 
+  #
   # switch to temporary directory for format generation
-  chdir($tmpdir) || die "Cannot change to directory $tmpdir: $!";
+  chdir($tmpdir) || die("Cannot change to directory $tmpdir: $?");
   
   # we rebuild formats in two rounds:
   # round 1: only formats with the same name as engine (pdftex/pdftex)
   # round 2: all other formats
   # reason: later formats might need earlier formats to be already
-  # initialized, e.g., xmltex.
-  my $suc = 0;
-  my $err = 0;
-  my @err = ();
-  my $disabled = 0;
-  my $nobuild = 0;
-  my $notavail = 0;
-  my $total = 0;
+  # initialized (xmltex is one of these examples AFAIR)
+  my $val;
   for my $fmt (keys %{$alldata->{'merged'}}) {
     for my $eng (keys %{$alldata->{'merged'}{$fmt}}) {
       next if ($fmt ne $eng);
-      $total++;
-      my $val = select_and_rebuild_format($fmt, $eng, $what, $whatarg);
-      if ($val == $FMT_DISABLED)    { $disabled++; }
+      $val = select_and_rebuild_format($fmt, $eng, $what, $whatarg);
+      if ($val == $FMT_DISABLED) { $disabled++; }
       elsif ($val == $FMT_NOTSELECTED) { $nobuild++; }
-      elsif ($val == $FMT_FAILURE)  { $err++; push (@err, "$eng/$fmt"); }
+      elsif ($val == $FMT_FAILURE) { $err++; }
       elsif ($val == $FMT_SUCCESS)  { $suc++; }
       elsif ($val == $FMT_NOTAVAIL) { $notavail++; }
-      else { print_error("callback_build_format (round 1): unknown return "
-             . "from select_and_rebuild.\n"); }
+      else { print_error("callback_build_format: unknown return from select_and_rebuild.\n"); }
     }
   }
   for my $fmt (keys %{$alldata->{'merged'}}) {
     for my $eng (keys %{$alldata->{'merged'}{$fmt}}) {
       next if ($fmt eq $eng);
-      $total++;
-      my $val = select_and_rebuild_format($fmt, $eng, $what, $whatarg);
-      if ($val == $FMT_DISABLED)    { $disabled++; }
+      $val = select_and_rebuild_format($fmt, $eng, $what, $whatarg);
+      if ($val == $FMT_DISABLED) { $disabled++; }
       elsif ($val == $FMT_NOTSELECTED) { $nobuild++; }
-      elsif ($val == $FMT_FAILURE)  { $err++; push (@err, "$eng/$fmt"); }
+      elsif ($val == $FMT_FAILURE) { $err++; }
       elsif ($val == $FMT_SUCCESS)  { $suc++; }
       elsif ($val == $FMT_NOTAVAIL) { $notavail++; }
-      else { print_error("callback_build_format (round 2): unknown return "
-             . "from select_and_rebuild.\n"); }
+      else { print_error("callback_build_format: unknown return from select_and_rebuild.\n"); }
     }
-  }
-
-  # if the user asked to rebuild something, but we did nothing, report.
-  if ($err + $suc == 0) {
-    print_info("did not find entry for $what=$whatarg, skipped\n");
   }
   my $stdo = ($mktexfmtMode ? \*STDERR : \*STDOUT);
   for (@deferred_stdout) { print $stdo $_; }
   for (@deferred_stderr) { print STDERR $_; }
-  #
-  print_info("Disabled formats: $disabled\n")        if ($disabled);
-  print_info("Successfully rebuilt formats: $suc\n") if ($suc);
-  print_info("Not selected formats: $nobuild\n")     if ($nobuild);
-  print_info("Not available formats: $notavail\n")   if ($notavail);
-  print_info("Failed to build: $err (@err)\n")       if ($err);
-  print_info("Total formats: $total\n");
-  chdir($thisdir) || warn "chdir($thisdir) failed: $!";
+  print_info("Disabled formats: $disabled\n") if ($disabled);
+  print_info("Successfully rebuild formats: $suc\n") if ($suc);
+  print_info("Not selected formats: $nobuild\n") if ($nobuild);
+  print_info("Not available formats: $notavail\n") if ($notavail);
+  print_info("Failure during builds: $err\n") if ($err);
+  chdir($thisdir) || warn("chdir($thisdir) failed: $!");
   if (win32()) {
     # try to remove the tmpdir with all files
     TeXLive::TLUtils::rmtree($tmpdir);
   }
-   # return 
-  return $opts{"strict"} ? $err : 0;
+  return 0;
 }
 
-#  select_and_rebuild_format
+# select_and_rebuild_format
 # check condition and rebuild the format if selected
 # return values: $FMT_*
-# 
 sub select_and_rebuild_format {
   my ($fmt, $eng, $what, $whatarg) = @_;
-  return $FMT_DISABLED
+  return($FMT_DISABLED) 
       if ($alldata->{'merged'}{$fmt}{$eng}{'status'} eq 'disabled');
   my $doit = 0;
   # we just identify 'all', 'refresh', 'missing'
@@ -449,8 +396,8 @@ sub select_and_rebuild_format {
   $doit = 1 if ($what eq 'byengine' && $eng eq $whatarg);
   $doit = 1 if ($what eq 'byfmt' && $fmt eq $whatarg);
   # TODO
-  # original fmtutil.sh was stricter about existence of the hyphen file
-  # not sure how we proceed here; let's implicitly ignore.
+  # original fmtutil.sh was more strict about existence of the hyphen file
+  # not sure how we proceed here
   $doit = 1 if ($what eq 'byhyphen' &&
                 $whatarg eq 
                 (split(/,/ , $alldata->{'merged'}{$fmt}{$eng}{'hyphen'}))[0]);
@@ -461,13 +408,11 @@ sub select_and_rebuild_format {
   }
 }
 
-#  rebuild_one_format
+# rebuild_one_format
 # takes fmt/eng and rebuilds it, irrelevant of any setting
-# return value FMT_*
-#
+# return value FMT_
 sub rebuild_one_format {
   my ($fmt, $eng) = @_;
-  print_info("--- remaking $fmt with $eng\n");
 
   # get variables
   my $hyphen  = $alldata->{'merged'}{$fmt}{$eng}{'hyphen'};
@@ -477,7 +422,6 @@ sub rebuild_one_format {
   my $texengine;
   my $jobswitch = "-jobname=$fmt";
   my $prgswitch = "-progname=" ;
-  my $recorderswitch = ($opts{'recorder'} ? "-recorder" : "");
   my $fmtfile = $fmt;
   my $kpsefmt;
   my $pool;
@@ -487,6 +431,7 @@ sub rebuild_one_format {
   my $texargs;
 
   unlink glob "*.pool";
+
 
   # addargs processing:
   # can contain:
@@ -505,7 +450,7 @@ sub rebuild_one_format {
   if ($eng eq "mpost") { 
     $fmtfile .= ".mem" ; 
     $kpsefmt = "mp" ; 
-    $texengine = "metapost"; # the directory, not the executable
+    $texengine = "metapost";
   } elsif ($eng =~ m/^mf(w|-nowin)?$/) {
     $fmtfile .= ".base" ; 
     $kpsefmt = "mf" ; 
@@ -540,15 +485,14 @@ sub rebuild_one_format {
   if ($pool) {
     chomp ( my $poolfile = `kpsewhich -progname=$eng $pool.poo 2>$nul` );
     if ($poolfile && -f $poolfile) {
-      print_verbose("attempting to create localized format "
-                    . "using pool=$pool and tcx=$tcx.\n");
+      print_verbose ("attempting to create localized format using pool=$pool and tcx=$tcx.\n");
       File::Copy($poolfile, "$eng.pool");
       $tcxflag = "-translate-file=$tcx" if ($tcx);
       $localpool = 1;
     }
   }
 
-  # Check for infinite recursion before running the iniengine:
+  # Check for infinite recursion before running the iniTeX:
   # We do this check only if we are running in mktexfmt mode
   # otherwise double format definitions will create an infinite loop, too
   if ($mktexfmtMode) {
@@ -575,9 +519,7 @@ sub rebuild_one_format {
     }
   }
 
-  my $cmdline = "$eng -ini $tcxflag $recorderswitch $jobswitch "
-                  . "$prgswitch $texargs";
-  print_verbose("running \`$cmdline' ...\n");
+  print_verbose("running \`$eng -ini $tcxflag $jobswitch $prgswitch $texargs' ...\n");
 
   {
     my $texpool = $ENV{'TEXPOOL'};
@@ -585,16 +527,17 @@ sub rebuild_one_format {
       $ENV{'TEXPOOL'} = cwd() . $sep . ($texpool ? $texpool : "");
     }
 
-    # in mktexfmtMode we must redirect *all* output to stderr
+    # in mktexfmtMode we need to redirect *all* output to stderr
+    my $cmdline = "$eng  -ini $tcxflag $jobswitch $prgswitch $texargs";
     $cmdline .= " >&2" if $mktexfmtMode;
     $cmdline .= " <$nul";
     my $retval = system($cmdline);
     if ($retval != 0) {
       $retval /= 256 if ($retval > 0);
-      print_deferred_error("running \`$cmdline' return status $retval\n");
+      print_deferred_error("call to \`$eng -ini $tcxflag $jobswitch $prgswitch $texargs' returned error code $retval\n");
       #
       # original shell script did *not* check the return value
-      # we keep this behavior, but add an option --strict that
+      # we keep this behaviour, but add an option --strict that
       # errors out on all failures.
       if ($opts{'strict'}) {
         print_deferred_error("return error due to options --strict\n");
@@ -612,9 +555,10 @@ sub rebuild_one_format {
 
   }
 
+  #
   # check and install of fmt and log files
   if (! -f $fmtfile) {
-    print_deferred_error("\`$cmdline' failed (no $fmtfile)\n");
+    print_deferred_error("\`$eng -ini $tcxflag $jobswitch $prgswitch $texargs' failed\n");
     return $FMT_FAILURE;
   }
 
@@ -623,12 +567,11 @@ sub rebuild_one_format {
     return $FMT_FAILURE;
   }
 
-  open (LOGFILE, "<$fmt.log")
-    || print_deferred_warning("cannot open $fmt.log, strange: $!\n");
+  open LOGFILE, "<$fmt.log" || print_deferred_warning("cannot open $fmt.log?\n");
   my @logfile = <LOGFILE>;
   close LOGFILE;
   if (grep(/^!/, @logfile) > 0) {
-    print_deferred_error("\`$cmdline' had errors.\n");
+    print_deferred_error("\`$eng -ini $tcxflag $jobswitch $prgswitch $texargs' had errors.\n");
   }
 
   my $fulldestdir;
@@ -641,15 +584,6 @@ sub rebuild_one_format {
   
   if (!File::Copy::move( "$fmt.log", "$fulldestdir/$fmt.log")) {
     print_deferred_error("Cannot move $fmt.log to $fulldestdir.\n");
-  }
-  if ($opts{'recorder'}) {
-    # the recorder output is used by check-fmttriggers to determine
-    # package dependencies for each format.  Unfortunately omega-based
-    # engines gratuitiously changed the extension from .fls to .ofl.
-    my $recfile = $fmt . ($fmt =~ m/^(aleph|lamed)$/ ? ".ofl" : ".fls");
-    if (!File::Copy::move( $recfile, "$fulldestdir/$recfile")) {
-      print_deferred_error("Cannot move $recfile to $fulldestdir.\n");
-    }
   }
 
   my $destfile = "$fulldestdir/$fmtfile";
@@ -678,7 +612,7 @@ sub rebuild_one_format {
     #      if cp "$destfile" "$mplib_mem_file" </dev/null; then
     #        mktexupd "$fulldestdir" "$mplib_mem_name"
     #      else
-    #        # failure to copy merits failure handling: e.g., full file system.
+	  #  # failure to copy merits failure handling: e.g., full file system.
     #        log_failure "cp $destfile $mplib_mem_file failed."
     #      fi
     #    else
@@ -691,31 +625,27 @@ sub rebuild_one_format {
       $mktexfmtFirst = 0;
     }
 
-    unless ($opts{'nohash'}) {
-      $updLSR->add($destfile);
-      $updLSR->exec();
-      $updLSR->reset();
-    }
+    $updLSR->add($destfile);
+    $updLSR->exec();
+    $updLSR->reset();
 
     return $FMT_SUCCESS;
-
   } else {
     print_deferred_error("Cannot move $fmtfile to $destfile.\n");
     if (-f $destfile) {
-      # remove the empty file possibly left over if near-full file system.
-      print_verbose("Removing partial file after move failure: $destfile\n");
-      unlink($destfile)
-        || print_deferred_error("unlink($destfile) failed: $!\n");
+      # remove the empty file possibly left over if a near-full file system.
+      print_verbose("Removing partial file $destfile after move failure ...\n");
+      unlink($destfile) || print_deferred_error("Removing $destfile failed.\n");
     }
     return $FMT_FAILURE;
   }
 
-  print_deferred_error("we should not be here! $fmt/$eng\n");
+  print_deferred_error("we should not be here $fmt/$eng\n");
   return $FMT_FAILURE;
 }
 
 
-# 
+#
 # enable_disable_format_engine
 # assumes that format/engine is already defined somewhere,
 # i.e., it $alldata->{'merged'}{$fmt}{$eng} is defined
@@ -735,19 +665,19 @@ sub enable_disable_format_engine {
       my $origin = $alldata->{'merged'}{$fmt}{$eng}{'origin'};
       if ($origin ne $tc) {
         $alldata->{'fmtutil'}{$tc}{'formats'}{$fmt}{$eng} =
-          {%{$alldata->{'fmtutil'}{$origin}{'formats'}{$fmt}{$eng}}};
-        $alldata->{'fmtutil'}{$tc}{'formats'}{$fmt}{$eng}{'line'} = -1;
+          {%{$alldata->{'fmtutil'}{$origin}{'formats'}{$fmt}{$eng}}}
       }
       $alldata->{'fmtutil'}{$tc}{'formats'}{$fmt}{$eng}{'status'} = $mode;
-      $alldata->{'fmtutil'}{$tc}{'changed'} = 1;
+      $alldata->{'fmtutil'}{$tc}{'formats'}{$fmt}{$eng}{'line'} = -1;
+      $alldata->{'fmtutil'}{$tc}{'formats'}{$fmt}{$eng}{'changed'} = 1;
       $alldata->{'merged'}{$fmt}{$eng}{'status'} = $mode;
       $alldata->{'merged'}{$fmt}{$eng}{'origin'} = $tc;
-      # dump_data();
+      dump_data();
       return save_fmtutil($tc);
     }
   } else {
     print_error("enable_disable_format_engine: unknown mode $mode\n");
-    exit 1;
+    exit(1);
   }
 }  
 
@@ -777,7 +707,7 @@ sub callback_enable_disable_format {
     if ($alldata->{'merged'}{$fmt}{$eng}) {
       return enable_disable_format_engine($tc, $fmt, $eng, $mode);
     } else {
-      print_warning("Format/engine combination $fmt/$eng is not defined.\n");
+      print_warning("Format/engine combination: $fmt/$eng is not defined.\n");
       print_warning("Cannot (de)activate it.\n");
       return -1;
     }
@@ -786,13 +716,8 @@ sub callback_enable_disable_format {
     if ($alldata->{'merged'}{$fmt}) {
       my @engs = keys %{$alldata->{'merged'}{$fmt}};
       if (($#engs > 0) || ($#engs == -1)) {
-        print_warning("Selected format $fmt not uniquely defined;\n");
-        print_warning("possible format/engine combinations:\n");
-        for my $e (@engs) {
-          print_warning("  $fmt/$e (currently "
-                        . $alldata->{'merged'}{$fmt}{$e}{'status'} . ")\n");
-        }
-        print_warning("Please select one by fully specifying $fmt/ENGINE\n");
+        print_warning("More engines given for format $fmt.\n");
+        print_warning("Please specify one of the engines: @engs\n");
         print_warning("No changes done.\n");
         return 0;
       } else {
@@ -800,45 +725,19 @@ sub callback_enable_disable_format {
         return enable_disable_format_engine($tc, $fmt, $engs[0], $mode);
       }
     } else {
-      print_warning("Format $fmt is not defined;\n");
-      print_warning("cannot (de)activate it.\n");
+      print_warning("Format $fmt is not defined.\n");
+      print_warning("Cannot (de)activate it.\n");
       return -1;
     }
   }
 }
 
-
-sub callback_list_cfg {
-  my @lines;
-  for my $f (keys %{$alldata->{'merged'}}) {
-    for my $e (keys %{$alldata->{'merged'}{$f}}) {
-      my $orig = $alldata->{'merged'}{$f}{$e}{'origin'};
-      my $hyph = $alldata->{'merged'}{$f}{$e}{'hyphen'};
-      my $stat = $alldata->{'merged'}{$f}{$e}{'status'};
-      my $args = $alldata->{'merged'}{$f}{$e}{'args'};
-      push @lines,
-        [ "$f/$e/$hyph",
-          "$f (engine=$e) $stat\n  hyphen=$hyph, args=$args\n  origin=$orig\n" ];
-    }
-  }
-  # sort lines
-  @lines = map { $_->[1] } sort { $a->[0] cmp $b->[0] } @lines;
-  print "List of all formats:\n";
-  print @lines;
-}
-
-
-# sets %alldata.
-# 
 sub read_fmtutil_files {
   my (@l) = @_;
   for my $l (@l) { read_fmtutil_file($l); }
   # in case the changes_config is a new one read it in and initialize it here
-  # the file might be already readable but not in ls-R so not found by
-  # kpsewhich. That means we need to check that it is readable and whether
-  # the lines entry is already defined
   my $cc = $alldata->{'changes_config'};
-  if ((! -r $cc) || (!$alldata->{'fmtutil'}{$cc}{'lines'}) ) {
+  if (! -r $cc) {
     $alldata->{'fmtutil'}{$cc}{'lines'} = [ ];
   }
   #
@@ -861,11 +760,11 @@ sub read_fmtutil_files {
   }
 }
 
-# 
 sub read_fmtutil_file {
   my $fn = shift;
-  open(FN, "<$fn") || die "Cannot read $fn: $!";
-  #
+  if (!open(FN,"<$fn")) {
+    die ("Cannot read $fn: $!");
+  }
   # we count lines from 0 ..!!!!
   my $i = -1;
   my @lines = <FN>;
@@ -898,8 +797,7 @@ sub read_fmtutil_file {
     } else {
       $alldata->{'fmtutil'}{$fn}{'formats'}{$a}{$b}{'hyphen'} = $c;
       $alldata->{'fmtutil'}{$fn}{'formats'}{$a}{$b}{'args'} = "@rest";
-      $alldata->{'fmtutil'}{$fn}{'formats'}{$a}{$b}{'status'}
-        = ($disabled ? 'disabled' : 'enabled');
+      $alldata->{'fmtutil'}{$fn}{'formats'}{$a}{$b}{'status'} = ($disabled ? 'disabled' : 'enabled');
       $alldata->{'fmtutil'}{$fn}{'formats'}{$a}{$b}{'line'} = $i;
     }
   }
@@ -907,9 +805,10 @@ sub read_fmtutil_file {
 
 
 
-# 
+#
 # FUNCTIONS THAT SHOULD GO INTO TLUTILS.PM
 # and also be reused in updmap.pl!!!
+#
 
 
 sub check_hidden_sysmode {
@@ -930,6 +829,8 @@ sub check_hidden_sysmode {
     }
   }
 
+
+
   if ($opts{'sys'}) {
     # we are running as updmap-sys, make sure that the right tree is used
     $texmfconfig = $TEXMFSYSCONFIG;
@@ -938,9 +839,6 @@ sub check_hidden_sysmode {
 }
 
 
-# sets global $alldata->{'changes_config'} to the config file to be
-# changed if requested.
-#
 sub determine_config_files {
   my $fn = shift;
 
@@ -1048,69 +946,6 @@ sub determine_config_files {
 
 
 
-# returns 1 if actually saved due to changes
-sub save_fmtutil {
-  my $fn = shift;
-  return if $opts{'dry-run'};
-  my %fmtf = %{$alldata->{'fmtutil'}{$fn}};
-  if ($fmtf{'changed'}) {
-    TeXLive::TLUtils::mkdirhier(dirname($fn));
-    open (FN, ">$fn") || die "$prg: can't write to $fn: $!";
-    my @lines = @{$fmtf{'lines'}};
-    if (!@lines) {
-      print_verbose ("Creating new config file $fn\n");
-      unless ($opts{"nohash"}) {
-        # update lsR database
-        $updLSR->add($fn);
-        $updLSR->exec();
-        $updLSR->reset();
-      }
-    }
-    # collect the lines with data
-    my %line_to_fmt;
-    my @add_fmt;
-    if (defined($fmtf{'formats'})) {
-      for my $f (keys %{$fmtf{'formats'}}) {
-        for my $e (keys %{$fmtf{'formats'}{$f}}) {
-          if ($fmtf{'formats'}{$f}{$e}{'line'} == -1) {
-            push @add_fmt, [ $f, $e ];
-          } else {
-            $line_to_fmt{$fmtf{'formats'}{$f}{$e}{'line'}} = [ $f, $e ];
-          }
-        }
-      }
-    }
-    for my $i (0..$#lines) {
-      if (defined($line_to_fmt{$i})) {
-        my $f = $line_to_fmt{$i}->[0];
-        my $e = $line_to_fmt{$i}->[1];
-        my $mode = $fmtf{'formats'}{$f}{$e}{'status'};
-        my $args = $fmtf{'formats'}{$f}{$e}{'args'};
-        my $hyph = $fmtf{'formats'}{$f}{$e}{'hyphen'};
-        my $p = ($mode eq 'disabled' ? "#! " : "");
-        print FN "$p$f $e $hyph $args\n";
-      } else {
-        print FN "$lines[$i]\n";
-      }
-    }
-    # add the new settings and maps
-    for my $m (@add_fmt) {
-      my $f = $m->[0];
-      my $e = $m->[1];
-      my $mode = $fmtf{'formats'}{$f}{$e}{'status'};
-      my $args = $fmtf{'formats'}{$f}{$e}{'args'};
-      my $hyph = $fmtf{'formats'}{$f}{$e}{'hyphen'};
-      my $p = ($mode eq 'disabled' ? "#! " : "");
-      print FN "$p$f $e $hyph $args\n";
-    }
-    close(FN) || warn("$prg: Cannot close file handle for $fn: $!");
-    delete $alldata->{'fmtutil'}{$fn}{'changed'};
-    return 1;
-  }
-  return 0;
-}
-
-
 #
 # $HOME and sudo and updmap-sys horror
 #   some instances of sudo do not reset $HOME to the home of root
@@ -1149,11 +984,12 @@ sub reset_root_home {
   }
 }
 
+#
 # printing to stdout (in mktexfmtMode also going to stderr!)
-#   print_info    can be suppressed with --quiet
+#   print_info    can be supressed with --quiet
 #   print_verbose cannot be suppressed
 # printing to stderr
-#   print_warning can be suppressed with --quiet
+#   print_warning can be supressed with --quiet
 #   print_error   cannot be suppressed
 #
 sub print_info {
@@ -1203,7 +1039,7 @@ sub win32 {
 
 
 
-# version, help.
+# help, version.
 
 sub version {
   my $ret = sprintf "%s version %s\n", $prg, $version;
@@ -1216,55 +1052,48 @@ Usage: $prg     [OPTION] ... [COMMAND]
    or: $prg-sys [OPTION] ... [COMMAND]
    or: mktexfmt FORMAT.fmt|BASE.base|MEM.mem|FMTNAME.EXT
 
-Rebuild and manage TeX fmts, Metafont bases and MetaPost mems,
-collectively called "formats" here.
+Rebuild and manage TeX formats, Metafont bases and MetaPost mems.
 
 If the command name ends in mktexfmt, only one format can be created.
 The only options supported are --help and --version, and the command
-line must be either a format name, with extension, or a plain name that
-is passed as the argument to --byfmt (see below).  The full name of the
-generated file (if any) is written to stdout, and nothing else.
+line must consist of either a format name, with its extension, or a
+plain name that is passed as the argument to --byfmt (see below).  The
+full name of the generated file (if any) is written to stdout, and
+nothing else.
 
-If not operating in mktexfmt mode, exactly one command must be given,
-extensions should generally not be specified, no non-option arguments
-are allowed, and multiple formats can be generated, as follows.
+If not operating in mktexfmt mode, the command line can be more general,
+and multiple formats can be generated, as follows.
 
 Options:
-  --sys                   use TEXMFSYS{VAR,CONFIG} instead of TEXMF{VAR,CONFIG}
-  --cnffile FILE          read FILE instead of fmtutil.cnf
-                           (can be given multiple times, in which case
-                           all the files are used)
-  --fmtdir DIR            write formats under DIR instead of TEXMF[SYS]VAR
-  --no-engine-subdir      don't use engine-specific subdir of the fmtdir
-  --no-error-if-no-format exit successfully if no format is selected
+  --cnffile FILE             read FILE instead of fmtutil.cnf
+                             (can be given multiple times, in which case
+                             all the files are used)
+  --fmtdir DIRECTORY
+  --no-engine-subdir         don't use engine-specific subdir of the fmtdir
+  --no-error-if-no-format    exit successfully if no format is selected
   --no-error-if-no-engine=ENGINE1,ENGINE2,...
-                          exit successfully even if a required engine
-                           is missing, if it is included in the list.
-  --nohash                don't update ls-R files
-  --recorder              pass the -recorder option and save .fls files
-  --strict                exit with bad status if a format fails to build
-  --quiet                 be silent
-  --catcfg                (does nothing, exists for compatibility)
-  --dolinks               (does nothing, exists for compatibility)
-  --force                 (does nothing, exists for compatibility)
-  --test                  (does nothing, exists for compatibility)
+                             exit successfully even if the required engine
+                               is missing, if it is included in the list.
+  --quiet                    be silent
+  --test                     (not implemented, just for compatibility)
+  --dolinks                  (not implemented, just for compatibility)
+  --force                    (not implemented, just for compatibility)
 
 Commands:
-  --all                   recreate all format files
-  --missing               create all missing format files
-  --refresh               recreate only existing format files
-  --byengine ENGINE       (re)create formats built with ENGINE
-  --byfmt FORMAT          (re)create format FORMAT
-  --byhyphen HYPHENFILE   (re)create formats that depend on HYPHENFILE
-  --enablefmt  FORMAT[/ENGINE] enable FORMAT, as built with ENGINE
-  --disablefmt FORMAT[/ENGINE] disable FORMAT, as built with ENGINE
-                          If multiple formats have the same name and
-                           different engines, /ENGINE specifier is required.
-  --listcfg               list (enabled and disabled) configurations,
-                           filtered to available formats
-  --showhyphen FORMAT     print name of hyphen file for FORMAT
-  --version               show version information and exit
-  --help                  show this message and exit
+  --all                      recreate all format files
+  --missing                  create all missing format files
+  --refresh                  recreate only existing format files
+  --byengine ENGINENAME      (re)create formats using ENGINENAME
+  --byfmt FORMATNAME         (re)create format for FORMATNAME
+  --byhyphen HYPHENFILE      (re)create formats that depend on HYPHENFILE
+  --enablefmt FORMATNAME     enable formatname in config file
+  --disablefmt FORMATNAME    disable formatname in config file
+  --listcfg                  list (enabled and disabled) configurations,
+                             filtered to available formats
+  --catcfg                   output the content of the config file
+  --showhyphen FORMATNAME    print name of hyphenfile for format FORMATNAME
+  --version                  show version information and exit
+  --help                     show this message and exit
 
 Explanation of trees and files normally used:
 
@@ -1300,19 +1129,7 @@ Explanation of trees and files normally used:
   According to the actions, fmtutil might write to one of the given files
   or create a new fmtutil.cnf, described further below.
 
-Where formats are written:
-  
-  By default, format files are (re)written in TEXMFSYSVAR/ENGINE by
-  fmtutil-sys, and TEXMFVAR/ENGINE by fmtutil, where /ENGINE is a
-  subdirectory named for the engine used, such as "pdftex".
-  
-  If the --fmtdir=DIR option is specified, DIR is used instead of
-  TEXMF[SYS]VAR, but the /ENGINE subdir is still used by default.
-  
-  In any case, if the --no-engine-subdir option is specified, the
-  /ENGINE subdir is omitted.
-  
-Where configuration changes are saved: 
+Where changes are saved: 
 
   If config files are given on the command line, then the first one 
   given will be used to save any changes from --enable or --disable.  
@@ -1329,8 +1146,8 @@ Where configuration changes are saved:
   
   In general, the idea is that if a given config file is not writable, a
   higher-level one can be used.  That way, the distribution's settings
-  can be overridden system-wide using TEXMFLOCAL, and system settings
-  can be overridden again in a particular user's TEXMFHOME.
+  can be overridden for system-wide using TEXMFLOCAL, and then system
+  settings can be overridden again in a particular user's TEXMFHOME.
 
 Resolving multiple definitions of a format:
 
@@ -1340,16 +1157,18 @@ Resolving multiple definitions of a format:
 Disabling formats:
 
   fmtutil.cnf files with higher priority (listed earlier) can disable
-  formats in lower priority (listed later) fmtutil.cnf files by
-  writing a line like
+  formats mentioned in lower priority (listed later) fmtutil.cnf files by
+  writing, e.g.,
     \#! <fmtname> <enginename> <hyphen> <args>
-  in the higher-priority fmtutil.cnf file.   The \#! must be at the
+  in the higher-priority fmtutil.cnf file.   (The \#! must be at the
   beginning of the line, with at least one space or tab afterward, and
-  there must be whitespace between each word on the list.
+  whitespace between each word on the list.)
 
-  For example, you can disable the luajitlatex format by creating
-  the file \$TEXMFCONFIG/web2c/fmtutil.cnf with the line
+  As an example, suppose you have want to disable the luajitlatex format.
+  You can create the file \$TEXMFCONFIG/web2c/fmtutil.cnf with the content
     #! luajitlatex luajittex language.dat,language.dat.lua lualatex.ini
+  and call $prg.
+  
   (As it happens, the luajittex-related formats are precisely why the
   --no-error-if-no-engine option exists, since luajittex cannot be
   compiled on all platforms.)
@@ -1370,8 +1189,10 @@ EOF
 ;
   print &version();
   print $usage;
-  exit 0; # no final print_info
+  exit 0;
 }
+
+
 
 ### Local Variables:
 ### perl-indent-level: 2

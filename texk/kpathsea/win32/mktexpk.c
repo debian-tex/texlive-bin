@@ -1,58 +1,42 @@
-/* mktexpk.c
-
-   Copyright 2000, 2015 Akira Kakuto.
-
-   This library is free software; you can redistribute it and/or
-   modify it under the terms of the GNU Lesser General Public
-   License as published by the Free Software Foundation; either
-   version 2.1 of the License, or (at your option) any later version.
-
-   This library is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-   Lesser General Public License for more details.
-
-   You should have received a copy of the GNU Lesser General Public License
-   along with this library; if not, see <http://www.gnu.org/licenses/>.
-
- %%----------------------------------------
- % Special variables for mktexpk ( W32TeX )
- % ----------------------------------------
- % MAKETEXPK_STYLE = dosnames
- % -----------------------------------------
- % MAKETEXPK_TOP_DIR = $VARTEXFONTS
- % -----------------------------------------
- % MAKETEXPK_MODE = canonex
- % -----------------------------------------
- % MAKETEXPK_MODE_300 = cx
- % MAKETEXPK_MODE_400 = nexthi
- % MAKETEXPK_MODE_600 = canonex
- % etc.
- %%-----------------------------------------
-
- Usage: mktexpk [OPTIONS] name,
-   Create a PK font.
-
- --dpi DPI           use resolution DPI.
- --bdpi BDPI         use base resolution BDPI.
- --mag MAG           use magnificiation MAG.
- --mfmode MODE       use MODE as the METAFONT mode.
- --destdir DESTDIR   write fonts in DESTDIR (absolute path).
-
- The following old form is also supported:
- Usage: mktexmk name dpi bdpi mag [mode]
-*/
+/* mktexpk.c (Web2C-7.5.5 --ak 2006)
+ * %%----------------------------------------
+ * % Special variables for mktexpk ( W32TeX )
+ * % ----------------------------------------
+ * % MAKETEXPK_STYLE = dosnames
+ * % -----------------------------------------
+ * % MAKETEXPK_TOP_DIR = $VARTEXFONTS
+ * % -----------------------------------------
+ * % MAKETEXPK_MODE = canonex
+ * % -----------------------------------------
+ * % MAKETEXPK_MODE_300 = cx
+ * % MAKETEXPK_MODE_400 = nexthi
+ * % MAKETEXPK_MODE_600 = canonex
+ * % etc.
+ * %%-----------------------------------------
+ *
+ * Usage: mktexpk [OPTIONS] name,
+ *   Create a PK font.
+ *
+ * --dpi DPI           use resolution DPI.
+ * --bdpi BDPI         use base resolution BDPI.
+ * --mag MAG           use magnificiation MAG.
+ * --mfmode MODE       use MODE as the METAFONT mode.
+ * --destdir DESTDIR   write fonts in DESTDIR (absolute path).
+ *
+ * The following old form is also supported:
+ * Usage: mktexmk name dpi bdpi mag [mode]
+ */
 
 #include <kpathsea/kpathsea.h>
-#ifndef __MINGW32__
-#include <web2c/w2c/c-auto.h>
-#endif
-#include "mktex.h"
+
+#include "dirutil.h"
+#include "getdestdir.h"
+#include "mktexupd.h"
 
 #define LLBUF 1024
 #define LBUF  512
-#define SBUF  512
-#define TBUF  512
+#define SBUF  256
+#define TBUF  256
 
 /*
 Global variables
@@ -132,7 +116,7 @@ static void
 version (void)
 {
   fprintf (stderr, "%s, (C version 1.5 --ak 2006-2012)\n", progname);
-  fprintf (stderr, KPSEVERSION WEB2CVERSION "\n");
+  fprintf (stderr, WEB2C_KPSE_VERSION "\n");
 }
 
 static void
@@ -184,34 +168,6 @@ relmem (char **v)
   return;
 }
 
-static void
-get_designsize(char *tfname, char *dsiz)
-{
-  FILE *f;
-  unsigned char a, b, c, d;
-  unsigned int  n;
-  double   x;
-  char     *p;
-
-  strcpy(dsiz, "10.0"); /* default */
-
-  p = kpse_find_file (tfname, kpse_tfm_format, 0);
-  if(p) {
-    f = fopen(p, "rb");
-    free(p);
-    if(f) {
-      fseek(f, 28, SEEK_SET);
-      a = getc(f);
-      b = getc(f);
-      c = getc(f);
-      d = getc(f);
-      fclose(f);
-      n = (a << 24) + (b << 16) + (c << 8) + d;
-      x = n / 1048576.0;
-      sprintf(dsiz, "%.1lf", x);
-    }
-  }
-}
 
 int
 main (int ac, char **av)
@@ -231,7 +187,6 @@ main (int ac, char **av)
   char mag[TBUF];
   char mode[TBUF];
   char destdir[SBUF];
-  char designsize[64];
 
   char *arg[4];
 
@@ -289,25 +244,30 @@ main (int ac, char **av)
 
   tmp = getenv ("TEMP");
   if (!tmp)
-    tmp = getenv ("TMP");
+    getenv ("TMP");
   if (!tmp)
-    tmp = getenv ("TMPDIR");
+    getenv ("TMPDIR");
   if (!tmp) {
     tpkerr ("Please define TEMP | TMP | TMPDIR.");
     return (100);
   }
   tmp = xstrdup(tmp);
-
 /*
  * normalize directory separators
  */
-  normalize (tmp);
+
+  for (fpp = tmp; *fpp; fpp++) {
+    if (*fpp == '\\')
+      *fpp = '/';
+    else if (IS_KANJI(fpp))
+      fpp++;
+  }
 
   for (i = 0; i < 4; i++)
     arg[i] = (char *) malloc (SBUF);
 
-  kpse_set_program_name (av[0], NULL);
-  progname = kpse_program_name;
+  progname = av[0];
+  kpse_set_program_name (progname, NULL);
 
 /*
  * get tex binary dir
@@ -329,7 +289,6 @@ main (int ac, char **av)
   if (ac < 2) {
     usage ();
     relmem (arg);
-    free(tmp);
     return (100);
   }
 
@@ -355,7 +314,6 @@ main (int ac, char **av)
     if (ac < 5) {
       usage ();
       relmem (arg);
-      free(tmp);
       return (100);
     }
     if((strlen(av[1]) > TBUF -1 ) ||
@@ -363,7 +321,6 @@ main (int ac, char **av)
        (strlen(av[3]) > TBUF -1 ) ||
        (strlen(av[4]) > TBUF -1 )) {
       fprintf(stderr, "\nToo long a string.\n");
-      free(tmp);
       return 100;
     }
 
@@ -374,7 +331,6 @@ main (int ac, char **av)
     if (ac > 5) {
       if(strlen(av[5]) > TBUF -1) {
         fprintf(stderr, "\nToo long a string.\n");
-        free(tmp);
         return 100;
       } 
       strcpy (mode, av[5]);
@@ -390,7 +346,6 @@ main (int ac, char **av)
     while (i < ac) {
       if(strlen(av[i]) > TBUF - 1) {
         fprintf(stderr, "\nToo long a string.\n");
-        free(tmp);
         return 100;
       }
       if (av[i][0] != '-') {
@@ -400,9 +355,8 @@ main (int ac, char **av)
       if (!strcmp (av[i], "--dpi") || !strcmp (av[i], "-dpi")) {
         i++;
         if (i >= ac) {
-          tpkerr ("Invalid arguments.");
+          tpkerr ("Invarid arguments.");
           relmem (arg);
-          free(tmp);
           return (100);
         }
         strcpy (dpi, av[i]);
@@ -410,9 +364,8 @@ main (int ac, char **av)
       } else if (!strcmp (av[i], "--bdpi") || !strcmp (av[i], "-bdpi")) {
         i++;
         if (i >= ac) {
-          tpkerr ("Invalid arguments.");
+          tpkerr ("Invarid arguments.");
           relmem (arg);
-          free(tmp);
           return (100);
         }
         strcpy (bdpi, av[i]);
@@ -420,9 +373,8 @@ main (int ac, char **av)
       } else if (!strcmp (av[i], "--mag") || !strcmp (av[i], "-mag")) {
         i++;
         if (i >= ac) {
-          tpkerr ("Invalid arguments.");
+          tpkerr ("Invarid arguments.");
           relmem (arg);
-          free(tmp);
           return (100);
         }
         strcpy (mag, av[i]);
@@ -430,9 +382,8 @@ main (int ac, char **av)
       } else if (!strcmp (av[i], "--mfmode") || !strcmp (av[i], "-mfmode")) {
         i++;
         if (i >= ac) {
-          tpkerr ("Invalid arguments.");
+          tpkerr ("Invarid arguments.");
           relmem (arg);
-          free(tmp);
           return (100);
         }
         strcpy (mode, av[i]);
@@ -440,9 +391,8 @@ main (int ac, char **av)
       } else if (!strcmp (av[i], "--destdir") || !strcmp (av[i], "-destdir")) {
         i++;
         if (i >= ac) {
-          tpkerr ("Invalid arguments.");
+          tpkerr ("Invarid arguments.");
           relmem (arg);
-          free(tmp);
           return (100);
         }
         strcpy (destdir, av[i]);
@@ -451,17 +401,14 @@ main (int ac, char **av)
       } else if (!strcmp (av[i], "--version") || !strcmp (av[i], "-version")) {
         version ();
         relmem (arg);
-        free(tmp);
         return (0);
       } else if (!strcmp (av[i], "--help") || !strcmp (av[i], "-help")) {
         help ();
         relmem (arg);
-        free(tmp);
         return (0);
       } else {
         tpkerr ("Argument error.");
         relmem (arg);
-        free(tmp);
         return (100);
       }
     }
@@ -500,20 +447,17 @@ main (int ac, char **av)
     if (!frd) {
       tpkerr ("I cannot find METAFONT.\n");
       relmem (arg);
-      free(tmp);
       return (100);
     }
     (void) fgets (buff, 126, frd);
     (void) fgets (buff, 126, frd);
     pclose (frd);
-    system("del /Q mfput.*");
+    remove ("mfput.log");
+    remove ("mfput.tfm");
 
-    len = (int)strlen (buff);
-    if (buff[len - 1] == '\n') {
+    len = strlen (buff);
+    if (buff[len - 1] == '\n')
       buff[len - 1] = '\0';
-      if (buff[len - 2] == '\r')
-        buff[len - 2] = '\0';
-    }
     if (strcmp (bdpi, buff)) {
       fprintf(stderr, "mode_dpi %s and bdpi %s are inconsistent.\n", buff, bdpi);
       fprintf(stderr, "therefore I reset mfmode.\n");
@@ -596,7 +540,6 @@ main (int ac, char **av)
   if (name[0] == 0) {
     tpkerr ("Font name is not given.");
     relmem (arg);
-    free(tmp);
     return (100);
   }
 
@@ -610,7 +553,6 @@ main (int ac, char **av)
     if (!(p = kpse_var_value ("MFINPUTS"))) {
       tpkerr ("Cannot get value of MFINPUTS.");
       relmem (arg);
-      free(tmp);
       return (100);
     }
     free (p);
@@ -629,7 +571,6 @@ main (int ac, char **av)
     if (!(p = kpse_var_value ("TFMFONTS"))) {
       tpkerr ("Cannot get value of TFMFONTS.");
       relmem (arg);
-      free(tmp);
       return (100);
     }
     free (p);
@@ -639,14 +580,12 @@ main (int ac, char **av)
     if (!(p = kpse_find_file (tfname, kpse_tfm_format, 0))) {
       fprintf (stderr, "Cannot find %s .\n", tfname);
       relmem (arg);
-      free(tmp);
       return 100;
     }
     tfmfileptr = fopen (p, "rb");
     if (!tfmfileptr) {
       fprintf (stderr, "I cannot open %s.\n", p);
       relmem (arg);
-      free(tmp);
       return 100;
     }
     i = 256 * getc (tfmfileptr);
@@ -656,7 +595,6 @@ main (int ac, char **av)
       fprintf (stderr, "Current font seems to be a Japanese one.\n");
       fprintf (stderr, "I give up to create a PK font.\n");
       relmem (arg);
-      free(tmp);
       return 100;
     }
   }
@@ -668,12 +606,16 @@ main (int ac, char **av)
   if (!fpp) {
     fprintf (stderr, "Failed to get current working directory.\n");
     relmem (arg);
-    free(tmp);
     return (100);
   }
-  normalize (currdir);
+  for (fpp = currdir; *fpp; fpp++) {
+    if (*fpp == '\\')
+      *fpp = '/';
+    else if (IS_KANJI(fpp))
+      fpp++;
+  }
 
-  i = (int)strlen (currdir);
+  i = strlen (currdir);
   if (currdir[i - 1] == '/')
     currdir[i - 1] = '\0';
 
@@ -694,7 +636,6 @@ main (int ac, char **av)
     if (!(p = getdestdir (4, arg))) {
       tpkerr ("Cannot get destination directory name.");
       relmem (arg);
-      free(tmp);
       return (100);
     }
     strcpy (rbuff, p);
@@ -704,10 +645,16 @@ main (int ac, char **av)
 /*
  * Change backslash into slash
  */
-  normalize (rbuff);
+
+  for (p = rbuff; *p; p++) {
+    if (*p == '\\')
+      *p = '/';
+    else if (IS_KANJI(p))
+      p++;
+  }
 
   p = rbuff;
-  i = (int)strlen (p);
+  i = strlen (p);
   if (p[i - 1] == '/')
     p[i - 1] = '\0';
 
@@ -715,14 +662,12 @@ main (int ac, char **av)
     if (!is_dir (p)) {
       fprintf (stderr, "Destination %s is not found.\n", p);
       relmem (arg);
-      free(tmp);
       return (100);
     }
   } else if (!is_dir (p)) {
     if (make_dir (p)) {
       tpkerr ("Error in make_dir.");
       relmem (arg);
-      free(tmp);
       return (100);
     }
   }
@@ -730,7 +675,7 @@ main (int ac, char **av)
   strcpy (buff, p);
   p = buff;
 
-  i = (int)strlen (p);
+  i = strlen (p);
 
   if (p[i - 1] != '/')
     strcat (p, "/");
@@ -738,7 +683,6 @@ main (int ac, char **av)
   if (dpi[0] == 0) {
     tpkerr ("Cannot determine DPI.");
     relmem (arg);
-    free(tmp);
     return (100);
   }
 
@@ -749,7 +693,6 @@ main (int ac, char **av)
       if (make_dir (p)) {
         tpkerr ("Error in make_dir.");
         relmem (arg);
-        free(tmp);
         return (100);
       }
     }
@@ -770,7 +713,6 @@ main (int ac, char **av)
     fprintf (stderr, "%s exists.\n", p);
     relmem (arg);
     printf ("%s\n", p);
-    free(tmp);
     return (0);
   }
 
@@ -804,7 +746,6 @@ main (int ac, char **av)
     _chdrive (cdrive);
     _chdir (currdir);
     relmem (arg);
-    free(tmp);
     return (100);
   }
   _dup2 (fileno (fnul), fileno (stdin));
@@ -823,7 +764,6 @@ main (int ac, char **av)
       _chdrive (cdrive);
       _chdir (currdir);
       relmem (arg);
-      free(tmp);
       return (100);
     }
     sprintf (cmd,
@@ -846,7 +786,6 @@ main (int ac, char **av)
       _chdrive (cdrive);
       _chdir (currdir);
       relmem (arg);
-      free(tmp);
       return (100);
     }
 
@@ -864,7 +803,6 @@ main (int ac, char **av)
       _chdrive (cdrive);
       _chdir (currdir);
       relmem (arg);
-      free(tmp);
       return (100);
     }
 
@@ -1156,22 +1094,18 @@ skip flag
     } else
       strcpy (ydpi, dpi);
 
-    strcpy(tfname, name);
-    strcat(tfname, ".tfm");
-    get_designsize(tfname, designsize);
-
     if (i == 3) {
-      sprintf (cmd, "-X%s -Y%s -S%s -E%s -P%s %s %s",
-               dpi, ydpi, slant, extend, designsize, pfbname, pkname);
+      sprintf (cmd, "-X%s -Y%s -S%s -E%s %s %s",
+               dpi, ydpi, slant, extend, pfbname, pkname);
     } else if (i == 4 && bdpi[0]) {
-      sprintf (cmd, "-X%s -Y%s -R%s -S%s -E%s -P%s %s %s",
-               dpi, ydpi, bdpi, slant, extend, designsize, pfbname, pkname);
+      sprintf (cmd, "-X%s -Y%s -R%s -S%s -E%s %s %s",
+               dpi, ydpi, bdpi, slant, extend, pfbname, pkname);
     } else if (i == 4 && encname[0]) {
-      sprintf (cmd, "-e%s -X%s -Y%s -S%s -E%s -P%s %s %s",
-               encname, dpi, ydpi, slant, extend, designsize, pfbname, pkname);
+      sprintf (cmd, "-e%s -X%s -Y%s -S%s -E%s %s %s",
+               encname, dpi, ydpi, slant, extend, pfbname, pkname);
     } else if (i == 5) {
-      sprintf (cmd, "-e%s -X%s -Y%s -R%s -S%s -E%s -P%s %s %s",
-               encname, dpi, ydpi, bdpi, slant, extend, designsize, pfbname, pkname);
+      sprintf (cmd, "-e%s -X%s -Y%s -R%s -S%s -E%s %s %s",
+               encname, dpi, ydpi, bdpi, slant, extend, pfbname, pkname);
     } else {
       tpkerr ("File format of pspksupp.map is wrong.");
       goto do_gsftopk;
@@ -1232,7 +1166,6 @@ skip flag
         _chdrive (cdrive);
         _chdir (currdir);
         relmem (arg);
-        free(tmp);
         return (100);
       }
       strcpy (execfile, "gftopk.exe");
@@ -1246,7 +1179,6 @@ skip flag
         _chdrive (cdrive);
         _chdir (currdir);
         relmem (arg);
-        free(tmp);
         return (100);
       }
       remove (cmd);
@@ -1276,7 +1208,6 @@ skip flag
     _chdrive (cdrive);
     _chdir (currdir);
     relmem (arg);
-    free(tmp);
     return (100);
   }
 
@@ -1285,11 +1216,10 @@ skip flag
     _chdrive (cdrive);
     _chdir (currdir);
     relmem (arg);
-    free(tmp);
     return (100);
   }
 
-  while ((i = (int)fread (rbuff, 1, LBUF, fr)))
+  while ((i = fread (rbuff, 1, LBUF, fr)))
     fwrite (rbuff, 1, i, fw);
 
   fclose (fr);
@@ -1310,7 +1240,6 @@ skip flag
   printf ("%s\n", buff);
   _chdrive (cdrive);
   _chdir (currdir);
-  free(tmp);
 
   return (0);
 }

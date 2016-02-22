@@ -145,6 +145,7 @@ am__aclocal_m4_deps = $(top_srcdir)/../m4/kpse-cairo-flags.m4 \
 	$(top_srcdir)/../texk/dvidvi/ac/withenable.ac \
 	$(top_srcdir)/../texk/dviljk/ac/withenable.ac \
 	$(top_srcdir)/../texk/dvipdfm-x/ac/withenable.ac \
+	$(top_srcdir)/../texk/dvipdfm-x/ac/dvipdfm-x.ac \
 	$(top_srcdir)/../texk/dvipng/ac/withenable.ac \
 	$(top_srcdir)/../texk/dvipng/ac/dvipng.ac \
 	$(top_srcdir)/../texk/dvipos/ac/withenable.ac \
@@ -152,7 +153,6 @@ am__aclocal_m4_deps = $(top_srcdir)/../m4/kpse-cairo-flags.m4 \
 	$(top_srcdir)/../texk/dvisvgm/ac/withenable.ac \
 	$(top_srcdir)/../texk/dvisvgm/ac/dvisvgm.ac \
 	$(top_srcdir)/../texk/dvisvgm/ac/libgs.ac \
-	$(top_srcdir)/../texk/gregorio/ac/withenable.ac \
 	$(top_srcdir)/../texk/gsftopk/ac/withenable.ac \
 	$(top_srcdir)/../texk/lcdf-typetools/ac/withenable.ac \
 	$(top_srcdir)/../texk/lcdf-typetools/ac/lcdf-typetools.ac \
@@ -166,7 +166,6 @@ am__aclocal_m4_deps = $(top_srcdir)/../m4/kpse-cairo-flags.m4 \
 	$(top_srcdir)/../texk/tex4htk/ac/withenable.ac \
 	$(top_srcdir)/../texk/ttf2pk2/ac/withenable.ac \
 	$(top_srcdir)/../texk/ttfdump/ac/withenable.ac \
-	$(top_srcdir)/../texk/upmendex/ac/withenable.ac \
 	$(top_srcdir)/../texk/xdvik/ac/withenable.ac \
 	$(top_srcdir)/../texk/xdvik/ac/xdvik.ac \
 	$(top_srcdir)/../texk/texlive/ac/withenable.ac \

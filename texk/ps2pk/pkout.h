@@ -1,7 +1,13 @@
-/* FILE:    pkout.h
+/* 
+ * FILE:    pkout.h
+ *
  * PURPOSE: interface to te PK output functions (pkfile.c)
+ *
  * COMMENT: See the pktest.c example program how to use the PK functions.
- * (see README for license)
+ *
+ * VERSION: 1.7 (December 2014)
+ *
+ * AUTHOR:  Piet Tutelaers (rcpt@urc.tue.nl)
  */
 
 /* A function for opening a pk file */

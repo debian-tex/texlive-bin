@@ -1,6 +1,6 @@
 /* This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
 
-    Copyright (C) 2002-2016 by Jin-Hwan Cho and Shunsaku Hirata,
+    Copyright (C) 2002-2014 by Jin-Hwan Cho and Shunsaku Hirata,
     the dvipdfmx project team.
 
     Copyright (C) 2012-2015 by Khaled Hosny <khaledhosny@eglug.org>
@@ -60,6 +60,7 @@
 #include "dvi.h"
 #include "dvipdfmx.h"
 
+#ifdef XETEX
 #include "dpxfile.h"
 #include "pdfximage.h"
 #include "tt_aux.h"
@@ -67,6 +68,7 @@
 #include "t1_load.h"
 #include "t1_char.h"
 #include "cff_dict.h"
+#endif
 
 #define DVI_STACK_DEPTH_MAX  256u
 #define TEX_FONTS_ALLOC_SIZE 16u
@@ -143,17 +145,20 @@ static struct loaded_font
   int   tfm_id;
   spt_t size;
   int   source;     /* Source is either DVI or VF */
+#ifdef XETEX
   uint32_t rgba_color;
   struct tt_longMetrics *hvmt;
   int   ascent;
   int   descent;
   unsigned unitsPerEm;
   cff_font *cffont;
+  int cff_is_standard_encoding;
   unsigned numGlyphs;
   int   layout_dir;
   float extend;
   float slant;
   float embolden;
+#endif
 } *loaded_fonts = NULL;
 static int num_loaded_fonts = 0, max_loaded_fonts = 0;
 
@@ -174,6 +179,7 @@ static struct font_def
   char  *font_name;
   int    font_id;   /* index of _loaded_ font in loaded_fonts array */
   int    used;
+#ifdef XETEX
   int    native; /* boolean */
   uint32_t rgba_color;   /* only used for native fonts in XeTeX */
   uint32_t face_index;
@@ -181,14 +187,17 @@ static struct font_def
   int    extend;
   int    slant;
   int    embolden;
+#endif
 } *def_fonts = NULL;
 
+#ifdef XETEX
 #define XDV_FLAG_VERTICAL       0x0100
 #define XDV_FLAG_COLORED        0x0200
 #define XDV_FLAG_FEATURES       0x0400
 #define XDV_FLAG_EXTEND         0x1000
 #define XDV_FLAG_SLANT          0x2000
 #define XDV_FLAG_EMBOLDEN       0x4000
+#endif
 
 static int num_def_fonts = 0, max_def_fonts = 0;
 static int compute_boxes = 0, link_annot    = 1;
@@ -214,12 +223,14 @@ static int get_and_buffer_unsigned_byte (FILE *file)
   return ch;
 }
 
+#ifdef XETEX
 static unsigned int get_and_buffer_unsigned_pair (FILE *file)
 {
   unsigned int pair = get_and_buffer_unsigned_byte(file);
   pair = (pair << 8) | get_and_buffer_unsigned_byte(file);
   return pair;
 }
+#endif
 
 static void get_and_buffer_bytes(FILE *file, unsigned int count)
 {
@@ -239,12 +250,14 @@ static int get_buffered_unsigned_byte (void)
   return dvi_page_buffer[dvi_page_buf_index++];
 }
 
+#ifdef XETEX
 static unsigned int get_buffered_unsigned_pair (void)
 {
   unsigned int pair = dvi_page_buffer[dvi_page_buf_index++];
   pair = (pair << 8) | dvi_page_buffer[dvi_page_buf_index++];
   return pair;
 }
+#endif
 
 static int32_t get_buffered_signed_quad(void)
 {
@@ -313,27 +326,6 @@ static const char invalid_signature[] =
    ERROR(invalid_signature); \
  }
 
-static int pre_id_byte, post_id_byte, is_ptex = 0, has_ptex = 0;
-
-static void
-check_id_bytes (void) {
-  if (pre_id_byte != post_id_byte && (pre_id_byte != DVI_ID || post_id_byte != DVIV_ID))
-    ERROR ("Inconsistent DVI id_bytes %d (pre) and %d (post)", pre_id_byte, post_id_byte);
-}
-
-static void
-need_XeTeX (int c) {
-  if (!is_xdv)
-    ERROR ("DVI opcode %i only valid for XeTeX", c);
-}
-
-static void
-need_pTeX (int c) {
-  if (!is_ptex)
-    ERROR ("DVI opcode %i only valid for Ascii pTeX", c);
-  has_ptex = 1;
-}
-
 static int32_t
 find_post (void)
 {
@@ -362,9 +354,7 @@ find_post (void)
     ERROR(invalid_signature);
   } 
 
-  post_id_byte = ch;
   is_xdv = ch == XDV_ID;
-  is_ptex = ch == DVIV_ID;
 
   /* Make sure post_post is really there */
   current = current - 5;
@@ -379,21 +369,6 @@ find_post (void)
     MESG("Found %d where post_post opcode should be\n", ch);
     ERROR(invalid_signature);
   }
-
-  /* Finally check the ID byte in the preamble */
-  /* An Ascii pTeX DVI file has id_byte DVI_ID in the preamble but DVIV_ID in the postamble. */
-  xseek_absolute (dvi_file, 0, "DVI");
-  if ((ch = get_unsigned_byte(dvi_file)) != PRE) {
-    MESG("Found %d where PRE was expected\n", ch);
-    ERROR(invalid_signature);
-  }
-  ch = get_unsigned_byte(dvi_file);
-  if (!(ch == DVI_ID || ch == XDV_ID)) {
-    MESG("DVI ID = %d\n", ch);
-    ERROR(invalid_signature);
-  }
-  pre_id_byte = ch;
-  check_id_bytes();
 
   return current;
 }
@@ -482,16 +457,13 @@ get_preamble_dvi_info (void)
     ERROR(invalid_signature);
   }
   
-  /* An Ascii pTeX DVI file has id_byte DVI_ID in the preamble but DVIV_ID in the postamble. */
   ch = get_unsigned_byte(dvi_file);
-  if (!(ch == DVI_ID || ch == XDV_ID)) {
+  if (!(ch == DVI_ID || ch == DVIV_ID || ch == XDV_ID)) {
     MESG("DVI ID = %d\n", ch);
     ERROR(invalid_signature);
   }
 
-  pre_id_byte = ch;
   is_xdv = ch == XDV_ID;
-  is_ptex = ch == DVI_ID; /* maybe */
   
   dvi_info.unit_num = get_positive_quad(dvi_file, "DVI", "unit_num");
   dvi_info.unit_den = get_positive_quad(dvi_file, "DVI", "unit_den");
@@ -557,6 +529,7 @@ read_font_record (int32_t tex_id)
   def_fonts[num_def_fonts].point_size  = point_size;
   def_fonts[num_def_fonts].design_size = design_size;
   def_fonts[num_def_fonts].used        = 0;
+#ifdef XETEX
   def_fonts[num_def_fonts].native      = 0;
   def_fonts[num_def_fonts].rgba_color  = 0xffffffff;
   def_fonts[num_def_fonts].face_index  = 0;
@@ -564,11 +537,13 @@ read_font_record (int32_t tex_id)
   def_fonts[num_def_fonts].extend      = 0x00010000; /* 1.0 */
   def_fonts[num_def_fonts].slant       = 0;
   def_fonts[num_def_fonts].embolden    = 0;
+#endif
   num_def_fonts++;
 
   return;
 }
 
+#ifdef XETEX
 static void
 read_native_font_record (int32_t tex_id)
 {
@@ -627,6 +602,7 @@ read_native_font_record (int32_t tex_id)
 
   return;
 }
+#endif
 
 static void
 get_dvi_fonts (int32_t post_location)
@@ -639,10 +615,11 @@ get_dvi_fonts (int32_t post_location)
     case FNT_DEF1: case FNT_DEF2: case FNT_DEF3: case FNT_DEF4:
       read_font_record(get_unsigned_num(dvi_file, code-FNT_DEF1));
       break;
+#ifdef XETEX
     case XDV_NATIVE_FONT_DEF:
-      need_XeTeX(code);
       read_native_font_record(get_signed_quad(dvi_file));
       break;
+#endif
     default:
       MESG("Unexpected op code: %3d\n", code);
       ERROR(invalid_signature);
@@ -942,6 +919,7 @@ dvi_locate_font (const char *tfm_name, spt_t ptsize)
   return  cur_id;
 }
 
+#ifdef XETEX
 static int
 dvi_locate_native_font (const char *filename, uint32_t index,
                         spt_t ptsize, int layout_dir, int extend, int slant, int embolden)
@@ -952,7 +930,7 @@ dvi_locate_native_font (const char *filename, uint32_t index,
   FILE         *fp;
   char         *path;
   sfnt         *sfont;
-  ULONG         offset = 0;
+  unsigned      offset = 0;
   struct tt_head_table *head;
   struct tt_maxp_table *maxp;
   struct tt_hhea_table *hhea;
@@ -1008,6 +986,7 @@ dvi_locate_native_font (const char *filename, uint32_t index,
       ERROR("Failed to read Type 1 font \"%s\".", filename);
 
     loaded_fonts[cur_id].cffont = cffont;
+    loaded_fonts[cur_id].cff_is_standard_encoding = enc_vec[0] == NULL;
 
     if (cff_dict_known(cffont->topdict, "FontBBox")) {
       loaded_fonts[cur_id].ascent = cff_dict_get(cffont->topdict, "FontBBox", 3);
@@ -1066,6 +1045,7 @@ dvi_locate_native_font (const char *filename, uint32_t index,
 
   return cur_id;
 }
+#endif
 
 double
 dvi_dev_xpos (void)
@@ -1472,6 +1452,7 @@ do_fnt (int32_t tex_id)
   if (!def_fonts[i].used) {
     int  font_id;
 
+#ifdef XETEX
     if (def_fonts[i].native) {
       font_id = dvi_locate_native_font(def_fonts[i].font_name,
                                        def_fonts[i].face_index,
@@ -1485,6 +1466,9 @@ do_fnt (int32_t tex_id)
                                 def_fonts[i].point_size);
     }
     loaded_fonts[font_id].rgba_color = def_fonts[i].rgba_color;
+#else
+    font_id = dvi_locate_font(def_fonts[i].font_name, def_fonts[i].point_size);
+#endif
     loaded_fonts[font_id].source = DVI;
     def_fonts[i].used    = 1;
     def_fonts[i].font_id = font_id;
@@ -1601,37 +1585,26 @@ dvi_end_reflect (void)
   }
 }
 
-static void
-skip_native_font_def (void)
-{
-  unsigned int flags;
-  int name_length;
-
-  skip_bytes(4, dvi_file); /* skip point size */
-  flags = get_unsigned_pair(dvi_file);
-  name_length = get_unsigned_byte(dvi_file);
-  skip_bytes(name_length + 4, dvi_file);
-
-  if (flags & XDV_FLAG_COLORED)
-    skip_bytes(4, dvi_file);
-
-  if (flags & XDV_FLAG_EXTEND)
-    skip_bytes(4, dvi_file);
-
-  if (flags & XDV_FLAG_SLANT)
-    skip_bytes(4, dvi_file);
-
-  if (flags & XDV_FLAG_EMBOLDEN)
-    skip_bytes(4, dvi_file);
-}
-
+#ifdef XETEX
 static void
 do_native_font_def (int32_t tex_id)
 {
-  if (linear)
+  if (linear) {
     read_native_font_record(tex_id);
-  else
-    skip_native_font_def();
+  } else {
+    unsigned int flags;
+    int name_length, i;
+
+    get_unsigned_quad(dvi_file); /* skip point size */
+    flags = get_unsigned_pair(dvi_file);
+    name_length = (int) get_unsigned_byte(dvi_file);
+    for (i = 0; i < name_length; ++i)
+      get_unsigned_byte(dvi_file);
+    get_unsigned_quad(dvi_file);
+    if (flags & XDV_FLAG_COLORED) {
+      get_unsigned_quad(dvi_file);
+    }
+  }
   --dvi_page_buf_index; /* don't buffer the opcode */
 }
 
@@ -1699,9 +1672,8 @@ do_glyphs (void)
         cff_index *cstrings = font->cffont->cstrings;
         t1_ginfo gm;
 
-        /* If .notdef is not the 1st glyph in CharStrings, glyph_id given by
-           FreeType should be increased by 1 */
-        if (font->cffont->is_notdef_notzero)
+        /* For standard encoding, Type1 glyph id is FreeType glyph index + 1. */
+        if (font->cff_is_standard_encoding)
           glyph_id += 1;
 
         t1char_get_metrics(cstrings->data + cstrings->offset[glyph_id] - 1,
@@ -1744,39 +1716,15 @@ do_glyphs (void)
 
   return;
 }
+#endif
 
-static void
-check_postamble (void)
-{
-  int code;
+/* Note to be absolutely certain that the string escape buffer doesn't
+ * hit its limit, FORMAT_BUF_SIZE should set to 4 times S_BUFFER_SIZE
+ * in pdfobj.c.  Is there any application that genenerate words with
+ * 1k characters?
+ */
 
-  skip_bytes(28, dvi_file);
-  while ((code = get_unsigned_byte(dvi_file)) != POST_POST) {
-    switch (code) {
-    case FNT_DEF1: case FNT_DEF2: case FNT_DEF3: case FNT_DEF4:
-      skip_bytes(code + 1 - FNT_DEF1, dvi_file);
-      skip_fntdef();
-      break;
-    case XDV_NATIVE_FONT_DEF:
-      skip_bytes(4, dvi_file);
-      skip_native_font_def();
-      break;
-    default:
-      ERROR("Unexpected op code (%u) in postamble", code);
-    }
-  }
-  skip_bytes(4, dvi_file);
-  post_id_byte = get_unsigned_byte(dvi_file);
-  if (!(post_id_byte == DVI_ID || post_id_byte == DVIV_ID || post_id_byte == XDV_ID)) {
-    MESG("DVI ID = %d\n", post_id_byte);
-    ERROR(invalid_signature);
-  }
-  check_id_bytes();
-  if (has_ptex && post_id_byte != DVIV_ID)
-    ERROR ("Saw opcode %i in DVI file not for Ascii pTeX", PTEXDIR);
-
-  num_pages = 0; /* force loop to terminate */
-}
+#define SBUF_SIZE 1024
 
 /* Most of the work of actually interpreting
  * the dvi file is here.
@@ -1840,12 +1788,6 @@ dvi_do_page (double page_paper_height, double hmargin, double vmargin)
       break;
     case EOP:
       do_eop();
-      if (linear) {
-        if ((opcode = get_unsigned_byte(dvi_file)) == POST)
-          check_postamble();
-        else
-          ungetc(opcode, dvi_file);
-      }
       return;
 
     case PUSH:
@@ -1912,25 +1854,22 @@ dvi_do_page (double page_paper_height, double hmargin, double vmargin)
 
       /* pTeX extension */
     case PTEXDIR:
-      need_pTeX(opcode);
       do_dir();
       break;
 
-    /* XeTeX extensions */
+#ifdef XETEX
+    /* XeTeX extension */
     case XDV_GLYPHS:
-      need_XeTeX(opcode);
       do_glyphs();
       break;
     /* should not occur - processed during pre-scanning */
     case XDV_NATIVE_FONT_DEF:
-      need_XeTeX(opcode);
       break;
+#endif
     case BEGIN_REFLECT:
-      need_XeTeX(opcode);
       dvi_begin_reflect();
       break;
     case END_REFLECT:
-      need_XeTeX(opcode);
       dvi_end_reflect();
       break;
 
@@ -1956,7 +1895,6 @@ dvi_init (char *dvi_filename, double mag)
   int32_t post_location;
 
   if (!dvi_filename) { /* no filename: reading from stdin, probably a pipe */
-    int ch;
 #ifdef WIN32
         setmode(fileno(stdin), _O_BINARY);
 #endif
@@ -1965,10 +1903,6 @@ dvi_init (char *dvi_filename, double mag)
 
     get_preamble_dvi_info();
     do_scales(mag);
-    if ((ch = get_unsigned_byte(dvi_file)) == POST)
-      check_postamble();
-    else
-      ungetc(ch, dvi_file);
   } else {
     dvi_file = MFOPEN(dvi_filename, FOPEN_RBIN_MODE);
     if (!dvi_file) {
@@ -2044,6 +1978,7 @@ dvi_close (void)
   page_loc  = NULL;
   num_pages = 0;
 
+#ifdef XETEX
   for (i = 0; i < num_loaded_fonts; i++)
   {
     if (loaded_fonts[i].hvmt != NULL)
@@ -2056,6 +1991,7 @@ dvi_close (void)
 
     loaded_fonts[i].cffont = NULL;
   }
+#endif
 
   if (loaded_fonts)
     RELEASE(loaded_fonts);
@@ -2184,10 +2120,9 @@ read_length (double *vp, double mag, const char **pp, const char *endptr)
 
 
 static int
-scan_special (double *wd, double *ht, double *xo, double *yo, int *lm,
-              int *majorversion, int *minorversion,
-              int *do_enc, int *key_bits, int32_t *permission,
-              char *owner_pw, char *user_pw,
+scan_special (double *wd, double *ht, double *xo, double *yo, char *lm,
+              unsigned *minorversion,
+              int *do_enc, unsigned *key_bits, unsigned *permission, char *owner_pw, char *user_pw,
               const char *buf, uint32_t size)
 {
   char  *q;
@@ -2292,16 +2227,7 @@ scan_special (double *wd, double *ht, double *xo, double *yo, int *lm,
       skip_white(&p, endptr);
       kv = parse_float_decimal(&p, endptr);
       if (kv) {
-        *minorversion = (int)strtol(kv, NULL, 10);
-        RELEASE(kv);
-      }
-    } else if (majorversion && ns_pdf && !strcmp(q, "majorversion")) {
-      char *kv;
-      if (*p == '=') p++;
-      skip_white(&p, endptr);
-      kv = parse_float_decimal(&p, endptr);
-      if (kv) {
-        *majorversion = (int)strtol(kv, NULL, 10);
+        *minorversion = (unsigned)strtol(kv, NULL, 10);
         RELEASE(kv);
       }
     } else if (ns_pdf && !strcmp(q, "encrypt") && do_enc) {
@@ -2316,15 +2242,13 @@ scan_special (double *wd, double *ht, double *xo, double *yo, int *lm,
           skip_white(&p, endptr);
           if (!strcmp(kp, "ownerpw")) {
             if ((obj = parse_pdf_string(&p, endptr))) {
-              if (pdf_string_value(obj))
-                strncpy(owner_pw, pdf_string_value(obj), MAX_PWD_LEN);
+              strncpy(owner_pw, pdf_string_value(obj), MAX_PWD_LEN); 
               pdf_release_obj(obj);
             } else
               error = -1;
           } else if (!strcmp(kp, "userpw")) {
             if ((obj = parse_pdf_string(&p, endptr))) {
-              if (pdf_string_value(obj))
-                strncpy(user_pw, pdf_string_value(obj), MAX_PWD_LEN);
+              strncpy(user_pw, pdf_string_value(obj), MAX_PWD_LEN);
               pdf_release_obj(obj);
             } else
               error = -1;
@@ -2359,18 +2283,19 @@ scan_special (double *wd, double *ht, double *xo, double *yo, int *lm,
 void
 dvi_scan_specials (int page_no,
                    double *page_width, double *page_height,
-                   double *x_offset, double *y_offset, int *landscape,
-                   int *majorversion, int *minorversion,
-                   int *do_enc, int *key_bits, int32_t *permission,
-                   char *owner_pw, char *user_pw)
+                   double *x_offset, double *y_offset, char *landscape,
+                   unsigned *minorversion,
+                   int *do_enc, unsigned *key_bits, unsigned *permission, char *owner_pw, char *user_pw)
 {
   FILE          *fp = dvi_file;
   int32_t        offset;
   unsigned char  opcode;
   static int     buffered_page = -1;
+#if XETEX
   unsigned int len;
+#endif
 
-  if (page_no == buffered_page || num_pages == 0)
+  if (page_no == buffered_page)
     return; /* because dvipdfmx wants to scan first page twice! */
   buffered_page = page_no;
 
@@ -2403,12 +2328,11 @@ dvi_scan_specials (int page_no,
         dvi_page_buf_size = (dvi_page_buf_index + size + DVI_PAGE_BUF_CHUNK);
         dvi_page_buffer = RENEW(dvi_page_buffer, dvi_page_buf_size, unsigned char);
       }
-#define buf ((char*)(dvi_page_buffer + dvi_page_buf_index))
+#define buf (char*)dvi_page_buffer + dvi_page_buf_index
       if (fread(buf, sizeof(char), size, fp) != size)
         ERROR("Reading DVI file failed!");
       if (scan_special(page_width, page_height, x_offset, y_offset, landscape,
-                       majorversion, minorversion,
-                       do_enc, key_bits, permission, owner_pw, user_pw,
+                       minorversion, do_enc, key_bits, permission, owner_pw, user_pw,
                        buf, size))
         WARN("Reading special command failed: \"%.*s\"", size, buf);
 #undef buf
@@ -2451,23 +2375,21 @@ dvi_scan_specials (int page_no,
     case FNT_DEF1: case FNT_DEF2: case FNT_DEF3: case FNT_DEF4:
       do_fntdef(get_unsigned_num(fp, opcode-FNT_DEF1));
       break;
+#ifdef XETEX
     case XDV_GLYPHS:
-      need_XeTeX(opcode);
       get_and_buffer_bytes(fp, 4);            /* width */
       len = get_and_buffer_unsigned_pair(fp); /* glyph count */
       get_and_buffer_bytes(fp, len * 10);     /* 2 bytes ID + 8 bytes x,y-location per glyph */
       break;
     case XDV_NATIVE_FONT_DEF:
-      need_XeTeX(opcode);
       do_native_font_def(get_signed_quad(dvi_file));
       break;
+#endif
     case BEGIN_REFLECT:
     case END_REFLECT:
-      need_XeTeX(opcode);
       break;
 
     case PTEXDIR:
-      need_pTeX(opcode);
       get_and_buffer_bytes(fp, 1);
       break;
 
@@ -2485,3 +2407,4 @@ dvi_scan_specials (int page_no,
 
   return;
 }
+

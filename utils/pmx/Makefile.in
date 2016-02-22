@@ -744,7 +744,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-EXTRA_DIST = $(PMX_TREE) pmx-PATCHES
+EXTRA_DIST = $(PMX_TREE) $(PMX_TREE)-PATCHES
 NEVER_DIST = `find . $(NEVER_NAMES)` $(PMX_TREE)/pmx.log \
 	$(PMX_TREE)/pmx.trs
 
@@ -2051,7 +2051,6 @@ uninstall-man: uninstall-man1
 
 dist-hook:
 	cd "$(distdir)" && rm -rf $(NEVER_DIST)
-$(PMX_TREE)/pmx.log: pmxab$(EXEEXT) scor2prt$(EXEEXT)
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

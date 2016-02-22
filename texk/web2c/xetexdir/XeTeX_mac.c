@@ -84,8 +84,9 @@ DoAATLayout(void* p, int justify)
     CFIndex totalGlyphCount = 0;
     UInt16* glyphIDs;
     Fixed* glyphAdvances;
-    void* glyph_info = NULL;
+    void* glyph_info;
     FixedPoint* locations;
+    Fixed lsUnit, lsDelta;
     CGFloat width;
 
     long txtLen;

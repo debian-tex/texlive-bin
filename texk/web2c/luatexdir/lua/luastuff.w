@@ -18,6 +18,8 @@
 % with LuaTeX; if not, see <http://www.gnu.org/licenses/>.
 
 @ @c
+
+
 #include "ptexlib.h"
 #include "lua/luatex-api.h"
 
@@ -25,6 +27,7 @@
 lua_State *Luas = NULL;
 
 int luastate_bytes = 0;
+
 int lua_active = 0;
 
 @ @c
@@ -53,7 +56,8 @@ void make_table(lua_State * L, const char *tab, const char *mttab, const char *g
 }
 
 @ @c
-static const char *getS(lua_State * L, void *ud, size_t * size)
+static
+const char *getS(lua_State * L, void *ud, size_t * size)
 {
     LoadS *ls = (LoadS *) ud;
     (void) L;
@@ -81,9 +85,11 @@ static void *my_luaalloc(void *ud, void *ptr, size_t osize, size_t nsize)
 static int my_luapanic(lua_State * L)
 {
     (void) L;                   /* to avoid warnings */
-    fprintf(stderr, "PANIC: unprotected error in call to Lua API (%s)\n", lua_tostring(L, -1));
+    fprintf(stderr, "PANIC: unprotected error in call to Lua API (%s)\n",
+            lua_tostring(L, -1));
     return 0;
 }
+
 
 @ @c
 void luafunctioncall(int slot)
@@ -96,7 +102,7 @@ void luafunctioncall(int slot)
     lua_rawgeti(Luas, -1,slot);
     if (lua_isfunction(Luas,-1)) {
         int base = lua_gettop(Luas); /* function index */
-        lua_pushinteger(Luas, slot);
+        lua_pushnumber(Luas, slot);
         lua_pushcfunction(Luas, lua_traceback); /* push traceback function */
         lua_insert(Luas, base); /* put it under chunk  */
         i = lua_pcall(Luas, 1, 0, base);
@@ -109,6 +115,10 @@ void luafunctioncall(int slot)
     lua_settop(Luas,stacktop);
     lua_active--;
 }
+
+
+
+
 
 @ @c
 static const luaL_Reg lualibs[] = {
@@ -130,6 +140,7 @@ static const luaL_Reg lualibs[] = {
     {"lpeg", luaopen_lpeg},
     {NULL, NULL}
 };
+
 
 @ @c
 static void do_openlibs(lua_State * L)
@@ -192,6 +203,7 @@ static int luatex_dofile (lua_State *L) {
   lua_call(L, 0, LUA_MULTRET);
   return lua_gettop(L) - n;
 }
+
 
 @ @c
 void luainterpreter(void)
@@ -256,6 +268,7 @@ void luainterpreter(void)
     luaopen_ff(L);
     luaopen_tex(L);
     luaopen_token(L);
+    luaopen_newtoken(L);
     luaopen_node(L);
     luaopen_texio(L);
     luaopen_kpse(L);
@@ -273,10 +286,8 @@ void luainterpreter(void)
     lua_pushstring(L, "pdf");
     lua_call(L, 1, 0);
 
-    if (!lua_only) {
-        luaL_requiref(L, "img", luaopen_img, 1);
-        lua_pop(L, 1);
-    }
+    luaL_requiref(L, "img", luaopen_img, 1);
+    lua_pop(L, 1);
 
     luaL_requiref(L, "epdf", luaopen_epdf, 1);
     lua_pop(L, 1);
@@ -357,9 +368,10 @@ void unhide_lua_value(lua_State * L, const char *name, const char *item, int r)
     }
 }
 
+
 @ @c
 int lua_traceback(lua_State * L)
-{
+{ 
     lua_getglobal(L, "debug");
     if (!lua_istable(L, -1)) {
         lua_pop(L, 1);
@@ -452,6 +464,8 @@ static void luacall(int p, int nameptr, boolean is_string) /* hh-ls: optimized l
     lua_active--;
 }
 
+
+
 @ @c
 void late_lua(PDF pdf, halfword p)
 {
@@ -518,23 +532,24 @@ lua_State *luatex_error(lua_State * L, int is_fatal)
 
     const_lstring luaerr;
     char *err = NULL;
-    if (lua_type(L, -1) == LUA_TSTRING) {
+    if (lua_isstring(L, -1)) {
         luaerr.s = lua_tolstring(L, -1, &luaerr.l);
-        /* free last one ? */
         err = (char *) xmalloc((unsigned) (luaerr.l + 1));
         snprintf(err, (luaerr.l + 1), "%s", luaerr.s);
-        last_lua_error = err; /* hm, what if we have several .. not freed */
+	last_lua_error = err;
     }
     if (is_fatal > 0) {
         /* Normally a memory error from lua.
            The pool may overflow during the |maketexlstring()|, but we
            are crashing anyway so we may as well abort on the pool size */
-        normal_error("lua",err);
+        lua_fatal_error(err);
         /* never reached */
+        xfree(err);
         lua_close(L);
         return (lua_State *) NULL;
     } else {
-        normal_warning("lua",err);
+        lua_norm_error(err);
+	/* last_lua_error = err so no need to xfree(err) */
         return L;
     }
 }

@@ -9,7 +9,7 @@ dnl
 m4_include([version.ac])[] dnl define mtx_version
 AC_INIT([m-tx (TeX Live)], mtx_version, [tex-k@tug.org])
 AC_PREREQ([2.65])
-AC_CONFIG_SRCDIR([mtx-src/analyze.c])
+AC_CONFIG_SRCDIR([mtx-]mtx_version[/analyze.c])
 AC_CONFIG_AUX_DIR([../../build-aux])
 AC_CONFIG_MACRO_DIR([../../m4])
 
@@ -35,7 +35,7 @@ AC_TYPE_SIZE_T
 # Checks for library functions.
 AC_CHECK_FUNCS([memchr memmove memset strchr strrchr strtol])
 
-AC_SUBST([MTX_TREE], [mtx-src])
+AC_SUBST([MTX_TREE], [mtx-]mtx_version)
 
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT

@@ -53,6 +53,10 @@ extern char **suffixlist;       /* in luainit.w */
 #  define eTeX_minor_version 2  /* \.{\\eTeXminorversion}  */
 #  define eTeX_revision ".2"    /* \.{\\eTeXrevision} */
 
+#  define pdftex_version_string "-2.00.0"
+                                        /* current \pdfTeX\ version */
+#  define pdftex_version 200    /* \.{\\pdftexversion} */
+#  define pdftex_revision "0"   /* \.{\\pdftexrevision} */
 
 #define LUA_COMPAT_MODULE 1
 #  include "lua.h"
@@ -80,7 +84,7 @@ extern char **suffixlist;       /* in luainit.w */
 
 #  define check_buf(size, buf_size)                                 \
   if ((unsigned)(size) > (unsigned)(buf_size))                      \
-    formatted_error("internal","buffer overflow: %d > %d at file %s, line %d",     \
+    luatex_fail("buffer overflow: %d > %d at file %s, line %d",     \
                 (int)(size), (int)(buf_size), __FILE__,  __LINE__ )
 
 #  define append_char_to_buf(c, p, buf, buf_size) do { \
@@ -149,25 +153,25 @@ size_t          T##_limit
 
 #  define str_prefix(s1, s2)  (strncmp((s1), (s2), strlen(s2)) == 0)
 
+/* that was ptexmac.h */
+
 #  include "tex/mainbody.h"
 #  include "tex/expand.h"
 #  include "tex/conditional.h"
+#  include "pdf/pdftypes.h"
 
-#  include "pdf/pdftypes.h" /* the backend data structure, shared between dvi and pdf */
-
+/* synctex */
 #  include "synctex.h"
 
 #  include "utils/avlstuff.h"
 #  include "utils/managed-sa.h"
-
 #  include "image/writeimg.h"
-
 #  include "dvi/dvigen.h"
-
-#  include "pdf/pdftables.h"
 #  include "pdf/pdfpagetree.h"
 #  include "pdf/pdfgen.h"
 #  include "pdf/pdfpage.h"
+#  include "pdf/pdftables.h"
+
 #  include "pdf/pdfaction.h"
 #  include "pdf/pdfannot.h"
 #  include "pdf/pdfcolorstack.h"
@@ -178,6 +182,7 @@ size_t          T##_limit
 #  include "pdf/pdflink.h"
 #  include "pdf/pdflistout.h"
 #  include "pdf/pdfliteral.h"
+#  include "pdf/pdfluaapi.h"
 #  include "pdf/pdfobj.h"
 #  include "pdf/pdfoutline.h"
 #  include "pdf/pdfrule.h"
@@ -187,13 +192,14 @@ size_t          T##_limit
 #  include "pdf/pdfthread.h"
 #  include "pdf/pdfxform.h"
 
+#  include "lua/luagen.h"
+
+#  include "luascripts/pdflua.h"
 
 #  include "font/luatexfont.h"
 #  include "font/mapfile.h"
-
 #  include "utils/utils.h"
 #  include "utils/unistring.h"
-
 #  include "image/writejbig2.h"
 #  include "image/pdftoepdf.h"
 
@@ -233,26 +239,24 @@ size_t          T##_limit
 
 #  include "tex/filename.h"
 
+/* lua/luainit.c */
+extern void write_svnversion(char *a);
+
 /**********************************************************************/
 
 extern halfword new_ligkern(halfword head, halfword tail);
 extern halfword handle_ligaturing(halfword head, halfword tail);
 extern halfword handle_kerning(halfword head, halfword tail);
 
-halfword lua_hpack_filter(
-    halfword head_node, scaled size, int pack_type, int extrainfo, int d);
-void lua_node_filter(
-    int filterid, int extrainfo, halfword head_node,
-    halfword * tail_node);
-halfword lua_vpack_filter(
-    halfword head_node, scaled size, int pack_type, scaled maxd, int extrainfo, int d);
-void lua_node_filter_s(
-    int filterid, int extrainfo);
-int lua_linebreak_callback(
-    int is_broken, halfword head_node, halfword * new_head);
-int lua_appendtovlist_callback(
-    halfword box, int location, halfword prev_depth, boolean is_mirrored,
-    halfword * result, int * next_depth, boolean * prev_set);
+halfword lua_hpack_filter(halfword head_node, scaled size, int pack_type,
+                          int extrainfo, int d);
+void lua_node_filter(int filterid, int extrainfo, halfword head_node,
+                     halfword * tail_node);
+halfword lua_vpack_filter(halfword head_node, scaled size, int pack_type,
+                          scaled maxd, int extrainfo, int d);
+void lua_node_filter_s(int filterid, int extrainfo);
+int lua_linebreak_callback(int is_broken, halfword head_node,
+                           halfword * new_head);
 
 void lua_pdf_literal(PDF pdf, int i);
 void copy_pdf_literal(pointer r, pointer p);
@@ -280,6 +284,9 @@ int luacstring_cattable(void);
 int luacstring_input(void);
 int luacstring_partial(void);
 int luacstring_final_line(void);
+
+/* lua/luatoken.c */
+void do_get_token_lua(int callback_id);
 
 /* lua/luanode.c */
 int visible_last_node_type(int n);
@@ -316,6 +323,7 @@ extern boolean get_callback(lua_State * L, int i);
 /* test whether a char in font is marked */
 #  define pdf_char_marked char_used
 
+#  define pdfassert assert
 #  define voidcast(a) (void *)(a)
 #  define fixmemcast(a) (smemory_word *)(a)
 
@@ -357,7 +365,9 @@ extern string normalize_quotes(const_string name, const_string mesg);
 extern string dump_name;
 extern const_string c_job_name;
 
-extern halfword *check_isnode(lua_State * L, int i);
+extern halfword *check_isnode(lua_State * L, int ud);
+extern void lua_nodelib_push_fast(lua_State * L, halfword n);
+
 extern void lua_nodelib_push_fast(lua_State * L, halfword n);
 
 extern halfword list_node_mem_usage(void);
@@ -372,5 +382,7 @@ extern void set_charinfo_vert_variants(charinfo * ci, extinfo * ext);
 extern extinfo *copy_variants(extinfo * o);
 
 extern int program_name_set;    /* in lkpselib.c */
+
+
 
 #endif                          /* PTEXLIB_H */

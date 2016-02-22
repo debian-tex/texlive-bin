@@ -19,14 +19,8 @@
 
 @* Sparse arrays with an embedded save stack.
 
-These functions are called very often but a few days of experimenting proved that
-there is not much to gain (if at all) from using macros or optimizations like
-preallocating and fast access to the first 128 entries. In practice the overhead
-is mostly in accessing memory and not in (probably inlined) calls. So, we should
-accept fate and wait for faster memory. It's the price we pay for being unicode
-on the one hand and sparse on the other.
-
 @ @c
+
 
 #include "ptexlib.h"
 
@@ -64,10 +58,12 @@ static void skip_in_stack(sa_tree a, int n)
 @ @c
 sa_tree_item get_sa_item(const sa_tree head, const int n)
 {
+    register int h;
+    register int m;
     if (head->tree != NULL) {
-        register int h = HIGHPART_PART(n);
+        h = HIGHPART_PART(n);
         if (head->tree[h] != NULL) {
-            register int m = MIDPART_PART(n);
+            m = MIDPART_PART(n);
             if (head->tree[h][m] != NULL) {
                 return head->tree[h][m][LOWPART_PART(n)];
             }
@@ -79,18 +75,22 @@ sa_tree_item get_sa_item(const sa_tree head, const int n)
 @ @c
 void set_sa_item(sa_tree head, int n, sa_tree_item v, int gl)
 {
-    int h = HIGHPART_PART(n);
-    int m = MIDPART_PART(n);
-    int l = LOWPART_PART(n);
+    int h, m, l;
+    int i;
+    h = HIGHPART_PART(n);
+    m = MIDPART_PART(n);
+    l = LOWPART_PART(n);
     if (head->tree == NULL) {
-        head->tree = (sa_tree_item ***) Mxcalloc_array(sa_tree_item **, HIGHPART);
+        head->tree =
+            (sa_tree_item ***) Mxcalloc_array(sa_tree_item **, HIGHPART);
     }
     if (head->tree[h] == NULL) {
-        head->tree[h] = (sa_tree_item **) Mxcalloc_array(sa_tree_item *, MIDPART);
+        head->tree[h] =
+            (sa_tree_item **) Mxcalloc_array(sa_tree_item *, MIDPART);
     }
     if (head->tree[h][m] == NULL) {
-        int i;
-        head->tree[h][m] = (sa_tree_item *) Mxmalloc_array(sa_tree_item, LOWPART);
+        head->tree[h][m] =
+            (sa_tree_item *) Mxmalloc_array(sa_tree_item, LOWPART);
         for (i = 0; i < LOWPART; i++) {
             head->tree[h][m][i] = head->dflt;
         }
@@ -120,10 +120,10 @@ void clear_sa_stack(sa_tree a)
 @ @c
 void destroy_sa_tree(sa_tree a)
 {
+    int h, m;
     if (a == NULL)
         return;
     if (a->tree != NULL) {
-        int h, m;
         for (h = 0; h < HIGHPART; h++) {
             if (a->tree[h] != NULL) {
                 for (m = 0; m < MIDPART; m++) {
@@ -141,16 +141,15 @@ void destroy_sa_tree(sa_tree a)
 @ @c
 sa_tree copy_sa_tree(sa_tree b)
 {
+    int h, m;
     sa_tree a = (sa_tree) Mxmalloc_array(sa_tree_head, 1);
     a->stack_step = b->stack_step;
     a->stack_size = b->stack_size;
-    a->stack_type = b->stack_type;
     a->dflt = b->dflt;
     a->stack = NULL;
     a->stack_ptr = 0;
     a->tree = NULL;
     if (b->tree != NULL) {
-        int h, m;
         a->tree = (sa_tree_item ***) Mxcalloc_array(void *, HIGHPART);
         for (h = 0; h < HIGHPART; h++) {
             if (b->tree[h] != NULL) {
@@ -169,16 +168,13 @@ sa_tree copy_sa_tree(sa_tree b)
 }
 
 @ The main reason to fill in the lowest entry branches here immediately
-is that most of the sparse arrays have a bias toward ASCII values.
+is that most of the sparse arrays have a bias toward ASCII values. 
 
 Allocating those here immediately improves the chance of the structure
-|a->tree[0][0][x]| being close together in actual memory locations
+|a->tree[0][0][x]| being close together in actual memory locations 
 
 @c
-
-/* we could save less for type 0 stacks */
-
-sa_tree new_sa_tree(int size, int type, sa_tree_item dflt)
+sa_tree new_sa_tree(int size, sa_tree_item dflt)
 {
     sa_tree_head *a;
     a = (sa_tree_head *) xmalloc(sizeof(sa_tree_head));
@@ -188,9 +184,7 @@ sa_tree new_sa_tree(int size, int type, sa_tree_item dflt)
     a->tree[0] = (sa_tree_item **) Mxcalloc_array(sa_tree_item *, MIDPART);
     a->stack_size = size;
     a->stack_step = size;
-    a->stack_type = type;
     a->stack_ptr = 0;
- /* printf("creating sa tree of type %d\n",type); */
     return (sa_tree) a;
 }
 
@@ -209,20 +203,19 @@ void restore_sa_stack(sa_tree head, int gl)
     }
 }
 
+
 @ @c
-void dump_sa_tree(sa_tree a, const char * name)
+void dump_sa_tree(sa_tree a)
 {
     boolean f;
-    int x, n;
+    int x;
     int h, m, l;
+    assert(a != NULL);
     dump_int(a->stack_step);
-    x = a->dflt.int_value;
+    x = (int) a->dflt;
     dump_int(x);
     if (a->tree != NULL) {
-        dump_int(1); /* marker */
-        n = a->stack_type;
-        dump_int(n);
-     /* printf("dumping sa tree %s with type %d\n",name,n); */
+        dump_int(1);
         for (h = 0; h < HIGHPART; h++) {
             if (a->tree[h] != NULL) {
                 f = 1;
@@ -232,15 +225,8 @@ void dump_sa_tree(sa_tree a, const char * name)
                         f = 1;
                         dump_qqqq(f);
                         for (l = 0; l < LOWPART; l++) {
-                            if (n == 2) {
-                                x = a->tree[h][m][l].dump_uint.value_1;
-                                dump_int(x);
-                                x = a->tree[h][m][l].dump_uint.value_2;
-                                dump_int(x);
-                            } else {
-                                x = a->tree[h][m][l].uint_value;
-                                dump_int(x);
-                            }
+                            x = (int) a->tree[h][m][l];
+                            dump_int(x);
                         }
                     } else {
                         f = 0;
@@ -253,14 +239,14 @@ void dump_sa_tree(sa_tree a, const char * name)
             }
         }
     } else {
-        dump_int(0); /* marker */
+        dump_int(0);
     }
 }
 
 @ @c
-sa_tree undump_sa_tree(const char * name)
+sa_tree undump_sa_tree(void)
 {
-    int x, n;
+    int x;
     int h, m, l;
     boolean f;
     sa_tree a = (sa_tree) Mxmalloc_array(sa_tree_head, 1);
@@ -268,17 +254,14 @@ sa_tree undump_sa_tree(const char * name)
     a->stack_step = x;
     a->stack_size = x;
     undump_int(x);
-    a->dflt.int_value = x;
+    a->dflt = (sa_tree_item) x;
     a->stack = Mxmalloc_array(sa_stack_item, a->stack_size);
     a->stack_ptr = 0;
     a->tree = NULL;
-    undump_int(x); /* marker */
+    undump_int(x);
     if (x == 0)
         return a;
     a->tree = (sa_tree_item ***) Mxcalloc_array(void *, HIGHPART);
-    undump_int(n);
-    a->stack_type = n;
- /* printf("undumping sa tree %s with type %d\n",name,n); */
     for (h = 0; h < HIGHPART; h++) {
         undump_qqqq(f);
         if (f > 0) {
@@ -288,15 +271,8 @@ sa_tree undump_sa_tree(const char * name)
                 if (f > 0) {
                     a->tree[h][m] = Mxmalloc_array(sa_tree_item, LOWPART);
                     for (l = 0; l < LOWPART; l++) {
-                        if (n == 2) {
-                            undump_int(x);
-                            a->tree[h][m][l].dump_uint.value_1 = x;
-                            undump_int(x);
-                            a->tree[h][m][l].dump_uint.value_2 = x;
-                        } else {
-                            undump_int(x);
-                            a->tree[h][m][l].uint_value = x;
-                        }
+                        undump_int(x);
+                        a->tree[h][m][l] = (unsigned int) x;
                     }
                 }
             }

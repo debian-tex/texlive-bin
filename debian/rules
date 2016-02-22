@@ -87,6 +87,8 @@ override_dh_autoreconf:
 #	--with-system-xpdf
 # so that as much as possible is built from system libs.
 #
+# 20160222: retry with current poppler (Debian 0.38)
+#
 
 # disable-largefile seems to break omegafonts, as they core dump
 # leave it as is for now and see what else pops up
@@ -116,7 +118,7 @@ override_dh_auto_configure:
 	--with-system-icu			\
 	--with-system-gmp			\
 	--with-system-mpfr			\
-	--without-system-poppler		\
+	--with-system-poppler			\
 	--with-system-xpdf			\
 	--with-x				\
 	--with-mf-x-toolkit			\

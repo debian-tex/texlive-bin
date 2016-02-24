@@ -1,3 +1,10 @@
+texlive-bin (2016.2016MMDD.SSSSS-1) UNRELEASED; urgency=medium
+
+  * switch to system teckit library
+  * build gregorio, replace file in the old package (Closes: #815682)
+
+ -- Norbert Preining <preining@debian.org>  Wed, 24 Feb 2016 22:48:51 +0900
+
 texlive-bin (2015.20160222.37495-1) unstable; urgency=medium
 
   * drop transitional dummy luatex package (Closes: #804070)

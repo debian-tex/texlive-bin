@@ -119,6 +119,7 @@ override_dh_auto_configure:
 	--with-system-gmp			\
 	--with-system-mpfr			\
 	--with-system-poppler			\
+	--with-system-teckit			\
 	--with-system-xpdf			\
 	--with-x				\
 	--with-mf-x-toolkit			\

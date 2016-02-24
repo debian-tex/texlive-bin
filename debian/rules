@@ -209,8 +209,7 @@ override_dh_installdocs:
 	#dh_installdocs -plibtexlua52 -plibtexlua52-dev \
 	#	NOTHING TO INSTALL
 ifeq ($(WITHLUAJIT), yes)
-	dh_installdocs -plibtexluajit2 -plibtexluajit-dev \
-		libs/luajit/LuaJIT-2.?.?-PATCHES/TL-Changes
+	dh_installdocs -plibtexluajit2 -plibtexluajit-dev
 endif
 
 override_dh_installchangelogs:
@@ -222,10 +221,10 @@ override_dh_installchangelogs:
 	dh_installchangelogs -plibsynctex1 -plibsynctex-dev \
 		texk/web2c/synctexdir/ChangeLog
 	dh_installchangelogs -plibtexlua52 -plibtexlua52-dev \
-		libs/lua52/lua-5.?.?-PATCHES/ChangeLog
+		libs/lua52/lua52-PATCHES/ChangeLog
 ifeq ($(WITHLUAJIT), yes)
 	dh_installchangelogs -plibtexluajit2 -plibtexluajit-dev \
-		libs/luajit/LuaJIT-2.?.?-PATCHES/ChangeLog
+		libs/luajit/LuaJIT-PATCHES/ChangeLog
 endif
 
 override_dh_compress:

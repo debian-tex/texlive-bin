@@ -14,7 +14,7 @@ else
     svnroot=/src/TeX/texlive-svn/Build/source
   fi
 fi
-baseyear=2015
+baseyear=2016
 
 cmd="svn info"
 if [ $gitmode = 1 ] ; then

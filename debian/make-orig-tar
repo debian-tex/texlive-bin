@@ -52,12 +52,7 @@ rm -rf $verstr/utils/ps2eps
 rm -rf $verstr/utils/t1utils
 #
 # remove system libraries, keep only teckit and lua52 and libpng
-# teckit: not in Debian
-# lua52: system usage not supported in TeX Live
-# libpng >= 1.4 is not available in Debian/unstable
-# and depending libs are not compiled against it, 
-# as bad as it is, we have to keep 
-#	cairo freetype2 gd libpng
+# teckit: for now only in experimental
 # poppler is currently too old in Debian, keep it
 #	poppler
 
@@ -73,6 +68,10 @@ for i in \
 	xpdf		\
 	zlib		\
 	zziplib		\
+	cairo		\
+	freetype2	\
+	libpng		\
+	gd		\
 	; do
   rm -rf $verstr/libs/$i
 done

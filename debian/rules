@@ -67,15 +67,6 @@ override_dh_autoreconf:
 	dh_autoreconf --as-needed
 
 #
-# we need libpng >= 1.4 which is not available in unstable and
-# seems not to arrive anytime soon. We have to rebuild also
-# the following depending libs with new libpng: gd freetype2 cairo
-#	--with-system-freetype2			\
-	--with-freetype2-include=/usr/include/freetype2 \
-#	--with-system-libpng			\
-#	--with-system-gd			\
-#	--with-system-cairo 			\
-#
 # poppler is used two times in TeX Live:
 # once for pdftex/xetex
 # once for luatex
@@ -88,6 +79,8 @@ override_dh_autoreconf:
 # so that as much as possible is built from system libs.
 #
 # 20160222: retry with current poppler (Debian 0.38)
+# 20160409: libpng16 has entered unstable, try to build everything
+#	    with system libraries
 #
 
 # disable-largefile seems to break omegafonts, as they core dump
@@ -121,6 +114,11 @@ override_dh_auto_configure:
 	--with-system-poppler			\
 	--with-system-teckit			\
 	--with-system-xpdf			\
+	--with-system-freetype2			\
+	--with-freetype2-include=/usr/include/freetype2 \
+	--with-system-libpng			\
+	--with-system-gd			\
+	--with-system-cairo 			\
 	--with-x				\
 	--with-mf-x-toolkit			\
 	--with-xdvi-x-toolkit=xaw		\

@@ -1,6 +1,6 @@
 /* This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
 
-    Copyright (C) 2002-2015 by Jin-Hwan Cho and Shunsaku Hirata,
+    Copyright (C) 2002-2016 by Jin-Hwan Cho and Shunsaku Hirata,
     the dvipdfmx project team.
     
     Copyright (C) 1998, 1999 by Mark A. Wicks <mwicks@kettering.edu>
@@ -40,7 +40,7 @@ typedef struct fontmap_opt {
   /* Synthetic font */
   double slant, extend, bold;
   /* comaptibility and other flags */
-  long   mapc,  flags;
+  int    mapc,  flags;
 
   char  *otl_tags;    /* currently unused */
   char  *tounicode;   /* not implemented yet */
@@ -84,7 +84,7 @@ extern void         pdf_init_fontmap_record   (fontmap_rec *mrec);
 extern void         pdf_clear_fontmap_record  (fontmap_rec *mrec);
 
 extern int          pdf_load_fontmap_file     (const char  *filename, int mode);
-extern int          pdf_read_fontmap_line     (fontmap_rec *mrec, const char *mline, long mline_strlen, int format);
+extern int          pdf_read_fontmap_line     (fontmap_rec *mrec, const char *mline, int mline_strlen, int format);
 
 extern int          pdf_append_fontmap_record (const char  *kp, const fontmap_rec *mrec);
 extern int          pdf_remove_fontmap_record (const char  *kp);

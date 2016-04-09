@@ -1,5 +1,7 @@
 #!/bin/sh
 # Convert WEB programs not needing special treatment to C.
+# Public domain.  Originally written ca.1985 by Tom Rokicki,
+# Tim Morgan, Karl Berry, et al.
 
 : ${srcdir=.}
 
@@ -64,9 +66,9 @@ case $basefile in
     midcmd="| sed -f $srcdir/web2c/cvtbib.sed"
     ;;
 
-  mf|tex|aleph|etex|pdftex|ptex|eptex|euptex|uptex|xetex)
+  mf|mflua|mfluajit|tex|aleph|etex|pdftex|ptex|eptex|euptex|uptex|xetex)
     case $basefile in
-      mf)
+      mf*)
         more_defines="$srcdir/web2c/texmf.defines $srcdir/web2c/mfmp.defines"
         precmd="| sed -f $srcdir/web2c/cvtmf1.sed"
         web2c_options="-m -c${basefile}coerce"
@@ -75,14 +77,14 @@ case $basefile in
 
       *)
         more_defines="$srcdir/web2c/texmf.defines $srcdir/synctexdir/synctex.defines"
-        prog_defines="$srcdir/${basefile}dir/$basefile.defines"
-        if test -f $prog_defines; then
-          more_defines="$more_defines $prog_defines"
-        fi
         web2c_options="-t -c${basefile}coerce"
         fixwrites_options=-t
         ;;
     esac
+    prog_defines="$srcdir/${basefile}dir/$basefile.defines"
+    if test -f $prog_defines; then
+      more_defines="$more_defines $prog_defines"
+    fi
     hfile=texmfmp.h
     postcmd="| ./web2c/splitup $splitup_options $basefile"
     cfile=${basefile}0.c # last output file, or thereabouts
@@ -105,9 +107,13 @@ eval "cat $srcdir/web2c/common.defines $more_defines $pascalfile \
 # Using the above pipeline as the condition of an if does no good, since
 # typical sh's use the status of the first command as the pipeline result.
 # So check for an empty output file, or one with the error marker we put in.
-if test ! -s $cfile || grep @error@ $output_files >/dev/null; then
+if test ! -s "$cfile" || grep @error@ $output_files >/dev/null; then
   : ${TMPDIR=/tmp}
   # Don't just delete it, since it may be useful for debugging.
+  if test ! -s "$pascalfile"; then
+    echo "$0: $pascalfile empty, removing it." >&2
+    rm -f $pascalfile
+  fi
   echo "$0: conversion of $pascalfile failed, moving dregs:" >&2
   cmd="mv $output_files $TMPDIR"
   (cd $TMPDIR && rm -f $output_files)
@@ -121,7 +127,7 @@ case $basefile in
     sed -e 's/(buftype)//g' -e 's/(pdstype)//g' <$basefile.h >x$basefile.h
     mv x$basefile.h $basefile.h
     ;;
-  mf|tex|aleph|etex|pdftex|ptex|eptex|euptex|uptex|xetex)
+  mf|mflua|mfluajit|tex|aleph|etex|pdftex|ptex|eptex|euptex|uptex|xetex)
     sleep 2 # so timestamps are definitely later, to avoid make weirdness
     cat $srcdir/web2c/coerce.h >>${basefile}coerce.h
     touch ${basefile}d.h

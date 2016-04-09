@@ -6,7 +6,7 @@
 ## We want to re-distribute the whole original pmx source tree.
 EXTRA_DIST = $(PMX_TREE)
 ## Patches applied to the original source tree
-EXTRA_DIST += $(PMX_TREE)-PATCHES
+EXTRA_DIST += pmx-PATCHES
 
 # Files not to be distributed
 include $(srcdir)/../../am/dist_hook.am
@@ -239,6 +239,7 @@ dist_man1_MANS = pmxab.1 scor2prt.1
 ## Tests
 ##
 TESTS = $(PMX_TREE)/pmx.test
+$(PMX_TREE)/pmx.log: pmxab$(EXEEXT) scor2prt$(EXEEXT)
 
 TESTS_ENVIRONMENT = test_src=$(srcdir)/$(PMX_TREE)/tests
 

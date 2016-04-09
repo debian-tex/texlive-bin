@@ -21,7 +21,6 @@
 #ifndef MAINBODY_H
 #  define MAINBODY_H
 
-extern int luatex_svn;
 extern int luatex_version;
 extern int luatex_revision;
 extern int luatex_date_info;
@@ -50,16 +49,16 @@ in production versions of \TeX.
 #  define sup_nest_size   4000
 
 #  define inf_max_in_open   6
-#  define sup_max_in_open   127
+#  define sup_max_in_open   600 /* was 127. now okay for some 512 nested lua calls */
 
 #  define inf_param_size   60
 #  define sup_param_size   32767
 
 #  define inf_save_size   600
-#  define sup_save_size   250000
+#  define sup_save_size   500000
 
 #  define inf_stack_size   200
-#  define sup_stack_size   30000
+#  define sup_stack_size   50000
 
 #  define inf_dvi_buf_size   800
 #  define sup_dvi_buf_size   65536
@@ -218,7 +217,6 @@ is conditionally compiled in the C code.
 
 #  define fix_date_and_time() dateandtime(int_par(time_code),int_par(day_code),int_par(month_code),int_par(year_code))
 
-extern int get_luatexsvn(void);
 extern int get_luatexversion(void);
 extern str_number get_luatexrevision(void);
 extern int get_luatex_date_info(void);

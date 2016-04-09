@@ -1,7 +1,7 @@
 /* epdf.h
 
    Copyright 1996-2006 Han The Thanh <thanh@pdftex.org>
-   Copyright 2006-2012 Taco Hoekwater <taco@luatex.org>
+   Copyright 2006-2015 Taco Hoekwater <taco@luatex.org>
    This file is part of LuaTeX.
 
    LuaTeX is free software; you can redistribute it and/or modify it under
@@ -47,9 +47,7 @@ extern "C" {
 #  include <Dict.h>
 #  include <XRef.h>
 #  include <Catalog.h>
-#  ifdef HAVE_STRUCTTREEROOT_H
-#    include <StructTreeRoot.h>
-#  endif
+#  include <StructTreeRoot.h>
 #  include <Link.h>
 #  include <Page.h>
 #  include <GfxFont.h>
@@ -123,9 +121,11 @@ extern "C" {
     extern int pdf_create_obj(PDF pdf, int t, int i);
 
     /* pdftoepdf.cc */
-    extern void read_pdf_info(image_dict *, int, int, img_readtype_e);
-    extern void write_epdf(PDF, image_dict *);
+    extern void read_pdf_info(image_dict *);
+    extern void flush_pdf_info(image_dict *);
+    extern void write_epdf(PDF, image_dict *, int suppress_optional_info);
     extern void unrefPdfDocument(char *);
+    extern void unrefMemStreamPdfDocument(char *);
     extern void epdf_free(void);
     extern void copyReal(PDF pdf, double d);
 
@@ -194,6 +194,14 @@ struct PdfDocument {
     unsigned int pc;            // counter to track PDFDoc generation or deletion
 };
 
-PdfDocument *refPdfDocument(char *file_path, file_error_mode fe);
+PdfDocument *refPdfDocument(const char *file_path, file_error_mode fe);
+
+PdfDocument *refMemStreamPdfDocument(char *docstream, unsigned long long streamsize, const char *file_id);
+
+#define STREAM_CHECKSUM_SIZE 16    // md5
+#define STRSTREAM_CHECKSUM_SIZE 1+((unsigned int)(log((double)ULONG_MAX)/log(16.0)))    // djb2 printable digest as hex stream
+#define STREAM_FILE_ID_LEN   2048  // 2048 bytes are enough to make a strong almost-unique name
+#define STREAM_URI           "data:application/pdf,"
+#define STREAM_URI_LEN       21    // length of "data:application/pdf," without final '\0'
 
 #endif                          /* EPDF_H */

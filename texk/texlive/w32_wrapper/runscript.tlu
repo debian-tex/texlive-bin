@@ -1,7 +1,7 @@
 
 
-local svnrevision = string.match("$Revision: 36823 $", "%d+") or "0"
-local svndate     = string.match("$Date: 2015-04-13 08:30:56 +0200 (Mon, 13 Apr 2015) $", "[-%d]+") or "2009-12-04"
+local svnrevision = string.match("$Revision: 39067 $", "%d+") or "0"
+local svndate     = string.match("$Date: 2015-12-10 23:28:26 +0100 (Thu, 10 Dec 2015) $", "[-%d]+") or "2009-12-04"
 local bannerstr   = "runscript wrapper utility (rev. " ..
                     svnrevision .. ", " .. svndate .. ")\n" .. 
                     "usage:   runscript script-name [arguments]\n" ..
@@ -249,6 +249,10 @@ local docstr = [[
         - fix for argument duplication in fmtutil
     2015/04/12
         - handle fmtutil-sys via fmtutil --sys
+    2015/09/10
+        - more slash flipping for the sake of vbscript and unc paths
+    2015/12/11
+    	- fix spurious arguments for updmap and fmtutil
 ]]
 
 -- HELPER SUBROUTINES --
@@ -574,11 +578,11 @@ elseif progname == 'a2ping' then
   table.insert(extension_map['.pl'], '-x')
 elseif progname == 'updmap' then 
   if sysprog then
-    argline = progname .. ' --sys ' .. argline
+    argline = ' --sys ' .. argline
   end
 elseif progname == 'fmtutil' then 
   if sysprog then
-    argline = progname .. ' --sys ' .. argline
+    argline = ' --sys ' .. argline
   end
 elseif progname == 'asy' then
   os.setenv('ASYMPTOTE_GS', GSEXE)
@@ -645,7 +649,9 @@ if not ARGV then
     arg[0] = progfullname
   else
     ARGV = extension_map[ext] or assert(shebang_to_argv(progfullname)) 
-    table.insert(ARGV, _q(progfullname))
+    -- [w|c]script, for one, mistakes a forward-slashed UNC script path
+    -- for an option even when quoted
+    table.insert(ARGV, _q(progfullname:gsub('/','\\')))
     if not ARGV[0] then
       ARGV[0], ARGV[1] = assert(check_command(ARGV[1], PATH))
     end

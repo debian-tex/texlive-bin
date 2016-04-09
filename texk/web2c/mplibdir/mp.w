@@ -1,4 +1,4 @@
-% $Id: mp.w 2055 2015-01-22 15:39:12Z luigi $
+% $Id: mp.w 2080 2016-03-06 21:26:30Z luigi $
 %
 % This file is part of MetaPost;
 % the MetaPost program is in the public domain.
@@ -73,12 +73,12 @@ undergoes any modifications, so that it will be clear which version of
 @^extensions to \MP@>
 @^system dependencies@>
 
-@d default_banner "This is MetaPost, Version 1.999" /* printed when \MP\ starts */
+@d default_banner "This is MetaPost, Version 1.9991" /* printed when \MP\ starts */
 @d true 1
 @d false 0
 
 @<Metapost version header@>=
-#define metapost_version "1.999"
+#define metapost_version "1.9991"
 
 @ The external library header for \MP\ is |mplib.h|. It contains a
 few typedefs and the header defintions for the externally used
@@ -331,6 +331,7 @@ typedef struct mp_number_data mp_number;
 typedef void (*convert_func) (mp_number *r);
 typedef void (*m_log_func) (MP mp, mp_number *r, mp_number a);
 typedef void (*m_exp_func) (MP mp, mp_number *r, mp_number a);
+typedef void (*m_unif_rand_func) (MP mp, mp_number *ret, mp_number x_orig);
 typedef void (*m_norm_rand_func) (MP mp, mp_number *ret);
 typedef void (*pyth_add_func) (MP mp, mp_number *r, mp_number a, mp_number b);
 typedef void (*pyth_sub_func) (MP mp, mp_number *r, mp_number a, mp_number b);
@@ -475,6 +476,7 @@ typedef struct math_data {
   n_arg_func  n_arg;
   m_log_func  m_log;
   m_exp_func  m_exp;
+  m_unif_rand_func m_unif_rand;
   m_norm_rand_func m_norm_rand;
   pyth_add_func pyth_add;
   pyth_sub_func pyth_sub;
@@ -2566,9 +2568,12 @@ void mp_new_randoms (MP mp) {
   mp->j_random = 54;
 }
 
-@ To consume a random fraction, the program below will say `|next_random|'.
+@ To consume a random fraction, the program below will say `|next_random|'. 
+Now each number system has its own implementation,
+true to the original as much as possibile.
 
 @c
+/* Unused.
 static void mp_next_random (MP mp, mp_number *ret) {
   if ( mp->j_random==0 )
     mp_new_randoms(mp);
@@ -2576,7 +2581,7 @@ static void mp_next_random (MP mp, mp_number *ret) {
     decr(mp->j_random);
   number_clone (*ret, mp->randoms[mp->j_random]);
 }
-
+*/
 
 @ To produce a uniform random number in the range |0<=u<x| or |0>=u>x|
 or |0=u=x|, given a |scaled| value~|x|, we proceed as shown here.
@@ -2584,10 +2589,15 @@ or |0=u=x|, given a |scaled| value~|x|, we proceed as shown here.
 Note that the call of |take_fraction| will produce the values 0 and~|x|
 with about half the probability that it will produce any other particular
 values between 0 and~|x|, because it rounds its answers.
+This is the original one,
+that stays as reference:
+As said before, now each number system has its own implementation.
+
 
 @c
+/*Unused.
 static void mp_unif_rand (MP mp, mp_number *ret, mp_number x_orig) {
-  mp_number y;     /* trial value */
+  mp_number y;     // trial value 
   mp_number x, abs_x;
   mp_number u;
   new_fraction (y);
@@ -2612,7 +2622,7 @@ static void mp_unif_rand (MP mp, mp_number *ret, mp_number x_orig) {
   free_number (x);
   free_number (y);
 }
-
+*/
 
 @ Finally, a normal deviate with mean zero and unit standard deviation
 can readily be obtained with the ratio method (Algorithm 3.4.1R in
@@ -10965,6 +10975,7 @@ This first set goes into the header
 @d n_arg(R,A,B)                        (((math_data *)(mp->math))->n_arg)(mp,&(R),A,B)
 @d m_log(R,A)                          (((math_data *)(mp->math))->m_log)(mp,&(R),A)
 @d m_exp(R,A)                          (((math_data *)(mp->math))->m_exp)(mp,&(R),A)
+@d m_unif_rand(R,A)                    (((math_data *)(mp->math))->m_unif_rand)(mp,&(R),A)
 @d m_norm_rand(R)                      (((math_data *)(mp->math))->m_norm_rand)(mp,&(R))
 @d velocity(R,A,B,C,D,E)               (((math_data *)(mp->math))->velocity)(mp,&(R),A,B,C,D,E)
 @d ab_vs_cd(R,A,B,C,D)                 (((math_data *)(mp->math))->ab_vs_cd)(mp,&(R),A,B,C,D)
@@ -24861,7 +24872,8 @@ static void mp_do_unary (MP mp, quarterword c) {
         {
           mp_number vvx;
           new_number (vvx);
-          mp_unif_rand (mp, &vvx, cur_exp_value_number ());
+          /*mp_unif_rand (mp, &vvx, cur_exp_value_number ());*/
+          m_unif_rand (vvx, cur_exp_value_number ());
           set_cur_exp_value_number (vvx);
           free_number (vvx);
         }
@@ -32790,8 +32802,7 @@ static integer mp_min_cover (MP mp, mp_number d) {
 
     set_number_from_substraction(test, value_number (p), l);
     if (number_less (test, mp->perturbation)) {
-      number_clone (mp->perturbation, value_number (p));
-      number_substract (mp->perturbation, l);
+      number_clone (mp->perturbation, test);
     }
   }
   free_number  (test);
@@ -32817,13 +32828,13 @@ finding the range, then to go sequentially until the exact borderline has
 been discovered.
 
 @c
-static void mp_threshold (MP mp, mp_number ret, integer m) {
+static void mp_threshold (MP mp, mp_number *ret, integer m) {
   mp_number d, arg1;     /* lower bound on the smallest interval size */
   new_number (d);
   new_number (arg1);
   mp->excess = mp_min_cover (mp, zero_t) - m;
   if (mp->excess <= 0) {
-    number_clone (ret, zero_t);
+    number_clone (*ret, zero_t);
   } else {
     do {
       number_clone (d, mp->perturbation);
@@ -32832,7 +32843,7 @@ static void mp_threshold (MP mp, mp_number ret, integer m) {
     while (mp_min_cover (mp, d) > m) {
       number_clone (d, mp->perturbation);
     }
-    number_clone (ret, d);
+    number_clone (*ret, d);
   }
   free_number (d);
   free_number (arg1);
@@ -32854,7 +32865,7 @@ static integer mp_skimp (MP mp, integer m) {
   mp_number v;     /* a compromise value */
   mp_number l_d;
   new_number (d);
-  mp_threshold (mp, d, m);
+  mp_threshold (mp, &d, m);
   new_number (l);
   new_number (l_d);
   new_number (v);
@@ -32891,6 +32902,7 @@ static integer mp_skimp (MP mp, integer m) {
     decr (mp->excess);
     if (mp->excess == 0) {
        number_clone (l_d, l);
+       set_number_to_zero (d);
     }
   } while (number_lessequal(value_number (mp_link (p)), l_d));
   set_number_from_substraction (test, value_number (p), l);
@@ -32960,7 +32972,7 @@ also because zero values do not need to be put into the lists.
 clear_the_list;
 for (k = mp->bc; k <= mp->ec; k++) {
   if (mp->char_exists[k]) {
-    if (mp->tfm_height[k] == 0)
+    if (number_zero(value_number (mp->tfm_height[k])))
       mp->tfm_height[k] = mp->zero_val;
     else
       mp->tfm_height[k] = mp_sort_in (mp, value_number (mp->tfm_height[k]));
@@ -32973,7 +32985,7 @@ if (number_greaterequal (mp->perturbation, tfm_warn_threshold_k))
 clear_the_list;
 for (k = mp->bc; k <= mp->ec; k++) {
   if (mp->char_exists[k]) {
-    if (mp->tfm_depth[k] == 0)
+    if (number_zero(value_number (mp->tfm_depth[k])))
       mp->tfm_depth[k] = mp->zero_val;
     else
       mp->tfm_depth[k] = mp_sort_in (mp, value_number (mp->tfm_depth[k]));
@@ -32986,7 +32998,7 @@ if (number_greaterequal (mp->perturbation, tfm_warn_threshold_k))
 clear_the_list;
 for (k = mp->bc; k <= mp->ec; k++) {
   if (mp->char_exists[k]) {
-    if (mp->tfm_ital_corr[k] == 0)
+    if (number_zero(value_number (mp->tfm_ital_corr[k])))
       mp->tfm_ital_corr[k] = mp->zero_val;
     else
       mp->tfm_ital_corr[k] = mp_sort_in (mp, value_number (mp->tfm_ital_corr[k]));

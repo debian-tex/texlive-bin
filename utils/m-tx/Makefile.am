@@ -6,7 +6,7 @@
 ## We want to re-distribute the whole original mtx source tree.
 EXTRA_DIST = $(MTX_TREE)
 ## Patches applied to the original source tree
-EXTRA_DIST += $(MTX_TREE)-PATCHES
+EXTRA_DIST += mtx-PATCHES
 
 # Files not to be distributed
 include $(srcdir)/../../am/dist_hook.am
@@ -58,6 +58,7 @@ dist_man1_MANS = prepmx.1
 ##
 TESTS = m-tx.test
 EXTRA_DIST += $(TESTS)
+m-tx.log: prepmx$(EXEEXT)
 
 ## m-tx.test
 EXTRA_DIST += tests/mozart.mtx tests/mozart.pmx

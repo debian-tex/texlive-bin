@@ -5,7 +5,7 @@
 ##
 #************************************************************************
 #
-#  Adapted for TeX Live from dvipng-1.12/Makefile.in
+#  Adapted for TeX Live from dvipng-src/Makefile.in
 #  Copyright (C) 2002-2008 Jan-Åke Larsson
 #
 #************************************************************************
@@ -19,7 +19,7 @@ EXTRA_DIST = $(DVIPNG_TREE)
 
 ## Patches applied to the original source tree
 ##
-EXTRA_DIST += $(DVIPNG_TREE)-PATCHES
+EXTRA_DIST += dvipng-PATCHES
 
 # Files not to be distributed
 include $(srcdir)/../../am/dist_hook.am
@@ -101,6 +101,7 @@ endif !WIN32
 endif have_gif
 
 TESTS = dvipng.test
+dvipng.log: dvipng$(EXEEXT)
 
 EXTRA_DIST += dvipng.test dvipng-test.dvi
 

@@ -1,6 +1,8 @@
+## $Id$
 ## Makefile.am for the TeX Live subdirectory utils/devnag/
 ##
-## Copyright 2009-2014 Peter Breitenlohner <tex-live@tug.org>
+## Copyright 2016 Karl Berry <tex-live@tug.org>
+## Copyright 2009-2015 Peter Breitenlohner <tex-live@tug.org>
 ## You may freely use, modify and/or distribute this file.
 ##
 AM_CPPFLAGS = -DTEXLIVE
@@ -17,12 +19,16 @@ config.force: $(KPATHSEA_DEPEND)
 	echo timestamp >config.force
 	$(SHELL) ./config.status --recheck
 
+man1_MANS = \
+	devnag.1
+
 DISTCLEANFILES = config.force
 
 ## Tests.
 ##
 TESTS = tests/devnag.test
 EXTRA_DIST = $(TESTS)
+tests/devnag.log: devnag$(EXEEXT)
 ## tests/devnag.test
 EXTRA_DIST += \
 	tests/captions.dn tests/captions.tex \
@@ -31,4 +37,3 @@ EXTRA_DIST += \
 	tests/vedasample.dn tests/vedasample.tex
 
 DISTCLEANFILES += captions.dn examples.dn *.tex
-

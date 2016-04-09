@@ -8,7 +8,7 @@ dnl   with or without modifications, as long as this notice is preserved.
 dnl
 dnl *********************************************************************
 dnl
-dnl  Adapted for TeX Live from dvisvgm-0.8.7/configure.ac
+dnl  Adapted for TeX Live from dvisvgm-src/configure.ac
 dnl  Copyright (C) 2005-2009 Martin Gieseking <martin.gieseking@uos.de>
 dnl
 dnl *********************************************************************
@@ -16,7 +16,7 @@ dnl
 m4_include([version.ac])[] dnl define dvisvgm_version
 AC_INIT([dvisvgm (TeX Live)], dvisvgm_version, [tex-k@tug.org])
 AC_PREREQ([2.65])
-AC_CONFIG_SRCDIR([dvisvgm-]dvisvgm_version[/src/dvisvgm.cpp])
+AC_CONFIG_SRCDIR([dvisvgm-src/src/dvisvgm.cpp])
 AC_CONFIG_AUX_DIR([../../build-aux])
 AC_CONFIG_MACRO_DIR([../../m4])
 
@@ -143,7 +143,7 @@ if false; then
   AC_DEFINE([KPSE_CXX_UNSAFE], 1, [Define to 1 if the kpathsea headers are not C++ safe.])
 fi
 
-AC_SUBST([DVISVGM_TREE], [dvisvgm-]dvisvgm_version)
+AC_SUBST([DVISVGM_TREE], [dvisvgm-src])
 
 AC_CONFIG_FILES([Makefile])
 

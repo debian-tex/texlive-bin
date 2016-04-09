@@ -93,7 +93,7 @@ int vf_packet_bytes(charinfo * co)
             vfp += (int) k;
             break;
         default:
-            pdf_error("vf", "invalid DVI command (1)");
+            normal_error("vf", "invalid DVI command (1)");
         }
     };
     return (vfp - vf_packets);
@@ -190,13 +190,13 @@ void do_vf_packet(PDF pdf, internal_font_number vf_f, int c, int ex_glyph)
         case packet_push_code:
             vp->packet_stack_level++;
             if (vp->packet_stack_level == packet_stack_size)
-                pdf_error("vf", "packet_stack_level overflow");
+                normal_error("vf", "packet_stack_level overflow");
             vp->packet_stack[vp->packet_stack_level] = *mat_p;
             mat_p = &(vp->packet_stack[vp->packet_stack_level]);
             break;
         case packet_pop_code:
             if (vp->packet_stack_level == vp->packet_stack_minlevel)
-                pdf_error("vf", "packet_stack_level underflow");
+                normal_error("vf", "packet_stack_level underflow");
             vp->packet_stack_level--;
             mat_p = &(vp->packet_stack[vp->packet_stack_level]);
             break;
@@ -217,8 +217,8 @@ void do_vf_packet(PDF pdf, internal_font_number vf_f, int c, int ex_glyph)
             packet_scaled(size.v, vp->fs_f);    /* height (where is depth?) */
             packet_scaled(size.h, vp->fs_f);
             if (size.h > 0 && size.v > 0)
-                pdf_place_rule(pdf, 0, size);   /* the 0 is unused */
-            mat_p->pos.h += size.h;
+                backend_out[rule_node](pdf, 0, size);  /* the 0 is unused */
+           mat_p->pos.h += size.h;
             break;
         case packet_right_code:
             packet_scaled(i, vp->fs_f);
@@ -255,7 +255,7 @@ void do_vf_packet(PDF pdf, internal_font_number vf_f, int c, int ex_glyph)
             break;
         case packet_node_code:
             packet_number(k);
-            hlist_out(pdf, (halfword) k);
+            hlist_out(pdf, (halfword) k, 0);
             break;
         case packet_nop_code:
             break;
@@ -268,7 +268,7 @@ void do_vf_packet(PDF pdf, internal_font_number vf_f, int c, int ex_glyph)
             pdf->pstruct->need_tf = true;
             break;
         default:
-            pdf_error("vf", "invalid DVI command (2)");
+            normal_error("vf", "invalid DVI command (2)");
         }
         synch_pos_with_cur(&localpos, save_posstruct, mat_p->pos);      /* trivial case, always TLT */
     }
@@ -324,7 +324,7 @@ int *packet_local_fonts(internal_font_number f, int *num)
                     vfp += i;
                     break;
                 default:
-                    pdf_error("vf", "invalid DVI command (3)");
+                    normal_error("vf", "invalid DVI command (3)");
                 }
             }
         }
@@ -392,7 +392,7 @@ replace_packet_fonts(internal_font_number f, int *old_fontid,
                     vfp += k;
                     break;
                 default:
-                    pdf_error("vf", "invalid DVI command (4)");
+                    normal_error("vf", "invalid DVI command (4)");
                 }
             }
         }

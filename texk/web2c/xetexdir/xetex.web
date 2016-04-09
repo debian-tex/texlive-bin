@@ -315,8 +315,8 @@ known as `\eTeX'.
 @d eTeX_version_string=='-2.6' {current \eTeX\ version}
 @#
 @d XeTeX_version=0 { \.{\\XeTeXversion} }
-@d XeTeX_revision==".99992" { \.{\\XeTeXrevision} }
-@d XeTeX_version_string=='-0.99992' {current \XeTeX\ version}
+@d XeTeX_revision==".99996" { \.{\\XeTeXrevision} }
+@d XeTeX_version_string=='-0.99996' {current \XeTeX\ version}
 @#
 @d XeTeX_banner=='This is XeTeX, Version 3.14159265',eTeX_version_string,XeTeX_version_string
   {printed when \XeTeX\ starts}
@@ -346,7 +346,12 @@ known as `\eTeX'.
 @d XeTeX_default_input_encoding_code=7 {|str_number| of encoding name if |mode =| ICU}
 @#
 @d XeTeX_tracing_fonts_code=8 {non-zero to log native fonts used}
-@d eTeX_states=9 {number of \eTeX\ state variables in |eqtb|}
+@d XeTeX_interword_space_shaping_code=9 { controls shaping of space chars in context when using native fonts;
+                                          set to 1 for contextual adjustment of space width only,
+                                          and 2 for full cross-space shaping (e.g. multi-word ligatures) }
+@d XeTeX_generate_actual_text_code=10 { controls output of /ActualText for native-word nodes }
+@d XeTeX_hyphenatable_length_code=11 { sets maximum hyphenatable word length }
+@d eTeX_states=12 {number of \eTeX\ state variables in |eqtb|}
 
 @ Different \PASCAL s have slightly different conventions, and the present
 @!@:PASCAL H}{\ph@>
@@ -628,6 +633,7 @@ emphasize this distinction.
 @d script_script_size=number_math_families+number_math_families {size code for the smallest size in a family}
 @d biggest_lang=255 {the largest hyphenation language}
 @d too_big_lang=256 {|biggest_lang+1|}
+@d hyphenatable_length_limit=4095 {hard limit for hyphenatable length; runtime value is |max_hyphenatable_length|}
 @^system dependencies@>
 
 @ In case somebody has inadvertently made bad settings of the ``constants,''
@@ -2393,7 +2399,7 @@ positions from the right end of a binary computer word.
 @<Types...@>=
 @!scaled = integer; {this type is used for scaled integers}
 @!nonnegative_integer=0..@'17777777777; {$0\L x<2^{31}$}
-@!small_number=0..63; {this type is self-explanatory}
+@!small_number=0..hyphenatable_length_limit; {this type is self-explanatory}
 
 @ The following function is used to create a scaled integer from a given decimal
 fraction $(.d_0d_1\ldots d_{k-1})$, where |0<=k<=17|. The digit $d_i$ is
@@ -3322,7 +3328,8 @@ There are also |glyph_node|s; these are like |native_word_node|s in having
 than size and length fields, and there's no subsidiary C pointer.
 
 @d native_word_node=40 {|subtype| of whatsits that hold |native_font| words}
-@d glyph_node=41 {|subtype| in whatsits that hold glyph numbers}
+@d native_word_node_AT=41 {a |native_word_node| that should output ActualText}
+@d glyph_node=42 {|subtype| in whatsits that hold glyph numbers}
 
 @d native_node_size=6 {size of a |native_word| node (plus the actual chars) -- see also \.{xetex.h}}
 @d glyph_node_size=5
@@ -3364,10 +3371,10 @@ So |pic_node_size|, which does not include any space for the picture file pathna
 
 A |pdf_node| is just like |pic_node|, but generate a different \.{XDV} file code.
 
-@d pic_node=42 {|subtype| in whatsits that hold picture file references}
-@d pdf_node=43 {|subtype| in whatsits that hold PDF page references}
+@d pic_node=43 {|subtype| in whatsits that hold picture file references}
+@d pdf_node=44 {|subtype| in whatsits that hold PDF page references}
 @#
-@d pic_node_size=8 {must sync with \.{xetex.h}}
+@d pic_node_size=9 {must sync with \.{xetex.h}}
 @d pic_path_length(#)==mem[#+4].hh.b0
 @d pic_page(#)==mem[#+4].hh.b1
 @d pic_transform1(#)==mem[#+5].hh.lh
@@ -3376,6 +3383,7 @@ A |pdf_node| is just like |pic_node|, but generate a different \.{XDV} file code
 @d pic_transform4(#)==mem[#+6].hh.rh
 @d pic_transform5(#)==mem[#+7].hh.lh
 @d pic_transform6(#)==mem[#+7].hh.rh
+@d pic_pdf_box(#)==mem[#+8].hh.b0
 
 @ A |math_node|, which occurs only in horizontal lists, appears before and
 after mathematical formulas. The |subtype| field is |before| before the
@@ -3548,6 +3556,7 @@ inserted from \.{\\mkern} specifications in math formulas).
 @d kern_node=11 {|type| of a kern node}
 @d explicit=1 {|subtype| of kern nodes from \.{\\kern} and \.{\\/}}
 @d acc_kern=2 {|subtype| of kern nodes from accents}
+@d space_adjustment=3 {|subtype| of kern nodes from \.{\\XeTeXinterwordspaceshaping} adjustment}
 
 @# {memory structure for marginal kerns}
 @d margin_kern_node = 40
@@ -3956,7 +3965,7 @@ hlist_node,vlist_node,ins_node,mark_node,adjust_node,
   unset_node: print("[]");
 whatsit_node:
   case subtype(p) of
-    native_word_node: begin
+    native_word_node, native_word_node_AT: begin
       if native_font(p)<>font_in_short_display then begin
         print_esc(font_id_text(native_font(p)));
         print_char(" ");
@@ -4237,8 +4246,9 @@ if subtype(p)<>mu_glue then
   begin print_esc("kern");
   if subtype(p)<>normal then print_char(" ");
   print_scaled(width(p));
-  if subtype(p)=acc_kern then print(" (for accent)");
+  if subtype(p)=acc_kern then print(" (for accent)")
 @.for accent@>
+  else if subtype(p)=space_adjustment then print(" (space adjustment)");
   end
 else  begin print_esc("mkern"); print_scaled(width(p)); print("mu");
   end
@@ -6061,8 +6071,8 @@ A global boolean variable called |no_new_control_sequence| is set to
 
 @ Primitive support needs a few extra variables and definitions
 
-@d prim_size=480 {maximum number of primitives }
-@d prim_prime=409 {about 85\pct! of |primitive_size|}
+@d prim_size=500 {maximum number of primitives }
+@d prim_prime=431 {about 85\pct! of |primitive_size|}
 @d prim_base=1
 @d prim_next(#) == prim[#].lh {link for coalesced lists}
 @d prim_text(#) == prim[#].rh {string number for control sequence name}
@@ -9307,6 +9317,10 @@ the internal quantity to be scanned; an error will be signalled if
 @d scanned_result_end(#)==cur_val_level:=#;@+end
 @d scanned_result(#)==@+begin cur_val:=#;scanned_result_end
 
+@d char_class_limit = @"1000
+@d char_class_ignored == char_class_limit
+@d char_class_boundary == (char_class_ignored - 1)
+
 @p procedure scan_something_internal(@!level:small_number;@!negative:boolean);
   {fetch an internal parameter}
 label exit;
@@ -9424,9 +9438,9 @@ else if cur_cmd<=assign_toks then
       end
     else cur_val:=sa_ptr(m)
   else if cur_chr=XeTeX_inter_char_loc then begin
-    scan_eight_bit_int; cur_ptr:=cur_val;
-    scan_eight_bit_int;
-    find_sa_element(inter_char_val, cur_ptr * @"100 + cur_val, false);
+    scan_char_class_not_ignored; cur_ptr:=cur_val;
+    scan_char_class_not_ignored;
+    find_sa_element(inter_char_val, cur_ptr*char_class_limit + cur_val, false);
     if cur_ptr=null then cur_val:=null
     else cur_val:=sa_ptr(cur_ptr);
   end else cur_val:=equiv(m);
@@ -9492,12 +9506,13 @@ the codes for its extensions: |eTeX_version_code|, \dots\ .
 @d pdf_last_x_pos_code        = XeTeX_int+27
 @d pdf_last_y_pos_code        = XeTeX_int+28
 @d pdf_strcmp_code            = XeTeX_int+29
-@d pdf_shell_escape_code      = XeTeX_int+30
+@d pdf_mdfive_sum_code        = XeTeX_int+30
+@d pdf_shell_escape_code      = XeTeX_int+31
 
-@d XeTeX_pdf_page_count_code  = XeTeX_int+31
+@d XeTeX_pdf_page_count_code  = XeTeX_int+32
 
 @#
-@d XeTeX_dim=XeTeX_int+32 {first of \XeTeX\ codes for dimensions}
+@d XeTeX_dim=XeTeX_int+33 {first of \XeTeX\ codes for dimensions}
 
 @d XeTeX_glyph_bounds_code = XeTeX_dim
 
@@ -9793,10 +9808,20 @@ end;
 
 procedure scan_char_class;
 begin scan_int;
-if (cur_val<0)or(cur_val>256) then
+if (cur_val<0)or(cur_val>char_class_limit) then
   begin print_err("Bad character class");
 @.Bad character code@>
-  help2("A character class must be between 0 and 256.")@/
+  help2("A character class must be between 0 and 4096.")@/
+    ("I changed this one to zero."); int_error(cur_val); cur_val:=0;
+  end;
+end;
+
+procedure scan_char_class_not_ignored;
+begin scan_int;
+if (cur_val<0)or(cur_val>char_class_limit) then
+  begin print_err("Bad character class");
+@.Bad character code@>
+  help2("A class for inter-character transitions must be between 0 and 4095.")@/
     ("I changed this one to zero."); int_error(cur_val); cur_val:=0;
   end;
 end;
@@ -10545,6 +10570,7 @@ convert: case chr_code of
   meaning_code: print_esc("meaning");
   font_name_code:  print_esc("fontname");
   pdf_strcmp_code: print_esc("strcmp");
+  pdf_mdfive_sum_code: print_esc("mdfivesum");
   left_margin_kern_code:    print_esc("leftmarginkern");
   right_margin_kern_code:   print_esc("rightmarginkern");
   @/@<Cases of |convert| for |print_cmd_chr|@>@/
@@ -10565,6 +10591,8 @@ we have to create a temporary string that is destroyed immediately after.
 @p procedure conv_toks;
 var old_setting:0..max_selector; {holds |selector| setting}
 @!save_warning_index, @!save_def_ref:pointer;
+@!boolvar: boolean; {temp boolean}
+@!s: str_number;
 @!u: str_number;
 @!c:small_number; {desired type of conversion}
 @!save_scanner_status:small_number; {|scanner_status| upon entry}
@@ -13121,6 +13149,8 @@ the following commands are used in \.{XDV} files.
 
 \yskip\hang|set_glyphs| 253 |w[4]| |k[2]| |xy[8k]| |g[2k]|.
 
+\yskip\hang|set_text_and_glyphs| 254 |l[2]| |t[2l]| |w[4]| |k[2]| |xy[8k]| |g[2k]|.
+
 \yskip\noindent Commands 250 and 255 are undefined in normal \.{XDV} files.
 
 @ @d set_char_0=0 {typeset character 0 and move right}
@@ -13153,14 +13183,15 @@ the following commands are used in \.{XDV} files.
 
 @d define_native_font=252 {define native font}
 @d set_glyphs=253 {sequence of glyphs with individual x-y coordinates}
+@d set_text_and_glyphs=254 {run of Unicode (UTF16) text followed by positioned glyphs}
 
 @ The preamble contains basic information about the file as a whole. As
 stated above, there are six parameters:
 $$\hbox{|@!i[1]| |@!num[4]| |@!den[4]| |@!mag[4]| |@!k[1]| |@!x[k]|.}$$
-The |i| byte identifies \.{DVI} format; in \XeTeX\ this byte is set to~6, as we
+The |i| byte identifies \.{DVI} format; in \XeTeX\ this byte is set to~7, as we
 have new \.{DVI} opcodes, while in \TeX82 it is always set to~2. (The value
 |i=3| is used for an extended format that allows a mixture of right-to-left and
-left-to-right typesetting. Older versions of \XeTeX\ used |i=4| and |i=5|.)
+left-to-right typesetting. Older versions of \XeTeX\ used |i=4|, |i=5| and |i=6|.)
 
 The next two parameters, |num| and |den|, are positive integers that define
 the units of measurement; they are the numerator and denominator of a
@@ -13183,7 +13214,7 @@ users to override the |mag|~setting when a \.{DVI} file is being printed.)
 Finally, |k| and |x| allow the \.{DVI} writer to include a comment, which is not
 interpreted further. The length of comment |x| is |k|, where |0<=k<256|.
 
-@d id_byte=6 {identifies the kind of \.{DVI} files described here}
+@d id_byte=7 {identifies the kind of \.{DVI} files described here}
 
 @ Font definitions for a given font number |k| contain further parameters
 $$\hbox{|c[4]| |s[4]| |d[4]| |a[1]| |l[1]| |n[a+l]|.}$$
@@ -13898,7 +13929,9 @@ var base_line: scaled; {the baseline coordinate for this box}
 begin cur_g:=0; cur_glue:=float_constant(0);
 this_box:=temp_ptr; g_order:=glue_order(this_box);
 g_sign:=glue_sign(this_box);
-@<Merge sequences of words using AAT fonts and inter-word spaces into single nodes@>;
+if XeTeX_interword_space_shaping_state > 1 then begin
+  @<Merge sequences of words using native fonts and inter-word spaces into single nodes@>;
+end;
 p:=list_ptr(this_box);
 incr(cur_s);
 if cur_s>0 then dvi_out(push);
@@ -13917,16 +13950,25 @@ end;
 
 @ Extra stuff for justifiable AAT text; need to merge runs of words and normal spaces.
 
-@d is_native_word_node(#) == (((#)<>null and (not is_char_node(#)) and (type(#) = whatsit_node) and (subtype(#) = native_word_node)))
+@d is_native_word_node(#) == (((#)<>null and (not is_char_node(#)) and (type(#) = whatsit_node) and ((subtype(#) = native_word_node) or (subtype(#) = native_word_node_AT))))
 @d is_glyph_node(#) == (((#)<>null and (not is_char_node(#)) and (type(#) = whatsit_node) and (subtype(#) = glyph_node)))
 
-@<Merge sequences of words using AAT fonts and inter-word spaces into single nodes@>=
+@d node_is_invisible_to_interword_space(#)==
+  not is_char_node(#) and
+  ((type(#) = penalty_node) or
+   (type(#) = ins_node) or
+   (type(#) = mark_node) or
+   (type(#) = adjust_node) or
+   ((type(#) = whatsit_node) and (subtype(#) <= 4)))
+     { This checks for |subtype|s in the range open/write/close/special/language,
+       but the definitions haven't appeared yet in the .web file so we cheat. }
+
+@<Merge sequences of words using native fonts and inter-word spaces into single nodes@>=
 p:=list_ptr(this_box);
 prev_p:=this_box+list_offset;
 while p<>null do begin
   if link(p) <> null then begin {not worth looking ahead at the end}
-    if is_native_word_node(p) and (font_area[native_font(p)] = aat_font_flag)
-        and (font_letter_space[native_font(p)] = 0) then begin
+    if is_native_word_node(p) and (font_letter_space[native_font(p)] = 0) then begin
       {got a word in an AAT font, might be the start of a run}
       r:=p; {|r| is start of possible run}
       k:=native_length(r);
@@ -13934,15 +13976,30 @@ while p<>null do begin
 check_next:
       @<Advance |q| past ignorable nodes@>;
       if (q <> null) and not is_char_node(q) then begin
-        if (type(q) = glue_node) and (subtype(q) = normal) and (glue_ptr(q) = font_glue[native_font(r)]) then begin
-          {found a normal space; if the next node is another word in the same font, we'll merge}
-          q:=link(q);
-          @<Advance |q| past ignorable nodes@>;
-          if is_native_word_node(q) and (native_font(q) = native_font(r)) then begin
-            p:=q; {record new tail of run in |p|}
-            k:=k + 1 + native_length(q);
+        if (type(q) = glue_node) and (subtype(q) = normal) then begin
+          if (glue_ptr(q) = font_glue[native_font(r)]) then begin
+            {found a normal space; if the next node is another word in the same font, we'll merge}
             q:=link(q);
-            goto check_next;
+            @<Advance |q| past ignorable nodes@>;
+            if is_native_word_node(q) and (native_font(q) = native_font(r)) then begin
+              p:=q; {record new tail of run in |p|}
+              k:=k + 1 + native_length(q);
+              q:=link(q);
+              goto check_next;
+            end
+          end else q:=link(q);
+          {we'll also merge if if space-adjustment was applied at this glue,
+           even if it wasn't the font's standard inter-word space}
+          if (q <> null) and not is_char_node(q) and (type(q) = kern_node) and
+             (subtype(q) = space_adjustment) then begin
+            q:=link(q);
+            @<Advance |q| past ignorable nodes@>;
+            if is_native_word_node(q) and (native_font(q) = native_font(r)) then begin
+              p:=q; {record new tail of run in |p|}
+              k:=k + 1 + native_length(q);
+              q:=link(q);
+              goto check_next;
+            end
           end;
           goto end_node_run;
         end;
@@ -13959,7 +14016,7 @@ end_node_run: {now |r| points to first |native_word_node| of the run, and |p| to
         q:=r;
         loop begin
           if type(q) = whatsit_node then begin
-            if subtype(q) = native_word_node then begin
+            if (subtype(q) = native_word_node) or (subtype(q) = native_word_node_AT) then begin
               for j:=0 to native_length(q)-1 do
                 append_char(get_native_char(q, j));
               k:=k + width(q);
@@ -13979,23 +14036,45 @@ end_node_run: {now |r| points to first |native_word_node| of the run, and |p| to
                 end
               end
             end
+          end else if type(q) = kern_node then begin
+            k:=k + width(q);
           end;
           {discretionary and deleted nodes can be discarded here}
           if q = p then break
           else q:=link(q);
         end;
-done:
+        { create the new merged node |q| }
         q:=new_native_word_node(native_font(r), cur_length);
-        link(prev_p):=q;
+        subtype(q):=subtype(r);
         for j:=0 to cur_length - 1 do
           set_native_char(q, j, str_pool[str_start_macro(str_ptr) + j]);
-        link(q):=link(p);
-        link(p):=null;
-        flush_node_list(r);
+        { impose the required width on |q|, and shape its text accordingly }
         width(q):=k;
         set_justified_native_glyphs(q);
-        p:=q;
+        { link |q| into the list in place of |r|..|p| }
+        link(prev_p):=q;
+        link(q):=link(p);
+        link(p):=null;
+        { Extract any "invisible" nodes from the old list and insert them after the new node,
+          so we don't lose them altogether. Note that the first node cannot be one of these,
+          as we always start merging at a native_word node. }
+        prev_p := r;
+        p := link(r);
+        while p <> null do begin
+          if node_is_invisible_to_interword_space(p) then begin
+            link(prev_p) := link(p);
+            link(p) := link(q);
+            link(q) := p;
+            q := p;
+          end;
+          prev_p := p;
+          p := link(p);
+        end;
+        { discard the remains of the old list }
+        flush_node_list(r);
+        { clean up and prepare for the next round }
         pool_ptr:=str_start_macro(str_ptr); {flush the temporary string data}
+        p:=q;
       end
     end;
     prev_p:=p;
@@ -14004,7 +14083,7 @@ done:
 end
 
 @ @<Advance |q| past ignorable nodes@>=
-while (q <> null) and (not is_char_node(q)) and (type(q) = disc_node) do
+while (q <> null) and node_is_invisible_to_interword_space(q) do
     q:=link(q)
 
 @ We ought to give special care to the efficiency of one part of |hlist_out|,
@@ -15766,7 +15845,8 @@ begin
 
   q:=get_node(l);
   type(q):=whatsit_node;
-  subtype(q):=native_word_node;
+  if XeTeX_generate_actual_text_en then subtype(q):=native_word_node_AT
+  else subtype(q):=native_word_node;
 
   native_size(q):=l;
   native_font(q):=f;
@@ -19400,7 +19480,8 @@ width of this glue is subtracted from the background; and we also look
 ahead to eliminate all subsequent glue and penalty and kern and math
 nodes, subtracting their widths as well.
 
-Kern nodes do not disappear at a line break unless they are |explicit|.
+Kern nodes do not disappear at a line break unless they are |explicit|
+or |space_adjustment|.
 
 @d set_break_width_to_background(#)==break_width[#]:=background[#]
 
@@ -19480,6 +19561,7 @@ else  case type(v) of
     break_width[1]:=break_width[1]-width(v);
   whatsit_node:
     if (subtype(v)=native_word_node)
+    or (subtype(v)=native_word_node_AT)
     or (subtype(v)=glyph_node)
     or (subtype(v)=pic_node)
     or (subtype(v)=pdf_node)
@@ -19504,6 +19586,7 @@ else  case type(s) of
     break_width[1]:=break_width[1]+width(s);
   whatsit_node:
     if (subtype(s)=native_word_node)
+    or (subtype(s)=native_word_node_AT)
     or (subtype(s)=glyph_node)
     or (subtype(s)=pic_node)
     or (subtype(s)=pdf_node)
@@ -20090,6 +20173,7 @@ else  case type(s) of
     disc_width:=disc_width+width(s);
   whatsit_node:
     if (subtype(s)=native_word_node)
+    or (subtype(s)=native_word_node_AT)
     or (subtype(s)=glyph_node)
     or (subtype(s)=pic_node)
     or (subtype(s)=pdf_node)
@@ -20114,6 +20198,7 @@ else  case type(s) of
     act_width:=act_width+width(s);
   whatsit_node:
     if (subtype(s)=native_word_node)
+    or (subtype(s)=native_word_node_AT)
     or (subtype(s)=glyph_node)
     or (subtype(s)=pic_node)
     or (subtype(s)=pdf_node)
@@ -20264,7 +20349,7 @@ loop@+  begin q:=link(r);
   {now |q| cannot be |null|}
   if is_char_node(q) then goto done1;
   if non_discardable(q) then goto done1;
-  if type(q)=kern_node then if subtype(q)<>explicit then goto done1;
+  if type(q)=kern_node then if (subtype(q)<>explicit) and (subtype(q)<>space_adjustment) then goto done1;
   r:=q; {now |type(q)=glue_node|, |kern_node|, |math_node| or |penalty_node|}
   if type(q)=math_node then if TeXXeT_en then
     @<Adjust \(t)the LR stack for the |post_line_break| routine@>;
@@ -20520,8 +20605,8 @@ terminating node $p_m$. All characters that do not have the same font as
 $c_1$ will be treated as nonletters. The |hyphen_char| for that font
 must be between 0 and 255, otherwise hyphenation will not be attempted.
 \TeX\ looks ahead for as many consecutive letters $c_1\ldots c_n$ as
-possible; however, |n| must be less than 64, so a character that would
-otherwise be $c_{64}$ is effectively not a letter. Furthermore $c_n$ must
+possible; however, |n| must be less than max_hyphenatable_length+1, so a character that would
+otherwise be $c_{max_hyphenatable_length+1}$ is effectively not a letter. Furthermore $c_n$ must
 not be in the middle of a ligature.  In this way we obtain a string of
 letters $c_1\ldots c_n$ that are generated by nodes $p_a\ldots p_b$, where
 |1<=a<=b+1<=m|. If |n>=l_hyf+r_hyf|, this string qualifies for hyphenation;
@@ -20553,13 +20638,13 @@ nodes $p_{a-1}$ and~$p_b$ in the description above are placed into variables
 |ha| and |hb|; and the font number is placed into |hf|.
 
 @<Glob...@>=
-@!hc:array[0..66] of 0..number_usvs; {word to be hyphenated}
+@!hc:array[0..hyphenatable_length_limit+3] of 0..number_usvs; {word to be hyphenated}
 { note that element 0 needs to be a full UnicodeScalar, even though we
   basically work in UTF16 }
 @!hn:small_number; {the number of positions occupied in |hc|}
 @!ha,@!hb:pointer; {nodes |ha..hb| should be replaced by the hyphenated result}
 @!hf:internal_font_number; {font number of the letters in |hc|}
-@!hu:array[0..64] of 0..too_big_char;
+@!hu:array[0..hyphenatable_length_limit+1] of 0..too_big_char;
      {like |hc|, before conversion to lowercase}
 @!hyf_char:integer; {hyphen character of the relevant font}
 @!cur_lang,@!init_cur_lang:0..biggest_lang;
@@ -20585,7 +20670,7 @@ begin prev_s:=cur_p; s:=link(prev_s);
 if s<>null then
   begin @<Skip to node |ha|, or |goto done1| if no hyphenation
     should be attempted@>;
-  if l_hyf+r_hyf>63 then goto done1;
+  if l_hyf+r_hyf>max_hyphenatable_length then goto done1;
 if is_native_word_node(ha) then begin
   @<Check that nodes after |native_word| permit hyphenation; if not, |goto done1|@>;
   @<Prepare a |native_word_node| for hyphenation@>;
@@ -20608,6 +20693,14 @@ begin @<Find hyphen locations for the word in |hc|, or |return|@>;
 @<Replace nodes |ha..hb| by a sequence of nodes that includes
   the discretionary hyphens@>;
 exit:end;
+
+function max_hyphenatable_length: integer;
+begin
+  if XeTeX_hyphenatable_length>hyphenatable_length_limit then
+    max_hyphenatable_length:=hyphenatable_length_limit
+  else
+    max_hyphenatable_length:=XeTeX_hyphenatable_length;
+end;
 
 @ @<Check that nodes after |native_word| permit hyphenation; if not, |goto done1|@>=
 s:=link(ha);
@@ -20642,7 +20735,7 @@ for l:=0 to native_length(ha)-1 do begin
     @<Split the |native_word_node| at |l| and link the second part after |ha|@>;
     ha:=link(ha);
     goto restart;
-  end else if (hn = 63) then
+  end else if (hn = max_hyphenatable_length) then
     { reached max hyphenatable length }
     goto done3
   else begin
@@ -20665,6 +20758,7 @@ end;
 
 @ @<Split the |native_word_node| at |l| and link the second part after |ha|@>=
   q:=new_native_word_node(hf, native_length(ha) - l);
+  subtype(q):=subtype(ha);
   for i:=l to native_length(ha) - 1 do
     set_native_char(q, i - l, get_native_char(ha, i));
   set_native_metrics(q, XeTeX_use_glyph_metrics);
@@ -20693,7 +20787,7 @@ loop@+  begin if is_char_node(s) then
   else if (type(s)=math_node)and(subtype(s)>=L_code) then goto continue
   else if type(s)=whatsit_node then
     begin
-      if subtype(s) = native_word_node then begin
+      if (subtype(s) = native_word_node) or (subtype(s) = native_word_node_AT) then begin
         { we only consider the node if it contains at least one letter, otherwise we'll skip it }
         for l:=0 to native_length(s) - 1 do begin
           c:=get_native_usv(s, l);
@@ -20730,7 +20824,7 @@ loop@+  begin if is_char_node(s) then
     set_lc_code(c);
     if hc[0]=0 then goto done3;
     if hc[0]>max_hyph_char then goto done3;
-    if hn=63 then goto done3;
+    if hn=max_hyphenatable_length then goto done3;
     hb:=s; incr(hn); hu[hn]:=c; hc[hn]:=hc[0]; hyf_bchar:=non_char;
     end
   else if type(s)=ligature_node then
@@ -20758,7 +20852,7 @@ while q>null do
   set_lc_code(c);
   if hc[0]=0 then goto done3;
   if hc[0]>max_hyph_char then goto done3;
-  if j=63 then goto done3;
+  if j=max_hyphenatable_length then goto done3;
   incr(j); hu[j]:=c; hc[j]:=hc[0];@/
   q:=link(q);
   end;
@@ -20790,13 +20884,13 @@ it finds, since it is better to work on this part of the program before
 forgetting what |ha| and |hb|, etc., are all about.
 
 @<Glob...@>=
-@!hyf:array [0..64] of 0..9; {odd values indicate discretionary hyphens}
+@!hyf:array [0..hyphenatable_length_limit+1] of 0..9; {odd values indicate discretionary hyphens}
 @!init_list:pointer; {list of punctuation characters preceding the word}
 @!init_lig:boolean; {does |init_list| represent a ligature?}
 @!init_lft:boolean; {if so, did the ligature involve a left boundary?}
 
 @ @<Local variables for hyphenation@>=
-@!i,@!j,@!l:0..65; {indices into |hc| or |hu|}
+@!i,@!j,@!l:0..hyphenatable_length_limit+2; {indices into |hc| or |hu|}
 @!q,@!r,@!s:pointer; {temporary registers for list manipulation}
 @!bchar:halfword; {right boundary character of hyphenated word, or |non_char|}
 
@@ -20873,6 +20967,7 @@ for j:=l_hyf to hn - r_hyf do begin
 
     { make a |native_word_node| for the fragment before the hyphen }
     q:=new_native_word_node(hf, j - hyphen_passed);
+    subtype(q):=subtype(ha);
     for i:=0 to j - hyphen_passed - 1 do
       set_native_char(q, i, get_native_char(ha, i + hyphen_passed));
     set_native_metrics(q, XeTeX_use_glyph_metrics);
@@ -20892,6 +20987,7 @@ end;
 { make a |native_word_node| for the last fragment of the word }
 hn:=native_length(ha); { ensure trailing punctuation is not lost! }
 q:=new_native_word_node(hf, hn - hyphen_passed);
+subtype(q):=subtype(ha);
 for i:=0 to hn - hyphen_passed - 1 do
   set_native_char(q, i, get_native_char(ha, i + hyphen_passed));
 set_native_metrics(q, XeTeX_use_glyph_metrics);
@@ -21146,7 +21242,7 @@ we need a few new local variables:
 @!major_tail,@!minor_tail:pointer; {the end of lists in the main and
   discretionary branches being reconstructed}
 @!c:UnicodeScalar; {character temporarily replaced by a hyphen}
-@!c_loc:0..63; {where that character came from}
+@!c_loc:0..hyphenatable_length_limit; {where that character came from}
 @!r_count:integer; {replacement count for discretionary}
 @!hyf_node:pointer; {the hyphen, if it exists}
 
@@ -21245,7 +21341,7 @@ end
 
 @ Ligature insertion can cause a word to grow exponentially in size. Therefore
 we must test the size of |r_count| here, even though the hyphenated text
-was at most 63 characters long.
+was at most |max_hyphenatable_length| characters long.
 
 @<Move pointer |s| to the end of the current list...@>=
 if r_count>127 then {we have to forget the discretionary hyphen}
@@ -21450,8 +21546,8 @@ When \TeX\ has scanned `\.{\\hyphenation}', it calls on a procedure named
 
 @p procedure new_hyph_exceptions; {enters new exceptions}
 label reswitch, exit, found, not_found, not_found1;
-var n:0..64; {length of current word; not always a |small_number|}
-@!j:0..64; {an index into |hc|}
+var n:0..hyphenatable_length_limit+1; {length of current word; not always a |small_number|}
+@!j:0..hyphenatable_length_limit+1; {an index into |hc|}
 @!h:hyph_pointer; {an index into |hyph_word| and |hyph_list|}
 @!k:str_number; {an index into |str_start|}
 @!p:pointer; {head of a list of hyphen positions}
@@ -21505,7 +21601,7 @@ else  begin set_lc_code(cur_chr);
       ("Proceed; I'll ignore the character I just read.");
     error;
     end
-  else if n<63 then
+  else if n<max_hyphenatable_length then
     begin incr(n);
       if hc[0]<@"10000 then hc[n]:=hc[0]
       else begin
@@ -21517,7 +21613,7 @@ else  begin set_lc_code(cur_chr);
   end
 
 @ @<Append the value |n| to list |p|@>=
-begin if n<63 then
+begin if n<max_hyphenatable_length then
   begin q:=get_avail; link(q):=p; info(q):=n; p:=q;
   end;
 end
@@ -21928,7 +22024,7 @@ sequence, it calls on |new_patterns| to do the right thing.
 @<Declare procedures for preprocessing hyph...@>=
 procedure new_patterns; {initializes the hyphenation pattern data}
 label done, done1;
-var k,@!l:0..64; {indices into |hc| and |hyf|;
+var k,@!l:0..hyphenatable_length_limit+1; {indices into |hc| and |hyf|;
                   not always in |small_number| range}
 @!digit_sensed:boolean; {should the next digit be treated as a letter?}
 @!v:quarterword; {trie op code}
@@ -21981,11 +22077,11 @@ if digit_sensed or(cur_chr<"0")or(cur_chr>"9") then
       end;
     end;
     if cur_chr>max_hyph_char then max_hyph_char:=cur_chr;
-  if k<63 then
+  if k<max_hyphenatable_length then
     begin incr(k); hc[k]:=cur_chr; hyf[k]:=0; digit_sensed:=false;
     end;
   end
-else if k<63 then
+else if k<max_hyphenatable_length then
   begin hyf[k]:=cur_chr-"0"; digit_sensed:=true;
   end
 
@@ -23275,6 +23371,7 @@ consideration of the other cases until later.
 @d pdfbox_bleed=3
 @d pdfbox_trim=4
 @d pdfbox_art=5
+@d pdfbox_none=6
 
 @p @t\4@>@<Declare action procedures for use by |main_control|@>@;
 @t\4@>@<Declare the procedure called |handle_right_brace|@>@;
@@ -23393,10 +23490,10 @@ are inside the individual sections.
   cur_ptr:=null;
   space_class:=sf_code(cur_chr) div @"10000;
 
-  if XeTeX_inter_char_tokens_en and space_class <> 256 then begin {class 256 = ignored (for combining marks etc)}
-    if prev_class = 255 then begin {boundary}
+  if XeTeX_inter_char_tokens_en and space_class <> char_class_ignored then begin {class 4096 = ignored (for combining marks etc)}
+    if prev_class = char_class_boundary then begin {boundary}
       if (state<>token_list) or (token_type<>backed_up_char) then begin
-        find_sa_element(inter_char_val, 255*@"100 + space_class, false);
+        find_sa_element(inter_char_val, char_class_boundary*char_class_limit + space_class, false);
         if cur_ptr<>null then begin
           if cur_cmd<>letter then cur_cmd:=other_char;
           cur_tok:=(cur_cmd*max_char_val)+cur_chr;
@@ -23406,13 +23503,13 @@ are inside the individual sections.
         end
       end
     end else begin
-      find_sa_element(inter_char_val, prev_class*@"100 + space_class, false);
+      find_sa_element(inter_char_val, prev_class*char_class_limit + space_class, false);
       if cur_ptr<>null then begin
         if cur_cmd<>letter then cur_cmd:=other_char;
         cur_tok:=(cur_cmd*max_char_val)+cur_chr;
         back_input; token_type:=backed_up_char;
         begin_token_list(sa_ptr(cur_ptr), inter_char_text);
-        prev_class:=255;
+        prev_class:=char_class_boundary;
         goto #;
       end;
     end;
@@ -23420,9 +23517,9 @@ are inside the individual sections.
   end
 
 @d check_for_post_char_toks(#)==
-  if XeTeX_inter_char_tokens_en and (space_class<>256) and (prev_class<>255) then begin
-    prev_class:=255;
-    find_sa_element(inter_char_val, space_class*@"100 + 255, false); {boundary}
+  if XeTeX_inter_char_tokens_en and (space_class<>char_class_ignored) and (prev_class<>char_class_boundary) then begin
+    prev_class:=char_class_boundary;
+    find_sa_element(inter_char_val, space_class*char_class_limit + char_class_boundary, false); {boundary}
     if cur_ptr<>null then begin
       if cur_cs=0 then begin
         if cur_cmd=char_num then cur_cmd:=other_char;
@@ -23436,7 +23533,7 @@ are inside the individual sections.
 
 @<Append character |cur_chr|...@>=
 
-prev_class:=255; {boundary}
+prev_class:=char_class_boundary; {boundary}
 
 { added code for native font support }
 if is_native_font(cur_font) then begin
@@ -23624,6 +23721,80 @@ collected:
       for main_p:=0 to main_k - 1 do
         set_native_char(tail, main_p, native_text[main_p]);
       set_native_metrics(tail, XeTeX_use_glyph_metrics);
+    end
+  end;
+
+  if XeTeX_interword_space_shaping_state > 0 then begin
+    { |tail| is a word we have just appended. If it is preceded by another word
+      with a normal inter-word space between (all in the same font), then we will
+      measure that space in context and replace it with an adjusted glue value
+      if it differs from the font's normal space. }
+
+    { First we look for the most recent native_word in the list and set |main_pp| to it.
+      This is potentially expensive, in the case of very long paragraphs,
+      but in practice it's negligible compared to the cost of shaping and measurement. }
+    main_p := head;
+    main_pp := null;
+    while main_p <> tail do begin
+      if is_native_word_node(main_p) then main_pp := main_p;
+      main_p := link(main_p);
+    end;
+
+    if (main_pp <> null) then begin
+      { check if the font matches; if so, check the intervening nodes }
+      if (native_font(main_pp) = main_f) then begin
+        main_p := link(main_pp);
+
+        { Skip nodes that should be invisible to inter-word spacing,
+          so that e.g. |\nobreak\ | doesn't prevent contextual measurement.
+          This loop is guaranteed to end safely because it'll eventually hit
+          |tail|, which is a native_word node, if nothing else intervenes. }
+        while node_is_invisible_to_interword_space(main_p) do
+          main_p := link(main_p);
+
+        if not is_char_node(main_p) and (type(main_p) = glue_node) then begin
+          { We found a glue node: we might have an inter-word space to deal with.
+            Again, skip nodes that should be invisible to inter-word spacing.
+            We leave |main_p| pointing to the glue node; |main_pp| is the preceding word. }
+          main_ppp := link(main_p);
+          while node_is_invisible_to_interword_space(main_ppp) do
+            main_ppp := link(main_ppp);
+
+          if main_ppp = tail then begin
+            { We found a candidate inter-word space! Collect the characters of both words,
+              separated by a single space, into a native_word node and measure its overall width. }
+            temp_ptr := new_native_word_node(main_f, native_length(main_pp) + 1 + native_length(tail));
+            main_k := 0;
+            for t := 0 to native_length(main_pp)-1 do begin
+              set_native_char(temp_ptr, main_k, get_native_char(main_pp, t));
+              incr(main_k);
+            end;
+            set_native_char(temp_ptr, main_k, " ");
+            incr(main_k);
+            for t := 0 to native_length(tail)-1 do begin
+              set_native_char(temp_ptr, main_k, get_native_char(tail, t));
+              incr(main_k);
+            end;
+            set_native_metrics(temp_ptr, XeTeX_use_glyph_metrics);
+
+            { The contextual space width is the difference between this width and
+              the sum of the two words measured separately. }
+            t := width(temp_ptr) - width(main_pp) - width(tail);
+            free_node(temp_ptr, native_size(temp_ptr));
+
+            { If the desired width differs from the font's default word space,
+              we will insert a suitable kern after the existing glue.
+              Because kerns are discardable, this will behave OK during line breaking,
+              and it's easier than actually modifying/replacing the glue node. }
+            if t <> width(font_glue[main_f]) then begin
+              temp_ptr := new_kern(t - width(font_glue[main_f]));
+              subtype(temp_ptr) := space_adjustment;
+              link(temp_ptr) := link(main_p);
+              link(main_p) := temp_ptr;
+            end
+          end
+        end
+      end
     end
   end;
 
@@ -24950,7 +25121,7 @@ begin if tail<>head then
   begin if is_char_node(tail) then p:=tail
   else if type(tail)=ligature_node then p:=lig_char(tail)
   else if (type(tail)=whatsit_node) then begin
-    if (subtype(tail)=native_word_node) then begin
+    if (subtype(tail)=native_word_node) or (subtype(tail)=native_word_node_AT) then begin
       tail_append(new_kern(get_native_italic_correction(tail))); subtype(tail):=explicit;
     end
     else if (subtype(tail)=glyph_node) then begin
@@ -25052,7 +25223,7 @@ q:=head; p:=link(q); n:=0;
 while p<>null do
   begin if not is_char_node(p) then if type(p)>rule_node then
     if type(p)<>kern_node then if type(p)<>ligature_node then
-    if (type(p)<>whatsit_node) or ((subtype(p)<>native_word_node)
+    if (type(p)<>whatsit_node) or ((subtype(p)<>native_word_node) and (subtype(p)<>native_word_node_AT)
                                      and (subtype(p)<>glyph_node)) then
       begin print_err("Improper discretionary list");
 @.Improper discretionary list@>
@@ -26758,9 +26929,9 @@ toks_register,assign_toks: begin q:=cur_cs;
       end
     else e:=true
   else if cur_chr=XeTeX_inter_char_loc then begin
-    scan_eight_bit_int; cur_ptr:=cur_val;
-    scan_eight_bit_int;
-    find_sa_element(inter_char_val, cur_ptr*@"100 + cur_val, true);
+    scan_char_class_not_ignored; cur_ptr:=cur_val;
+    scan_char_class_not_ignored;
+    find_sa_element(inter_char_val, cur_ptr*char_class_limit + cur_val, true);
     cur_chr:=cur_ptr; e:=true;
   end;
   p:=cur_chr; {|p=every_par_loc| or |output_routine_loc| or \dots}
@@ -26795,9 +26966,9 @@ if (cur_cmd=toks_register)or(cur_cmd=assign_toks) then
       end
     else q:=sa_ptr(cur_chr)
   else if cur_chr=XeTeX_inter_char_loc then begin
-    scan_eight_bit_int; cur_ptr:=cur_val;
-    scan_eight_bit_int;
-    find_sa_element(inter_char_val, cur_ptr*@"100 + cur_val, false);
+    scan_char_class_not_ignored; cur_ptr:=cur_val;
+    scan_char_class_not_ignored;
+    find_sa_element(inter_char_val, cur_ptr*char_class_limit + cur_val, false);
     if cur_ptr=null then q:=null
     else q:=sa_ptr(cur_ptr);
   end else q:=equiv(cur_chr);
@@ -28776,6 +28947,11 @@ begin
   tokens_to_string:=make_string;
 end;
 
+procedure scan_pdf_ext_toks;
+begin
+    call_func(scan_toks(false, true)); {like \.{\\special}}
+end;
+
 procedure compare_strings; {to implement \.{\\strcmp}}
 label done;
 var s1, s2: str_number;
@@ -28867,7 +29043,7 @@ language_node:begin print_esc("setlanguage");
   print_int(what_lhm(p)); print_char(",");
   print_int(what_rhm(p)); print_char(")");
   end;
-native_word_node:begin print_esc(font_id_text(native_font(p)));
+native_word_node, native_word_node_AT:begin print_esc(font_id_text(native_font(p)));
   print_char(" ");
   print_native_word(p);
   end;
@@ -28900,7 +29076,7 @@ write_node,special_node: begin r:=get_node(write_node_size);
 close_node,language_node: begin r:=get_node(small_node_size);
   words:=small_node_size;
   end;
-native_word_node: begin words:=native_size(p);
+native_word_node, native_word_node_AT: begin words:=native_size(p);
   r:=get_node(words);
   while words > 0 do
     begin decr(words); mem[r+words]:=mem[p+words]; end;
@@ -28926,7 +29102,7 @@ write_node,special_node: begin delete_token_ref(write_tokens(p));
   free_node(p,write_node_size); goto done;
   end;
 close_node,language_node: free_node(p,small_node_size);
-native_word_node: begin free_native_glyph_info(p); free_node(p,native_size(p)); end;
+native_word_node, native_word_node_AT: begin free_native_glyph_info(p); free_node(p,native_size(p)); end;
 glyph_node: free_node(p,glyph_node_size);
 pic_node,pdf_node: free_node(p,total_pic_node_size(p));
 pdf_save_pos_node:
@@ -28951,7 +29127,7 @@ end
 @ @<Incorporate a whatsit node into an hbox@>=
 begin
   case subtype(p) of
-  native_word_node: begin
+  native_word_node, native_word_node_AT: begin
     { merge with any following word fragments in same font, discarding discretionary breaks }
     if type(q) = disc_node then k:=replace_count(q) else k:=0;
     while (link(q) <> p) do begin
@@ -28963,7 +29139,7 @@ begin
     restart:
     if (k <= 0) and (pp <> null) and (not is_char_node(pp)) then begin
       if (type(pp) = whatsit_node)
-        and (subtype(pp) = native_word_node)
+        and ((subtype(pp) = native_word_node) or (subtype(pp) = native_word_node_AT))
         and (native_font(pp) = native_font(p)) then begin
         pp:=link(pp);
         goto restart;
@@ -28995,6 +29171,7 @@ begin
 
       p:=link(q); { the first fragment again }
       pp:=new_native_word_node(native_font(p), total_chars); { make new node for merged word }
+      subtype(pp):=subtype(p);
       link(q):=pp; { link to preceding material }
       link(pp):=link(ppp); { attach remainder of hlist to it }
       link(ppp):=null; { and detach from the old fragments }
@@ -29036,6 +29213,7 @@ end
 
 @ @<Let |d| be the width of the whatsit |p|, and |goto found| if ``visible''@>=
 if (subtype(p)=native_word_node)
+or (subtype(p)=native_word_node_AT)
 or (subtype(p)=glyph_node)
 or (subtype(p)=pic_node)
 or (subtype(p)=pdf_node)
@@ -29050,6 +29228,7 @@ end else
     set_hyph_index;
     end
   else if (subtype(#)=native_word_node)
+  or (subtype(#)=native_word_node_AT)
   or (subtype(#)=glyph_node)
   or (subtype(#)=pic_node)
   or (subtype(#)=pdf_node)
@@ -29145,7 +29324,7 @@ else
 @ @<Output the whatsit node |p| in an hlist@>=
 begin
   case subtype(p) of
-  native_word_node, glyph_node: begin
+  native_word_node, native_word_node_AT, glyph_node: begin
     synch_h; synch_v; {Sync DVI state to TeX state}
     f:=native_font(p);
     if f<>dvi_f then @<Change font |dvi_f| to |f|@>;
@@ -29158,11 +29337,25 @@ begin
       dvi_two(native_glyph(p));
       cur_h:=cur_h + width(p);
     end else begin
-      if native_glyph_info_ptr(p) <> null_ptr then begin
-        dvi_out(set_glyphs);
-        len:=make_xdv_glyph_array_data(p);
-        for k:=0 to len-1 do
-          dvi_out(xdv_buffer_byte(k));
+      if subtype(p) = native_word_node_AT then begin
+        if (native_length(p) > 0) or (native_glyph_info_ptr(p) <> null_ptr) then begin
+          dvi_out(set_text_and_glyphs);
+          len:=native_length(p);
+          dvi_two(len);
+          for k:=0 to len-1 do begin
+            dvi_two(get_native_char(p, k));
+          end;
+          len:=make_xdv_glyph_array_data(p);
+          for k:=0 to len-1 do
+            dvi_out(xdv_buffer_byte(k));
+        end
+      end else begin
+        if native_glyph_info_ptr(p) <> null_ptr then begin
+          dvi_out(set_glyphs);
+          len:=make_xdv_glyph_array_data(p);
+          for k:=0 to len-1 do
+            dvi_out(xdv_buffer_byte(k));
+        end
       end;
       cur_h:=cur_h + width(p);
     end;
@@ -29291,6 +29484,14 @@ print_scaled(pic_transform4(p)); print(" ");
 print_scaled(pic_transform5(p)); print(" ");
 print_scaled(pic_transform6(p)); print(" ");
 print("page "); print_int(pic_page(p)); print(" ");
+case pic_pdf_box(p) of
+  pdfbox_crop:  print("pagebox cropbox ");
+  pdfbox_media: print("pagebox mediabox ");
+  pdfbox_bleed: print("pagebox bleedbox ");
+  pdfbox_art:   print("pagebox artbox ");
+  pdfbox_trim:  print("pagebox trimbox ");
+  others:       do_nothing;
+endcases;
 print("(");
 for i:=0 to pic_path_length(p)-1 do
   print_visible_char(pic_path_byte(p, i));
@@ -29481,8 +29682,8 @@ begin
       scan_int;
       page:=cur_val;
     end;
-    pdf_box_type:=pdfbox_crop;
-    if scan_keyword("crop") then do_nothing
+    pdf_box_type:=pdfbox_none;
+    if scan_keyword("crop") then pdf_box_type:=pdfbox_crop
     else if scan_keyword("media") then pdf_box_type:=pdfbox_media
     else if scan_keyword("bleed") then pdf_box_type:=pdfbox_bleed
     else if scan_keyword("trim") then pdf_box_type:=pdfbox_trim
@@ -29490,7 +29691,10 @@ begin
   end;
 
   { access the picture file and check its size }
-  result:=find_pic_file(addressof(pic_path), addressof(bounds), pdf_box_type, page);
+  if pdf_box_type=pdfbox_none then
+    result:=find_pic_file(addressof(pic_path), addressof(bounds), pdfbox_crop, page)
+  else
+    result:=find_pic_file(addressof(pic_path), addressof(bounds), pdf_box_type, page);
 
   setPoint(corners[0], xField(bounds), yField(bounds));
   setPoint(corners[1], xField(corners[0]), yField(bounds) + htField(bounds));
@@ -29578,6 +29782,7 @@ begin
     end;
     pic_path_length(tail):=strlen(pic_path);
     pic_page(tail):=page;
+    pic_pdf_box(tail):=pdf_box_type;
 
     width(tail):=D2Fix(xmax - xmin);
     height(tail):=D2Fix(ymax - ymin);
@@ -29745,6 +29950,7 @@ primitive("XeTeXlastfontchar", last_item, XeTeX_last_char_code);
 primitive("pdflastxpos",last_item,pdf_last_x_pos_code);
 primitive("pdflastypos",last_item,pdf_last_y_pos_code);
 primitive("strcmp",convert,pdf_strcmp_code);
+primitive("mdfivesum",convert,pdf_mdfive_sum_code);
 primitive("shellescape",last_item,pdf_shell_escape_code);
 
 primitive("XeTeXpdfpagecount",last_item,XeTeX_pdf_page_count_code);
@@ -30081,6 +30287,39 @@ pdf_strcmp_code:
     scanner_status:=save_scanner_status;
     restore_cur_string;
   end;
+
+pdf_mdfive_sum_code:
+  begin
+    save_scanner_status := scanner_status;
+    save_warning_index := warning_index;
+    save_def_ref := def_ref;
+    save_cur_string;
+    boolvar := scan_keyword("file");
+    scan_pdf_ext_toks;
+
+    if selector = new_string then
+      pdf_error("tokens", "tokens_to_string() called while selector = new_string");
+    old_setting:=selector; selector:=new_string;
+    show_token_list(link(def_ref),null,pool_size-pool_ptr);
+    selector:=old_setting;
+    s:=make_string;
+
+    delete_token_ref(def_ref);
+    def_ref := save_def_ref;
+    warning_index := save_warning_index;
+    scanner_status := save_scanner_status;
+    b := pool_ptr;
+    getmd5sum(s, boolvar);
+    link(garbage) := str_toks(b);
+
+    if flushable(s) then
+        flush_string;
+
+    ins_list(link(temp_head));
+    restore_cur_string;
+    return;
+  end;
+
 XeTeX_revision_code: do_nothing;
 
 XeTeX_variation_name_code:
@@ -30828,8 +31067,15 @@ and is never inhibited for words originating from horizontal mode.
 @d XeTeX_input_normalization_state == eTeX_state(XeTeX_input_normalization_code)
 @d XeTeX_tracing_fonts_state == eTeX_state(XeTeX_tracing_fonts_code)
 
+@d XeTeX_interword_space_shaping_state==eTeX_state(XeTeX_interword_space_shaping_code)
+
+@d XeTeX_generate_actual_text_state == eTeX_state(XeTeX_generate_actual_text_code)
+@d XeTeX_generate_actual_text_en == (XeTeX_generate_actual_text_state>0)
+
 @d XeTeX_default_input_mode == eTeX_state(XeTeX_default_input_mode_code)
 @d XeTeX_default_input_encoding == eTeX_state(XeTeX_default_input_encoding_code)
+
+@d XeTeX_hyphenatable_length == eTeX_state(XeTeX_hyphenatable_length_code)
 
 @<Cases for |print_param|@>=
 suppress_fontnotfound_error_code:print_esc("suppressfontnotfounderror");
@@ -30840,6 +31086,9 @@ eTeX_state_code+XeTeX_inter_char_tokens_code:print_esc("XeTeXinterchartokenstate
 eTeX_state_code+XeTeX_dash_break_code:print_esc("XeTeXdashbreakstate");
 eTeX_state_code+XeTeX_input_normalization_code:print_esc("XeTeXinputnormalization");
 eTeX_state_code+XeTeX_tracing_fonts_code:print_esc("XeTeXtracingfonts");
+eTeX_state_code+XeTeX_interword_space_shaping_code:print_esc("XeTeXinterwordspaceshaping");
+eTeX_state_code+XeTeX_generate_actual_text_code:print_esc("XeTeXgenerateactualtext");
+eTeX_state_code+XeTeX_hyphenatable_length_code:print_esc("XeTeXhyphenatablelength");
 
 @ @<Generate all \eTeX...@>=
 primitive("suppressfontnotfounderror",assign_int,int_base+suppress_fontnotfound_error_code);@/
@@ -30859,6 +31108,15 @@ primitive("XeTeXinputnormalization",assign_int,eTeX_state_base+XeTeX_input_norma
 @!@:XeTeX_input_normalization_}{\.{\\XeTeXinputnormalization} primitive@>
 
 primitive("XeTeXtracingfonts",assign_int,eTeX_state_base+XeTeX_tracing_fonts_code);
+
+primitive("XeTeXinterwordspaceshaping",assign_int,eTeX_state_base+XeTeX_interword_space_shaping_code);
+@!@:XeTeX_interword_space_shaping_}{\.{\\XeTeXinterwordspaceshaping} primitive@>
+
+primitive("XeTeXgenerateactualtext",assign_int,eTeX_state_base+XeTeX_generate_actual_text_code);
+@!@:XeTeX_generate_actual_text_}{\.{\\XeTeXgenerateactualtext} primitive@>
+
+primitive("XeTeXhyphenatablelength",assign_int,eTeX_state_base+XeTeX_hyphenatable_length_code);
+@!@:XeTeX_hyphenatable_length_}{\.{\\XeTeXhyphenatablelength} primitive@>
 
 primitive("XeTeXinputencoding",extension,XeTeX_input_encoding_extension_code);
 primitive("XeTeXdefaultencoding",extension,XeTeX_default_encoding_extension_code);
@@ -31146,6 +31404,7 @@ end
 @<Cases of |reverse|...@>=
 whatsit_node:
   if (subtype(p)=native_word_node)
+  or (subtype(p)=native_word_node_AT)
   or (subtype(p)=glyph_node)
   or (subtype(p)=pic_node)
   or (subtype(p)=pdf_node)
@@ -32427,17 +32686,18 @@ max_reg_help_line:="A register number must be between 0 and 32767.";
 @!max_reg_num: halfword; {largest allowed register number}
 @!max_reg_help_line: str_number; {first line of help message}
 
-@ There are seven almost identical doubly linked trees, one for the
-sparse array of the up to 32512 additional registers of each kind and
+@ There are eight almost identical doubly linked trees, one for the
+sparse array of the up to 32512 additional registers of each kind,
+one for inter-character token lists at specified class transitions, and
 one for the sparse array of the up to 32767 additional mark classes.
-The root of each such tree, if it exists, is an index node containing 16
-pointers to subtrees for 4096 consecutive array elements.  Similar index
-nodes are the starting points for all nonempty subtrees for 4096, 256,
-and 16 consecutive array elements.  These four levels of index nodes are
+The root of each such tree, if it exists, is an index node containing 64
+pointers to subtrees for 64^4 consecutive array elements.  Similar index
+nodes are the starting points for all nonempty subtrees for 64^3, 64^2,
+and 64 consecutive array elements.  These four levels of index nodes are
 followed by a fifth level with nodes for the individual array elements.
 
-Each index node is nine words long.  The pointers to the 16 possible
-subtrees or are kept in the |info| and |link| fields of the last eight
+Each index node is 33 words long.  The pointers to the 64 possible
+subtrees or nodes are kept in the |info| and |link| fields of the last 32
 words.  (It would be both elegant and efficient to declare them as
 array, unfortunately \PASCAL\ doesn't allow this.)
 
@@ -32447,11 +32707,11 @@ lower index node and the |sa_index| field contains four bits (one
 hexadecimal digit) of the register number or mark class.  For the lowest
 index node the |link| field is |null| and the |sa_index| field indicates
 the type of quantity (|int_val|, |dimen_val|, |glue_val|, |mu_val|,
-|box_val|, |tok_val|, or |mark_val|).  The |sa_used| field in the index
-nodes counts how many of the 16 pointers are non-null.
+|box_val|, |tok_val|, |inter_char_val| or |mark_val|).  The |sa_used| field in the index
+nodes counts how many of the 64 pointers are non-null.
 
-The |sa_index| field in the nodes for array elements contains the four
-bits plus 16 times the type.  Therefore such a node represents a count
+The |sa_index| field in the nodes for array elements contains the six
+bits plus 64 times the type.  Therefore such a node represents a count
 or dimen register if and only if |sa_index<dimen_val_limit|; it
 represents a skip or muskip register if and only if
 |dimen_val_limit<=sa_index<mu_val_limit|; it represents a box register
@@ -32466,12 +32726,12 @@ having given contents of the |sa_index| and |link| fields.
 @d box_val==4 {the additional box registers}
 @d mark_val=7 {the additional mark classes}
 @#
-@d dimen_val_limit=@"20 {$2^4\cdot(|dimen_val|+1)$}
-@d mu_val_limit=@"40 {$2^4\cdot(|mu_val|+1)$}
-@d box_val_limit=@"50 {$2^4\cdot(|box_val|+1)$}
-@d tok_val_limit=@"60 {$2^4\cdot(|tok_val|+1)$}
+@d dimen_val_limit=@"80 {$2^6\cdot(|dimen_val|+1)$}
+@d mu_val_limit=@"100 {$2^6\cdot(|mu_val|+1)$}
+@d box_val_limit=@"140 {$2^6\cdot(|box_val|+1)$}
+@d tok_val_limit=@"180 {$2^6\cdot(|tok_val|+1)$}
 @#
-@d index_node_size=9 {size of an index node}
+@d index_node_size=33 {size of an index node}
 @d sa_index==type {a four-bit address or a type or both}
 @d sa_used==subtype {count of non-null pointers}
 
@@ -32480,12 +32740,12 @@ procedure new_index(@!i:quarterword; @!q:pointer);
 var k:small_number; {loop index}
 begin cur_ptr:=get_node(index_node_size); sa_index(cur_ptr):=i;
 sa_used(cur_ptr):=0; link(cur_ptr):=q;
-for k:=1 to index_node_size-1 do {clear all 16 pointers}
+for k:=1 to index_node_size-1 do {clear all 64 pointers}
   mem[cur_ptr+k]:=sa_null;
 end;
 
-@ The roots of the seven trees for the additional registers and mark
-classes are kept in the |sa_root| array.  The first six locations must
+@ The roots of the eight trees for the additional registers and mark
+classes are kept in the |sa_root| array.  The first seven locations must
 be dumped and undumped; the last one is also known as |sa_mark|.
 
 @d sa_mark==sa_root[mark_val] {root for mark classes}
@@ -32501,7 +32761,7 @@ sa_mark:=null; sa_null.hh.lh:=null; sa_null.hh.rh:=null;
 @ @<Initialize table...@>=
 for i:=int_val to inter_char_val do sa_root[i]:=null;
 
-@ Given a type |t| and a sixteen-bit number |n|, the |find_sa_element|
+@ Given a type |t| and a twenty-four-bit number |n|, the |find_sa_element|
 procedure returns (in |cur_ptr|) a pointer to the node for the
 corresponding array element, or |null| when no such element exists.  The
 third parameter |w| is set |true| if the element must exist, e.g.,
@@ -32509,19 +32769,20 @@ because it is about to be modified.  The procedure has two main
 branches:  one follows the existing tree structure, the other (only used
 when |w| is |true|) creates the missing nodes.
 
-We use macros to extract the four-bit pieces from a sixteen-bit register
-number or mark class and to fetch or store one of the 16 pointers from
-an index node.
+We use macros to extract the six-bit pieces from a twenty-four-bit register
+number or mark class and to fetch or store one of the 64 pointers from
+an index node. (Note that the |hex_dig| macros are mis-named since the conversion
+from 4-bit to 6-bit fields for \XeTeX!)
 
 @d if_cur_ptr_is_null_then_return_or_goto(#)== {some tree element is missing}
   begin if cur_ptr=null then
     if w then goto #@+else return;
   end
 @#
-@d hex_dig1(#)==# div 4096 {the fourth lowest hexadecimal digit}
-@d hex_dig2(#)==(# div 256) mod 16 {the third lowest hexadecimal digit}
-@d hex_dig3(#)==(# div 16) mod 16 {the second lowest hexadecimal digit}
-@d hex_dig4(#)==# mod 16 {the lowest hexadecimal digit}
+@d hex_dig1(#)==# div @"40000 {the fourth lowest 6-bit field}
+@d hex_dig2(#)==(# div @"1000) mod @"40 {the third lowest 6-bit field}
+@d hex_dig3(#)==(# div @"40) mod @"40 {the second lowest 6-bit field}
+@d hex_dig4(#)==# mod @"40 {the lowest 6-bit field}
 @#
 @d get_sa_ptr==if odd(i) then cur_ptr:=link(q+(i div 2)+1)
   else cur_ptr:=info(q+(i div 2)+1)
@@ -32539,7 +32800,7 @@ procedure find_sa_element(@!t:small_number;@!n:halfword;@!w:boolean);
   {sets |cur_val| to sparse array element location or |null|}
 label not_found,not_found1,not_found2,not_found3,not_found4,exit;
 var q:pointer; {for list manipulations}
-@!i:small_number; {a four bit index}
+@!i:small_number; {a six bit index}
 begin cur_ptr:=sa_root[t];
 if_cur_ptr_is_null_then_return_or_goto(not_found);@/
 q:=cur_ptr; i:=hex_dig1(n); get_sa_ptr;
@@ -32582,7 +32843,7 @@ words contain the five types of current marks
 
 @d sa_lev==sa_used {grouping level for the current value}
 @d pointer_node_size=2 {size of an element with a pointer value}
-@d sa_type(#)==(sa_index(#) div 16) {type part of combined type/index}
+@d sa_type(#)==(sa_index(#) div 64) {type part of combined type/index}
 @d sa_ref(#)==info(#+1) {reference count of a sparse array element}
 @d sa_ptr(#)==link(#+1) {a pointer value}
 @#
@@ -32616,7 +32877,7 @@ else  begin if t<=dimen_val then {a count or dimen register}
     end;
   sa_ref(cur_ptr):=null; {all registers have a reference count}
   end;
-sa_index(cur_ptr):=16*t+i; sa_lev(cur_ptr):=level_one
+sa_index(cur_ptr):=64*t+i; sa_lev(cur_ptr):=level_one
 
 @ The |delete_sa_ref| procedure is called when a pointer to an array
 element representing a register is being removed; this means that the
@@ -32670,8 +32931,8 @@ to an array element.
 procedure print_sa_num(@!q:pointer); {print register number}
 var @!n:halfword; {the register number}
 begin if sa_index(q)<dimen_val_limit then n:=sa_num(q) {the easy case}
-else  begin n:=hex_dig4(sa_index(q)); q:=link(q); n:=n+16*sa_index(q);
-  q:=link(q); n:=n+256*(sa_index(q)+16*sa_index(link(q)));
+else  begin n:=hex_dig4(sa_index(q)); q:=link(q); n:=n+64*sa_index(q);
+  q:=link(q); n:=n+64*64*(sa_index(q)+64*sa_index(link(q)));
   end;
 print_int(n);
 end;
@@ -33179,6 +33440,7 @@ existing code.
 @d hyph_root==trie_r[0] {root of the linked trie for |hyph_codes|}
 
 @<Initialize table entries...@>=
+XeTeX_hyphenatable_length:=63; {for backward compatibility with standard TeX by default}
 
 @ @<Store hyphenation codes for current language@>=
 begin c:=cur_lang; first_child:=false; p:=0;

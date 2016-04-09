@@ -79,8 +79,11 @@ override_dh_autoreconf:
 # so that as much as possible is built from system libs.
 #
 # 20160222: retry with current poppler (Debian 0.38)
-# 20160409: libpng16 has entered unstable, try to build everything
-#	    with system libraries
+# 20160409: - libpng16 has entered unstable, try to build everything
+#	      with system libraries
+#           - do not use system teckit as there is no response from
+#             the maintainer about schedule for upload to unstable
+#             --with-system-teckit		\
 #
 
 # disable-largefile seems to break omegafonts, as they core dump
@@ -112,7 +115,6 @@ override_dh_auto_configure:
 	--with-system-gmp			\
 	--with-system-mpfr			\
 	--with-system-poppler			\
-	--with-system-teckit			\
 	--with-system-xpdf			\
 	--with-system-freetype2			\
 	--with-freetype2-include=/usr/include/freetype2 \

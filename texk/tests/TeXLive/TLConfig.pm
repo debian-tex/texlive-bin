@@ -1,11 +1,11 @@
 # TeXLive::TLConfig.pm - module exporting configuration values
-# Copyright 2007-2015 Norbert Preining
+# Copyright 2007-2016 Norbert Preining
 # This file is licensed under the GNU General Public License version 2
 # or any later version.
 
 package TeXLive::TLConfig;
 
-my $svnrev = '$Revision: 36787 $';
+my $svnrev = '$Revision: 40251 $';
 my $_modulerevision;
 if ($svnrev =~ m/: ([0-9]+) /) {
   $_modulerevision = $1;
@@ -48,13 +48,14 @@ BEGIN {
     %TLPDBConfigs
     $NetworkTimeout
     $PartialEngineSupport
+    $F_OK $F_WARNING $F_ERROR $F_NOPOSTACTION
   );
   @EXPORT = @EXPORT_OK;
 }
 
 # the year of our release, will be used in the location of the
 # network packages, and in menu names, and other places.
-$ReleaseYear = 2015;
+$ReleaseYear = 2016;
 
 # users can upgrade from this year to the current year; maybe a spread
 # of more than one year will be useful at some point, but not now.
@@ -197,12 +198,26 @@ our $PartialEngineSupport = "luajittex";
 # timeout for network connections (wget, LWP) in seconds
 our $NetworkTimeout = 30;
 
+# Flags for error handling across the scripts and modules
+# all fine
+our $F_OK = 0;
+#
+# some warnings, but we still try to run post actions
+our $F_WARNING = 1;
+#
+# error, terminating
+our $F_ERROR = 2;
+#
+# all fine, but no need to run post actions
+our $F_NOPOSTACTION = 4;
+
+
 1;
 
 
 =head1 NAME
 
-C<TeXLive::TLConfig> -- TeX Live Configurations
+C<TeXLive::TLConfig> -- TeX Live Configuration module
 
 =head1 SYNOPSIS
 

@@ -590,12 +590,11 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-EXTRA_DIST = $(CJKUTILS_TREE) $(CJKUTILS_TREE)-PATCHES $(CWEB_TEX) \
-	$(CWEB_DVI) $(TESTS) tests/bg5conv.tex tests/bg5conv.cjk \
-	tests/cefconv.tex tests/cefconv.cjk tests/cef5conv.tex \
-	tests/cef5conv.cjk tests/cefsconv.tex tests/cefsconv.cjk \
-	tests/extconv.tex tests/extconv.cjk tests/sjisconv.tex \
-	tests/sjisconv.cjk
+EXTRA_DIST = $(CJKUTILS_TREE) cjkutils-PATCHES $(CWEB_TEX) $(CWEB_DVI) \
+	$(TESTS) tests/bg5conv.tex tests/bg5conv.cjk tests/cefconv.tex \
+	tests/cefconv.cjk tests/cef5conv.tex tests/cef5conv.cjk \
+	tests/cefsconv.tex tests/cefsconv.cjk tests/extconv.tex \
+	tests/extconv.cjk tests/sjisconv.tex tests/sjisconv.cjk
 NEVER_DIST = `find . $(NEVER_NAMES)`
 
 # Files not to be distributed
@@ -1632,6 +1631,12 @@ do-cweave: $(CWEB_SRC) .FORCE
 @do_cweb_TRUE@	$(CTANGLE) $<
 @do_cweb_TRUE@hbf2gf.c: $(CWEB_SRC)
 @do_cweb_TRUE@	$(CTANGLE) $<
+bg5conv.log: bg5conv$(EXEEXT)
+cefconv.log: cefconv$(EXEEXT)
+cef5conv.log: cef5conv$(EXEEXT) bg5conv$(EXEEXT) cefconv$(EXEEXT)
+cefsconv.log: cefsconv$(EXEEXT) sjisconv$(EXEEXT) cefconv$(EXEEXT)
+extconv.log: extconv$(EXEEXT)
+sjisconv.log: sjisconv$(EXEEXT)
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

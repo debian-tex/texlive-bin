@@ -24,9 +24,12 @@
 
 #  include "image.h"
 
-void read_pdf_info(image_dict *, int, int, img_readtype_e);
+void read_pdf_info(image_dict *);
+void flush_pdf_info(image_dict *);
+/*   flush_pdfstream_info(image_dict *); */ /* somehow doesn't work due to xfree macro */
 void unrefPdfDocument(char *);
-void write_epdf(PDF, image_dict *);
+void unrefMemStreamPdfDocument(char *);
+void write_epdf(PDF, image_dict *, int suppress_optional_info);
 void epdf_check_mem(void);
 void copyReal(PDF pdf, double d);
 

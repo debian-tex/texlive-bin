@@ -1,5 +1,5 @@
 /* maincontrol.h
-   
+
    Copyright 2009 Taco Hoekwater <taco@luatex.org>
 
    This file is part of LuaTeX.
@@ -156,8 +156,10 @@ extern void fixup_directions(void);
 /* Assignments from Lua need helpers. */
 
 #  define is_int_assign(cmd) (cmd==assign_int_cmd)
+#  define is_attr_assign(cmd) (cmd==assign_attr_cmd)
 #  define is_dim_assign(cmd) (cmd==assign_dimen_cmd)
 #  define is_glue_assign(cmd) (cmd==assign_glue_cmd)
+#  define is_mu_glue_assign(cmd) (cmd==assign_mu_glue_cmd)
 #  define is_toks_assign(cmd) (cmd==assign_toks_cmd)
 
 #  define show_code 0           /* \.{\\show} */
@@ -174,7 +176,6 @@ extern void fixup_directions(void);
 
 extern void get_r_token(void);
 extern void assign_internal_value(int a, halfword p, int cur_val);
-extern void trap_zero_glue(void);
 extern void do_register_command(int a);
 extern void alter_aux(void);
 extern void alter_prev_graf(void);

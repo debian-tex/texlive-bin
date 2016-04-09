@@ -33,7 +33,6 @@
  *	integers must be manipulated with %ld, be carefull!
  * AUTHORS
  *	Piet Tutelaers
- *	rcpt@urc.tue.nl
  */
  
 #include <stdio.h>
@@ -58,4 +57,4 @@ typedef struct {
    halfword *raster ;
 } chardesc ;
 
-int readchar(char *name, shalfword c, chardesc *cd);
+int readchar(char *name, integer c, chardesc *cd);

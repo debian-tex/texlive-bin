@@ -124,7 +124,7 @@ void indwrite(char *filename, struct index *ind, int pagenum)
 	FILE *fp;
 	int conv_euc_to_euc;
 
-	if (filename[0]!='\0' && kpse_out_name_ok(filename)) fp=fopen(filename,"wb");
+	if (filename && kpse_out_name_ok(filename)) fp=fopen(filename,"wb");
 	else {
 		fp=stdout;
 #ifdef WIN32
@@ -245,15 +245,6 @@ void indwrite(char *filename, struct index *ind, int pagenum)
 						fputs(lethead_suffix,fp);
 					}
 				}
-
-				else if ((strncmp(ind[i].dic[0],HIRAEND,2)>=0)&&(strncmp(ind[i-1].dic[0],ind[i].dic[0],2)!=0)) {
-					fputs(group_skip,fp);
-					if (lethead_flag!=0) {
-						fputs(lethead_prefix,fp);
-						fprint_euc_char(fp,ind[i].dic[0][0],ind[i].dic[0][1]);
-						fputs(lethead_suffix,fp);
-					}
-				}
 			}
 
 			switch (ind[i].words) {
@@ -303,7 +294,7 @@ void indwrite(char *filename, struct index *ind, int pagenum)
 	}
 	fputs(postamble,fp);
 
-	if (filename[0]!='\0') fclose(fp);
+	if (filename) fclose(fp);
 }
 
 /*   write page block   */

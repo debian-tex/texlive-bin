@@ -1,6 +1,6 @@
 /* This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
 
-    Copyright (C) 2002-2015 by Jin-Hwan Cho and Shunsaku Hirata,
+    Copyright (C) 2002-2016 by Jin-Hwan Cho and Shunsaku Hirata,
     the dvipdfmx project team.
     
     Copyright (C) 1998, 1999 by Mark A. Wicks <mwicks@kettering.edu>
@@ -808,7 +808,7 @@ pdf_dev__flushpath (pdf_path  *pa,
 {
   pa_elem   *pe, *pe1;
   char      *b      = fmt_buf;
-  long       b_len  = FORMAT_BUFF_LEN;
+  int        b_len  = FORMAT_BUFF_LEN;
   pdf_rect   r; /* FIXME */
   pdf_coord *pt;
   int        n_pts, n_seg;
@@ -906,7 +906,7 @@ typedef struct pdf_gstate_
 
   /* internal */
   pdf_path  path;
-  long      flags;
+  int       flags;
   /* bookkeeping the origin of the last transform applied */
   pdf_coord pt_fixee;
 } pdf_gstate;

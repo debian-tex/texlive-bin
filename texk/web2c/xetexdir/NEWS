@@ -1,8 +1,42 @@
+XeTeX 0.99996 (just squeaked into TeXLive 2016)
+
+XeTeX:
+* Added \XeTeXhyphenatablelength primitive that sets the maximum
+  length of word that XeTeX will attempt to hyphenate (default: 63).
+
 ==============================================================
-XeTeX 0.99992 was released 2015????
+XeTeX 0.99995 (targeting TeXLive 2016)
 ==============================================================
 
 XeTeX:
+* Added \XeTeXgenerateactualtext primitive; bumped the DVI id byte to 7,
+  as this uses a new opcode that requires support in the driver.
+
+==============================================================
+XeTeX 0.99994 (unreleased experimental version)
+==============================================================
+
+XeTeX:
+* Increased character class limit to 4096.
+* Added \XeTeXinterwordspaceshaping primitive.
+
+==============================================================
+XeTeX 0.99993 was not really "released", but in July 2015 the
+version number was bumped in the TeXLive source when a new
+primitive was added.
+==============================================================
+
+XeTeX:
+* Added \mdfivesum primitive
+* Removed -q from the default xdvipdfmx output-driver command line.
+
+==============================================================
+XeTeX 0.99992 was released 20150507
+==============================================================
+
+XeTeX:
+* New \Uchar and \Ucharcat primitives
+* Fix various issues with UTF-16 and characters >= U+10000.
 * Various image handling fixes by Akira Kakuto.
 * Fix off-by-one error in display of \every... token registers, thanks to Bruno
   Le Floch.

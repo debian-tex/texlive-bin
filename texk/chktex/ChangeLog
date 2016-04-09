@@ -1,3 +1,11 @@
+2016-02-23  Akira Kakuto  <kakuto@kakuto.fuk.kindai.ac.jp>
+
+	* Makefile.am, configure.ac: New convention.
+
+2015-07-07  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* Makefile.am: Better dependencies for 'make check'.
+
 2015-04-13  Peter Breitenlohner  <peb@mppmu.mpg.de>
 
 	* ChkTeX.tex (new): Source of ChkTeX.pdf.

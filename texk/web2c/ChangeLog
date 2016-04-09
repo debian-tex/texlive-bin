@@ -1,3 +1,83 @@
+2016-02-27  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* help.h: Add an option -charcode-format in omfonts for compatibility.
+
+2015-12-18  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* Makefile.am: remove txt2zlib.am for LuaTeX.
+
+2015-12-16  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* Makefile.in: Rewritten by hand for LuaTeX beta-0.87.0.
+	It should be recreated by autotool.
+
+2015-11-27  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* dvicopy.ch: Avoid to crash and abort with an error message when
+	the character size >= 2048 pt.
+
+2015-09-22  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* triptest.test: Also check tripos.tex.
+
+2015-09-01  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* configure.ac: Check poppler for Object::initCmd(const char*).
+
+2015-08-29  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* configure.ac: Drop check for <StructTreeRoot.h>, we now
+	require poppler 0.30 better.
+	
+2015-08-10  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* pltotf.ch, vptovf.ch: Send also real numbers to stderr,
+	completing the change from 2015-01-09 (report from Norbert).
+
+2015-07-28  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* dvitype.ch: Removed a spurious duplicate statement.
+
+2015-07-10  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* mftraptest (removed): Renamed ...
+	* mftraptest.test (new):  ... into this.
+	* triptest (removed): Renamed ...
+	* triptest.test (new):... into this.
+	* triptrap-sh: Adapted.
+	* Makefile.am, am/bootstrap.am, am/cweb.am, am/texmf.am,
+	am/web.am, libmd5/am/md5.am: Dependencies for 'make check'.
+
+2015-07-09  Akira Kakuto  <kakuto@fuk.kinidai.ac.jp>
+
+	* texmfmp.h: Add \pdfmdfivesum to XeTeX.
+
+2015-07-08  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* am/web.am: Fix dependencies for 'make check'.
+
+2015-07-04  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* texmfmp.h: Declare convertStringToHexString() and getmd5sum().
+
+2015-07-03  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* am/texmf.am: Always create mf-nowin, either as extra program
+	or as symlink.
+
+2015-06-22  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* Makefile.am (tie_c, tie_m): New variables.
+	* am/texmf.am: Use $(tie_c).
+
+2015-06-12  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	Integrate MFLua and MFLuaJIT.
+	* mfluadir, mfluajitdir: New directories.
+	* mf.ch: Avoid conflict with mfluadir/mf-lua.ch.
+	* Makefile.am, ac/web2c.ac, tangle-sh.in, texmfmp.h,
+	* texmfmp-help.h, triptrap-sh: Adapted.
+
 2015-05-21  Karl Berry  <karl@tug.org>
 
 	* TL'15.
@@ -216,7 +296,7 @@
 
 	* trap.test (removed): Renamed ...
 	* mftraptest (new): ... into this.
-	* trp.test (removed): Renamed ...
+	* trip.test (removed): Renamed ...
 	* triptest (new): ... into this.
 	* am/texmf.am, triptrap-sh: Adapted.
 

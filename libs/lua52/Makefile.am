@@ -12,7 +12,7 @@ EXTRA_DIST = $(LUA52_TREE)
 
 ## Changes applied to the original source tree
 ##
-EXTRA_DIST += $(LUA52_TREE)-PATCHES
+EXTRA_DIST += lua52-PATCHES
 
 # Files not to be distributed
 include $(srcdir)/../../am/dist_hook.am
@@ -80,6 +80,8 @@ check_PROGRAMS = luatest luatry
 dist_check_SCRIPTS = lua52.test luaerror.test
 TESTS = lua52.test luaerror.test
 endif build
+lua52.log: luatest$(EXEEXT)
+luaerror.log: luatry$(EXEEXT)
 
 luatest_SOURCES = luatest.c
 

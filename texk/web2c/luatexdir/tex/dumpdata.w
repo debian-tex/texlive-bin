@@ -25,9 +25,9 @@
 #define font_id_text(A) cs_text(font_id_base+(A))
 #define prev_depth cur_list.prev_depth_field
 
-/* 907 = sum of the values of the bytes of "don knuth" */
-/* The next FORMAT_ID will be 907+2               */
-#define FORMAT_ID (907+1)  
+/* we start with 907: the sum of the values of the bytes of "don knuth" */
+
+#define FORMAT_ID (907+15)
 #if ((FORMAT_ID>=0) && (FORMAT_ID<=256))
 #error Wrong value for FORMAT_ID.
 #endif
@@ -47,8 +47,8 @@ after the |banner| line when \TeX\ is ready to start. For \.{INITEX} this
 string says simply `\.{(INITEX)}'; for other versions of \TeX\ it says,
 for example, `\.{(preloaded format=plain 1982.11.19)}', showing the year,
 month, and day that the format file was created. We have |format_ident=0|
-before \TeX's tables are loaded. |FORMAT_ID| is a new field of type int 
-suitable for the identification of a format: values between 0 and 256 
+before \TeX's tables are loaded. |FORMAT_ID| is a new field of type int
+suitable for the identification of a format: values between 0 and 256
 (included) can not be used because in the previous format they are used
 for the length of  the name of the engine.
 @c
@@ -81,7 +81,7 @@ void store_fmt_file(void)
         succumb();
     }
 
-    /* Create the |format_ident|, open the format file, and inform the user 
+    /* Create the |format_ident|, open the format file, and inform the user
        that dumping has begun */
     callback_id = callback_defined(pre_dump_callback);
     if (callback_id > 0) {
@@ -121,7 +121,7 @@ void store_fmt_file(void)
        dump/undump macros. */
 
     dump_int(0x57325458);       /* Web2C \TeX's magic constant: "W2TX" */
-    dump_int(FORMAT_ID);       
+    dump_int(FORMAT_ID);
 
     /* Align engine to 4 bytes with one or more trailing NUL */
     x = (int) strlen(engine_name);
@@ -150,7 +150,7 @@ void store_fmt_file(void)
     /* Dump the dynamic memory */
     /* By sorting the list of available spaces in the variable-size portion of
        |mem|, we are usually able to get by without having to dump very much
-       of the dynamic memory. 
+       of the dynamic memory.
 
        We recompute |var_used| and |dyn_used|, so that \.{INITEX} dumps valid
        information even when it has not been gathering statistics.
@@ -301,9 +301,6 @@ void store_fmt_file(void)
     /* Dump the hyphenation tables */
     dump_language_data();
 
-    /* Dump pdftex data */
-    dump_pdftex_data(static_pdf);
-
     /* Dump a couple more things and the closing check word */
     dump_int(interaction);
     dump_int(format_ident);
@@ -387,7 +384,7 @@ boolean load_fmt_file(const char *fmtname)
     format_debug("engine name size", x);
     if ((x < 0) || (x > 256))
         goto BAD_FMT;           /* corrupted format file */
- 
+
     format_engine = xmalloc((unsigned) x);
     undump_things(format_engine[0], x);
     format_engine[x - 1] = 0;   /* force string termination, just in case */
@@ -506,13 +503,9 @@ boolean load_fmt_file(const char *fmtname)
         undump_font(k);
     }
     undump_math_data();
-    /*make_pdftex_banner();*/
 
     /* Undump the hyphenation tables */
     undump_language_data();
-
-    /* Undump pdftex data */
-    undump_pdftex_data(static_pdf);
 
     /* Undump a couple more things and the closing check word */
     undump(batch_mode, error_stop_mode, interaction);
@@ -527,7 +520,7 @@ boolean load_fmt_file(const char *fmtname)
     /* Undump the lua bytecodes */
     undump_luac_registers();
 
-    prev_depth = dimen_par(pdf_ignored_dimen_code);
+    prev_depth = ignore_depth;
     return true;                /* it worked! */
   BAD_FMT:
     wake_up_terminal();

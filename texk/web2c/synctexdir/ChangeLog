@@ -1,3 +1,16 @@
+2016-03-04  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* synctex-ep-mem.ch1, synctex-p-mem.ch1: Adapt to changes in
+	ptexdir/ptex-base.ch.
+
+2015-12-21  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* synctex-luatex.h: update for the new texnode.h in LuaTeX beta-0.87.0.
+
+2015-07-10  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* am/synctex.am: Dependencies for 'make check'.
+
 2015-04-05  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
 
 	* synctex.c: Support file names with multi-byte characters in SyncTeX

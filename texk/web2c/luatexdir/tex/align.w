@@ -40,15 +40,13 @@ void init_col(void);
 #define every_cr          equiv(every_cr_loc)
 #define display_indent    dimen_par(display_indent_code)
 #define max_depth         dimen_par(max_depth_code)
-#define pdf_ignored_dimen dimen_par(pdf_ignored_dimen_code)
 #define overfull_rule     dimen_par(overfull_rule_code)
 
 @ It's sort of a miracle whenever \.{\\halign} and \.{\\valign} work, because
 they cut across so many of the control structures of \TeX.
 
-Therefore the
-present page is probably not the best place for a beginner to start reading
-this program; it is better to master everything else first.
+Therefore the present page is probably not the best place for a beginner to
+start reading this program; it is better to master everything else first.
 
 Let us focus our thoughts on an example of what the input might be, in order
 to get some idea about how the alignment miracle happens. The example doesn't
@@ -173,8 +171,6 @@ called upon to step in and do some little action, but most of the time
 these routines just lurk in the background. It's something like
 post-hypnotic suggestion.
 
-
-
 @ We have mentioned that alignrecords contain no |height| or |depth| fields.
 Their |glue_sign| and |glue_order| are pre-empted as well, since it
 is necessary to store information about what to do when a template ends.
@@ -185,7 +181,6 @@ This information is called the |extra_info| field.
 #define v_part(A) vinfo((A)+depth_offset)       /* pointer to \<v_j> token list */
 #define span_ptr(A) vinfo((A)+1)        /* column spanning list */
 #define extra_info(A) vinfo((A)+list_offset)    /* info to remember during template */
-
 
 @ Alignments can occur within alignments, so a small stack is used to access
 the alignrecord information. At each level we have a |preamble| pointer,
@@ -219,6 +214,13 @@ pointer cur_pre_head = null, cur_pre_tail = null;       /* pre-adjustment list p
 
 @ Alignment stack maintenance is handled by a pair of trivial routines
 called |push_alignment| and |pop_alignment|.
+
+(HH:) It makes not much sense to add support for an \.{attr} keyword to
+\.{\\halign} and \.{\\valign} because then we need to decide if we tag
+rows or cells or both or come up with \.{cellattr} and \.{rowattr} and
+such. But then it even makes sense to have explicit commands (in addition
+to the seperator) to tags individual cells. Too muss hassle for now and the
+advantages are not that large.
 
 @c
 static void push_alignment(void)
@@ -494,7 +496,7 @@ static void init_span(pointer p)
     if (cur_list.mode_field == -hmode) {
         space_factor = 1000;
     } else {
-        prev_depth = pdf_ignored_dimen;
+        prev_depth = ignore_depth;
         normal_paragraph();
     }
     cur_span = p;
@@ -516,7 +518,7 @@ void init_row(void)
         space_factor = 0;
     else
         prev_depth = 0;
-    tail_append(new_glue(glue_ptr(preamble)));
+    tail_append(new_glue(preamble));
     subtype(cur_list.tail_field) = tab_skip_code + 1;
     cur_align = vlink(preamble);
     cur_tail = cur_head;
@@ -648,7 +650,7 @@ boolean fin_col(void)
             v_part(p) = token_link(hold_token_head);
 
             cur_loop = vlink(cur_loop);
-            r = new_glue(glue_ptr(cur_loop));
+            r = new_glue(cur_loop);
             vlink(p) = r;
         } else {
             const char *hlp[] =
@@ -669,15 +671,15 @@ boolean fin_col(void)
             adjust_tail = cur_tail;
             pre_adjust_tail = cur_pre_tail;
             u = filtered_hpack(cur_list.head_field, cur_list.tail_field, 0,
-                               additional, align_set_group, -1);
+                               additional, align_set_group, -1, 0, 0);
             w = width(u);
             cur_tail = adjust_tail;
             adjust_tail = null;
             cur_pre_tail = pre_adjust_tail;
             pre_adjust_tail = null;
         } else {
-            u = filtered_vpackage(vlink(cur_list.head_field), 0, additional, 0,
-                                  align_set_group, -1);
+            u = filtered_vpackage(vlink(cur_list.head_field),
+                0, additional, 0, align_set_group, -1, 0, 0);
             w = height(u);
         }
         n = min_quarterword;    /* this represents a span count of 1 */
@@ -717,7 +719,7 @@ boolean fin_col(void)
         cur_list.tail_field = u;
 
         /* Copy the tabskip glue between columns */
-        tail_append(new_glue(glue_ptr(vlink(cur_align))));
+        tail_append(new_glue(vlink(cur_align)));
         subtype(cur_list.tail_field) = tab_skip_code + 1;
 
         if (extra_info(cur_align) >= cr_code) {
@@ -770,16 +772,16 @@ void fin_row(void)
     pointer p;                  /* the new unset box */
     if (cur_list.mode_field == -hmode) {
         p = filtered_hpack(cur_list.head_field, cur_list.tail_field, 0,
-                           additional, fin_row_group, -1);
+                           additional, fin_row_group, -1, 0, 0);
         pop_nest();
         if (cur_pre_head != cur_pre_tail)
             append_list(cur_pre_head, cur_pre_tail);
-        append_to_vlist(p);
+        append_to_vlist(p,lua_key_index(alignment));
         if (cur_head != cur_tail)
             append_list(cur_head, cur_tail);
     } else {
-        p = filtered_vpackage(vlink(cur_list.head_field), 0, additional,
-                              max_depth, fin_row_group, -1);
+        p = filtered_vpackage(vlink(cur_list.head_field),
+            0, additional, max_depth, fin_row_group, -1, 0, 0);
         pop_nest();
         vlink(cur_list.tail_field) = p;
         cur_list.tail_field = p;
@@ -801,12 +803,13 @@ set so that the columns line up, taking due account of spanned columns.
 @c
 void fin_align(void)
 {
-    pointer p, q, r, s, u, v, rr;       /* registers for the list operations */
+    pointer p, q, r, s, u, rr;  /* registers for the list operations */
     scaled t, w;                /* width of column */
     scaled o;                   /* shift offset for unset boxes */
     halfword n;                 /* matching span amount */
     scaled rule_save;           /* temporary storage for |overfull_rule| */
     halfword pd;                /* temporary storage for |prev_depth| */
+    halfword ng;                /*  temporary storage for |new_glue| */
     if (cur_group != align_group)
         confusion("align1");
     unsave();                   /* that |align_group| was for individual entries */
@@ -818,7 +821,7 @@ void fin_align(void)
     else
         o = 0;
     /* Go through the preamble list, determining the column widths and
-     * changing the alignrecords to dummy unset boxes 
+     * changing the alignrecords to dummy unset boxes
      */
 
 /* It's time now to dismantle the preamble list and to compute the column
@@ -853,12 +856,7 @@ value is changed to zero and so is the next tabskip.
             /* Nullify |width(q)| and the tabskip glue following this column */
             width(q) = 0;
             r = vlink(q);
-            s = glue_ptr(r);
-            if (s != zero_glue) {
-                add_glue_ref(zero_glue);
-                delete_glue_ref(s);
-                glue_ptr(r) = zero_glue;
-            }
+            reset_glue_to_zero(r); /* is a lready copy */ 
         }
         if (span_ptr(q) != end_span) {
             /* Merge the widths in the span nodes of |q| with those of |p|,
@@ -871,7 +869,7 @@ value is changed to zero and so is the next tabskip.
                have been processed, and the successor of |s| matches |r| or precedes |r|
                or follows |r|, according as |link(r)=n| or |link(r)>n| or |link(r)<n|.
              */
-            t = width(q) + width(glue_ptr(vlink(q)));
+            t = width(q) + width(vlink(q));
             r = span_ptr(q);
             s = end_span;
             span_ptr(s) = p;
@@ -930,8 +928,8 @@ value is changed to zero and so is the next tabskip.
             width(q) = 0;
             q = vlink(vlink(q));
         } while (q != null);
-        p = filtered_vpackage(preamble, saved_value(0), saved_level(0),
-                              max_depth, preamble_group, -1);
+        p = filtered_vpackage(preamble,
+            saved_value(0), saved_level(0), max_depth, preamble_group, -1, 0, 0);
         q = vlink(preamble);
         do {
             width(q) = height(q);
@@ -953,11 +951,11 @@ value is changed to zero and so is the next tabskip.
 
                 if (cur_list.mode_field == -vmode) {
                     type(q) = hlist_node;
-                    subtype(q) = HLIST_SUBTYPE_ALIGNROW;
+                    subtype(q) = align_row_list;
                     width(q) = width(p);
                 } else {
                     type(q) = vlist_node;
-                    subtype(q) = HLIST_SUBTYPE_ALIGNROW;
+                    subtype(q) = align_row_list;
                     height(q) = height(p);
                 }
                 glue_order(q) = glue_order(p);
@@ -984,28 +982,24 @@ value is changed to zero and so is the next tabskip.
                            and update |s| and |t| as the prototype nodes are passed */
 
                         s = vlink(s);
-                        v = glue_ptr(s);
-                        vlink(u) = new_glue(v);
+                        ng = new_glue(s);
+                        vlink(u) = ng;
                         u = vlink(u);
                         subtype(u) = tab_skip_code + 1;
-                        t = t + width(v);
+                        t = t + width(s);
                         if (glue_sign(p) == stretching) {
-                            if (stretch_order(v) == glue_order(p))
-                                t = t +
-                                    round(float_cast(glue_set(p)) *
-                                          float_cast(stretch(v)));
+                            if (stretch_order(s) == glue_order(p))
+                                t = t + round(float_cast(glue_set(p)) * float_cast(stretch(s)));
                         } else if (glue_sign(p) == shrinking) {
-                            if (shrink_order(v) == glue_order(p))
-                                t = t -
-                                    round(float_cast(glue_set(p)) *
-                                          float_cast(shrink(v)));
+                            if (shrink_order(s) == glue_order(p))
+                                t = t - round(float_cast(glue_set(p)) * float_cast(shrink(s)));
                         }
                         s = vlink(s);
                         rr = new_null_box();
                         vlink(u) = rr;
                         u = vlink(u);
                         t = t + width(s);
-                        subtype(u) = HLIST_SUBTYPE_ALIGNCELL;
+                        subtype(u) = align_cell_list;
                         if (cur_list.mode_field == -vmode) {
                             width(u) = width(s);
                         } else {
@@ -1047,7 +1041,7 @@ value is changed to zero and so is the next tabskip.
                         }
                         width(r) = w;
                         type(r) = hlist_node;
-                        subtype(r) = HLIST_SUBTYPE_ALIGNCELL;
+                        subtype(r) = align_cell_list;
 
                     } else {
                         /* Make the unset node |r| into a |vlist_node| of height |w|,
@@ -1079,7 +1073,7 @@ value is changed to zero and so is the next tabskip.
                         }
                         height(r) = w;
                         type(r) = vlist_node;
-                        subtype(r) = HLIST_SUBTYPE_ALIGNCELL;
+                        subtype(r) = align_cell_list;
 
                     }
                     /* subtype(r) = 0; */
@@ -1108,7 +1102,7 @@ value is changed to zero and so is the next tabskip.
                     vlink(q) = null;
                     q = hpack(q, 0, additional, -1);
                     shift_amount(q) = o;
-                    subtype(q) = HLIST_SUBTYPE_ALIGNCELL;
+                    subtype(q) = align_cell_list;
                     vlink(q) = r;
                     vlink(s) = q;
                 }
@@ -1124,7 +1118,7 @@ value is changed to zero and so is the next tabskip.
        and ends at |cur_list.tail_field|. This list will be merged with the one that encloses
        it. (In case the enclosing mode is |mmode|, for displayed formulas,
        we will need to insert glue before and after the display; that part of the
-       program will be deferred until we're more familiar with such operations.) 
+       program will be deferred until we're more familiar with such operations.)
      */
     pd = cur_list.prev_depth_field;
     p = vlink(cur_list.head_field);
@@ -1139,14 +1133,11 @@ value is changed to zero and so is the next tabskip.
             cur_list.tail_field = q;
         if (cur_list.mode_field == vmode) {
             if (!output_active)
-	    //                lua_node_filter_s(buildpage_filter_callback, "alignment");
-		lua_node_filter_s(buildpage_filter_callback,lua_key_index(alignment));	
+                lua_node_filter_s(buildpage_filter_callback,lua_key_index(alignment));
             build_page();
         }
     }
 }
-
-
 
 @ The token list |omit_template| just referred to is a constant token
 list that contains the special control sequence \.{\\endtemplate} only.

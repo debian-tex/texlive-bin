@@ -9,7 +9,7 @@ EXTRA_DIST = $(DVI2TTY_TREE)
 
 ## Patches applied to the original source tree
 ##
-EXTRA_DIST += $(DVI2TTY_TREE)-PATCHES
+EXTRA_DIST += dvi2tty-PATCHES
 
 # Files not to be distributed
 include $(srcdir)/../../am/dist_hook.am
@@ -32,6 +32,7 @@ dvi2tty_SOURCES = \
 	@DVI2TTY_TREE@/commands.h \
 	@DVI2TTY_TREE@/dvi2tty.c \
 	@DVI2TTY_TREE@/dvi2tty.h \
+	@DVI2TTY_TREE@/tex2ucs.h \
 	@DVI2TTY_TREE@/dvistuff.c
 
 $(dvi2tty_OBJECTS): $(KPATHSEA_DEPEND) $(PTEXENC_DEPEND)
@@ -49,6 +50,8 @@ man1_MANS = \
 ## Tests.
 ##
 TESTS = disdvi.test dvi2tty.test
+disdvi.log: disdvi$(EXEXET)
+dvi2tty.log: dvi2tty$(EXEEXT)
 
 TESTS_ENVIRONMENT = DVI2TTY_TREE=$(DVI2TTY_TREE)
 EXTRA_DIST += $(TESTS)
@@ -59,4 +62,6 @@ DISTCLEANFILES = ligtest.dout
 ## dvi2tty.test
 EXTRA_DIST += ligtest.tty test.tty testc.tty tests.tty testu.tty
 DISTCLEANFILES += ligtest.out test.out testc.out tests.out testu.out
+DISTCLEANFILES += table.out tablec.out tables.out tableu.out tableuC.out
+DISTCLEANFILES += tableEu.out tableEu1.out tableEuC.out tableEua.out
 

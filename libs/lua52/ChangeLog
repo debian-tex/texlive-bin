@@ -1,3 +1,11 @@
+2016-02-18  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* Makefile.am, configure.ac: New convention.
+
+2015-07-06  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* Makefile.am: Better dependencies for 'make check'.
+
 2015-03-11  Peter Breitenlohner  <peb@mppmu.mpg.de>
 
 	Import lua-5.2.4.

@@ -1,3 +1,27 @@
+2016-04-06  Karl Berry  <karl@tug.org>
+
+	* etexextra.h (COPYRIGHT_HOLDER): add et al. since
+	peb passed away in 2015 so can't hold later copyrights.
+
+2015-09-22  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* etriptest.test: Also check tripos.tex and etrip.out.
+
+2015-07-28  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* am/etex.am: Fixed a stupid typo that caused 'make dist' to
+	create e-TeX.
+
+2015-07-10  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* etriptest (removed): Renamed ...
+	* etriptest.test (new):  ... into this.
+	* am/etex.am: Better dependencies for 'make check'.
+
+2015-06-22  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* am/etex.am: Use $(tie_c) and $(tie_m).
+
 2015-04-12  Peter Breitenlohner  <peb@mppmu.mpg.de>
 
 	* etrip/etrip.diffs: Updated for TL 2015.

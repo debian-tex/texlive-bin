@@ -21,10 +21,7 @@
 @* Image inclusion.
 
 @ @c
-
-
 #include "ptexlib.h"
-#include <assert.h>
 #include <kpathsea/c-auto.h>
 #include <kpathsea/c-memstr.h>
 
@@ -38,84 +35,65 @@
 #include "lua.h"          /* for |LUA_NOREF| */
 #include "lauxlib.h"
 
-@ @c
-#define pdf_image_resolution int_par(pdf_image_resolution_code)
-#define pdf_pagebox int_par(pdf_pagebox_code)
-
 @* Patch ImageTypeDetection 2003/02/08 by Heiko Oberdiek.
 
-  Function |readimage| performs some basic initializations.
-  Then it looks at the file extension to determine the
-  image type and calls specific code/functions.
+Function |readimage| performs some basic initializations. Then it looks at the
+file extension to determine the image type and calls specific code/functions. The
+main disadvantage is that standard file extensions have to be used, otherwise
+pdfTeX is not able to detect the correct image type. The patch now looks at the
+file header first regardless of the file extension. This is implemented in
+function |check_type_by_header|. If this check fails, the traditional test of
+standard file extension is tried, done in function |check_type_by_extension|.
 
-    The main disadvantage is that standard file extensions
-  have to be used, otherwise pdfTeX is not able to detect
-  the correct image type.
+Magic headers:
 
-  The patch now looks at the file header first regardless of
-  the file extension. This is implemented in function
-  |check_type_by_header|. If this check fails, the traditional
-  test of standard file extension is tried, done in function
-  |check_type_by_extension|.
+* "PNG (Portable Network Graphics) Specification", Version 1.2
+  (http://www.libpng.org/pub/png):
 
-  Magic headers:
+   3.1. PNG file signature
 
-  * "PNG (Portable Network Graphics) Specification", Version 1.2
-    (http://www.libpng.org/pub/png):
+      The first eight bytes of a PNG file always contain the following
+      (decimal) values: 137 80 78 71 13 10 26 10
 
-     3.1. PNG file signature
+Translation to C: |"\x89PNG\r\n\x1A\n"|
 
-        The first eight bytes of a PNG file always contain the following
-        (decimal) values:
+* "JPEG File Interchange Format", Version 1.02:
 
-           137 80 78 71 13 10 26 10
+  * you can identify a JFIF file by looking for the following sequence:
+    X'FF', SOI X'FF', APP0, <2 bytes to be skipped>, "JFIF", X'00'.
 
-  Translation to C: |"\x89PNG\r\n\x1A\n"|
+Function |check_type_by_header| only looks at the first two bytes: |"\xFF\xD8"|
 
-  * "JPEG File Interchange Format", Version 1.02:
+* ISO/IEC JTC 1/SC 29/WG 1
+  (ITU-T SG8)
+  Coding of Still Pictures
+  Title: 14492 FCD
+  Source: JBIG Committee
+  Project: JTC 1.29.10
+  Status: Final Committee Draft
 
-   o you can identify a JFIF file by looking for the following
-     sequence: X'FF', SOI X'FF', APP0, <2 bytes to be skipped>,
-     "JFIF", X'00'.
+ D.4.1, ID string
 
-  Function |check_type_by_header| only looks at the first two bytes:
-    |"\xFF\xD8"|
+ This is an 8-byte sequence containing 0x97 0x4A 0x42 0x32 0x0D 0x0A 0x1A 0x0A.
 
-  * ISO/IEC JTC 1/SC 29/WG 1
-    (ITU-T SG8)
-    Coding of Still Pictures
-    Title: 14492 FCD
-    Source: JBIG Committee
-    Project: JTC 1.29.10
-    Status: Final Committee Draft
+* "PDF Reference", third edition:
 
-   D.4.1, ID string
+  * The first line should contain \%PDF-1.0 -- \%PDF-1.4 (section 3.4.1 "File Header").
+  * The "implementation notes" say:
 
-   This is an 8-byte sequence containing 0x97 0x4A 0x42 0x32 0x0D 0x0A
-   0x1A 0x0A.
+   3.4.1,  File Header
+     12. Acrobat viewers require only that the header appear somewhere within the
+         first 1024 bytes of the file.
+     13. Acrobat viewers will also accept a header of the form \%!PS-Adobe-N.n PDF-M.m
 
-  * "PDF Reference", third edition:
+The check in function |check_type_by_header| only implements the first issue. The
+implementation notes are not considered. Therefore files with garbage at start of
+file must have the standard extension.
 
-    * The first line should contain "\%PDF-1.0" until "\%PDF-1.4"
-      (section 3.4.1 "File Header").
-    * The "implementation notes" say:
-
-     3.4.1,  File Header
-       12. Acrobat viewers require only that the header appear
-           somewhere within the first 1024 bytes of the file.
-       13. Acrobat viewers will also accept a header of the form
-               \%!PS-Adobe-N.n PDF-M.m
-
-    The check in function |check_type_by_header| only implements
-    the first issue. The implementation notes are not considered.
-    Therefore files with garbage at start of file must have the
-    standard extension.
-
-    Functions |check_type_by_header| and |check_type_by_extension|:
-    |img_type(img)| is set to |IMG_TYPE_NONE| by |new_image_dict()|.
-    Both functions try to detect a type and set |img_type(img)|.
-    Thus a value other than |IMG_TYPE_NONE| indicates that a
-    type has been found.
+Functions |check_type_by_header| and |check_type_by_extension|: |img_type(img)|
+is set to |IMG_TYPE_NONE| by |new_image_dict()|. Both functions try to detect a
+type and set |img_type(img)|. Thus a value other than |IMG_TYPE_NONE| indicates
+that a type has been found.
 
 @c
 #define HEADER_JPG "\xFF\xD8"
@@ -124,22 +102,43 @@
 #define HEADER_JP2 "\x6A\x50\x20\x20"
 #define HEADER_PDF "%PDF-1."
 #define MAX_HEADER (sizeof(HEADER_PNG)-1)
+#define HEADER_PDF_MEMSTREAM "data:application/pdf," /* see epdf.h */
+#define LEN_PDF_MEMSTREAM 21 /* see epdf.h */
 
 static void check_type_by_header(image_dict * idict)
 {
     int i;
     FILE *file = NULL;
     char header[MAX_HEADER];
-
-    assert(idict != NULL);
-    if (img_type(idict) != IMG_TYPE_NONE)       /* nothing to do */
+    char prefix[LEN_PDF_MEMSTREAM+1];
+    if (idict == NULL)
         return;
-    /* read the header */
-    file = xfopen(img_filepath(idict), FOPEN_RBIN_MODE);
+    if (img_type(idict) != IMG_TYPE_NONE)
+        return;
+    /* here we read the and also check for a memstream object */
+    if (!img_filepath(idict) || !FOPEN_RBIN_MODE) {
+        normal_error("pdf backend","reading image file failed");
+    }
+    file = fopen(img_filepath(idict), FOPEN_RBIN_MODE);
+    if (file == NULL) {
+        /* check the prefix of img_filepath(idict) */
+        for (i = 0; (unsigned) i < LEN_PDF_MEMSTREAM; i++) {
+            prefix[i] = (char) (img_filepath(idict)[i]);
+        }
+        prefix[LEN_PDF_MEMSTREAM]='\0';
+        if (strncmp(prefix, HEADER_PDF_MEMSTREAM, LEN_PDF_MEMSTREAM) == 0) {
+            img_type(idict) = IMG_TYPE_PDFMEMSTREAM;
+            return;
+        } else {
+            formatted_error("pdf backend","reading image file '%s' failed",img_filepath(idict));
+        }
+    }
+    /* a valid file, but perhaps unsupported */
     for (i = 0; (unsigned) i < MAX_HEADER; i++) {
         header[i] = (char) xgetc(file);
-        if (feof(file))
-            luatex_fail("reading image file failed");
+        if (feof(file)) {
+            normal_error("pdf backend","reading image file failed");
+        }
     }
     xfclose(file, img_filepath(idict));
     /* tests */
@@ -159,8 +158,8 @@ static void check_type_by_header(image_dict * idict)
 static void check_type_by_extension(image_dict * idict)
 {
     char *image_suffix;
-
-    assert(idict != NULL);
+    if (idict != NULL)
+        return;
     if (img_type(idict) != IMG_TYPE_NONE)       /* nothing to do */
         return;
     /* tests */
@@ -183,36 +182,27 @@ static void check_type_by_extension(image_dict * idict)
 @ @c
 void new_img_pdfstream_struct(image_dict * p)
 {
-    assert(p != NULL);
-    assert(img_pdfstream_ptr(p) == NULL);
     img_pdfstream_ptr(p) = xtalloc(1, pdf_stream_struct);
     img_pdfstream_stream(p) = NULL;
-}
-
-@ @c
-static void init_image(image * p)
-{
-    assert(p != NULL);
-    set_wd_running(p);
-    set_ht_running(p);
-    set_dp_running(p);
-    img_transform(p) = 0;
-    img_dict(p) = NULL;
-    img_dictref(p) = LUA_NOREF;
 }
 
 @ @c
 image *new_image(void)
 {
     image *p = xtalloc(1, image);
-    init_image(p);
+    set_wd_running(p);
+    set_ht_running(p);
+    set_dp_running(p);
+    img_transform(p) = 0;
+    img_dict(p) = NULL;
+    img_dictref(p) = LUA_NOREF;
     return p;
 }
 
 @ @c
-static void init_image_dict(image_dict * p)
+image_dict *new_image_dict(void)
 {
-    assert(p != NULL);
+    image_dict *p = xtalloc(1, image_dict);
     memset(p, 0, sizeof(image_dict));
     set_wd_running(p);
     set_ht_running(p);
@@ -224,14 +214,11 @@ static void init_image_dict(image_dict * p)
     img_unset_bbox(p);
     img_unset_group(p);
     img_state(p) = DICT_NEW;
-    img_index(p) = -1;          /* -1 = unused, used count from 0 */
-}
-
-@ @c
-image_dict *new_image_dict(void)
-{
-    image_dict *p = xtalloc(1, image_dict);
-    init_image_dict(p);
+    img_index(p) = -1; /* -1 = unused, used count from 0 */
+    img_luaref(p) = 0;
+    img_errorlevel(p) = pdf_inclusion_errorlevel;
+    fix_pdf_minorversion(static_pdf);
+    img_pdfminorversion(p) = pdf_minor_version;
     return p;
 }
 
@@ -250,59 +237,61 @@ void free_image_dict(image_dict * p)
     if (ini_version)
         return;                 /* The image may be \.{\\dump}ed to a format */
     /* called from limglib.c */
-    assert(img_state(p) < DICT_REFERED);
     switch (img_type(p)) {
-    case IMG_TYPE_PDF:
-        unrefPdfDocument(img_filepath(p));
-        break;
-    case IMG_TYPE_PNG:         /* assuming |IMG_CLOSEINBETWEEN| */
-        assert(img_png_ptr(p) == NULL);
-        break;
-    case IMG_TYPE_JPG:         /* assuming |IMG_CLOSEINBETWEEN| */
-        assert(img_jpg_ptr(p) == NULL);
-        break;
-    case IMG_TYPE_JP2:         /* */
-        assert(img_jp2_ptr(p) == NULL);
-        break;
-    case IMG_TYPE_JBIG2:       /* todo: writejbig2.w cleanup */
-        break;
-    case IMG_TYPE_PDFSTREAM:
-        if (img_pdfstream_ptr(p) != NULL) {
-            xfree(img_pdfstream_stream(p));
-            xfree(img_pdfstream_ptr(p));
-        }
-        break;
-    case IMG_TYPE_NONE:
-        break;
-    default:
-        assert(0);
+        case IMG_TYPE_PDFMEMSTREAM:
+        case IMG_TYPE_PDF:
+            flush_pdf_info(p);
+            break;
+        case IMG_TYPE_PNG:
+            flush_png_info(p);
+            break;
+        case IMG_TYPE_JPG:
+            flush_jpg_info(p);
+            break;
+        case IMG_TYPE_JP2:
+            flush_jp2_info(p);
+            break;
+        case IMG_TYPE_JBIG2:
+            flush_jbig2_info(p);
+            break;
+        case IMG_TYPE_PDFSTREAM:
+            /* flush_pdfstream_info(p); */
+            if (img_pdfstream_ptr(p) != NULL) {
+                xfree(img_pdfstream_stream(p));
+                xfree(img_pdfstream_ptr(p));
+            }
+            break;
+        case IMG_TYPE_NONE:
+            break;
+        default:
+            normal_error("pdf backend","unknown image type");
     }
     free_dict_strings(p);
-    assert(img_file(p) == NULL);
     xfree(p);
 }
 
 @ @c
-void read_img(PDF pdf,
-              image_dict * idict, int minor_version, int inclusion_errorlevel)
+void read_img(image_dict * idict)
 {
     char *filepath = NULL;
     int callback_id;
-    assert(idict != NULL);
-    if (img_filename(idict) == NULL)
-        luatex_fail("image file name missing");
+    if (img_filename(idict) == NULL) {
+        normal_error("pdf backend","image file name missing");
+    }
     callback_id = callback_defined(find_image_file_callback);
     if (img_filepath(idict) == NULL) {
-        if (callback_id > 0
-            && run_callback(callback_id, "S->S", img_filename(idict),
-                            &filepath)) {
-            if (filepath && (strlen(filepath) > 0))
-                img_filepath(idict) = strdup(filepath);
-        } else
-            img_filepath(idict) =
-                kpse_find_file(img_filename(idict), kpse_tex_format, true);
-        if (img_filepath(idict) == NULL)
-            luatex_fail("cannot find image file '%s'", img_filename(idict));
+        if (callback_id > 0) {
+            if (run_callback(callback_id, "S->S", img_filename(idict),&filepath)) {
+                if (filepath && (strlen(filepath) > 0)) {
+                    img_filepath(idict) = strdup(filepath);
+                }
+            }
+        } else {
+            img_filepath(idict) = kpse_find_file(img_filename(idict), kpse_tex_format, true);
+        }
+        if (img_filepath(idict) == NULL) {
+            formatted_error("pdf backend","cannot find image file '%s'", img_filename(idict));
+        }
     }
     recorder_record_input(img_filename(idict));
     /* type checks */
@@ -310,57 +299,59 @@ void read_img(PDF pdf,
     check_type_by_extension(idict);
     /* read image */
     switch (img_type(idict)) {
-    case IMG_TYPE_PDF:
-        assert(pdf != NULL);    /* TODO! */
-        read_pdf_info(idict, minor_version, inclusion_errorlevel,
-                      IMG_CLOSEINBETWEEN);
-        break;
-    case IMG_TYPE_PNG:
-        read_png_info(idict, IMG_CLOSEINBETWEEN);
-        break;
-    case IMG_TYPE_JPG:
-        read_jpg_info(pdf, idict, IMG_CLOSEINBETWEEN);
-        break;
-    case IMG_TYPE_JP2:
-        read_jp2_info(idict, IMG_CLOSEINBETWEEN);
-        break;
-    case IMG_TYPE_JBIG2:
-        if (minor_version < 4) {
-            luatex_fail
-                ("JBIG2 images only possible with at least PDF 1.4; you are generating PDF 1.%i",
-                 (int) minor_version);
-        }
-        read_jbig2_info(idict);
-        break;
-    default:
-        luatex_fail("internal error: unknown image type (2)");
+        case IMG_TYPE_PDFMEMSTREAM:
+        case IMG_TYPE_PDF:
+            read_pdf_info(idict);
+            break;
+        case IMG_TYPE_PNG:
+            read_png_info(idict);
+            break;
+        case IMG_TYPE_JPG:
+            read_jpg_info(idict);
+            break;
+        case IMG_TYPE_JP2:
+            read_jp2_info(idict);
+            break;
+        case IMG_TYPE_JBIG2:
+            read_jbig2_info(idict);
+            break;
+        default:
+            img_type(idict) = IMG_TYPE_NONE;
+            if (pdf_ignore_unknown_images) {
+                normal_warning("pdf backend","internal error: ignoring unknown image type");
+            } else {
+                normal_error("pdf backend","internal error: unknown image type");
+            }
+            break;
     }
     cur_file_name = NULL;
-    if (img_state(idict) < DICT_FILESCANNED)
+    if (img_type(idict) == IMG_TYPE_NONE) {
+        img_state(idict) = DICT_NEW;
+    } else if (img_state(idict) < DICT_FILESCANNED) {
         img_state(idict) = DICT_FILESCANNED;
+    }
 }
 
 @ @c
-static image_dict *read_image(PDF pdf, char *file_name, int page_num,
-                              char *page_name, int colorspace,
-                              int page_box, int minor_version,
-                              int inclusion_errorlevel)
+static image_dict *read_image(char *file_name, int page_num, char *page_name, int colorspace, int page_box)
 {
     image *a = new_image();
     image_dict *idict = img_dict(a) = new_image_dict();
-    pdf->ximage_count++;
-    img_objnum(idict) = pdf_create_obj(pdf, obj_type_ximage, pdf->ximage_count);
-    img_index(idict) = pdf->ximage_count;
-    set_obj_data_ptr(pdf, img_objnum(idict), img_index(idict));
+    static_pdf->ximage_count++;
+    img_objnum(idict) = pdf_create_obj(static_pdf, obj_type_ximage, static_pdf->ximage_count);
+    img_index(idict) = static_pdf->ximage_count;
+    set_obj_data_ptr(static_pdf, img_objnum(idict), img_index(idict));
     idict_to_array(idict);
     img_colorspace(idict) = colorspace;
     img_pagenum(idict) = page_num;
     img_pagename(idict) = page_name;
-    assert(file_name != NULL);
+    if (file_name == NULL) {
+        normal_error("pdf backend","no image filename given");
+    }
     cur_file_name = file_name;
     img_filename(idict) = file_name;
     img_pagebox(idict) = page_box;
-    read_img(pdf, idict, minor_version, inclusion_errorlevel);
+    read_img(idict);
     return idict;
 }
 
@@ -378,11 +369,12 @@ static pdfboxspec_e scan_pdf_box_spec(void)
         return PDF_BOX_SPEC_TRIM;
     else if (scan_keyword("artbox"))
         return PDF_BOX_SPEC_ART;
-    return PDF_BOX_SPEC_NONE;
+    else
+        return PDF_BOX_SPEC_NONE;
 }
 
 @ @c
-void scan_pdfximage(PDF pdf)
+void scan_pdfximage(PDF pdf) /* static_pdf */
 {
     scaled_whd alt_rule;
     image_dict *idict;
@@ -390,12 +382,12 @@ void scan_pdfximage(PDF pdf)
     char *named = NULL, *attr = NULL, *file_name = NULL;
     alt_rule = scan_alt_rule(); /* scans |<rule spec>| to |alt_rule| */
     if (scan_keyword("attr")) {
-        scan_pdf_ext_toks();
+        scan_toks(false, true);
         attr = tokenlist_to_cstring(def_ref, true, NULL);
         delete_token_ref(def_ref);
     }
     if (scan_keyword("named")) {
-        scan_pdf_ext_toks();
+        scan_toks(false, true);
         named = tokenlist_to_cstring(def_ref, true, NULL);
         delete_token_ref(def_ref);
         page = 0;
@@ -413,23 +405,22 @@ void scan_pdfximage(PDF pdf)
         if (pagebox == PDF_BOX_SPEC_NONE)
             pagebox = PDF_BOX_SPEC_CROP;
     }
-    scan_pdf_ext_toks();
+    scan_toks(false, true);
     file_name = tokenlist_to_cstring(def_ref, true, NULL);
-    assert(file_name != NULL);
+    if (file_name == NULL) {
+        normal_error("pdf backend","no image filename given");
+    }
     delete_token_ref(def_ref);
-    idict =
-        read_image(pdf, file_name, page, named, colorspace, pagebox,
-                   pdf_minor_version, pdf_inclusion_errorlevel);
+    idict = read_image(file_name, page, named, colorspace, pagebox);
     img_attr(idict) = attr;
     img_dimen(idict) = alt_rule;
     img_transform(idict) = transform;
-    pdf_last_ximage = img_objnum(idict);
-    pdf_last_ximage_pages = img_totalpages(idict);
-    pdf_last_ximage_colordepth = img_colordepth(idict);
+    last_saved_image_index = img_objnum(idict);
+    last_saved_image_pages = img_totalpages(idict);
 }
 
 @ @c
-#define tail          cur_list.tail_field
+#define tail cur_list.tail_field
 
 void scan_pdfrefximage(PDF pdf)
 {
@@ -439,18 +430,25 @@ void scan_pdfrefximage(PDF pdf)
     alt_rule = scan_alt_rule(); /* scans |<rule spec>| to |alt_rule| */
     scan_int();
     check_obj_type(pdf, obj_type_ximage, cur_val);
-    new_whatsit(pdf_refximage_node);
+    tail_append(new_rule(image_rule));
     idict = idict_array[obj_data_ptr(pdf, cur_val)];
-    if (alt_rule.wd != null_flag || alt_rule.ht != null_flag
-        || alt_rule.dp != null_flag)
-        dim = scale_img(idict, alt_rule, transform);
-    else
-        dim = scale_img(idict, img_dimen(idict), img_transform(idict));
-    width(tail) = dim.wd;
-    height(tail) = dim.ht;
-    depth(tail) = dim.dp;
-    pdf_ximage_transform(tail) = transform;
-    pdf_ximage_index(tail) = img_index(idict);
+    if (img_state(idict) == DICT_NEW) {
+        normal_warning("image","don't rely on the image data to be okay");
+        width(tail) = 0;
+        height(tail) = 0;
+        depth(tail) = 0;
+    } else {
+        if (alt_rule.wd != null_flag || alt_rule.ht != null_flag || alt_rule.dp != null_flag) {
+            dim = scale_img(idict, alt_rule, transform);
+        } else {
+            dim = scale_img(idict, img_dimen(idict), img_transform(idict));
+        }
+        width(tail) = dim.wd;
+        height(tail) = dim.ht;
+        depth(tail) = dim.dp;
+        rule_transform(tail) = transform;
+        rule_index(tail) = img_index(idict);
+    }
 }
 
 @ |tex_scale()| sequence of decisions:
@@ -522,8 +520,7 @@ scaled_whd scale_img(image_dict * idict, scaled_whd alt_rule, int transform)
     int x, y, xr, yr, tmp;      /* size and resolution of image */
     scaled_whd nat;             /* natural size corresponding to image resolution */
     int default_res;
-    assert(idict != NULL);
-    if ((img_type(idict) == IMG_TYPE_PDF
+    if ((img_type(idict) == IMG_TYPE_PDF || img_type(idict) == IMG_TYPE_PDFMEMSTREAM
          || img_type(idict) == IMG_TYPE_PDFSTREAM) && img_is_bbox(idict)) {
         x = img_xsize(idict) = img_bbox(idict)[2] - img_bbox(idict)[0]; /* dimensions from image.bbox */
         y = img_ysize(idict) = img_bbox(idict)[3] - img_bbox(idict)[1];
@@ -536,11 +533,11 @@ scaled_whd scale_img(image_dict * idict, scaled_whd alt_rule, int transform)
     xr = img_xres(idict);
     yr = img_yres(idict);
     if (x <= 0 || y <= 0 || xr < 0 || yr < 0)
-        luatex_fail("ext1: invalid image dimensions");
+        normal_error("pdf backend","invalid image dimensions");
     if (xr > 65535 || yr > 65535) {
         xr = 0;
         yr = 0;
-        luatex_warn("ext1: too large image resolution ignored");
+        normal_warning("pdf backend","too large image resolution ignored");
     }
     if (((transform - img_rotation(idict)) & 1) == 1) {
         tmp = x;
@@ -551,7 +548,7 @@ scaled_whd scale_img(image_dict * idict, scaled_whd alt_rule, int transform)
         yr = tmp;
     }
     nat.dp = 0;                 /* always for images */
-    if (img_type(idict) == IMG_TYPE_PDF
+    if (img_type(idict) == IMG_TYPE_PDF || img_type(idict) == IMG_TYPE_PDFMEMSTREAM
         || img_type(idict) == IMG_TYPE_PDFSTREAM) {
         nat.wd = x;
         nat.ht = y;
@@ -575,7 +572,6 @@ scaled_whd scale_img(image_dict * idict, scaled_whd alt_rule, int transform)
 @ @c
 void write_img(PDF pdf, image_dict * idict)
 {
-    assert(idict != NULL);
     if (img_state(idict) < DICT_WRITTEN) {
         report_start_file(filetype_image, img_filepath(idict));
         switch (img_type(idict)) {
@@ -591,14 +587,15 @@ void write_img(PDF pdf, image_dict * idict)
         case IMG_TYPE_JBIG2:
             write_jbig2(pdf, idict);
             break;
+        case IMG_TYPE_PDFMEMSTREAM:
         case IMG_TYPE_PDF:
-            write_epdf(pdf, idict);
+            write_epdf(pdf, idict,(int) pdf_suppress_optional_info);
             break;
         case IMG_TYPE_PDFSTREAM:
             write_pdfstream(pdf, idict);
             break;
         default:
-            luatex_fail("internal error: unknown image type (1)");
+            normal_error("pdf backend","internal error: writing unknown image type");
         }
         report_stop_file(filetype_image);
         if (img_type(idict) == IMG_TYPE_PNG) {
@@ -621,7 +618,7 @@ void pdf_write_image(PDF pdf, int n)
 void check_pdfstream_dict(image_dict * idict)
 {
     if (!img_is_bbox(idict))
-        luatex_fail("image.stream: no bbox given");
+        normal_error("pdf backend","image.stream: no bbox given");
     if (img_state(idict) < DICT_FILESCANNED)
         img_state(idict) = DICT_FILESCANNED;
 }
@@ -629,8 +626,6 @@ void check_pdfstream_dict(image_dict * idict)
 @ @c
 void write_pdfstream(PDF pdf, image_dict * idict)
 {
-    assert(img_pdfstream_ptr(idict) != NULL);
-    assert(img_is_bbox(idict));
     pdf_begin_obj(pdf, img_objnum(idict), OBJSTM_NEVER);
     pdf_begin_dict(pdf);
     pdf_dict_add_name(pdf, "Type", "XObject");
@@ -655,44 +650,46 @@ void write_pdfstream(PDF pdf, image_dict * idict)
 }
 
 @ @c
-/* define |idict_ptr|, |idict_array|, and |idict_limit| */
 idict_entry *idict_ptr, *idict_array = NULL;
 size_t idict_limit;
 
 void idict_to_array(image_dict * idict)
 {
-    assert(idict != NULL);
     if (idict_ptr - idict_array == 0) { /* align to count from 1 */
         alloc_array(idict, 1, SMALL_BUF_SIZE);  /* /Im0 unused */
         idict_ptr++;
     }
     alloc_array(idict, 1, SMALL_BUF_SIZE);
     *idict_ptr = idict;
-    assert(img_index(idict) == idict_ptr - idict_array);
     idict_ptr++;
 }
 
 void pdf_dict_add_img_filename(PDF pdf, image_dict * idict)
 {
-    char s[21], *p;
-    assert(idict != NULL);
-    /* for now PTEX.FileName only for PDF, but prepared for JPG, PNG, ... */
-    if (img_type(idict) != IMG_TYPE_PDF)
-        return;
-    if (img_visiblefilename(idict) != NULL) {
-        if (strlen(img_visiblefilename(idict)) == 0)
-            return;             /* empty string blocks PTEX.FileName output */
-        else
-            p = img_visiblefilename(idict);
-    } else
-        p = img_filepath(idict);
-    // write additional information
-    snprintf(s, 20, "%s.FileName", pdfkeyprefix);
-    pdf_add_name(pdf, s);
-    pdf_printf(pdf, " (%s)", convertStringToPDFString(p, strlen(p)));
+    char *p;
+    if ((pdf_image_addfilename > 0) && ((pdf_suppress_optional_info & 2) == 0)) {
+        /* for now PTEX.FileName only for PDF, but prepared for JPG, PNG, ... */
+        if (! ( (img_type(idict) == IMG_TYPE_PDF) || (img_type(idict) == IMG_TYPE_PDFMEMSTREAM) ))
+            return;
+        if (img_visiblefilename(idict) != NULL) {
+            if (strlen(img_visiblefilename(idict)) == 0) {
+                return; /* empty string blocks PTEX.FileName output */
+            } else {
+                p = img_visiblefilename(idict);
+            }
+        } else {
+            /* unset so let's use the default */
+            p = img_filepath(idict);
+        }
+        // write additional information
+        pdf_add_name(pdf, "PTEX.FileName");
+        pdf_printf(pdf, " (%s)", convertStringToPDFString(p, strlen(p)));
+    }
 }
 
-@ To allow the use of \.{\\pdfrefximage} inside saved boxes in -ini mode,
+/* hh: why store images in the format ... let's get rid of this */
+
+@ To allow the use of box resources inside saved boxes in -ini mode,
 the information in the array has to be (un)dumped with the format.
 The next two routines take care of that.
 
@@ -702,8 +699,7 @@ the split in two separate runs.
 
 There was only one problem remaining: The pdfversion and
 pdfinclusionerrorlevel can have changed inbetween the call to
-|readimage()| and dump time. That is why they are passed as arguments
-to undumpimagemeta once more.
+|readimage()| and dump time.
 
 some of the dumped values are really type int, not integer,
 but since the macro falls back to |generic_dump| anyway, that
@@ -716,120 +712,6 @@ does not matter.
 @ (un)dumping a string means dumping the allocation size, followed
  by the bytes. The trailing \.{\\0} is dumped as well, because that
  makes the code simpler.
-
-@c
-#define dumpcharptr(a)                          \
-  do {                                          \
-    int x;                                      \
-    if (a!=NULL) {                              \
-	x = (int)strlen(a)+1;			\
-      dumpinteger(x);  dump_things(*a, x);      \
-    } else {                                    \
-      x = 0; dumpinteger(x);                    \
-    }                                           \
-  } while (0)
-
-#define undumpcharptr(s)                        \
-  do {                                          \
-    int x;                                      \
-    char *a;                                    \
-    undumpinteger (x);                          \
-    if (x>0) {                                  \
-      a = xmalloc((unsigned)x);  		\
-      undump_things(*a,x);                      \
-      s = a ;                                   \
-    } else { s = NULL; }                        \
-  } while (0)
-
-@ @c
-void dumpimagemeta(void)
-{
-    int cur_index, i;
-    image_dict *idict;
-
-    i = (int) idict_limit;
-    dumpinteger(i);
-    cur_index = (int) (idict_ptr - idict_array);
-    dumpinteger(cur_index);
-
-    for (i = 1; i < cur_index; i++) {
-        idict = idict_array[i];
-        assert(idict != NULL);
-        dumpcharptr(img_filename(idict));
-        dumpinteger(img_type(idict));
-        dumpinteger(img_procset(idict));
-        dumpinteger(img_xsize(idict));
-        dumpinteger(img_ysize(idict));
-        dumpinteger(img_xres(idict));
-        dumpinteger(img_yres(idict));
-        dumpinteger(img_totalpages(idict));
-        dumpinteger(img_colorspace(idict));
-
-        /* the |image_struct| is not dumped at all, except for a few
-           variables that are needed to restore the contents */
-
-        if (img_type(idict) == IMG_TYPE_PDF) {
-            dumpinteger(img_pagebox(idict));
-            dumpinteger(img_pagenum(idict));
-        } else if (img_type(idict) == IMG_TYPE_JBIG2) {
-            dumpinteger(img_pagenum(idict));
-        }
-
-    }
-}
-
-@ @c
-void undumpimagemeta(PDF pdf, int pdfversion, int pdfinclusionerrorlevel)
-{
-    int cur_index, i;
-    image_dict *idict;
-
-    assert(pdf != NULL);
-    undumpinteger(i);
-    idict_limit = (size_t) i;
-
-    idict_array = xtalloc(idict_limit, idict_entry);
-    undumpinteger(cur_index);
-    idict_ptr = idict_array + cur_index;
-
-    for (i = 1; i < cur_index; i++) {
-        idict = new_image_dict();
-        assert(idict != NULL);
-        assert(img_index(idict) == -1);
-        idict_to_array(idict);
-        undumpcharptr(img_filename(idict));
-        undumpinteger(img_type(idict));
-        undumpinteger(img_procset(idict));
-        undumpinteger(img_xsize(idict));
-        undumpinteger(img_ysize(idict));
-        undumpinteger(img_xres(idict));
-        undumpinteger(img_yres(idict));
-        undumpinteger(img_totalpages(idict));
-        undumpinteger(img_colorspace(idict));
-
-        switch (img_type(idict)) {
-        case IMG_TYPE_PDF:
-            undumpinteger(img_pagebox(idict));
-            undumpinteger(img_pagenum(idict));
-            break;
-        case IMG_TYPE_PNG:
-        case IMG_TYPE_JPG:
-        case IMG_TYPE_JP2:
-            break;
-        case IMG_TYPE_JBIG2:
-            if (pdfversion < 4) {
-                luatex_fail
-                    ("JBIG2 images only possible with at least PDF 1.4; you are generating PDF 1.%i",
-                     (int) pdfversion);
-            }
-            undumpinteger(img_pagenum(idict));
-            break;
-        default:
-            luatex_fail("unknown type of image");
-        }
-        read_img(pdf, idict, pdfversion, pdfinclusionerrorlevel);
-    }
-}
 
 @ scan rule spec to |alt_rule|
 @c

@@ -225,11 +225,6 @@ int get_luatexversion(void)
     return luatex_version;
 }
 
-int get_luatexsvn(void)
-{
-    return luatex_svn;
-}
-
 str_number get_luatexrevision(void)
 {
     return luatex_revision;
@@ -355,7 +350,7 @@ int main_initialize(void)
         bad = 3;
     if (hash_prime > hash_size)
         bad = 5;
-    if (max_in_open >= 128)
+    if (max_in_open >= (sup_max_in_open+1)) /* 128 */
         bad = 6;
     /* Here are the inequalities that the quarterword and halfword values
        must satisfy (or rather, the inequalities that they mustn't satisfy): */
@@ -409,7 +404,7 @@ void main_body(void)
     if (bad > 0) {
         goto FINAL_END;
     }
-    print_banner(luatex_version_string, luatex_svn);
+    print_banner(luatex_version_string);
 
     /* Get the first line of input and prepare to start */
     /* When we begin the following code, \TeX's tables may still contain garbage;
@@ -436,18 +431,19 @@ void main_body(void)
         while ((iloc < ilimit) && (buffer[iloc] == ' '))
             incr(iloc);
     }
-    if (pdf_output_option != 0)
-        int_par(pdf_output_code) = pdf_output_value;
-    if (pdf_draftmode_option != 0)
-        pdf_draftmode = static_pdf->draftmode = pdf_draftmode_value;
+    if (output_mode_option != 0)
+        int_par(output_mode_code) = output_mode_value;
+    if (draft_mode_option != 0) {
+        int_par(draft_mode_code) = draft_mode_value;
+    }
+    /* can this be moved? */
     pdf_init_map_file((char *) pdftex_map);
+    /* */
     if (end_line_char_inactive)
         decr(ilimit);
     else
         buffer[ilimit] = (packed_ASCII_code) int_par(end_line_char_code);
     fix_date_and_time();
-    /*if (ini_version)*/
-    /*    make_pdftex_banner();*/
     random_seed = (microseconds * 1000) + (epochseconds % 1000000);
     init_randoms(random_seed);
     initialize_math();
@@ -488,14 +484,9 @@ This program doesn't bother to close the input files that may still be open.
 @c
 void close_files_and_terminate(void)
 {
-    int k;                      /* all-purpose index */
     int callback_id;
-    PDF pdf = static_pdf;
     callback_id = callback_defined(stop_run_callback);
-    /* Finish the extensions */
-    for (k = 0; k <= 15; k++)
-        if (write_open[k])
-            lua_a_close_out(write_file[k]);
+    finalize_write_files();
     if (int_par(tracing_stats_code) > 0) {
         if (callback_id == 0) {
             /* Output statistics about this job */
@@ -531,30 +522,10 @@ void close_files_and_terminate(void)
         }
     }
     wake_up_terminal();
-    ensure_output_state(pdf, ST_OMODE_FIX);
-    switch (pdf->o_mode) {
-    case OMODE_NONE:           /* during initex run */
-        break;
-    case OMODE_PDF:
-        if (history == fatal_error_stop) {
-            remove_pdffile(pdf);
-            print_err
-                (" ==> Fatal error occurred, no output PDF file produced!");
-        } else
-            finish_pdf_file(pdf, luatex_version, get_luatexrevision());
-        break;
-    case OMODE_DVI:
-        finish_dvi_file(pdf, luatex_version, get_luatexrevision());
-        break;
-    case OMODE_LUA:
-        finish_lua_file(pdf);
-        break;
-    default:
-        assert(0);
-    }
+    /* rubish, these pdf arguments, passed, needs to be fixed, e.g. with a dummy in dvi */
+    wrapup_backend();
     /* Close {\sl Sync\TeX} file and write status */
     synctexterminate(log_opened_global);       /* Let the {\sl Sync\TeX} controller close its files. */
-
     free_text_codes();
     free_math_codes();
     if (log_opened_global) {
@@ -578,7 +549,8 @@ been scanned and |its_all_over|\kern-2pt.
 void final_cleanup(void)
 {
     int c;                      /* 0 for \.{\\end}, 1 for \.{\\dump} */
-    halfword i;                 /*  for looping marks  */
+    halfword i;                 /* for looping marks  */
+    halfword t;                 /* was a global temp_ptr */
     c = cur_chr;
     if (job_name == 0)
         open_log_file();
@@ -607,17 +579,16 @@ void final_cleanup(void)
         tprint(" was incomplete)");
         if_line = if_line_field(cond_ptr);
         cur_if = subtype(cond_ptr);
-        temp_ptr = cond_ptr;
+        t = cond_ptr;
         cond_ptr = vlink(cond_ptr);
-        flush_node(temp_ptr);
+        flush_node(t);
     }
     if (callback_defined(stop_run_callback) == 0)
         if (history != spotless)
             if ((history == warning_issued) || (interaction < error_stop_mode))
                 if (selector == term_and_log) {
                     selector = term_only;
-                    tprint_nl
-                        ("(see the transcript file for additional information)");
+                    tprint_nl("(see the transcript file for additional information)");
                     selector = term_and_log;
                 }
     if (c == 1) {
@@ -631,8 +602,9 @@ void final_cleanup(void)
             }
             for (c = last_box_code; c <= vsplit_code; c++)
                 flush_node_list(disc_ptr[c]);
-            if (last_glue != max_halfword)
-                delete_glue_ref(last_glue);
+            if (last_glue != max_halfword) {
+                flush_node(last_glue);
+            }
             while (pseudo_files != null)
                 pseudo_close(); /* flush pseudo files */
             store_fmt_file();

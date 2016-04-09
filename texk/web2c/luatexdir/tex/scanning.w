@@ -19,7 +19,6 @@
 
 @ @c
 
-
 #include "ptexlib.h"
 
 @ @c
@@ -36,9 +35,7 @@
 #define count(A) eqtb[count_base+(A)].hh.rh
 #define box(A) equiv(box_base+(A))
 
-#define text_direction int_par(text_direction_code)
-#define body_direction int_par(body_direction_code)
-
+static void scan_expr(void);
 
 @ Let's turn now to some procedures that \TeX\ calls upon frequently to digest
 certain kinds of patterns in the input. Most of these are quite simple;
@@ -72,7 +69,6 @@ void scan_left_brace(void)
     }
 }
 
-
 @ The |scan_optional_equals| routine looks for an optional `\.=' sign preceded
 by optional spaces; `\.{\\relax}' is not ignored here.
 
@@ -87,7 +83,6 @@ void scan_optional_equals(void)
         back_input();
 }
 
-
 @ Here is a procedure that sounds an alarm when mu and non-mu units
 are being switched.
 
@@ -98,7 +93,6 @@ static void mu_error(void)
     help1("I'm going to assume that 1mu=1pt when they're mixed.");
     error();
 }
-
 
 @ The next routine `|scan_something_internal|' is used to fetch internal
 numeric quantities like `\.{\\hsize}', and also to handle the `\.{\\the}'
@@ -145,11 +139,10 @@ int cur_val;                    /* value returned by numeric scanners */
 int cur_val1;                   /* delcodes are sometimes 51 digits */
 int cur_val_level;              /* the ``level'' of this value */
 
-#define scanned_result(A,B) do {		\
-	cur_val=A;				\
-	cur_val_level=B;			\
-    } while (0)
-
+#define scanned_result(A,B) do { \
+    cur_val=A; \
+    cur_val_level=B; \
+} while (0)
 
 @ When a |glue_val| changes to a |dimen_val|, we use the width component
 of the glue; there is no need to decrease the reference count, since it
@@ -165,7 +158,7 @@ static void downgrade_cur_val(boolean delete_glue)
         m = cur_val;
         cur_val = width(m);
         if (delete_glue)
-            delete_glue_ref(m);
+            flush_node(m);
     } else if (cur_val_level == mu_val_level) {
         mu_error();
     }
@@ -179,7 +172,7 @@ static void negate_cur_val(boolean delete_glue)
         m = cur_val;
         cur_val = new_spec(m);
         if (delete_glue)
-            delete_glue_ref(m);
+            flush_node(m);
         /* Negate all three glue components of |cur_val| */
         negate(width(cur_val));
         negate(stretch(cur_val));
@@ -190,10 +183,9 @@ static void negate_cur_val(boolean delete_glue)
     }
 }
 
-
 @ Some of the internal items can be fetched both routines,
 and these have been split off into the next routine, that
-returns true if the command code was understood 
+returns true if the command code was understood
 
 @c
 static boolean short_scan_something_internal(int cmd, int chr, int level,
@@ -223,9 +215,11 @@ static boolean short_scan_something_internal(int cmd, int chr, int level,
         break;
     case assign_glue_cmd:
         scanned_result(equiv(m), glue_val_level);
+// cur_val = new_spec(cur_val);
         break;
     case assign_mu_glue_cmd:
         scanned_result(equiv(m), mu_val_level);
+// cur_val = new_spec(cur_val);
         break;
     case math_style_cmd:
         scanned_result(m, int_val_level);
@@ -315,7 +309,7 @@ static boolean short_scan_something_internal(int cmd, int chr, int level,
         cur_chr = chr;
         /* Fetch an item in the current node, if appropriate */
         /* Here is where \.{\\lastpenalty}, \.{\\lastkern}, and \.{\\lastskip} are
-           implemented. The reference count for \.{\\lastskip} will be updated later. 
+           implemented. The reference count for \.{\\lastskip} will be updated later.
 
            We also handle \.{\\inputlineno} and \.{\\badness} here, because they are
            legal in similar contexts. */
@@ -344,7 +338,7 @@ static boolean short_scan_something_internal(int cmd, int chr, int level,
                 /* This code for reducing |cur_val_level| and\slash or negating the
                    result is similar to the one for all the other cases of
                    |scan_something_internal|, with the difference that |scan_expr| has
-                   already increased the reference count of a glue specification. 
+                   already increased the reference count of a glue specification.
                  */
                 while (cur_val_level > level) {
                     downgrade_cur_val(true);
@@ -409,7 +403,7 @@ static boolean short_scan_something_internal(int cmd, int chr, int level,
                         cur_val = stretch(q);
                     else
                         cur_val = shrink(q);
-                    delete_glue_ref(q);
+                    flush_node(q);
                     break;
                 }               /* there are no other cases */
                 cur_val_level = dimen_val_level;
@@ -421,44 +415,26 @@ static boolean short_scan_something_internal(int cmd, int chr, int level,
                 case badness_code:
                     cur_val = last_badness;
                     break;
-                case pdftex_version_code:
-                    cur_val = pdftex_version;
-                    break;
                 case luatex_version_code:
                     cur_val = get_luatexversion();
                     break;
-                case pdf_last_obj_code:
-                    cur_val = pdf_last_obj;
+                case last_saved_box_resource_index_code:
+                    cur_val = last_saved_box_index;
                     break;
-                case pdf_last_xform_code:
-                    cur_val = pdf_last_xform;
+                case last_saved_image_resource_index_code:
+                    cur_val = last_saved_image_index;
                     break;
-                case pdf_last_ximage_code:
-                    cur_val = pdf_last_ximage;
+                case last_saved_image_resource_pages_code:
+                    cur_val = last_saved_image_pages;
                     break;
-                case pdf_last_ximage_pages_code:
-                    cur_val = pdf_last_ximage_pages;
+                case last_x_pos_code:
+                    cur_val = last_position.h;
                     break;
-                case pdf_last_annot_code:
-                    cur_val = pdf_last_annot;
-                    break;
-                case pdf_last_x_pos_code:
-                    cur_val = pdf_last_pos.h;
-                    break;
-                case pdf_last_y_pos_code:
-                    cur_val = pdf_last_pos.v;
-                    break;
-                case pdf_retval_code:
-                    cur_val = pdf_retval;
-                    break;
-                case pdf_last_ximage_colordepth_code:
-                    cur_val = pdf_last_ximage_colordepth;
+                case last_y_pos_code:
+                    cur_val = last_position.v;
                     break;
                 case random_seed_code:
                     cur_val = random_seed;
-                    break;
-                case pdf_last_link_code:
-                    cur_val = pdf_last_link;
                     break;
                 case eTeX_version_code:
                     cur_val = eTeX_version;
@@ -504,9 +480,8 @@ static boolean short_scan_something_internal(int cmd, int chr, int level,
                         cur_val = stretch_order(q);
                     else
                         cur_val = shrink_order(q);
-                    delete_glue_ref(q);
+                    flush_node(q);
                     break;
-
                 }               /* there are no other cases */
                 cur_val_level = int_val_level;
             }
@@ -537,7 +512,7 @@ static boolean short_scan_something_internal(int cmd, int chr, int level,
                     break;
                 case lastskip_code:
                     if (type(cur_list.tail_field) == glue_node)
-                        cur_val = glue_ptr(cur_list.tail_field);
+                        cur_val = new_glue(cur_list.tail_field);
                     if (subtype(cur_list.tail_field) == mu_glue)
                         cur_val_level = mu_val_level;
                     break;
@@ -556,7 +531,7 @@ static boolean short_scan_something_internal(int cmd, int chr, int level,
                     break;
                 case lastskip_code:
                     if (last_glue != max_halfword)
-                        cur_val = last_glue;
+                        cur_val = last_glue; /* maybe new_glue */ 
                     break;
                 case last_node_type_code:
                     cur_val = last_node_type;
@@ -581,9 +556,8 @@ static boolean short_scan_something_internal(int cmd, int chr, int level,
          */
         if (negative) {
             negate_cur_val(false);
-        } else if ((cur_val_level >= glue_val_level)
-                   && (cur_val_level <= mu_val_level)) {
-            add_glue_ref(cur_val);
+        } else if ((cur_val_level >= glue_val_level) && (cur_val_level <= mu_val_level)) {
+			cur_val = new_glue(cur_val);
         }
     }
     return succeeded;
@@ -591,7 +565,7 @@ static boolean short_scan_something_internal(int cmd, int chr, int level,
 
 @ First, here is a short routine that is called from lua code. All
 the  real work is delegated to |short_scan_something_internal| that
-is shared between this routine and |scan_something_internal|. 
+is shared between this routine and |scan_something_internal|.
 
 @c
 void scan_something_simple(halfword cmd, halfword subitem)
@@ -607,8 +581,6 @@ void scan_something_simple(halfword cmd, halfword subitem)
         scanned_result(0, int_val_level);
     }
 }
-
-
 
 @ OK, we're ready for |scan_something_internal| itself. A second parameter,
 |negative|, is set |true| if the value that is found should be negated.
@@ -630,7 +602,7 @@ void scan_something_internal(int level, boolean negative)
             /* Fetch a character code from some table */
             scan_char_num();
             if (m == math_code_base) {
-                cur_val1 = get_math_code_num(cur_val, true);
+                cur_val1 = get_math_code_num(cur_val);
                 scanned_result(cur_val1, int_val_level);
             } else if (m == lc_code_base) {
                 cur_val1 = get_lc_code(cur_val);
@@ -649,6 +621,7 @@ void scan_something_internal(int level, boolean negative)
             }
             break;
         case def_del_code_cmd:
+        case extdef_del_code_cmd: /* bonus */
             /* Fetch a character code from some table */
             scan_char_num();
             cur_val1 = get_del_code_num(cur_val);
@@ -657,14 +630,14 @@ void scan_something_internal(int level, boolean negative)
         case extdef_math_code_cmd:
             /* Fetch an extended math code table value */
             scan_char_num();
-            cur_val1 = get_math_code_num(cur_val, false);
+            cur_val1 = get_math_code_num(cur_val);
             scanned_result(cur_val1, int_val_level);
             break;
         case toks_register_cmd:
         case set_font_cmd:
         case def_font_cmd:
         case letterspace_font_cmd:
-        case pdf_copy_font_cmd:
+        case copy_font_cmd:
             /* Fetch a token list or font identifier, provided that |level=tok_val| */
             if (level != tok_val_level) {
                 print_err("Missing number, treated as zero");
@@ -682,6 +655,10 @@ void scan_something_internal(int level, boolean negative)
                 scan_font_ident();
                 scanned_result(font_id_base + cur_val, ident_val_level);
             }
+            break;
+        case set_font_id_cmd:
+            scan_int();
+            scanned_result(font_id_base + cur_val, ident_val_level);
             break;
         case def_family_cmd:
             /* Fetch a math font identifier */
@@ -819,7 +796,41 @@ void scan_something_internal(int level, boolean negative)
                 goto RESTART;
             }
             break;
+        case hyph_data_cmd:
+            switch (cur_chr) {
+                case 0:
+                case 1:
+                    goto DEFAULT;
+                    break;
+                case 2:
+                    cur_val = get_pre_hyphen_char(int_par(language_code));
+                    cur_val_level = int_val_level;
+                    break;
+                case 3:
+                    cur_val = get_post_hyphen_char(int_par(language_code));
+                    cur_val_level = int_val_level;
+                    break;
+                case 4:
+                    cur_val = get_pre_exhyphen_char(int_par(language_code));
+                    cur_val_level = int_val_level;
+                    break;
+                case 5:
+                    cur_val = get_post_exhyphen_char(int_par(language_code));
+                    cur_val_level = int_val_level;
+                    break;
+                case 6:
+                    cur_val = get_hyphenation_min(int_par(language_code));
+                    cur_val_level = int_val_level;
+                    break;
+                case 7:
+                    scan_int();
+                    cur_val = get_hj_code(int_par(language_code),cur_val);
+                    cur_val_level = int_val_level;
+                    break;
+            }
+            break;
         default:
+            DEFAULT:
             /* Complain that \.{\\the} can not do this; give zero result */
             print_err("You can't use `");
             print_cmd_chr((quarterword) cur_cmd, cur_chr);
@@ -843,21 +854,19 @@ void scan_something_internal(int level, boolean negative)
          */
         if (negative) {
             negate_cur_val(false);
-        } else if ((cur_val_level >= glue_val_level) &&
-                   (cur_val_level <= mu_val_level)) {
-            add_glue_ref(cur_val);
+        } else if ((cur_val_level >= glue_val_level) && (cur_val_level <= mu_val_level)) {
+			cur_val = new_glue(cur_val);
         }
     }
 }
-
 
 @ It is nice to have routines that say what they do, so the original
 |scan_eight_bit_int| is superceded by |scan_register_num| and
 |scan_mark_num|. It may become split up even further in the future.
 
-Many of the |restricted classes| routines are the essentially 
+Many of the |restricted classes| routines are the essentially
 the same except for the upper limit and the error message, so it makes
-sense to combine these all into one function. 
+sense to combine these all into one function.
 
 @c
 void scan_limited_int(int max, const char *name)
@@ -917,28 +926,6 @@ void scan_fifty_one_bit_int(void)
     cur_val = iiii;
 }
 
-
-@ To be able to determine whether \.{\\write18} is enabled from within
-\TeX\ we also implement \.{\\eof18}.  We sort of cheat by having an
-additional route |scan_four_bit_int_or_18| which is the same as
-|scan_four_bit_int| except it also accepts the value 18.
-
-@c
-void scan_four_bit_int_or_18(void)
-{
-    scan_int();
-    if ((cur_val < 0) || ((cur_val > 15) && (cur_val != 18))) {
-        print_err("Bad number");
-        help2("Since I expected to read a number between 0 and 15,",
-              "I changed this one to zero.");
-        int_error(cur_val);
-        cur_val = 0;
-    }
-}
-
-
-
-
 @ An integer number can be preceded by any number of spaces and `\.+' or
 `\.-' signs. Then comes either a decimal constant (i.e., radix 10), an
 octal constant (i.e., radix 8, preceded by~'), a hexadecimal constant
@@ -951,7 +938,6 @@ otherwise |radix| is set to zero. An optional space follows a constant.
 
 @c
 int radix;                      /* |scan_int| sets this to 8, 10, 16, or zero */
-
 
 @ The |scan_int| routine is used also to scan the integer part of a
   fraction; for example, the `\.3' in `\.{3.14159}' will be found by
@@ -1107,7 +1093,6 @@ void scan_int(void)
         negate(cur_val);
 }
 
-
 @ The following code is executed when |scan_something_internal| was
 called asking for |mu_val|, when we really wanted a ``mudimen'' instead
 of ``muglue.''
@@ -1118,12 +1103,10 @@ static void coerce_glue(void)
     int v;
     if (cur_val_level >= glue_val_level) {
         v = width(cur_val);
-        delete_glue_ref(cur_val);
+        flush_node(cur_val);
         cur_val = v;
     }
 }
-
-
 
 @ The |scan_dimen| routine is similar to |scan_int|, but it sets |cur_val| to
 a |scaled| value, i.e., an integral number of sp. One of its main tasks
@@ -1153,26 +1136,73 @@ $|cur_val|+|f|/2^{16}$. At the end of the routine, this ``unpacked''
 representation is put into the single word |cur_val|, which suddenly
 switches significance from |integer| to |scaled|.
 
-@c
-void scan_dimen(boolean mu, boolean inf, boolean shortcut)
-/* sets |cur_val| to a dimension */
-{
-    boolean negative;           /* should the answer be negated? */
-    int f;                      /* numerator of a fraction whose denominator is $2^{16}$ */
-    /* Local variables for dimension calculations */
-    int num, denom;             /* conversion ratio for the scanned units */
-    int k, kk;                  /* number of digits in a decimal fraction */
-    halfword p, q;              /* top of decimal digit stack */
-    scaled v;                   /* an internal dimension */
-    int save_cur_val;           /* temporary storage of |cur_val| */
+@
+The necessary conversion factors can all be specified exactly as
+fractions whose numerator and denominator add to 32768 or less.
+According to the definitions here, $\rm2660\,dd\approx1000.33297\,mm$;
+this agrees well with the value $\rm1000.333\,mm$ cited by Bosshard
+\^{Bosshard, Hans Rudolf}
+in {\sl Technische Grundlagen zur Satzherstellung\/} (Bern, 1980).
+The Didot point has been newly standardized in 1978;
+it's now exactly $\rm 1\,nd=0.375\,mm$.
+Conversion uses the equation $0.375=21681/20320/72.27\cdot25.4$.
+The new Cicero follows the new Didot point; $\rm 1\,nc=12\,nd$.
+These would lead to the ratios $21681/20320$ and $65043/5080$,
+respectively.
+The closest approximations supported by the algorithm would be
+$11183/10481$ and $1370/107$.  In order to maintain the
+relation $\rm 1\,nc=12\,nd$, we pick the ratio $685/642$ for
+$\rm nd$, however.
 
-    f = 0;
+@c
+
+static void scan_dimen_mu_error(void) {
+    print_err("Illegal unit of measure (mu inserted)");
+    help4("The unit of measurement in math glue must be mu.",
+          "To recover gracefully from this error, it's best to",
+          "delete the erroneous units; e.g., type `2' to delete",
+          "two letters. (See Chapter 27 of The TeXbook.)");
+    error();
+}
+
+static void scan_dimen_unknown_unit_error(void) {
+    print_err("Illegal unit of measure (pt inserted)");
+    help6("Dimensions can be in units of em, ex, in, pt, pc,",
+          "cm, mm, dd, cc, nd, nc, bp, or sp; but yours is a new one!",
+          "I'll assume that you meant to say pt, for printer's points.",
+          "To recover gracefully from this error, it's best to",
+          "delete the erroneous units; e.g., type `2' to delete",
+          "two letters. (See Chapter 27 of The TeXbook.)");
+    error();
+}
+
+static void scan_dimen_out_of_range_error(void) {
+    print_err("Dimension too large");
+    help2("I can't work with sizes bigger than about 19 feet.",
+          "Continue and I'll use the largest value I can.");
+    error();
+}
+
+#define set_conversion(A,B) do { num=(A); denom=(B); } while(0)
+
+/*
+    This function sets |cur_val| to a dimension. It could be optimized a bit
+    more (but not now, something for luatex > 1).
+*/
+
+void scan_dimen(boolean mu, boolean inf, boolean shortcut)
+{
+    boolean negative; /* should the answer be negated? */
+    int f = 0;        /* numerator of a fraction whose denominator is $2^{16}$ */
+    int num, denom;   /* conversion ratio for the scanned units */
+    halfword q;       /* top of decimal digit stack */
+    scaled v;         /* an internal dimension */
+    int save_cur_val; /* temporary storage of |cur_val| */
     arith_error = false;
     cur_order = normal;
     negative = false;
     if (!shortcut) {
         /* Get the next non-blank non-sign... */
-        negative = false;
         do {
             /* Get the next non-blank non-call token */
             do {
@@ -1183,23 +1213,22 @@ void scan_dimen(boolean mu, boolean inf, boolean shortcut)
                 cur_tok = other_token + '+';
             }
         } while (cur_tok == other_token + '+');
-
         if ((cur_cmd >= min_internal_cmd) && (cur_cmd <= max_internal_cmd)) {
-            /* Fetch an internal dimension and |goto attach_sign|,
-               or fetch an internal integer */
+            /* Fetch an internal dimension and |goto attach_sign|, or fetch an internal integer */
             if (mu) {
                 scan_something_internal(mu_val_level, false);
                 coerce_glue();
-                if (cur_val_level == mu_val_level)
+                if (cur_val_level == mu_val_level) {
                     goto ATTACH_SIGN;
-                if (cur_val_level != int_val_level)
+                } else if (cur_val_level != int_val_level) {
                     mu_error();
+                }
             } else {
                 scan_something_internal(dimen_val_level, false);
-                if (cur_val_level == dimen_val_level)
+                if (cur_val_level == dimen_val_level) {
                     goto ATTACH_SIGN;
+                }
             }
-
         } else {
             back_input();
             if (cur_tok == continental_point_token) {
@@ -1211,24 +1240,26 @@ void scan_dimen(boolean mu, boolean inf, boolean shortcut)
                 radix = 10;
                 cur_val = 0;
             }
-            if (cur_tok == continental_point_token)
+            if (cur_tok == continental_point_token) {
                 cur_tok = point_token;
+            }
             if ((radix == 10) && (cur_tok == point_token)) {
-                /* Scan decimal fraction */
-                /* When the following code is executed, we have |cur_tok=point_token|, but this
-                   token has been backed up using |back_input|; we must first discard it.
-
-                   It turns out that a decimal point all by itself is equivalent to `\.{0.0}'.
-                   Let's hope people don't use that fact. */
-
-                k = 0;
-                p = null;
-                get_token();    /* |point_token| is being re-scanned */
+                /*
+                    Scan decimal fraction. When the following code is executed, we have
+                    |cur_tok=point_token|, but this token has been backed up using |back_input|;
+                    we must first discard it. It turns out that a decimal point all by itself
+                    is equivalent to `\.{0.0}'. Let's hope people don't use that fact.
+                */
+                int k = 0;
+                halfword p = null;
+                int kk;
+                get_token(); /* |point_token| is being re-scanned */
                 while (1) {
                     get_x_token();
                     if ((cur_tok > zero_token + 9) || (cur_tok < zero_token))
                         break;
-                    if (k < 17) {       /* digits for |k>=17| cannot affect the result */
+                    if (k < 17) {
+                        /* digits for |k>=17| cannot affect the result */
                         q = get_avail();
                         set_token_link(q, p);
                         set_token_info(q, cur_tok - zero_token);
@@ -1243,50 +1274,70 @@ void scan_dimen(boolean mu, boolean inf, boolean shortcut)
                     free_avail(q);
                 }
                 f = round_decimals(k);
-                if (cur_cmd != spacer_cmd)
+                if (cur_cmd != spacer_cmd) {
                     back_input();
+                }
             }
         }
     }
-    if (cur_val < 0) {          /* in this case |f=0| */
+    if (cur_val < 0) {
+        /* in this case |f=0| */
         negative = !negative;
         negate(cur_val);
     }
-    /* Scan units and set |cur_val| to $x\cdot(|cur_val|+f/2^{16})$, where there
-       are |x| sp per unit; |goto attach_sign| if the units are internal */
-    /* Now comes the harder part: At this point in the program, |cur_val| is a
-       nonnegative integer and $f/2^{16}$ is a nonnegative fraction less than 1;
-       we want to multiply the sum of these two quantities by the appropriate
-       factor, based on the specified units, in order to produce a |scaled|
-       result, and we want to do the calculation with fixed point arithmetic that
-       does not overflow.
-     */
-
+    /*
+        Scan units and set |cur_val| to $x\cdot(|cur_val|+f/2^{16})$, where there
+        are |x| sp per unit; |goto attach_sign| if the units are internal. Now comes
+        the harder part: At this point in the program, |cur_val| is a nonnegative
+        integer and $f/2^{16}$ is a nonnegative fraction less than 1; we want to
+        multiply the sum of these two quantities by the appropriate factor, based
+        on the specified units, in order to produce a |scaled| result, and we want
+        to do the calculation with fixed point arithmetic that does not overflow.
+    */
     if (inf) {
-        /* Scan for (f)\.{fil} units; |goto attach_fraction| if found */
-        /* In traditional TeX, a specification like `\.{filllll}' or `\.{fill L L
-           L}' will lead to two error messages (one for each additional keyword
-           \.{"l"}). 
-           Not so for luatex, it just parses the construct in reverse. */
-        if (scan_keyword("filll")) {
-            cur_order = filll;
-            goto ATTACH_FRACTION;
-        } else if (scan_keyword("fill")) {
-            cur_order = fill;
-            goto ATTACH_FRACTION;
-        } else if (scan_keyword("fil")) {
-            cur_order = fil;
-            goto ATTACH_FRACTION;
-        } else if (scan_keyword("fi")) {
-            cur_order = sfi;
-            goto ATTACH_FRACTION;
-        }
+        /*
+            Scan for (f)\.{fil} units; |goto attach_fraction| if found. In traditional
+            \TeX, a specification like `\.{filllll}' or `\.{fill L L L}' will lead to
+            two error messages (one for each additional keyword \.{"l"}). Not so for
+            \LuaTeX, it just parses the construct in reverse.
 
+             if (scan_keyword("filll")) {
+                 cur_order = filll;
+                 goto ATTACH_FRACTION;
+             } else if (scan_keyword("fill")) {
+                 cur_order = fill;
+                 goto ATTACH_FRACTION;
+             } else if (scan_keyword("fil")) {
+                 cur_order = fil;
+                 goto ATTACH_FRACTION;
+             } else if (scan_keyword("fi")) {
+                 cur_order = sfi;
+                 goto ATTACH_FRACTION;
+             }
+
+            But ... it failed in alignments so now we do this. And, as we support an extra
+            l we don't issue an error message (we didn't do that anyway).
+         */
+         if (scan_keyword("fi")) {
+             cur_order = sfi;
+             if (scan_keyword("l")) {
+                cur_order = fil;
+                if (scan_keyword("l")) {
+                    cur_order = fill;
+                    if (scan_keyword("l")) {
+                        cur_order = filll;
+                    }
+                }
+            }
+            goto ATTACH_FRACTION;
+         }
     }
-    /* Scan for (u)units that are internal dimensions;
-       |goto attach_sign| with |cur_val| set if found */
+    /*
+        Scan for (u)units that are internal dimensions; |goto attach_sign| with
+        |cur_val| set if found
+    */
     save_cur_val = cur_val;
-    /* Get the next non-blank non-call... */
+    /* Get the next non-blank non-call... a pitty if just backed up the input */
     do {
         get_x_token();
     } while (cur_cmd == spacer_cmd);
@@ -1294,148 +1345,125 @@ void scan_dimen(boolean mu, boolean inf, boolean shortcut)
     if ((cur_cmd < min_internal_cmd) || (cur_cmd > max_internal_cmd)) {
         back_input();
     } else {
+        /* math_given_cmd xmath_given_cmd last_item_cmd */
         if (mu) {
             scan_something_internal(mu_val_level, false);
             coerce_glue();
-            if (cur_val_level != mu_val_level)
+            if (cur_val_level != mu_val_level) {
                 mu_error();
+            }
         } else {
             scan_something_internal(dimen_val_level, false);
         }
         v = cur_val;
         goto FOUND;
     }
-    if (mu)
-        goto NOT_FOUND;
-    if (scan_keyword("em")) {
-        v = (quad(get_cur_font()));
+    /* bah ... true forces to split the unit scanner */
+    if (mu) {
+        /* Scan for (m)\.{mu} units and |goto attach_fraction| */
+        if (! scan_keyword("mu")) {
+            scan_dimen_mu_error();
+        }
+        goto ATTACH_FRACTION;
+    } else if (scan_keyword("em")) {
+        v = quad(get_cur_font());
     } else if (scan_keyword("ex")) {
-        v = (x_height(get_cur_font()));
+        v = x_height(get_cur_font());
     } else if (scan_keyword("px")) {
-        v = dimen_par(pdf_px_dimen_code);
+        v = dimen_par(px_dimen_code);
     } else {
-        goto NOT_FOUND;
+        goto PICKUP_UNIT;
     }
-    /* Scan an optional space */
+    /* Scan an optional space (after em, ex or px) */
     get_x_token();
-    if (cur_cmd != spacer_cmd)
+    if (cur_cmd != spacer_cmd) {
         back_input();
-
+    }
   FOUND:
     cur_val = nx_plus_y(save_cur_val, v, xn_over_d(v, f, 0200000));
     goto ATTACH_SIGN;
-  NOT_FOUND:
-
-    if (mu) {
-        /* Scan for (m)\.{mu} units and |goto attach_fraction| */
-        if (scan_keyword("mu")) {
-            goto ATTACH_FRACTION;
-        } else {
-            print_err("Illegal unit of measure (mu inserted)");
-            help4("The unit of measurement in math glue must be mu.",
-                  "To recover gracefully from this error, it's best to",
-                  "delete the erroneous units; e.g., type `2' to delete",
-                  "two letters. (See Chapter 27 of The TeXbook.)");
-            error();
-            goto ATTACH_FRACTION;
-        }
-    }
-    if (scan_keyword("true")) {
-        /* Adjust (f)for the magnification ratio */
-        prepare_mag();
-        if (int_par(mag_code) != 1000) {
-            cur_val = xn_over_d(cur_val, 1000, int_par(mag_code));
-            f = (1000 * f + 0200000 * tex_remainder) / int_par(mag_code);
-            cur_val = cur_val + (f / 0200000);
-            f = f % 0200000;
-        }
-    }
-    if (scan_keyword("pt"))
+    /*
+        Scan for (a)all other units and adjust |cur_val| and |f| accordingly;
+        |goto done| in the case of scaled points
+    */
+  PICKUP_UNIT:
+    if (scan_keyword("pt")) {
         goto ATTACH_FRACTION;   /* the easy case */
-    /* Scan for (a)all other units and adjust |cur_val| and |f| accordingly;
-       |goto done| in the case of scaled points */
-
-    /* The necessary conversion factors can all be specified exactly as
-       fractions whose numerator and denominator add to 32768 or less.
-       According to the definitions here, $\rm2660\,dd\approx1000.33297\,mm$;
-       this agrees well with the value $\rm1000.333\,mm$ cited by Bosshard
-       \^{Bosshard, Hans Rudolf}
-       in {\sl Technische Grundlagen zur Satzherstellung\/} (Bern, 1980).
-       The Didot point has been newly standardized in 1978;
-       it's now exactly $\rm 1\,nd=0.375\,mm$.
-       Conversion uses the equation $0.375=21681/20320/72.27\cdot25.4$.
-       The new Cicero follows the new Didot point; $\rm 1\,nc=12\,nd$.
-       These would lead to the ratios $21681/20320$ and $65043/5080$,
-       respectively.
-       The closest approximations supported by the algorithm would be
-       $11183/10481$ and $1370/107$.  In order to maintain the
-       relation $\rm 1\,nc=12\,nd$, we pick the ratio $685/642$ for
-       $\rm nd$, however.
-     */
-
-#define set_conversion(A,B) do { num=(A); denom=(B); } while(0)
-
-    if (scan_keyword("in")) {
-        set_conversion(7227, 100);
-    } else if (scan_keyword("pc")) {
-        set_conversion(12, 1);
-    } else if (scan_keyword("cm")) {
-        set_conversion(7227, 254);
     } else if (scan_keyword("mm")) {
         set_conversion(7227, 2540);
-    } else if (scan_keyword("bp")) {
-        set_conversion(7227, 7200);
-    } else if (scan_keyword("dd")) {
-        set_conversion(1238, 1157);
-    } else if (scan_keyword("cc")) {
-        set_conversion(14856, 1157);
-    } else if (scan_keyword("nd")) {
-        set_conversion(685, 642);
-    } else if (scan_keyword("nc")) {
-        set_conversion(1370, 107);
+        goto SCALE_VALUE;
+    } else if (scan_keyword("cm")) {
+        set_conversion(7227, 254);
+        goto SCALE_VALUE;
     } else if (scan_keyword("sp")) {
         goto DONE;
+    } else if (scan_keyword("bp")) {
+        set_conversion(7227, 7200);
+        goto SCALE_VALUE;
+    } else if (scan_keyword("in")) {
+        set_conversion(7227, 100);
+        goto SCALE_VALUE;
+    } else if (scan_keyword("dd")) {
+        set_conversion(1238, 1157);
+        goto SCALE_VALUE;
+    } else if (scan_keyword("cc")) {
+        set_conversion(14856, 1157);
+        goto SCALE_VALUE;
+    } else if (scan_keyword("pc")) {
+        set_conversion(12, 1);
+        goto SCALE_VALUE;
+    } else if (scan_keyword("nd")) {
+        set_conversion(685, 642);
+        goto SCALE_VALUE;
+    } else if (scan_keyword("nc")) {
+        set_conversion(1370, 107);
+        goto SCALE_VALUE;
+    } else if (scan_keyword("true")) {
+        /* Adjust (f)for the magnification ratio */
+        if (output_mode_used == OMODE_DVI) {
+            prepare_mag();
+            if (int_par(mag_code) != 1000) {
+                cur_val = xn_over_d(cur_val, 1000, int_par(mag_code));
+                f = (1000 * f + 0200000 * tex_remainder) / int_par(mag_code);
+                cur_val = cur_val + (f / 0200000);
+                f = f % 0200000;
+            }
+        }
+        goto PICKUP_UNIT;
     } else {
         /* Complain about unknown unit and |goto done2| */
-        print_err("Illegal unit of measure (pt inserted)");
-        help6("Dimensions can be in units of em, ex, in, pt, pc,",
-              "cm, mm, dd, cc, nd, nc, bp, or sp; but yours is a new one!",
-              "I'll assume that you meant to say pt, for printer's points.",
-              "To recover gracefully from this error, it's best to",
-              "delete the erroneous units; e.g., type `2' to delete",
-              "two letters. (See Chapter 27 of The TeXbook.)");
-        error();
-        goto DONE2;
+        scan_dimen_unknown_unit_error();
+        goto BAD_NEWS;
     }
+  SCALE_VALUE:
     cur_val = xn_over_d(cur_val, num, denom);
     f = (num * f + 0200000 * tex_remainder) / denom;
     cur_val = cur_val + (f / 0200000);
     f = f % 0200000;
-  DONE2:
+  BAD_NEWS:
   ATTACH_FRACTION:
-    if (cur_val >= 040000)
+    if (cur_val >= 040000) {
         arith_error = true;
-    else
+    } else {
         cur_val = cur_val * unity + f;
+    }
   DONE:
-    /* Scan an optional space */
+    /* Scan an optional space */ /* happens too often */
     get_x_token();
-    if (cur_cmd != spacer_cmd)
+    if (cur_cmd != spacer_cmd) {
         back_input();
+    }
   ATTACH_SIGN:
     if (arith_error || (abs(cur_val) >= 010000000000)) {
         /* Report that this dimension is out of range */
-        print_err("Dimension too large");
-        help2("I can't work with sizes bigger than about 19 feet.",
-              "Continue and I'll use the largest value I can.");
-        error();
+        scan_dimen_out_of_range_error();
         cur_val = max_dimen;
         arith_error = false;
     }
-    if (negative)
+    if (negative) {
         negate(cur_val);
+    }
 }
-
 
 @ The final member of \TeX's value-scanning trio is |scan_glue|, which
 makes |cur_val| point to a glue specification. The reference count of that
@@ -1449,13 +1477,11 @@ most of the work has already been done.
 
 @c
 void scan_glue(int level)
-{                               /* sets |cur_val| to a glue spec pointer */
-    boolean negative;           /* should the answer be negated? */
-    halfword q;                 /* new glue specification */
-    boolean mu;                 /* does |level=mu_val|? */
-    mu = (level == mu_val_level);
-    /* Get the next non-blank non-sign... */
-    negative = false;
+{
+    boolean negative = false;             /* should the answer be negated? */
+    halfword q = null;                    /* new glue specification */
+    boolean mu = (level == mu_val_level); /* does |level=mu_val|? */
+    /* Get the next non-blank non-sign ... */
     do {
         /* Get the next non-blank non-call token */
         do {
@@ -1466,7 +1492,6 @@ void scan_glue(int level)
             cur_tok = other_token + '+';
         }
     } while (cur_tok == other_token + '+');
-
     if ((cur_cmd >= min_internal_cmd) && (cur_cmd <= max_internal_cmd)) {
         scan_something_internal(level, negative);
         if (cur_val_level >= glue_val_level) {
@@ -1484,8 +1509,10 @@ void scan_glue(int level)
         if (negative)
             negate(cur_val);
     }
-    /* Create a new glue specification whose width is |cur_val|; scan for its
-       stretch and shrink components  */
+    /*
+        Create a new glue specification whose width is |cur_val|; scan for its
+        stretch and shrink components.
+    */
     q = new_spec(zero_glue);
     width(q) = cur_val;
     if (scan_keyword("plus")) {
@@ -1501,7 +1528,7 @@ void scan_glue(int level)
     cur_val = q;
 }
 
-@ This is an omega routine 
+@ This is an omega routine
 @c
 void scan_scaled(void)
 {                               /* sets |cur_val| to a scaled value */
@@ -1586,7 +1613,6 @@ void scan_scaled(void)
         negate(cur_val);
 }
 
-
 @ This procedure is supposed to scan something like `\.{\\skip\\count12}',
 i.e., whatever can follow `\.{\\the}', and it constructs a token list
 containing something like `\.{-3.0pt minus 0.5fill}'.
@@ -1654,11 +1680,11 @@ halfword the_toks(void)
             break;
         case glue_val_level:
             print_spec(cur_val, "pt");
-            delete_glue_ref(cur_val);
+            flush_node(cur_val);
             break;
         case mu_val_level:
             print_spec(cur_val, "mu");
-            delete_glue_ref(cur_val);
+            flush_node(cur_val);
             break;
         }                       /* there are no other cases */
         selector = old_setting;
@@ -1700,11 +1726,11 @@ str_number the_scanned_result(void)
             break;
         case glue_val_level:
             print_spec(cur_val, "pt");
-            delete_glue_ref(cur_val);
+            flush_node(cur_val);
             break;
         case mu_val_level:
             print_spec(cur_val, "mu");
-            delete_glue_ref(cur_val);
+            flush_node(cur_val);
             break;
         }                       /* there are no other cases */
         r = make_string();
@@ -1712,8 +1738,6 @@ str_number the_scanned_result(void)
     selector = old_setting;
     return r;
 }
-
-
 
 @ The following routine is used to implement `\.{\\fontdimen} |n| |f|'.
 The boolean parameter |writing| is set |true| if the calling program
@@ -1790,7 +1814,6 @@ void get_font_dimen(void)
     scanned_result(cur_val, dimen_val_level);
 }
 
-
 @ Here's a similar procedure that returns a pointer to a rule node. This
 routine is called just after \TeX\ has seen \.{\\hrule} or \.{\\vrule};
 therefore |cur_cmd| will be either |hrule| or |vrule|. The idea is to store
@@ -1801,8 +1824,17 @@ found (in any order).
 @c
 halfword scan_rule_spec(void)
 {
-    halfword q;                 /* the rule node being created */
-    q = new_rule();             /* |width|, |depth|, and |height| all equal |null_flag| now */
+    /* |width|, |depth|, and |height| all equal |null_flag| now */
+    halfword q;
+    if (cur_cmd == no_vrule_cmd) {
+        q = new_rule(empty_rule);
+        cur_cmd = vrule_cmd;
+    } else if (cur_cmd == no_hrule_cmd) {
+        q = new_rule(empty_rule);
+        cur_cmd = hrule_cmd;
+    } else {
+        q = new_rule(normal_rule);
+    }
     if (cur_cmd == vrule_cmd) {
         width(q) = default_rule;
         rule_dir(q) = body_direction;
@@ -1843,8 +1875,7 @@ void scan_font_ident(void)
         get_x_token();
     } while (cur_cmd == spacer_cmd);
 
-    if ((cur_cmd == def_font_cmd) || (cur_cmd == letterspace_font_cmd)
-        || (cur_cmd == pdf_copy_font_cmd)) {
+    if ((cur_cmd == def_font_cmd) || (cur_cmd == letterspace_font_cmd) || (cur_cmd == copy_font_cmd)) {
         f = get_cur_font();
     } else if (cur_cmd == set_font_cmd) {
         f = cur_chr;
@@ -1865,7 +1896,7 @@ void scan_font_ident(void)
 }
 
 @ The |scan_general_text| procedure is much like |scan_toks(false,false)|,
-but will be invoked via |expand|, i.e., recursively. 
+but will be invoked via |expand|, i.e., recursively.
 
 The token list (balanced text) created by |scan_general_text| begins
 at |link(temp_token_head)| and ends at |cur_val|.  (If |cur_val=temp_token_head|,
@@ -1916,7 +1947,6 @@ void scan_general_text(void)
     def_ref = d;
 }
 
-
 @ The |get_x_or_protected| procedure is like |get_x_token| except that
 protected macros are not expanded.
 
@@ -1935,7 +1965,6 @@ void get_x_or_protected(void)
         expand();
     }
 }
-
 
 @ |scan_toks|. This function returns a pointer to the tail of a new token
 list, and it also makes |def_ref| point to the reference count at the
@@ -2041,7 +2070,7 @@ halfword scan_toks(boolean macro_def, boolean xpand)
             /* Here we insert an entire token list created by |the_toks| without
                expanding it further. */
             while (1) {
-                get_token_lua();
+                get_next();
                 if (cur_cmd >= call_cmd) {
                     if (token_info(token_link(cur_chr)) == protected_token) {
                         cur_cmd = relax_cmd;
@@ -2105,7 +2134,6 @@ halfword scan_toks(boolean macro_def, boolean xpand)
     return p;
 }
 
-
 @ Here we declare two trivial procedures in order to avoid mutually
 recursive procedures with parameters.
 
@@ -2143,31 +2171,27 @@ typedef enum {
   ($2^{31}-1$) in absolute value, dimensions must not exceed |max_dimen|
   ($2^{30}-1$).  We avoid the absolute value of an integer, because this
   might fail for the value $-2^{31}$ using 32-bit arithmetic.
- 
-@   clear a number or dimension and set |arith_error| 
+
+@   clear a number or dimension and set |arith_error|
 
 @c
-#define num_error(A) do {			\
-	arith_error=true;			\
-	A=0;					\
-    } while (0)
+#define num_error(A) do { \
+    arith_error=true; \
+    A=0; \
+} while (0)
 
- 
-@   clear a glue spec and set |arith_error| 
+@   clear a glue spec and set |arith_error|
 
 @c
-#define glue_error(A) do {				\
-	arith_error=true;				\
-	delete_glue_ref(A);				\
-	A=new_spec(zero_glue);				\
-    } while (0)
+#define glue_error(A) do { \
+    arith_error=true; \
+    reset_glue_to_zero(A); \
+} while (0)
 
-
-#define normalize_glue(A) do {				\
-	if (stretch(A)==0) stretch_order(A)=normal;	\
-	if (shrink(A)==0) shrink_order(A)=normal;	\
-    } while (0)
-
+#define normalize_glue(A) do { \
+    if (stretch(A)==0) stretch_order(A)=normal; \
+    if (shrink(A)==0) shrink_order(A)=normal; \
+} while (0)
 
 @ Parenthesized subexpressions can be inside expressions, and this
 nesting has a stack.  Seven local variables represent the top of the
@@ -2184,7 +2208,6 @@ numerator for a combined multiplication and division, if any.
 #define expr_t_field(A) vlink((A)+2)    /* saved term so far */
 #define expr_n_field(A) vinfo((A)+2)    /* saved numerator */
 
-
 #define expr_add_sub(A,B,C) add_or_sub((A),(B),(C),(r==expr_sub))
 #define expr_a(A,B) expr_add_sub((A),(B),max_dimen)
 
@@ -2195,7 +2218,7 @@ numerator for a combined multiplication and division, if any.
   |max_answer|.
 
 @c
-int add_or_sub(int x, int y, int max_answer, boolean negative)
+inline static int add_or_sub(int x, int y, int max_answer, boolean negative)
 {
     int a;                      /* the answer */
     if (negative)
@@ -2213,17 +2236,14 @@ int add_or_sub(int x, int y, int max_answer, boolean negative)
     return a;
 }
 
-
 #define expr_m(A) A = nx_plus_y((A),f,0)
-
 #define expr_d(A) A=quotient((A),f)
-
 
 @ The function |quotient(n,d)| computes the rounded quotient
 $q=\lfloor n/d+{1\over2}\rfloor$, when $n$ and $d$ are positive.
 
 @c
-int quotient(int n, int d)
+inline static int quotient(int n, int d)
 {
     boolean negative;           /* should the answer be negated? */
     int a;                      /* the answer */
@@ -2252,7 +2272,6 @@ int quotient(int n, int d)
 }
 
 #define expr_s(A) A=fract((A),n,f,max_dimen)
-
 
 @ Finally, the function |fract(x,n,d,max_answer)| computes the integer
 $q=\lfloor xn/d+{1\over2}\rfloor$, when $x$, $n$, and $d$ are positive
@@ -2310,8 +2329,6 @@ int fract(int x, int n, int d, int max_answer)
         x = n;
         n = t;
     }
-
-
     /* now |0<n<=x<d| */
     /* Compute $f=\lfloor xn/d+{1\over2}\rfloor$; */
     /* The loop here preserves the following invariant relations
@@ -2365,7 +2382,7 @@ int fract(int x, int n, int d, int max_answer)
 }
 
 @ @c
-void scan_expr(void)
+static void scan_expr(void)
 {                               /* scans and evaluates an expression */
     boolean a, b;               /* saved values of |arith_error| */
     int l;                      /* type of expression */
@@ -2460,8 +2477,7 @@ void scan_expr(void)
         if (abs(f) > max_dimen)
             num_error(f);
     } else {
-        if ((abs(width(f)) > max_dimen) ||
-            (abs(stretch(f)) > max_dimen) || (abs(shrink(f)) > max_dimen))
+        if ((abs(width(f)) > max_dimen) || (abs(stretch(f)) > max_dimen) || (abs(shrink(f)) > max_dimen))
             glue_error(f);
     }
 
@@ -2475,9 +2491,11 @@ void scan_expr(void)
            unless the next operator is a right parenthesis; this allows us later on
            to simply modify the glue components.
          */
+        t = f;
         if ((l >= glue_val_level) && (o != expr_none)) {
+	        /* do we really need to copy here ? */ 
             t = new_spec(f);
-            delete_glue_ref(f);
+            flush_node(f);
             normalize_glue(t);
         } else {
             t = f;
@@ -2522,7 +2540,6 @@ void scan_expr(void)
             expr_s(shrink(t));
         }
         break;
-
     }                           /* there are no other cases */
     if (o > expr_sub) {
         s = o;
@@ -2544,8 +2561,7 @@ void scan_expr(void)
             width(e) = expr_a(width(e), width(t));
             if (stretch_order(e) == stretch_order(t)) {
                 stretch(e) = expr_a(stretch(e), stretch(t));
-            } else if ((stretch_order(e) < stretch_order(t))
-                       && (stretch(t) != 0)) {
+            } else if ((stretch_order(e) < stretch_order(t)) && (stretch(t) != 0)) {
                 stretch(e) = stretch(t);
                 stretch_order(e) = stretch_order(t);
             }
@@ -2555,7 +2571,7 @@ void scan_expr(void)
                 shrink(e) = shrink(t);
                 shrink_order(e) = shrink_order(t);
             }
-            delete_glue_ref(t);
+            flush_node(t);
             normalize_glue(e);
         }
         r = o;
@@ -2584,9 +2600,7 @@ void scan_expr(void)
               "since the result is out of range.");
         error();
         if (l >= glue_val_level) {
-            delete_glue_ref(e);
-            e = zero_glue;
-            add_glue_ref(e);
+            reset_glue_to_zero(e);
         } else {
             e = 0;
         }

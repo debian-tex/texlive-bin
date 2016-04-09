@@ -1,6 +1,6 @@
 /* This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
 
-    Copyright (C) 2002-2015 by Jin-Hwan Cho and Shunsaku Hirata,
+    Copyright (C) 2002-2016 by Jin-Hwan Cho and Shunsaku Hirata,
     the dvipdfmx project team.
     
     Copyright (C) 1998, 1999 by Mark A. Wicks <mwicks@kettering.edu>
@@ -74,13 +74,13 @@ extern int        pdf_color_is_white      (const pdf_color *color);
 extern int        pdf_color_is_valid      (const pdf_color *color);
 
 /* Not check size */
-extern pdf_obj *iccp_get_rendering_intent (const void *profile, long proflen);
+extern pdf_obj *iccp_get_rendering_intent (const void *profile, int proflen);
 extern int      iccp_check_colorspace     (int colortype,
-					   const void *profile, long proflen);
+					   const void *profile, int proflen);
 
 /* returns colorspace ID */
 extern int      iccp_load_profile (const char *ident,
-				   const void *profile, long proflen);
+				   const void *profile, int proflen);
 
 extern void     pdf_init_colors  (void);
 extern void     pdf_close_colors (void);
@@ -99,7 +99,6 @@ extern int      pdf_colorspace_load_ICCBased      (const char *ident,
  * See remark in spc_color.c.
  */
 extern void     pdf_color_set   (pdf_color *sc, pdf_color *fc);
-extern void     pdf_color_set_default (const pdf_color *color);
 extern void     pdf_color_push  (pdf_color *sc, pdf_color *fc);
 extern void     pdf_color_pop   (void);
 

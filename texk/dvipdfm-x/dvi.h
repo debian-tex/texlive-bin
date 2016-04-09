@@ -1,6 +1,6 @@
 /* This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
 
-    Copyright (C) 2002-2014 by Jin-Hwan Cho and Shunsaku Hirata,
+    Copyright (C) 2002-2016 by Jin-Hwan Cho and Shunsaku Hirata,
     the dvipdfmx project team.
     
     Copyright (C) 1998, 1999 by Mark A. Wicks <mwicks@kettering.edu>
@@ -30,7 +30,7 @@
 
 /* instantiated in dvipdfmx.c */
 extern double paper_width, paper_height;
-extern char landscape_mode;
+extern int    landscape_mode;
 
 extern double get_origin (int x);
 
@@ -72,9 +72,10 @@ extern void dvi_dir   (unsigned char dir);
 extern void  dvi_do_page  (double paper_height, double x_offset, double y_offset);
 extern void  dvi_scan_specials (int page_no,
 				double *width, double *height,
-				double *x_offset, double *y_offset,
-				char *landscape, unsigned *minorversion,
-				int *do_enc, unsigned *key_bits, unsigned *permission, char *owner_pw, char *user_pw);
+                                double *x_offset, double *y_offset, int *landscape,
+                                int *majorversion, int *minorversion,
+                                int *do_enc, int *keybits, int32_t *perm,
+                                char *opasswd, char *upasswd);
 extern int   dvi_locate_font   (const char *name, spt_t ptsize);
 
 /* link or nolink:

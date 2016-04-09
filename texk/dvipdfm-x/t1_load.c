@@ -1,6 +1,6 @@
 /* This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
 
-    Copyright (C) 2002-2014 by Jin-Hwan Cho and Shunsaku Hirata,
+    Copyright (C) 2002-2016 by Jin-Hwan Cho and Shunsaku Hirata,
     the dvipdfmx project team.
 
     Copyright (C) 1998, 1999 by Mark A. Wicks <mwicks@kettering.edu>
@@ -76,7 +76,7 @@ static void t1_crypt_init (unsigned short key)
 static void
 t1_decrypt (unsigned short key,
             unsigned char *dst, const unsigned char *src,
-            long skip, long len)
+            int skip, int len)
 {
   len -= skip;
   while (skip--)
@@ -322,6 +322,105 @@ static const char *const ISOLatin1Encoding[256] = {
   "ydieresis"
 };
 
+/* Treat cases such as "dup num num getinterval num exch putinterval"
+ * or "dup num exch num get put"
+ */
+static int
+try_put_or_putinterval (char **enc_vec, unsigned char **start, unsigned char *end)
+{
+  pst_obj *tok;
+  int i, num1, num2, num3;
+
+  tok = pst_get_token(start, end);
+  if (!tok || !PST_INTEGERTYPE(tok) ||
+      (num1 = pst_getIV(tok)) > 255 || num1 < 0) {
+    RELEASE_TOK(tok);
+    return -1;
+  }
+  RELEASE_TOK(tok);
+
+  tok = pst_get_token(start, end);
+  if (!tok) {
+    return -1;
+  } else if (MATCH_OP(tok, "exch")) {
+    /* dup num exch num get put */
+    RELEASE_TOK(tok);
+
+    tok = pst_get_token(start, end);
+    if (!tok || !PST_INTEGERTYPE(tok) ||
+        (num2 = pst_getIV(tok)) > 255 || num2 < 0) {
+      RELEASE_TOK(tok);
+      return -1;
+    }
+    RELEASE_TOK(tok);
+
+    tok = pst_get_token(start, end);
+    if (!MATCH_OP(tok, "get")) {
+      RELEASE_TOK(tok);
+      return -1;
+    }
+    RELEASE_TOK(tok);
+
+    tok = pst_get_token(start, end);
+    if (!MATCH_OP(tok, "put")) {
+      RELEASE_TOK(tok);
+      return -1;
+    }
+    RELEASE_TOK(tok);
+
+    if (enc_vec[num1])
+      RELEASE(enc_vec[num1]);
+    enc_vec[num1] = xstrdup(enc_vec[num2]);
+  } else if (PST_INTEGERTYPE(tok) &&
+             (num2 = pst_getIV(tok)) + num1 <= 255 && num2 >= 0) {
+    RELEASE_TOK(tok);
+
+    tok = pst_get_token(start, end);
+    if (!MATCH_OP(tok, "getinterval")) {
+      RELEASE_TOK(tok);
+      return -1;
+    }
+    RELEASE_TOK(tok);
+
+    tok = pst_get_token(start, end);
+    if (!tok || !PST_INTEGERTYPE(tok) ||
+        (num3 = pst_getIV(tok)) + num2 > 255 || num3 < 0) {
+      RELEASE_TOK(tok);
+      return -1;
+    }
+    RELEASE_TOK(tok);
+
+    tok = pst_get_token(start, end);
+    if (!MATCH_OP(tok, "exch")) {
+      RELEASE_TOK(tok);
+      return -1;
+    }
+    RELEASE_TOK(tok);
+
+    tok = pst_get_token(start, end);
+    if (!MATCH_OP(tok, "putinterval")) {
+      RELEASE_TOK(tok);
+      return -1;
+    }
+    RELEASE_TOK(tok);
+
+    for (i = 0; i < num2; i++) {
+      if (enc_vec[num1 + i]) { /* num1 + i < 256 here */
+        if (enc_vec[num3 + i]) { /* num3 + i < 256 here */
+          RELEASE(enc_vec[num3 + i]);
+          enc_vec[num3+i] = NULL;
+        }
+        enc_vec[num3 + i] = xstrdup(enc_vec[num1 + i]);
+      }
+    }
+  } else {
+    RELEASE_TOK(tok);
+    return -1;
+  }
+
+  return 0;
+}
+
 static int
 parse_encoding (char **enc_vec, unsigned char **start, unsigned char *end)
 {
@@ -393,8 +492,21 @@ parse_encoding (char **enc_vec, unsigned char **start, unsigned char *end)
       }
       RELEASE_TOK(tok);
 
+      /* cmctt10.pfb for examples contains the following PS code
+       *     dup num num getinterval num exch putinterval
+       *     dup num exch num get put
+       */
       tok = pst_get_token(start, end);
-      if (!tok || !PST_INTEGERTYPE(tok) ||
+      if (MATCH_OP(tok, "dup")) { /* possibly putinterval type */
+        if (enc_vec == NULL) {
+          WARN ("This kind of type1 fonts are not supported as native fonts.\n"
+                "                   They are supported if used with tfm fonts.\n");
+        } else {
+          try_put_or_putinterval(enc_vec, start, end);
+        }
+        RELEASE_TOK(tok)
+        continue;
+      } else if (!tok || !PST_INTEGERTYPE(tok) ||
           (code = pst_getIV(tok)) > 255 || code < 0) {
         RELEASE_TOK(tok);
         continue;
@@ -442,8 +554,8 @@ parse_subrs (cff_font *font,
 {
   cff_index *subrs;
   pst_obj   *tok;
-  long       i, count, offset, max_size;
-  long      *offsets, *lengths;
+  int        i, count, offset, max_size;
+  int       *offsets, *lengths;
   card8     *data;
 
   tok = pst_get_token(start, end);
@@ -471,10 +583,10 @@ parse_subrs (cff_font *font,
   if (mode != 1) {
     max_size = CS_STR_LEN_MAX;
     data     = NEW(max_size, card8);
-    offsets  = NEW(count, long);
-    lengths  = NEW(count, long);
-    memset(offsets, 0, sizeof(long)*count);
-    memset(lengths, 0, sizeof(long)*count);
+    offsets  = NEW(count, int);
+    lengths  = NEW(count, int);
+    memset(offsets, 0, sizeof(int)*count);
+    memset(lengths, 0, sizeof(int)*count);
   } else {
     max_size = 0;
     data     = NULL;
@@ -485,7 +597,7 @@ parse_subrs (cff_font *font,
   offset = 0;
   /* dup subr# n-bytes RD n-binary-bytes NP */
   for (i = 0; i < count;) {
-    long idx, len;
+    int idx, len;
 
     tok = pst_get_token(start, end);
     if (!tok) {
@@ -597,8 +709,8 @@ parse_charstrings (cff_font *font,
   cff_index    *charstrings;
   cff_charsets *charset;
   pst_obj      *tok;
-  long          i, count, have_notdef;
-  long          max_size, offset;
+  int           i, count, have_notdef;
+  int           max_size, offset;
 
   /* /CharStrings n dict dup begin
    * /GlyphName n-bytes RD -n-binary-bytes- ND
@@ -637,10 +749,11 @@ parse_charstrings (cff_font *font,
   offset      = 0;
   have_notdef = 0; /* .notdef must be at gid = 0 in CFF */
 
+  font->is_notdef_notzero = 0;
   seek_operator(start, end, "begin");
   for (i = 0; i < count; i++) {
     char *glyph_name;
-    long  len, gid, j;
+    int   len, gid, j;
 
     /* BUG-20061126 (by ChoF):
      * Some fonts (e.g., belleek/blsy.pfb) does not have the correct number
@@ -648,6 +761,9 @@ parse_charstrings (cff_font *font,
      */
     tok = pst_get_token(start, end);
     glyph_name = (char *)pst_getSV(tok);
+
+    if ((i == 0) && (glyph_name != NULL) && (strcmp (glyph_name, ".notdef") != 0))
+      font->is_notdef_notzero = 1;
 
     if (PST_NAMETYPE(tok)) {
       RELEASE_TOK(tok);
@@ -725,7 +841,7 @@ parse_charstrings (cff_font *font,
     *start += 1;
     if (mode != 1) {
       if (lenIV >= 0) {
-        long offs = gid ? offset : 0;
+        int offs = gid ? offset : 0;
         charstrings->offset[gid] = offs + 1; /* start at 1 */
         t1_decrypt(T1_CHARKEY, charstrings->data+offs, *start, lenIV, len);
         offset += len - lenIV;
@@ -844,7 +960,7 @@ parse_part2 (cff_font *font, unsigned char **start, unsigned char *end, int mode
 #define TYPE1_NAME_LEN_MAX 127
 #endif
 
-static long
+static int
 parse_part1 (cff_font *font, char **enc_vec,
              unsigned char **start, unsigned char *end)
 {
@@ -1011,10 +1127,10 @@ is_pfb (FILE *fp)
 #define PFB_SEG_TYPE_BINARY 2
 
 static unsigned char *
-get_pfb_segment (FILE *fp, int expected_type, long *length)
+get_pfb_segment (FILE *fp, int expected_type, int *length)
 {
   unsigned char *buffer;
-  long bytesread;
+  int bytesread;
 
   buffer = NULL; bytesread = 0;
   for (;;) {
@@ -1032,7 +1148,7 @@ get_pfb_segment (FILE *fp, int expected_type, long *length)
       break;
     }
     {
-      long slen, rlen;
+      int  slen, rlen;
       int  i;
 
       slen = 0;
@@ -1082,7 +1198,7 @@ int
 t1_get_fontname (FILE *fp, char *fontname)
 {
   unsigned char *buffer, *start, *end;
-  long  length;
+  int   length;
   char *key;
   int   fn_found = 0;
 
@@ -1156,7 +1272,7 @@ init_cff_font (cff_font *cff)
 cff_font *
 t1_load_font (char **enc_vec, int mode, FILE *fp)
 {
-  long length;
+  int length;
   cff_font *cff;
   unsigned char *buffer, *start, *end;
 

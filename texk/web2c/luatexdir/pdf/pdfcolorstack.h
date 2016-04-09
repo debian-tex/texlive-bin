@@ -15,19 +15,20 @@
    License for more details.
 
    You should have received a copy of the GNU General Public License along
-   with LuaTeX; if not, see <http://www.gnu.org/licenses/>. */
+   with LuaTeX; if not, see <http://www.gnu.org/licenses/>.
+*/
 
 
 #ifndef PDFCOLORSTACK_H
 #  define PDFCOLORSTACK_H
 
 #  define set_pdf_colorstack_stack(A,B) pdf_colorstack_stack(A)=B
-#  define set_pdf_colorstack_cmd(A,B) pdf_colorstack_cmd(A)=B
-#  define set_pdf_colorstack_data(A,B) pdf_colorstack_data(A)=B
+#  define set_pdf_colorstack_cmd(A,B)   pdf_colorstack_cmd(A)=B
+#  define set_pdf_colorstack_data(A,B)  pdf_colorstack_data(A)=B
 
 #  define STACK_INCREMENT 8
 
-int newcolorstack(int s, int literal_mode, boolean pagestart);
+int newcolorstack(const char *s, int literal_mode, boolean pagestart);
 int colorstackused(void);
 int colorstackpop(int colstack_no);
 int colorstackcurrent(int colstack_no);

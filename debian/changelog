@@ -3,8 +3,9 @@ texlive-bin (2016.20160409.40358-1) experimental; urgency=medium
   * build gregorio, replace file in the old package (Closes: #815682)
   * switch to system libraries for most libraries but libteckit
     (which is only in experimental) (Closes: #810001)
+  * update patches
 
- -- Norbert Preining <preining@debian.org>  Sat, 09 Apr 2016 16:55:43 +0900
+ -- Norbert Preining <preining@debian.org>  Sat, 09 Apr 2016 17:06:21 +0900
 
 texlive-bin (2015.20160222.37495-1) unstable; urgency=medium
 

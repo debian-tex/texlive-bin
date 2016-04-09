@@ -9,7 +9,7 @@
 
 --- texlive-bin.orig/texk/kpathsea/texmf.cnf
 +++ texlive-bin/texk/kpathsea/texmf.cnf
-@@ -54,20 +54,23 @@
+@@ -57,20 +57,23 @@
  TEXMFROOT = $SELFAUTOPARENT
  
  % The main tree of distributed packages and programs:
@@ -37,20 +37,20 @@
  
  % Per-user texmf tree(s) -- organized per the TDS, as usual.  To define
  % more than one per-user tree, set this to a list of directories in
-@@ -76,10 +79,10 @@
+@@ -79,10 +82,10 @@
  TEXMFHOME = ~/texmf
  
  % TEXMFVAR, where texconfig/updmap/fmtutil store cached runtime data.
--TEXMFVAR = ~/.texlive2015/texmf-var
+-TEXMFVAR = ~/.texlive2016/texmf-var
 +TEXMFVAR = ~/.texmf-var
  
  % TEXMFCONFIG, where texconfig/updmap/fmtutil store configuration data.
--TEXMFCONFIG = ~/.texlive2015/texmf-config
+-TEXMFCONFIG = ~/.texlive2016/texmf-config
 +TEXMFCONFIG = ~/.texmf-config
  
  % List all the texmf trees. For an explanation of what they are, see the
  % TeX Live manual.
-@@ -91,7 +94,7 @@
+@@ -94,7 +97,7 @@
  % should take precedence over distribution files -- although it is
  % generally a source of confusion to have different versions of a
  % package installed, whatever the trees, so try to avoid it.
@@ -59,7 +59,7 @@
  
  % Where to look for ls-R files.  There need not be an ls-R in the
  % directories in this path, but if there is one, Kpathsea will use it.
-@@ -99,13 +102,13 @@
+@@ -102,13 +105,13 @@
  % does not create ls-R files in the non-!! elements -- because if an
  % ls-R is present, it will be used, and the disk will not be searched.
  % This is arguably a bug in kpathsea.
@@ -75,7 +75,7 @@
  
  % First writable tree here is used by Lua(La)TeX for the font cache.
  % LuaLaTeX uses the value here, while ConTeXt uses the same variable but
-@@ -116,7 +119,7 @@
+@@ -119,7 +122,7 @@
  % Where generated fonts may be written.  This tree is used when the sources
  % were found in a system tree and either that tree wasn't writable, or the
  % varfonts feature was enabled in MT_FEATURES in mktex.cnf.
@@ -84,7 +84,7 @@
  
  % On some systems, there will be a system tree which contains all the font
  % files that may be created as well as the formats.  For example
-@@ -486,33 +489,8 @@
+@@ -489,33 +492,8 @@
  % since we don't want to scatter ../'s throughout the value.  Hence we
  % explicitly list every directory.  Arguably more understandable anyway.
  %

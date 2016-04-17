@@ -13,3 +13,4 @@ remove-libdir-from-kpathsea-pkgconfig
 # from here on upstream patches
 fix-format-gcc-errors
 fix-mktexlsr-bashims
+upupstream-xdvi-desktop-file

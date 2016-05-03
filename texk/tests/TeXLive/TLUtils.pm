@@ -5,16 +5,9 @@
 
 package TeXLive::TLUtils;
 
-my $svnrev = '$Revision: 40251 $';
-my $_modulerevision;
-if ($svnrev =~ m/: ([0-9]+) /) {
-  $_modulerevision = $1;
-} else {
-  $_modulerevision = "unknown";
-}
-sub module_revision {
-  return $_modulerevision;
-}
+my $svnrev = '$Revision: 40652 $';
+my $_modulerevision = ($svnrev =~ m/: ([0-9]+) /) ? $1 : "unknown";
+sub module_revision { return $_modulerevision; }
 
 =pod
 
@@ -97,7 +90,6 @@ C<TeXLive::TLUtils> -- utilities used in TeX Live infrastructure
   TeXLive::TLUtils::forward_slashify($path_from_user);
   TeXLive::TLUtils::give_ctan_mirror();
   TeXLive::TLUtils::give_ctan_mirror_base();
-  TeXLive::TLUtils::tlmd5($path);
   TeXLive::TLUtils::compare_tlpobjs($tlpA, $tlpB);
   TeXLive::TLUtils::compare_tlpdbs($tlpdbA, $tlpdbB);
   TeXLive::TLUtils::report_tlpdb_differences(\%ret);
@@ -171,7 +163,6 @@ BEGIN {
     &give_ctan_mirror_base
     &create_mirror_list
     &extract_mirror_entry
-    &tlmd5
     &wsystem
     &xsystem
     &run_cmd
@@ -197,7 +188,6 @@ BEGIN {
 }
 
 use Cwd;
-use Digest::MD5;
 use Getopt::Long;
 use File::Temp;
 
@@ -212,7 +202,7 @@ $::opt_verbosity = 0;  # see process_logging_options
 
 =item C<platform>
 
-If C<$^O=~/MSWin(32|64)$/i> is true we know that we're on
+If C<$^O =~ /MSWin/i> is true we know that we're on
 Windows and we set the global variable C<$::_platform_> to C<win32>.
 Otherwise we call C<platform_name> with the output of C<config.guess>
 as argument.
@@ -561,7 +551,7 @@ sub run_cmd {
 
 =back
 
-=head2 File Utilities
+=head2 File utilities
 
 =over 4
 
@@ -636,8 +626,8 @@ sub basename {
 
 =item C<tl_abs_path($path)>
 
-# Other than Cwd::abs_path, tl_abs_path also works
-# if only the grandparent exists.
+# Other than Cwd::abs_path, tl_abs_path also works if the argument does not
+# yet exist as long as the path does not contain '..' components.
 
 =cut
 
@@ -646,33 +636,34 @@ sub tl_abs_path {
   if (win32) {
     $path=~s!\\!/!g;
   }
-  my $ret;
-  eval {$ret = Cwd::abs_path($path);}; # eval needed for w32
-  return $ret if defined $ret;
-  # $ret undefined: probably the parent does not exist.
-  # But we also want an answer if only the grandparent exists.
-  my ($parent, $base) = dirname_and_basename($path);
-  return undef unless defined $parent;
-  eval {$ret = Cwd::abs_path($parent);};
-  if (defined $ret) {
-    if ($ret =~ m!/$! or $base =~ m!^/!) {
-      $ret = "$ret$base";
-    } else {
-      $ret = "$ret/$base";
-    }
-    return $ret;
-  } else {
-    my ($pparent, $pbase) = dirname_and_basename($parent);
-    return undef unless defined $pparent;
-    eval {$ret = Cwd::abs_path($pparent);};
-    return undef unless defined $ret;
-    if ($ret =~ m!/$!) {
-      $ret = "$ret$pbase/$base";
-    } else {
-      $ret = "$ret/$pbase/$base";
-    }
-    return $ret;
+  if (-e $path) {
+    $path = Cwd::abs_path($path);
+  } elsif ($path eq '.') {
+    $path = Cwd::getcwd();
+  } else{
+    # collapse /./ components
+    $path =~ s!/\./!/!g;
+    # no support for .. path components or for win32 long-path syntax
+    # (//?/ path prefix)
+    die "Unsupported path syntax" if $path =~ m!/\.\./! || $path =~ m!/\.\.$!
+      || $path =~ m!^\.\.!;
+    die "Unsupported path syntax" if win32() && $path =~ m!^//\?/!;
+    if ($path !~ m!^(.:)?/!) { # relative path
+      if (win32() && $path =~ /^.:/) { # drive letter
+        my $dcwd;
+        # starts with drive letter: current dir on drive
+        $dcwd = Cwd::getdcwd ($1);
+        $dcwd .= '/' unless $dcwd =~ m!/$!;
+        return $dcwd.$path;
+      } else { # relative path without drive letter
+        my $cwd = Cwd::getcwd();
+        $cwd .= '/' unless $cwd =~ m!/$!;
+        return $cwd . $path;
+      }
+    } # else absolute path
   }
+  $path =~ s!/$!! unless $path =~ m!^(.:)?/$!;
+  return $path;
 }
 
 
@@ -694,13 +685,19 @@ sub dir_creatable {
   #print STDERR "testing $path\n";
   $path =~ s!\\!/!g if win32;
   return 0 unless -d $path;
-  $path =~ s!/$!!;
+  $path .= '/' unless $path =~ m!/$!;
   #print STDERR "testing $path\n";
-  my $i = 0;
-  my $too_large = 100000;
-  while ((-e $path . "/" . $i) and $i<$too_large) { $i++; }
-  return 0 if $i>=$too_large;
-  my $d = $path."/".$i;
+  my $d;
+  for my $i (1..100) {
+    $d = "";
+    # find a non-existent dirname
+    $d = $path . int(rand(1000000));
+    last unless -e $d;
+  }
+  if (!$d) {
+    tlwarn("Cannot find available testdir name\n");
+    return 0;
+  }
   #print STDERR "creating $d\n";
   return 0 unless mkdir $d;
   return 0 unless -d $d;
@@ -719,10 +716,6 @@ a fileserver.
 
 =cut
 
-# Theoretically, the test below, which uses numbers as names, might
-# lead to a race condition. OTOH, it should work even on a very
-# broken Perl.
-
 # The Unix test gives the wrong answer when used under Windows Vista
 # with one of the `virtualized' directories such as Program Files:
 # lacking administrative permissions, it would write successfully to
@@ -733,14 +726,19 @@ sub dir_writable {
   my ($path) = @_;
   return 0 unless -d $path;
   $path =~ s!\\!/!g if win32;
-  $path =~ s!/$!!;
+  $path .= '/' unless $path =~ m!/$!;
   my $i = 0;
-  my $too_large = 100000;
-  while ((-e "$path/$i") && $i < $too_large) {
-    $i++;
+  my $f;
+  for my $i (1..100) {
+    $f = "";
+    # find a non-existent filename
+    $f = $path . int(rand(1000000));
+    last unless -e $f;
   }
-  return 0 if $ i >= $too_large;
-  my $f = "$path/$i";
+  if (!$f) {
+    tlwarn("Cannot find available testfile name\n");
+    return 0;
+  }
   return 0 if ! open (TEST, ">$f");
   my $written = 0;
   $written = (print TEST "\n");
@@ -1950,23 +1948,26 @@ sub w32_remove_from_path {
 =item C<check_file($what, $checksum, $checksize>
 
 Remove C<$what> if either the given C<$checksum> or C<$checksize> does
-not agree. Does nothing if neither of the check arguments is given.
+not agree. If a check argument is not given, that check is not performed.
 
 =cut
 
 sub check_file {
-  my ($xzfile, $checksum, $size) = @_;
+  my ($xzfile, $checksum, $checksize) = @_;
   if ($checksum) {
-    if (tlmd5($xzfile) ne $checksum) {
-      tlwarn("TLUtils::check_file: found $xzfile, but hashsums differ, removing it.\n");
+    my $tlchecksum = TeXLive::TLCrypto::tlchecksum($xzfile);
+    if ($tlchecksum ne $checksum) {
+      tlwarn("TLUtils::check_file: removing $xzfile, checksums differ:\n");
+      tlwarn("TLUtils::check_file:   TL=$tlchecksum, arg=$checksum\n");
       unlink($xzfile);
       return;
     }
   }
-  if ($size) {
+  if ($checksize) {
     my $filesize = (stat $xzfile)[7];
-    if ($filesize != $size) {
-      tlwarn("TLUtils::check_file: found $xzfile, but sizes differ, removing it.\n");
+    if ($filesize != $checksize) {
+      tlwarn("TLUtils::check_file: removing $xzfile, sizes differ:\n");
+      tlwarn("TLUtils::check_file:   TL=$filesize, arg=$checksize\n");
       unlink($xzfile);
       return;
     }
@@ -2186,7 +2187,7 @@ sub setup_programs {
   $::progs{'xz'} = "xz";
   $::progs{'tar'} = "tar";
 
-  if ($^O =~ /^MSWin(32|64)$/i) {
+  if ($^O =~ /^MSWin/i) {
     $::progs{'wget'}    = conv_to_w32_path("$bindir/wget/wget.exe");
     $::progs{'tar'}     = conv_to_w32_path("$bindir/tar.exe");
     $::progs{'xzdec'} = conv_to_w32_path("$bindir/xz/xzdec.exe");
@@ -2239,12 +2240,14 @@ sub setup_programs {
 # Return 0 if failure, 1 if success.
 #
 sub setup_unix_one {
-  my ($p, $def, $arg) = @_;
+  my ($p, $def, $arg, $donotwarn) = @_;
   our $tmp;
   my $test_fallback = 0;
+  ddebug("trying to set up $p, default $def, arg $arg\n");
   if (-r $def) {
     my $ready = 0;
     if (-x $def) {
+      ddebug("default $def is readable and executable!\n");
       # checking only for the executable bit is not enough, we have
       # to check for actualy "executability" since a "noexec" mount
       # option may interfere, which is not taken into account by
@@ -2313,9 +2316,13 @@ sub setup_unix_one {
       if ($ret == 0) {
         debug("Using system $p (tested).\n");
       } else {
-        tlwarn("$0: Initialization failed (in setup_unix_one):\n");
-        tlwarn("$0: could not find a usable $p.\n");
-        tlwarn("$0: Please install $p and try again.\n");
+        if ($donotwarn) {
+          debug("$0: initialization of $p failed but ignored!\n");
+        } else {
+          tlwarn("$0: Initialization failed (in setup_unix_one):\n");
+          tlwarn("$0: could not find a usable $p.\n");
+          tlwarn("$0: Please install $p and try again.\n");
+        }
         return 0;
       }
     } else {
@@ -2726,8 +2733,11 @@ sub _create_config_files {
     @lines = <INFILE>;
     close (INFILE);
   } else {
-    tlwarn("TLUtils::_create_config_files: $root/$headfile: "
-           . " head file not found, ok in user mode");
+    tlwarn("TLUtils::_create_config_files: $root/$headfile missing!\n");
+    # TODO
+    # if we allow tlmgr generate to generate language.* file in usermode
+    # we need to remove the die here!
+    die ("Giving up.");
   }
   push @lines, @$tlpdblinesref;
   if (defined($localconf) && -r $localconf) {
@@ -2984,13 +2994,16 @@ directory (Unix) or the root of a drive (Windows).
 sub texdir_check {
   my $texdir = shift;
   return 0 unless defined $texdir;
-  # convert to absolute/canonical, for safer parsing
-  # tl_abs_path should work as long as grandparent exists
+  # convert to absolute, for safer parsing.
+  # The return value may still contain symlinks,
+  # but no unnecessary terminating '/'.
   $texdir = tl_abs_path($texdir);
   return 0 unless defined $texdir;
-  # also reject the root of a drive/volume,
+  # also reject the root of a drive,
   # assuming that only the canonical form of the root ends with /
   return 0 if $texdir =~ m!/$!;
+  # win32: for now, reject the root of a samba share
+  return 0 if win32() && $texdir =~ m!^//[^/]+/[^/]+$!;
   my $texdirparent;
   my $texdirpparent;
 
@@ -3123,11 +3136,12 @@ sub dddebug {
   }
 }
 
-
 =item C<log ($str1, $str2, ...)>
 
 Write a message to the log file (and nowhere else), the concatenation of
-the argument strings.
+the argument strings.  The log file may not ever be defined (e.g., the
+C<-logfile> option isn't given), in which case the message will never be
+written anywhere.
 
 =cut
 
@@ -3137,7 +3151,6 @@ sub log {
   _logit('file', -100, @_);
   $::opt_quiet = $savequiet;
 }
-
 
 =item C<tlwarn ($str1, $str2, ...)>
 
@@ -3271,7 +3284,7 @@ sub process_logging_options {
 
 This function takes a single argument I<path> and returns it with
 C<"> chars surrounding it on Unix.  On Windows, the C<"> chars are only
-added if I<path> a few special characters, since unconditional quoting
+added if I<path> contains special characters, since unconditional quoting
 leads to errors there.  In all cases, any C<"> chars in I<path> itself
 are (erroneously) eradicated.
  
@@ -3564,21 +3577,56 @@ sub extract_mirror_entry {
   return $foo[$#foo] . "/" . $TeXLive::TLConfig::TeXLiveServerPath;
 }
 
-sub tlmd5 {
-  my ($file) = @_;
-  if (-r $file) {
-    open(FILE, $file) || die "open($file) failed: $!";
-    binmode(FILE);
-    my $md5hash = Digest::MD5->new->addfile(*FILE)->hexdigest;
-    close(FILE);
-    return $md5hash;
-  } else {
-    tlwarn("tlmd5, given file not readable: $file\n");
-    return "";
-  }
+=pod
+
+=item C<< slurp_file($file) >>
+
+Reads the whole file and returns the content in a scalar.
+
+=cut
+
+sub slurp_file {
+  my $file = shift;
+  my $file_data = do {
+    local $/ = undef;
+    open my $fh, "<", $file || die "open($file) failed: $!";
+    <$fh>;
+  };
+  return($file_data);
 }
 
-#
+=pod
+
+=item C<< download_to_temp_or_file($url) >>
+
+If C<$url> tries to download the file into a temporary file.
+In both cases returns the local file.
+
+Returns the local file name if succeeded, otherwise undef.
+
+=cut
+
+sub download_to_temp_or_file {
+  my $url = shift;
+  my ($url_fh, $url_file);
+  if ($url =~ m,^(http|ftp|file)://,) {
+    ($url_fh, $url_file) = File::Temp::tempfile(UNLINK => 1);
+    # now $url_fh filehandle is open, the file created
+    # TLUtils::download_file will just overwrite what is there
+    # on windows that doesn't work, so we close the fh immediately
+    # this creates a short loophole, but much better than before anyway
+    close($url_fh);
+    $ret = download_file($url, $url_file);
+  } else {
+    $url_file = $url;
+    $ret = 1;
+  }
+  if ($ret && (-r "$url_file")) {
+    return $url_file;
+  }
+  return;
+}
+
 # compare_tlpobjs 
 # returns a hash
 #   $ret{'revision'} = "leftRev:rightRev"     if revision differ
@@ -3908,10 +3956,9 @@ __END__
 
 =head1 SEE ALSO
 
-The modules L<TeXLive::TLPSRC>, L<TeXLive::TLPOBJ>,
-L<TeXLive::TLPDB>, L<TeXLive::TLTREE>, and the
-document L<Perl-API.txt> and the specification in the TeX Live
-repository trunk/Master/tlpkg/doc/.
+The modules L<TeXLive::TLConfig>, L<TeXLive::TLCrypto>,
+L<TeXLive::TLDownload>, L<TeXLive::TLWinGoo>, etc., and the
+documentation in the repository: C<Master/tlpkg/doc/>.
 
 =head1 AUTHORS AND COPYRIGHT
 

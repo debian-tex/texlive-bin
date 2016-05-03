@@ -593,7 +593,7 @@ PACKAGE_TARNAME='gregorio--tex-live-'
 PACKAGE_VERSION='4.1.1'
 PACKAGE_STRING='Gregorio (TeX Live) 4.1.1'
 PACKAGE_BUGREPORT='tex-k@tug.org'
-PACKAGE_URL=''
+PACKAGE_URL='http://gregorio-project.github.io/'
 
 ac_unique_file="gregorio-src/src/gregorio-utils.c"
 # Factoring default headers for most tests.
@@ -1459,6 +1459,7 @@ Use these variables to override the choices made by `configure' or to help
 it to find libraries and programs with nonstandard names/locations.
 
 Report bugs to <tex-k@tug.org>.
+Gregorio (TeX Live) home page: <http://gregorio-project.github.io/>.
 _ACEOF
 ac_status=$?
 fi
@@ -15901,7 +15902,8 @@ $config_headers
 Configuration commands:
 $config_commands
 
-Report bugs to <tex-k@tug.org>."
+Report bugs to <tex-k@tug.org>.
+Gregorio (TeX Live) home page: <http://gregorio-project.github.io/>."
 
 _ACEOF
 cat >>$CONFIG_STATUS <<_ACEOF || ac_write_fail=1

@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-# $Id: fmtutil.pl 39813 2016-02-22 05:25:37Z preining $
+# $Id: fmtutil.pl 40678 2016-04-22 13:16:07Z siepo $
 # fmtutil - utility to maintain format files.
 # (Maintained in TeX Live:Master/texmf-dist/scripts/texlive.)
 # 
@@ -24,11 +24,11 @@ BEGIN {
   TeX::Update->import();
 }
 
-my $svnid = '$Id: fmtutil.pl 39813 2016-02-22 05:25:37Z preining $';
-my $lastchdate = '$Date: 2016-02-22 06:25:37 +0100 (Mon, 22 Feb 2016) $';
+my $svnid = '$Id: fmtutil.pl 40678 2016-04-22 13:16:07Z siepo $';
+my $lastchdate = '$Date: 2016-04-22 15:16:07 +0200 (Fri, 22 Apr 2016) $';
 $lastchdate =~ s/^\$Date:\s*//;
 $lastchdate =~ s/ \(.*$//;
-my $svnrev = '$Revision: 39813 $';
+my $svnrev = '$Revision: 40678 $';
 $svnrev =~ s/^\$Revision:\s*//;
 $svnrev =~ s/\s*\$$//;
 my $version = "r$svnrev ($lastchdate)";
@@ -37,12 +37,15 @@ use strict;
 use Getopt::Long qw(:config no_autoabbrev ignore_case_always);
 use File::Basename;
 use File::Copy;
+use File::Spec;
 use Cwd;
 
 # don't import anything automatically, this requires us to explicitly
 # call functions with TeXLive::TLUtils prefix, and makes it easier to
 # find and if necessary remove references to TLUtils
 use TeXLive::TLUtils qw();
+
+require TeXLive::TLWinGoo if TeXLive::TLUtils::win32;
 
 # numerical constants
 my $FMT_NOTSELECTED = 0;
@@ -321,10 +324,15 @@ sub callback_build_formats {
   my $tmpdir;
   if (win32()) {
     my $foo;
+    my $tmp_deflt = File::Spec->tmpdir;
     for my $i (1..5) {
-      $foo = "$texmfvar/temp.$$." . int(rand(1000000));
+      # $foo = "$texmfvar/temp.$$." . int(rand(1000000));
+      $foo = (($texmfvar =~ m!^//!) ? $tmp_deflt : $texmfvar)
+        . "/temp.$$." . int(rand(1000000));
       if (! -d $foo) {
-        if (mkdir($foo)) {
+        TeXLive::TLUtils::mkdirhier($foo);
+        sleep 1;
+        if (-d $foo) {
           $tmpdir = $foo;
           last;
         }
@@ -332,6 +340,10 @@ sub callback_build_formats {
     }
     if (! $tmpdir) {
       die "Cannot get a temporary directory after five iterations ... sorry!";
+    }
+    if ($texmfvar =~ m!^//!) {
+      # used File::Spec->tmpdir; fix permissions
+      TeXLive::TLWinGoo::maybe_make_ro ($tmpdir);
     }
   } else {
     $tmpdir = File::Temp::tempdir(CLEANUP => 1);
@@ -349,7 +361,7 @@ sub callback_build_formats {
   # for safety, check again
   die "abs_path failed, strange: $!" if !$opts{'fmtdir'};
   print_info("writing formats under $opts{fmtdir}\n"); # report
-   
+
   # code taken over from the original shell script for KPSE_DOT etc
   my $thisdir = cwd();
   $ENV{'KPSE_DOT'} = $thisdir;
@@ -502,7 +514,7 @@ sub rebuild_one_format {
   my $addargs = $alldata->{'merged'}{$fmt}{$eng}{'args'};
 
   # running parameters
-  my $texengine;
+  my $enginedir;
   my $jobswitch = "-jobname=$fmt";
   my $prgswitch = "-progname=" ;
   my $recorderswitch = ($opts{'recorder'} ? "-recorder" : "");
@@ -533,15 +545,15 @@ sub rebuild_one_format {
   if ($eng eq "mpost") { 
     $fmtfile .= ".mem" ; 
     $kpsefmt = "mp" ; 
-    $texengine = "metapost"; # the directory, not the executable
-  } elsif ($eng =~ m/^mf(w|-nowin)?$/) {
+    $enginedir = "metapost"; # the directory, not the executable
+  } elsif ($eng =~ m/^mf(lua(jit)?)?(w|-nowin)?$/) {
     $fmtfile .= ".base" ; 
     $kpsefmt = "mf" ; 
-    $texengine = "metafont";
+    $enginedir = "metafont";
   } else {
     $fmtfile .= ".fmt" ; 
     $kpsefmt = "tex" ; 
-    $texengine = $eng;
+    $enginedir = $eng;
   }
   
   # check for existence of ini file before doing anything else
@@ -663,7 +675,7 @@ sub rebuild_one_format {
   if ($opts{'no-engine-subdir'}) {
     $fulldestdir = $opts{'fmtdir'};
   } else {
-    $fulldestdir = "$opts{'fmtdir'}/$texengine";
+    $fulldestdir = "$opts{'fmtdir'}/$enginedir";
   }
   TeXLive::TLUtils::mkdirhier($fulldestdir);
   

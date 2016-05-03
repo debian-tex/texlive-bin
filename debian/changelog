@@ -1,9 +1,12 @@
-texlive-bin (2016.20160409.40358-2) UNRELEASED; urgency=medium
+texlive-bin (2016.20160503.40849-1) UNRELEASED; urgency=medium
 
   * break against old texlive (Closes: #820716)
   * install a desktop file for xdvi (Thanks Pino Toscano, upupstream)
+  * Imported Upstream version 2016.20160503.40849
+  * SOURCE_DATE_EPOCH extensions 
+    (thanks to Alexis Bienvenüe <pado@passoire.fr>)
 
- -- Norbert Preining <preining@debian.org>  Sun, 17 Apr 2016 17:01:09 +0900
+ -- Norbert Preining <preining@debian.org>  Tue, 03 May 2016 16:54:09 +0900
 
 texlive-bin (2016.20160409.40358-1) experimental; urgency=medium
 

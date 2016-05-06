@@ -35,7 +35,7 @@ Build-Depends:
   texinfo,
   time,
   zlib1g-dev | libz-dev,
-Standards-Version: 3.9.7
+Standards-Version: 3.9.8
 Homepage: http://www.tug.org/texlive/
 Vcs-Git: git://anonscm.debian.org/debian-tex/texlive-bin.git
 Vcs-Browser: http://anonscm.debian.org/cgit/debian-tex/texlive-bin.git

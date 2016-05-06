@@ -2,12 +2,13 @@ texlive-bin (2016.20160507.40923-1) unstable; urgency=medium
 
   * break against old texlive (Closes: #820716)
   * install a desktop file for xdvi (Thanks Pino Toscano, upupstream)
-  * Imported Upstream version 2016.20160507.40923
+  * imported Upstream version 2016.20160507.40923
     support for suppressing time stamps via SOURCE_DATE_EPOCH (Closes: #792202)
-  * Add support for SOURCE_DATE_EPOCH also to luatex
-  * Update patches
+  * add support for SOURCE_DATE_EPOCH also to luatex
+  * update patches
+  * bump standards version - no further changes necessary
 
- -- Norbert Preining <preining@debian.org>  Sat, 07 May 2016 08:43:56 +0900
+ -- Norbert Preining <preining@debian.org>  Sat, 07 May 2016 08:45:11 +0900
 
 texlive-bin (2016.20160409.40358-1) experimental; urgency=medium
 

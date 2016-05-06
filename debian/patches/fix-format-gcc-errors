@@ -23,7 +23,7 @@
  }
 --- texlive-bin.orig/utils/devnag/src/devnag.c
 +++ texlive-bin/utils/devnag/src/devnag.c
-@@ -2400,7 +2400,7 @@
+@@ -2408,7 +2408,7 @@
  void err_ill(const char *str) {
     fprintf(stderr, "Error: illegal character(s) \"%s\" detected at line %d:\n",
  	  str, linenumber);

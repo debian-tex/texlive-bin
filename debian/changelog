@@ -1,15 +1,15 @@
-texlive-bin (2016.20160511.41021-1) unstable; urgency=medium
+texlive-bin (2016.20160512.41045-1) unstable; urgency=medium
 
   * break against old texlive (Closes: #820716)
   * install a desktop file for xdvi (Thanks Pino Toscano, upupstream)
-  * imported Upstream version 2016.20160511.41021
-    support for suppressing time stamps via SOURCE_DATE_EPOCH (Closes: #792202)
+  * imported Upstream version 2016.20160512.41045
+    support for suppressing time stamps (SOURCE_DATE_EPOCH) (Closes: #792202)
   * add support for SOURCE_DATE_EPOCH also to luatex
   * update patches
   * bump standards version - no further changes necessary
   * include a fix for dvipdfmx eating cid type2 font characters
 
- -- Norbert Preining <preining@debian.org>  Wed, 11 May 2016 20:57:06 +0900
+ -- Norbert Preining <preining@debian.org>  Thu, 12 May 2016 10:36:39 +0900
 
 texlive-bin (2016.20160409.40358-1) experimental; urgency=medium
 

@@ -3,8 +3,10 @@ texlive-bin (2016.20160513.41080-1) unstable; urgency=medium
   * Imported Upstream version 2016.20160513.41080
     - fix for xetex and luatex
   * disable upstream included patch for dvipdfmx
+  * fix building on jit-unsupported archs, thanks to Thorsten Glaser
+    (Closes: #824166)
 
- -- Norbert Preining <preining@debian.org>  Fri, 13 May 2016 10:51:45 +0900
+ -- Norbert Preining <preining@debian.org>  Fri, 13 May 2016 19:57:37 +0900
 
 texlive-bin (2016.20160512.41045-1) unstable; urgency=medium
 

@@ -15,4 +15,4 @@ fix-format-gcc-errors
 fix-mktexlsr-bashims
 upupstream-xdvi-desktop-file
 source-date-epoch-extension
-dvipdfmx-cidtype2-fixes
+#dvipdfmx-cidtype2-fixes

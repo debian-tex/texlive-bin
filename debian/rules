@@ -42,7 +42,7 @@ ifeq (,$(filter $(DEB_HOST_ARCH), $(LUAJIT_GOOD_ARCHS)))
   WITHLUAJIT=no
 else
   # not necessary, but for completeness
-  BUILDLUAJITTEX=--enable-luajittex
+  BUILDLUAJITTEX=--enable-luajittex --enable-mfluajit
   WITHLUAJIT=yes
 endif
 

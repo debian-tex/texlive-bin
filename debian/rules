@@ -11,6 +11,12 @@ export CONFIG_SHELL=/bin/sh
 # and building only on some platforms.
 LUAJIT_GOOD_ARCHS := amd64 armel armhf hurd-i386 i386 kfreebsd-amd64 kfreebsd-i386 mips mipsel powerpc 
 
+#
+# architectures where icu related programs (upmendex, xetex) have problems
+# and core dump etc. Possible fix, but sub-optimal because slowing down
+# programs
+BROKEN_ICU_ARCHS := mips mipsel sparc64
+
 # In case one wants to build with old automake (<< 1.13.1), the following
 # variable has to be set. By default the debian/control requires high
 # enough versions of automake and friends
@@ -34,6 +40,15 @@ ifeq ($(DEB_HOST_ARCH), s390x)
   export CFLAGS = -O1
   export CXXFLAGS = -O1
 endif
+
+#
+# building on mips/sparc etc is somehow broken, try fix from tlbuild
+# by setting U_IS_BIG_ENDIAN=0
+ifneq (,$(findstring $(DEB_HOST_ARCH)), $(BROKEN_ICU_ARCHS))
+  export CFLAGS = $(CFLAGS) -DU_IS_BIG_ENDIAN=0
+  export CXXFLAGS = $(CFLAGS) -DU_IS_BIG_ENDIAN=0
+endif
+
 
 # for whitelisting good archs
 ifeq (,$(filter $(DEB_HOST_ARCH), $(LUAJIT_GOOD_ARCHS)))

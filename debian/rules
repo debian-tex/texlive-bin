@@ -44,7 +44,7 @@ endif
 #
 # building on mips/sparc etc is somehow broken, try fix from tlbuild
 # by setting U_IS_BIG_ENDIAN=0
-ifneq (,$(findstring $(DEB_HOST_ARCH)), $(BROKEN_ICU_ARCHS))
+ifneq (,$(findstring $(DEB_HOST_ARCH), $(BROKEN_ICU_ARCHS)))
   export CFLAGS = $(CFLAGS) -DU_IS_BIG_ENDIAN=0
   export CXXFLAGS = $(CFLAGS) -DU_IS_BIG_ENDIAN=0
 endif

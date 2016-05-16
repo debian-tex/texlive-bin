@@ -2,8 +2,9 @@ texlive-bin (2016.20160513.41080-2~1) UNRELEASED; urgency=medium
 
   * uniform luajit options
   * try fixing test errors on icu-related progs
+  * break context << 2016 due to luatex incompatibility (Closes: #824474)
 
- -- Norbert Preining <preining@debian.org>  Mon, 16 May 2016 12:27:06 +0900
+ -- Norbert Preining <preining@debian.org>  Mon, 16 May 2016 22:01:12 +0900
 
 texlive-bin (2016.20160513.41080-1) unstable; urgency=medium
 

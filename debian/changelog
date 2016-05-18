@@ -6,10 +6,10 @@ texlive-bin (2016.20160513.41080-2) unstable; urgency=medium
   * syntax fix in rules
   * try to fix build/test errors on mips(el) and sparc (Closes: #824260)
     - make C(XX)FLAGS additive
-    - remove mips(el) from luajit archs
+    - remove mips(el) from luajit archs (debian/rules and /control)
     - disable upmendex on sparc/mips(el)
 
- -- Norbert Preining <preining@debian.org>  Wed, 18 May 2016 17:16:32 +0900
+ -- Norbert Preining <preining@debian.org>  Wed, 18 May 2016 23:00:23 +0900
 
 texlive-bin (2016.20160513.41080-1) unstable; urgency=medium
 

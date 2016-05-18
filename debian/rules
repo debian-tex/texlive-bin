@@ -37,16 +37,16 @@ endif
 # pdftex0.c, but somehow the make check still fails on
 # the same tests, while doing the check manually works, strange?!
 ifeq ($(DEB_HOST_ARCH), s390x)
-  export CFLAGS = -O1
-  export CXXFLAGS = -O1
+  export CFLAGS += -O1
+  export CXXFLAGS += -O1
 endif
 
 #
 # building on mips/sparc etc is somehow broken, try fix from tlbuild
 # by setting U_IS_BIG_ENDIAN=0
 ifneq (,$(findstring $(DEB_HOST_ARCH), $(BROKEN_ICU_ARCHS)))
-  export CFLAGS = -DU_IS_BIG_ENDIAN=0
-  export CXXFLAGS = -DU_IS_BIG_ENDIAN=0
+  export CFLAGS += -DU_IS_BIG_ENDIAN=0
+  export CXXFLAGS += -DU_IS_BIG_ENDIAN=0
 endif
 
 
@@ -67,7 +67,7 @@ endif
 # Building in arm mode helps
 #
 ifeq ($(DEB_HOST_ARCH), armhf)
-  export CFLAGS = -marm
+  export CFLAGS += -marm
 endif
 
 

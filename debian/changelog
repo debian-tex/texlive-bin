@@ -1,10 +1,15 @@
-texlive-bin (2016.20160513.41080-2~1) UNRELEASED; urgency=medium
+texlive-bin (2016.20160513.41080-2) unstable; urgency=medium
 
   * uniform luajit options
   * try fixing test errors on icu-related progs
   * break context << 2016 due to luatex incompatibility (Closes: #824474)
+  * syntax fix in rules
+  * try to fix build/test errors on mips(el) and sparc (Closes: #824260)
+    - make C(XX)FLAGS additive
+    - remove mips(el) from luajit archs
+    - disable upmendex on sparc/mips(el)
 
- -- Norbert Preining <preining@debian.org>  Mon, 16 May 2016 22:01:12 +0900
+ -- Norbert Preining <preining@debian.org>  Wed, 18 May 2016 17:16:32 +0900
 
 texlive-bin (2016.20160513.41080-1) unstable; urgency=medium
 

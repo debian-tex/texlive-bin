@@ -9,7 +9,7 @@ export CONFIG_SHELL=/bin/sh
 # all cases. We have now two ways to test for where to build.
 # One by disabling on the other platforms, one by whitelisting
 # and building only on some platforms.
-LUAJIT_GOOD_ARCHS := amd64 armel armhf hurd-i386 i386 kfreebsd-amd64 kfreebsd-i386 mips mipsel powerpc 
+LUAJIT_GOOD_ARCHS := amd64 armel armhf hurd-i386 i386 kfreebsd-amd64 kfreebsd-i386 powerpc 
 
 #
 # architectures where icu related programs (upmendex, xetex) have problems
@@ -47,6 +47,9 @@ endif
 ifneq (,$(findstring $(DEB_HOST_ARCH), $(BROKEN_ICU_ARCHS)))
   export CFLAGS += -DU_IS_BIG_ENDIAN=0
   export CXXFLAGS += -DU_IS_BIG_ENDIAN=0
+  BUILDUPMENDEX=--disable-upmendex
+else
+  BUILDUPMENDEX=--enable-upmendex
 endif
 
 
@@ -140,6 +143,7 @@ override_dh_auto_configure:
 	--with-mf-x-toolkit			\
 	--with-xdvi-x-toolkit=xaw		\
 	$(BUILDLUAJITTEX)			\
+	$(BUILDUPMENDEX)			\
 	--disable-lcdf-typetools		\
 	--disable-biber				\
 	--disable-dvipng			\

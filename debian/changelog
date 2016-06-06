@@ -1,3 +1,10 @@
+texlive-bin (2016.20160513.41080-3~1) UNRELEASED; urgency=medium
+
+  * UNRELEASED
+  * fix pdftex segfault on pdfmatch invocations
+
+ -- Norbert Preining <preining@debian.org>  Mon, 06 Jun 2016 23:45:38 +0900
+
 texlive-bin (2016.20160513.41080-2) unstable; urgency=medium
 
   * uniform luajit options

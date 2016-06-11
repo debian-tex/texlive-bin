@@ -17,3 +17,4 @@ upupstream-xdvi-desktop-file
 source-date-epoch-extension
 #dvipdfmx-cidtype2-fixes
 pdftex-compare-fix-crash
+sde_rename_tex_primitive

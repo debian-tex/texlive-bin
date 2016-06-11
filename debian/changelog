@@ -2,8 +2,10 @@ texlive-bin (2016.20160513.41080-3~1) UNRELEASED; urgency=medium
 
   * UNRELEASED
   * fix pdftex segfault on pdfmatch invocations
+  * rename SOURCE_DATE_EPOCH_TEX_PRIMITIVES to FORCE_SOURCE_DATE
+    as requested by reproducible-build.
 
- -- Norbert Preining <preining@debian.org>  Mon, 06 Jun 2016 23:45:38 +0900
+ -- Norbert Preining <preining@debian.org>  Sat, 11 Jun 2016 20:33:43 +0900
 
 texlive-bin (2016.20160513.41080-2) unstable; urgency=medium
 

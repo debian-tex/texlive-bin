@@ -15,5 +15,6 @@ fix-format-gcc-errors
 fix-mktexlsr-bashims
 upupstream-xdvi-desktop-file
 SDE-support-for-luatex
+upstream-svn41295-fix-ptex-checkbox
 upstream-svn41417-rename-sdetp
 upstream-svn41418-pdftex-match-fix

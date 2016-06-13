@@ -1,0 +1,67 @@
+Rename SOURCE_DATE_EPOCH_TEX_PRIMITIVES to FORCE_SOURCE_DATE as
+requested by reproducible build
+---
+ texk/web2c/lib/ChangeLog  |    9 ++++++++-
+ texk/web2c/lib/texmfmp.c  |    4 ++--
+ texk/web2c/man/pdftex.man |    2 +-
+ texk/web2c/pdftexdir/NEWS |    4 ++++
+ 4 files changed, 15 insertions(+), 4 deletions(-)
+
+--- texlive-bin.orig/texk/web2c/lib/ChangeLog
++++ texlive-bin/texk/web2c/lib/ChangeLog
+@@ -1,6 +1,13 @@
++2016-06-12  Karl Berry  <karl@freefriends.org>
++
++	* texmfmp.c (get_date_and_time):
++	rename envvar SOURCE_DATE_EPOCH_TEX_PRIMITIVES to FORCE_SOURCE_DATE.
++	http://tug.org/pipermail/tex-k/2016-June/002722.html
++	(and surrounding thread, starting in May)
++
+ 2016-05-06  Akira Kakuto  <kakuto@fuk.kinidai.ac.jp>
+ 
+-	* texmfmp.c: Avoid to crash for too large a value of SOURCE_DATE_EPOCH.
++	* texmfmp.c: Avoid crash for too large a value of SOURCE_DATE_EPOCH.
+ 	(w32 only).
+ 
+ 2016-05-06  Karl Berry  <karl@tug.org>
+--- texlive-bin.orig/texk/web2c/lib/texmfmp.c
++++ texlive-bin/texk/web2c/lib/texmfmp.c
+@@ -2247,7 +2247,7 @@
+ {
+   struct tm *tmptr;
+ #ifndef onlyTeX
+-  string sde_texprim = getenv ("SOURCE_DATE_EPOCH_TEX_PRIMITIVES");
++  string sde_texprim = getenv ("FORCE_SOURCE_DATE");
+   if (sde_texprim && STREQ (sde_texprim, "1")) {
+     init_start_time ();
+     tmptr = gmtime (&start_time);
+@@ -2263,7 +2263,7 @@
+     /* warn if they gave an invalid value, empty (null string) ok.  */
+     if (sde_texprim && strlen (sde_texprim) > 0
+         && !STREQ (sde_texprim, "0")) {
+-WARNING1 ("invalid value (expected 0 or 1) for environment variable $SOURCE_DATE_EPOCH_TEX_PRIMITIVES: %s", 
++WARNING1 ("invalid value (expected 0 or 1) for environment variable $FORCE_SOURCE_DATE: %s", 
+           sde_texprim);
+     }
+ #endif /* not onlyTeX */
+--- texlive-bin.orig/texk/web2c/man/pdftex.man
++++ texlive-bin/texk/web2c/man/pdftex.man
+@@ -379,7 +379,7 @@
+ timestamps in the PDF output, such as the CreationDate and ModDate keys.
+ This is useful for making reproducible builds.
+ .TP
+-.B SOURCE_DATE_EPOCH_TEX_PRIMITIVES
++.B FORCE_SOURCE_DATE
+ If set to the value "1", the time-related \*(TX primitives
+ .RI ( \eyear ,
+ .IR \emonth ,
+--- texlive-bin.orig/texk/web2c/pdftexdir/NEWS
++++ texlive-bin/texk/web2c/pdftexdir/NEWS
+@@ -1,3 +1,7 @@
++- changes:
++  - rename envvar SOURCE_DATE_EPOCH_TEX_PRIMITIVES to FORCE_SOURCE_DATE;
++    no changes in functionality.
++---------------------------------------------------
+ pdfTeX 3.14159265-2.6-1.40.17 (TeX Live 2016)
+ - changes:
+   - if the environment variable SOURCE_DATE_EPOCH is set, use its value for

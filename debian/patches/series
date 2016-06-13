@@ -14,7 +14,8 @@ remove-libdir-from-kpathsea-pkgconfig
 fix-format-gcc-errors
 fix-mktexlsr-bashims
 upupstream-xdvi-desktop-file
-source-date-epoch-extension
+SDE-support-for-luatex
 #dvipdfmx-cidtype2-fixes
-pdftex-compare-fix-crash
-sde_rename_tex_primitive
+#pdftex-compare-fix-crash
+#sde_rename_tex_primitive
+upstream-svn41417-rename-sdetp

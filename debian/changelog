@@ -1,12 +1,11 @@
-texlive-bin (2016.20160513.41080-3~1) UNRELEASED; urgency=medium
+texlive-bin (2016.20160513.41080-3) unstable; urgency=medium
 
-  * UNRELEASED
   * fix pdftex segfault on pdfmatch invocations (upstream svn 41418)
   * rename SOURCE_DATE_EPOCH_TEX_PRIMITIVES to FORCE_SOURCE_DATE
     as requested by reproducible-build. (upstream svn 41417)
   * fix check_box bug in ptex (upstream svn 41295)
 
- -- Norbert Preining <preining@debian.org>  Mon, 13 Jun 2016 11:27:06 +0900
+ -- Norbert Preining <preining@debian.org>  Tue, 14 Jun 2016 11:29:56 +0900
 
 texlive-bin (2016.20160513.41080-2) unstable; urgency=medium
 

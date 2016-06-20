@@ -1,3 +1,9 @@
+texlive-bin (2016.20160513.41080-4) UNRELEASED; urgency=medium
+
+  * fix for upmendex segfaults (upstream svn 41497 and 41498)
+
+ -- Norbert Preining <preining@debian.org>  Mon, 20 Jun 2016 10:17:24 +0900
+
 texlive-bin (2016.20160513.41080-3) unstable; urgency=medium
 
   * fix pdftex segfault on pdfmatch invocations (upstream svn 41418)

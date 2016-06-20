@@ -2,6 +2,7 @@ texlive-bin (2016.20160513.41080-4) unstable; urgency=medium
 
   * fix for upmendex segfaults (upstream svn 41497 and 41498)
     - reactivate upmendex building for all archs
+    (Closes: #824791)
 
  -- Norbert Preining <preining@debian.org>  Mon, 20 Jun 2016 13:18:21 +0900
 

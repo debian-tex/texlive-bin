@@ -1,7 +1,7 @@
-diff --git a/Build/source/texk/README b/Build/source/texk/README
+diff --git a/texk/README b/texk/README
 index 98c16d8..e429b23 100644
---- a/Build/source/texk/README
-+++ b/Build/source/texk/README
+--- a/texk/README
++++ b/texk/README
 @@ -98,7 +98,7 @@ ttf2pk2 - maintained here, by us
  
  ttfdump - ?
@@ -11,10 +11,10 @@ index 98c16d8..e429b23 100644
    http://www.ctan.org/pkg/upmendex
    http://www.t-lab.opal.ne.jp/tex/uptex_en.html
  
-diff --git a/Build/source/texk/upmendex/ChangeLog b/Build/source/texk/upmendex/ChangeLog
+diff --git a/texk/upmendex/ChangeLog b/texk/upmendex/ChangeLog
 index e02a843..d3d014f 100644
---- a/Build/source/texk/upmendex/ChangeLog
-+++ b/Build/source/texk/upmendex/ChangeLog
+--- a/texk/upmendex/ChangeLog
++++ b/texk/upmendex/ChangeLog
 @@ -1,3 +1,9 @@
 +2016-06-19  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
 +
@@ -25,10 +25,10 @@ index e02a843..d3d014f 100644
  2016-02-12  Karl Berry  <karl@tug.org>
  
  	* configure.ac (KPSE_CXX_HACK): add to avoid usual libstdc++.so
-diff --git a/Build/source/texk/upmendex/fwrite.c b/Build/source/texk/upmendex/fwrite.c
+diff --git a/texk/upmendex/fwrite.c b/texk/upmendex/fwrite.c
 index 75ae159..a54b5dd 100644
---- a/Build/source/texk/upmendex/fwrite.c
-+++ b/Build/source/texk/upmendex/fwrite.c
+--- a/texk/upmendex/fwrite.c
++++ b/texk/upmendex/fwrite.c
 @@ -67,33 +67,38 @@ static inline int SAPPENDF(char *buf, const char *format, ...)
  
  static void fprint_uchar(FILE *fp, const UChar *a, const int mode, const int len)
@@ -125,10 +125,10 @@ index 75ae159..a54b5dd 100644
  	}
  
  	return hzmode;
-diff --git a/Build/source/texk/upmendex/main.c b/Build/source/texk/upmendex/main.c
+diff --git a/texk/upmendex/main.c b/texk/upmendex/main.c
 index 6b2d689..eb5a68d 100644
---- a/Build/source/texk/upmendex/main.c
-+++ b/Build/source/texk/upmendex/main.c
+--- a/texk/upmendex/main.c
++++ b/texk/upmendex/main.c
 @@ -19,7 +19,7 @@ char *styfile,*idxfile[256],*indfile,*dicfile,*logfile;
  #endif
  KpathseaSupportInfo kp_ist,kp_dict;

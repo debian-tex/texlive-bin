@@ -12,7 +12,7 @@ export CONFIG_SHELL=/bin/sh
 LUAJIT_GOOD_ARCHS := amd64 armel armhf hurd-i386 i386 kfreebsd-amd64 kfreebsd-i386 powerpc 
 
 #
-# architectures where icu related programs (upmendex, xetex) have problems
+# architectures where icu related programs (xetex) have problems
 # and core dump etc. Possible fix, but sub-optimal because slowing down
 # programs
 BROKEN_ICU_ARCHS := mips mipsel sparc64
@@ -47,9 +47,7 @@ endif
 ifneq (,$(findstring $(DEB_HOST_ARCH), $(BROKEN_ICU_ARCHS)))
   export CFLAGS += -DU_IS_BIG_ENDIAN=0
   export CXXFLAGS += -DU_IS_BIG_ENDIAN=0
-  BUILDUPMENDEX=--disable-upmendex
 else
-  BUILDUPMENDEX=--enable-upmendex
 endif
 
 
@@ -143,7 +141,6 @@ override_dh_auto_configure:
 	--with-mf-x-toolkit			\
 	--with-xdvi-x-toolkit=xaw		\
 	$(BUILDLUAJITTEX)			\
-	$(BUILDUPMENDEX)			\
 	--disable-lcdf-typetools		\
 	--disable-biber				\
 	--disable-dvipng			\

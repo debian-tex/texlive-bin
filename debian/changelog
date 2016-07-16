@@ -1,3 +1,11 @@
+texlive-bin (2016.20160513.41080-5) UNRELEASED; urgency=medium
+
+  * fix pdftex segfaults with pdf docs with non-integer stemv values
+    - this is a problem introduced by poppler, upstream TeX Live
+    has not problem with this.
+
+ -- Norbert Preining <preining@debian.org>  Sat, 16 Jul 2016 23:54:33 +0900
+
 texlive-bin (2016.20160513.41080-4) unstable; urgency=medium
 
   * fix for upmendex segfaults (upstream svn 41497 and 41498)

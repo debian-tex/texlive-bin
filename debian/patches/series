@@ -20,3 +20,4 @@ upstream-svn41295-fix-ptex-checkbox
 upstream-svn41417-rename-sdetp
 upstream-svn41418-pdftex-match-fix
 upstream-svn41497-svn41498-fix-upmendex
+upstream-svn41713-fix-pdftex-non-int-stemv

@@ -146,7 +146,6 @@ override_dh_auto_configure:
 	--disable-dvipng			\
 	--disable-ps2eps			\
 	--disable-psutils			\
-	--disable-tex4htk			\
 	--disable-t1utils			\
 	--disable-cjkutils			\
 	--disable-chktex			\

@@ -35,6 +35,7 @@ Build-Depends:
   texinfo,
   time,
   zlib1g-dev | libz-dev,
+  default-jdk
 Standards-Version: 3.9.8
 Homepage: http://www.tug.org/texlive/
 Vcs-Git: git://anonscm.debian.org/debian-tex/texlive-bin.git

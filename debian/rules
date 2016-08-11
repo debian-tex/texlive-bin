@@ -185,9 +185,6 @@ override_dh_auto_build:
 
 override_dh_auto_install:
 	dh_auto_install -- DESTDIR=$(CURDIR)/debian/tmp
-	# install tex4ht.jar
-	mkdir -p $(CURDIR)/debian/tmp/usr/share/texlive/texmf-dist/tex4ht/bin/
-	cp Work/tex4ht.jar $(CURDIR)/debian/tmp/usr/share/texlive/texmf-dist/tex4ht/bin/tex4ht.jar
 
 override_dh_install:
 	# remove .la files which we do not install, so that dh_install
@@ -205,6 +202,10 @@ override_dh_install:
 	install -m 0755 debian/xdvi-pl debian/texlive-binaries/usr/bin/xdvi
 	# remove texlive directories, they should not be shipped here
 	rm -rf debian/texlive-binaries/usr/share/texlive
+	# but we ship the tex4ht.jar file here ...
+	# install tex4ht.jar
+	mkdir -p $(CURDIR)/debian/texlive-binaries/usr/share/texlive/texmf-dist/tex4ht/bin/
+	cp Work/tex4ht.jar $(CURDIR)/debian/texlive-binaries/usr/share/texlive/texmf-dist/tex4ht/bin/tex4ht.jar
 	# remove wrongly added info/dir.gz
 	rm -f debian/texlive-binaries/usr/share/info/dir*
 	# remove tlbuild info document, not needed

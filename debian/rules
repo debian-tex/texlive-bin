@@ -181,11 +181,13 @@ override_dh_auto_build:
 	# build the java classes for tex4ht
 	mkdir -p Work/tex4ht-java
 	cd texk/tex4htk/java ; javac *.java */*.java */*/*.java -d ../../../Work/tex4ht-java
-	cd Work/tex4ht-java ; jar cvf ../tex4ht-java/tex4ht.jar .
-	echo "TODO TODO TODO - we need to install the jar somewhere!!!!"
+	cd Work/tex4ht-java ; jar cvf ../tex4ht.jar .
 
 override_dh_auto_install:
 	dh_auto_install -- DESTDIR=$(CURDIR)/debian/tmp
+	# install tex4ht.jar
+	mkdir -p $(CURDIR)/debian/tmp/usr/share/texlive/texmf-dist/tex4ht/bin/
+	cp Work/tex4ht.jar $(CURDIR)/debian/tmp/usr/share/texlive/texmf-dist/tex4ht/bin/tex4ht.jar
 
 override_dh_install:
 	# remove .la files which we do not install, so that dh_install

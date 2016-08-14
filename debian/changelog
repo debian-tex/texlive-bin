@@ -1,11 +1,11 @@
-texlive-bin (2016.20160513.41080-5) UNRELEASED; urgency=medium
+texlive-bin (2016.20160513.41080-5) experimental; urgency=medium
 
   * fix pdftex segfaults with pdf docs with non-integer stemv values
     - this is a problem introduced by poppler, upstream TeX Live
     has not problem with this.
   * build and install tex4ht, add java dependencies
 
- -- Norbert Preining <preining@debian.org>  Thu, 11 Aug 2016 11:32:06 +0900
+ -- Norbert Preining <preining@debian.org>  Mon, 15 Aug 2016 08:07:09 +0900
 
 texlive-bin (2016.20160513.41080-4) unstable; urgency=medium
 

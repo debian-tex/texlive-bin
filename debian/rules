@@ -214,12 +214,26 @@ override_dh_install:
 	rm debian/texlive-binaries/usr/share/man/man1/pdflatex.1*
 	rm debian/texlive-binaries/usr/share/man/man1/lamed.1*
 	rm debian/texlive-binaries/usr/share/man/man1/amstex.1*
+	#
+	# remove tex4ht links, they are shipped with tl-htmlxml
+	for i in ht htcontext htlatex htmex httex httexi htxelatex htxetex mk4ht ; do \
+	  rm debian/texlive-binaries/usr/bin/$$i ; \
+	done
 	# for alternatives treatment we rename usr/bin/bibtex to
 	# usr/bin/bibtex.original
 	mv debian/texlive-binaries/usr/bin/bibtex \
 	   debian/texlive-binaries/usr/bin/bibtex.original
 	mv debian/texlive-binaries/usr/share/man/man1/bibtex.1 \
 	   debian/texlive-binaries/usr/share/man/man1/bibtex.original.1
+	# find dangling symlinks in /usr/bin and error out if found
+	err=0 ; for i in `find debian/texlive-binaries/usr/bin -type l` ; do \
+	  f=`readline $$i` ; \
+	  if [ ! -r "$$f" ] ; then \
+	    echo "ERROR: dangling symbolic link $$f" ; \
+	    err=1 ; \
+	  fi ; \
+	done ; if [ $$err = 1 ] ; then exit 1 ; fi
+
 
 override_dh_installdocs:
 	dh_installdocs

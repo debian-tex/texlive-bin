@@ -227,7 +227,7 @@ override_dh_install:
 	   debian/texlive-binaries/usr/share/man/man1/bibtex.original.1
 	# find dangling symlinks in /usr/bin and error out if found
 	err=0 ; for i in `find debian/texlive-binaries/usr/bin -type l` ; do \
-	  f=`readlink $$i` ; \
+	  f=`realpath $$i` ; \
 	  if [ ! -r "$$f" ] ; then \
 	    echo "ERROR: dangling symbolic link $$f" ; \
 	    err=1 ; \

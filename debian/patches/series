@@ -21,3 +21,9 @@ upstream-svn41417-rename-sdetp
 upstream-svn41418-pdftex-match-fix
 upstream-svn41497-svn41498-fix-upmendex
 upstream-svn41713-fix-pdftex-non-int-stemv
+upstream-svn41762-ptex-savepos-improved
+upstream-svn41998-ptex-eptex-allow-only-8bit-catcode
+upstream-svn42040-ptex-add-ifmbox
+upstream-svn42041-eptex-fix
+upstream-svn42110-tex4ht-xetex-compatibility
+upstream-svn42167-mendex-fix

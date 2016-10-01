@@ -1,0 +1,25 @@
+diff --git a/texk/mendexk/ChangeLog b/Build/source/texk/mendexk/ChangeLog
+index f762c5d..d1a9abb 100644
+--- a/texk/mendexk/ChangeLog
++++ b/texk/mendexk/ChangeLog
+@@ -1,3 +1,7 @@
++2016-09-28  Hironobu Yamashita  <h.y.acetaminophen@gmail.com>
++
++	* styfile.c: Use mfgets() instead of fgets() in bfgets().
++
+ 2016-02-02  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+ 
+ 	* mendex.1, mendex.doc: Convert encoding
+diff --git a/texk/mendexk/styfile.c b/Build/source/texk/mendexk/styfile.c
+index 0418966..e35256c 100644
+--- a/texk/mendexk/styfile.c
++++ b/texk/mendexk/styfile.c
+@@ -21,7 +21,7 @@ static char *
+ bfgets (char *buf, int size, FILE *fp)
+ {
+ 	char *p, *q;
+-	p = fgets (buf, size, fp);
++	p = mfgets (buf, size, fp);
+ 	for (q = buf; *q; q++) {
+ 		if(*q == '\r') {
+ 			*q++ = '\n';

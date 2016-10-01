@@ -1,10 +1,16 @@
-texlive-bin (2016.20160513.41080-7) UNRELEASED; urgency=medium
+texlive-bin (2016.20160513.41080-7) unstable; urgency=medium
 
-  * UNRELEASED
   * do not install tex4ht dangling symlinks, leave that to tl-htmlxml
     (Closes: #835803)
+  * cherrypick several upstream fixes:
+    - svn41762 improve (e)ptex savepos
+    - svn41998 (e)ptex: allow only 8bit catcode
+    - svn42040 add ifmbox primitive to ptex
+    - svn42041 adapt eptex for ifmbox
+    - svn42110 fix tex4ht's compatibility with xetex
+    - svn42167 fix for mendex
 
- -- Norbert Preining <preining@debian.org>  Mon, 29 Aug 2016 11:18:10 +0900
+ -- Norbert Preining <preining@debian.org>  Sat, 01 Oct 2016 14:53:05 +0900
 
 texlive-bin (2016.20160513.41080-6) unstable; urgency=medium
 

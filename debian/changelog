@@ -1,3 +1,9 @@
+texlive-bin (2016.20160513.41080-8~1) UNRELEASED; urgency=medium
+
+  * include jtex in the build
+
+ -- Norbert Preining <preining@debian.org>  Thu, 20 Oct 2016 23:42:40 +0900
+
 texlive-bin (2016.20160513.41080-7) unstable; urgency=medium
 
   * do not install tex4ht dangling symlinks, leave that to tl-htmlxml

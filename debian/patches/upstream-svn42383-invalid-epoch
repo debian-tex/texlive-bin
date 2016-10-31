@@ -1,0 +1,42 @@
+---
+ texk/dvipsk/ChangeLog |    6 ++++++
+ texk/dvipsk/output.c  |    8 ++------
+ 2 files changed, 8 insertions(+), 6 deletions(-)
+
+--- texlive-bin.orig/texk/dvipsk/ChangeLog
++++ texlive-bin/texk/dvipsk/ChangeLog
+@@ -1,3 +1,9 @@
++2016-10-30  Karl Berry  <karl@tug.org>
++
++	* output.c (INVALID_EPOCH_VALUE): define as (time_t) -1,
++	  to avoid warning with huge unsigned value on 32-bit systems.
++	  (open_output): don't duplicate writing of %%CreationDate.
++
+ 2016-05-06  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+ 
+ 	* output.c: Avoid to crash for too large a value of SOURCE_DATE_EPOCH
+--- texlive-bin.orig/texk/dvipsk/output.c
++++ texlive-bin/texk/dvipsk/output.c
+@@ -90,7 +90,7 @@
+ #define strtoll _strtoi64
+ #endif
+ 
+-#define INVALID_EPOCH_VALUE 0x7fffffffffffffffULL
++#define INVALID_EPOCH_VALUE ((time_t) -1)
+ 
+ static time_t
+ get_unique_time_if_given(void)
+@@ -1421,12 +1421,8 @@
+       jobtime = get_unique_time_if_given();
+       if (jobtime == INVALID_EPOCH_VALUE) {
+          jobtime = time(0);
+-         fprintf(bitfile, "%%%%CreationDate: %s",
+-                                    asctime(localtime(&jobtime)));
+-      } else {
+-         fprintf(bitfile, "%%%%CreationDate: %s",
+-                                    asctime(gmtime(&jobtime)));
+       }
++      fprintf(bitfile, "%%%%CreationDate: %s", asctime(gmtime(&jobtime)));
+ #endif
+       if (! isepsf) {
+ /*

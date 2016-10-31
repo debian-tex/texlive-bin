@@ -28,3 +28,7 @@ upstream-svn42041-eptex-fix
 upstream-svn42110-tex4ht-xetex-compatibility
 upstream-svn42167-mendex-fix
 jtex-161020
+upstream-svn42380-euptex-initstarttime
+upstream-svn42381-eptex-initstarttime
+upstream-svn42383-invalid-epoch
+upstream-svn42391-invalid-epoch-dvipdfmx

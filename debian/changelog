@@ -1,8 +1,13 @@
 texlive-bin (2016.20160513.41080-8~1) UNRELEASED; urgency=medium
 
   * include jtex in the build
+  * cherrypick several upstream fixes:
+    - svn42380 use initstarttime in euptex
+    - svn42381 use initstarttime in eptex
+    - svn42383 use -1 for invalid epoch (dvips)
+    - svn42391 use -1 for invalid epoch (dvipdfmx)
 
- -- Norbert Preining <preining@debian.org>  Thu, 20 Oct 2016 23:42:40 +0900
+ -- Norbert Preining <preining@debian.org>  Mon, 31 Oct 2016 16:15:28 +0900
 
 texlive-bin (2016.20160513.41080-7) unstable; urgency=medium
 

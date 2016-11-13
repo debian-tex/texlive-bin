@@ -39,7 +39,7 @@ endif
 # and core dump etc. Possible fix, but sub-optimal because slowing down
 # programs
 # TODO should be checked whether this still happens!
-BROKEN_ICU_ARCHS := mips mipsel sparc64
+BROKEN_ICU_ARCHS := sparc64
 ifneq (,$(findstring $(DEB_HOST_ARCH), $(BROKEN_ICU_ARCHS)))
   export CFLAGS += -DU_IS_BIG_ENDIAN=0
   export CXXFLAGS += -DU_IS_BIG_ENDIAN=0

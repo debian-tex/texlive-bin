@@ -6,8 +6,10 @@ texlive-bin (2016.20160513.41080-8~1) UNRELEASED; urgency=medium
     - svn42383 use -1 for invalid epoch (dvips)
     - svn42391 use -1 for invalid epoch (dvipdfmx)
     - svn42488 - 42493 avoid access violation in (up)mendex
+  * remove mips(el) from ICU broken list (Closes: #836454)
+    (Thanks to James Cowgill for tracking down and testing!)
 
- -- Norbert Preining <preining@debian.org>  Sun, 13 Nov 2016 22:00:45 +0900
+ -- Norbert Preining <preining@debian.org>  Sun, 13 Nov 2016 22:11:47 +0900
 
 texlive-bin (2016.20160513.41080-7) unstable; urgency=medium
 

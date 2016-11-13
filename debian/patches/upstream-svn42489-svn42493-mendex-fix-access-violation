@@ -1,0 +1,86 @@
+---
+ texk/mendexk/ChangeLog  |    5 +++++
+ texk/mendexk/main.c     |    4 ++--
+ texk/mendexk/mendex.h   |    2 +-
+ texk/upmendex/ChangeLog |    4 ++++
+ texk/upmendex/main.c    |   10 +++++-----
+ 5 files changed, 17 insertions(+), 8 deletions(-)
+
+--- texlive-bin.orig/texk/mendexk/ChangeLog
++++ texlive-bin/texk/mendexk/ChangeLog
+@@ -1,3 +1,8 @@
++2016-11-12  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
++
++	* mendex.h: Sync with W32TeX (W32 only).
++	* main.c: Avoid access violation.
++
+ 2016-09-28  Hironobu Yamashita  <h.y.acetaminophen@gmail.com>
+ 
+ 	* styfile.c: Use mfgets() instead of fgets() in bfgets().
+--- texlive-bin.orig/texk/mendexk/main.c
++++ texlive-bin/texk/mendexk/main.c
+@@ -253,8 +253,6 @@
+ 		}
+ 	}
+ 
+-	if (styfile!=NULL) styread(styfile);
+-
+ 	if (!indfile &&(idxcount-fsti>0)) {
+ 		indfile=xmalloc(strlen(idxfile[0]+6));
+ 		for (i=strlen(idxfile[0]);i>=0;i--) {
+@@ -285,6 +283,8 @@
+ 		logfile=xstrdup("stderr");
+ 	}
+ 
++	if (styfile!=NULL) styread(styfile);
++
+ 	if (strcmp(argv[0],"makeindex")==0) {
+ 		verb_printf(efp,"This is Not `MAKEINDEX\', But `MENDEX\' %s (%s) (%s).\n",
+ 			    VERSION, get_enc_string(), TL_VERSION);
+--- texlive-bin.orig/texk/mendexk/mendex.h
++++ texlive-bin/texk/mendexk/mendex.h
+@@ -8,7 +8,7 @@
+ 
+ #ifdef WIN32
+ #define nkf_open fopen
+-#define nkf_close fclose
++#define nkf_close(fp) {clear_infile_enc(fp); fclose(fp);}
+ #endif
+ 
+ struct page {
+--- texlive-bin.orig/texk/upmendex/ChangeLog
++++ texlive-bin/texk/upmendex/ChangeLog
+@@ -1,3 +1,7 @@
++2016-11-12  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
++
++	* main.c: Avoid access violation.
++
+ 2016-06-19  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+ 
+ 	* version 0.51  Beta version.
+--- texlive-bin.orig/texk/upmendex/main.c
++++ texlive-bin/texk/upmendex/main.c
+@@ -199,11 +199,6 @@
+ 		}
+ 	}
+ 
+-/*   init hangul tumunja table   */
+-	u_strcpy(tumunja,GANADA);
+-
+-	if (styfile!=NULL) styread(styfile);
+-
+ 	if (!indfile &&(idxcount-fsti>0)) {
+ 		indfile=xmalloc(strlen(idxfile[0]+6));
+ 		for (i=strlen(idxfile[0]);i>=0;i--) {
+@@ -233,6 +228,11 @@
+ 		efp=stderr;
+ 		logfile=xstrdup("stderr");
+ 	}
++
++/*   init hangul tumunja table   */
++	u_strcpy(tumunja,GANADA);
++	if (styfile!=NULL) styread(styfile);
++
+ 	set_icu_attributes();
+ 
+ 	if (strcmp(argv[0],"makeindex")==0) {

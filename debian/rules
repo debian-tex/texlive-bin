@@ -11,12 +11,6 @@ export CONFIG_SHELL=/bin/sh
 # and building only on some platforms.
 LUAJIT_GOOD_ARCHS := amd64 armel armhf hurd-i386 i386 kfreebsd-amd64 kfreebsd-i386 powerpc 
 
-#
-# architectures where icu related programs (xetex) have problems
-# and core dump etc. Possible fix, but sub-optimal because slowing down
-# programs
-BROKEN_ICU_ARCHS := mips mipsel sparc64
-
 # In case one wants to build with old automake (<< 1.13.1), the following
 # variable has to be set. By default the debian/control requires high
 # enough versions of automake and friends
@@ -33,17 +27,19 @@ endif
 #
 # gcc-4.9 creates broken binaries on s390x, see #753575,
 # fix is to use -O1
-# see below for a tentative fix that only compiles
-# pdftex0.c, but somehow the make check still fails on
-# the same tests, while doing the check manually works, strange?!
+# TODO: should be checked whether this is still valid with gcc-5/6
 ifeq ($(DEB_HOST_ARCH), s390x)
   export CFLAGS += -O1
   export CXXFLAGS += -O1
 endif
 
 #
-# building on mips/sparc etc is somehow broken, try fix from tlbuild
-# by setting U_IS_BIG_ENDIAN=0
+#
+# architectures where icu related programs (xetex) have problems
+# and core dump etc. Possible fix, but sub-optimal because slowing down
+# programs
+# TODO should be checked whether this still happens!
+BROKEN_ICU_ARCHS := mips mipsel sparc64
 ifneq (,$(findstring $(DEB_HOST_ARCH), $(BROKEN_ICU_ARCHS)))
   export CFLAGS += -DU_IS_BIG_ENDIAN=0
   export CXXFLAGS += -DU_IS_BIG_ENDIAN=0
@@ -155,26 +151,6 @@ override_dh_auto_configure:
 	--disable-ttf2pk			\
 	--enable-ttf2pk2			\
 	--enable-ipc				
-
-#
-# the below should actually solve the problem for s390x
-# by only recompiling pdftex0.c with -O1, but somehow
-# the test suite still does not succeed, while running
-# the same test manually succeeds. I have no idea. 
-# Giving up here.
-# Sorry s390x, hope for a fix for the gcc bug ...
-#override_dh_auto_build:
-#	dh_auto_build
-#ifeq ($(DEB_HOST_ARCH), s390x)
-#	# gcc-4.9 creates broken binaries on s390x, see #753575,
-#	# we have to recompile pdftex0.c with -O1 otherwise tests fail
-#	cp Work/texk/web2c/Makefile Work/texk/web2c/Makefile.backup
-#	cat Work/texk/web2c/Makefile.backup | sed -e 's/\$$(CFLAGS) -c -o pdftex-pdftex0.o/-g -O1 -c -o pdftex-pdftex0.c/' > Work/texk/web2c/Makefile
-#	touch Work/texk/web2c/pdftex0.c
-#	rm Work/texk/web2c/pdftex
-#	rm -f Work/texk/web2c/.libs/pdftex
-#	make -C Work/texk/web2c pdftex
-#endif
 
 override_dh_auto_build:
 	dh_auto_build

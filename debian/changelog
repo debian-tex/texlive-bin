@@ -1,4 +1,4 @@
-texlive-bin (2016.20160513.41080-8~1) UNRELEASED; urgency=medium
+texlive-bin (2016.20160513.41080-8) unstable; urgency=medium
 
   * cherrypick several upstream fixes:
     - svn42380 use initstarttime in euptex
@@ -9,7 +9,7 @@ texlive-bin (2016.20160513.41080-8~1) UNRELEASED; urgency=medium
   * remove mips(el) from ICU broken list (Closes: #836454)
     (Thanks to James Cowgill for tracking down and testing!)
 
- -- Norbert Preining <preining@debian.org>  Sun, 13 Nov 2016 22:11:47 +0900
+ -- Norbert Preining <preining@debian.org>  Sun, 13 Nov 2016 22:12:49 +0900
 
 texlive-bin (2016.20160513.41080-7) unstable; urgency=medium
 

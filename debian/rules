@@ -25,15 +25,6 @@ ifeq ($(DEB_HOST_ARCH), alpha)
 endif
 
 #
-# gcc-4.9 creates broken binaries on s390x, see #753575,
-# fix is to use -O1
-# TODO: should be checked whether this is still valid with gcc-5/6
-ifeq ($(DEB_HOST_ARCH), s390x)
-  export CFLAGS += -O1
-  export CXXFLAGS += -O1
-endif
-
-#
 #
 # architectures where icu related programs (xetex) have problems
 # and core dump etc. Possible fix, but sub-optimal because slowing down

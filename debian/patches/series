@@ -33,3 +33,4 @@ upstream-svn42381-eptex-initstarttime
 upstream-svn42383-invalid-epoch
 upstream-svn42391-invalid-epoch-dvipdfmx
 upstream-svn42489-svn42493-mendex-fix-access-violation
+upstream-svn42506-eptex-euptex-randsupport

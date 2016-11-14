@@ -6,10 +6,12 @@ texlive-bin (2016.20160513.41080-8) unstable; urgency=medium
     - svn42383 use -1 for invalid epoch (dvips)
     - svn42391 use -1 for invalid epoch (dvipdfmx)
     - svn42488 - 42493 avoid access violation in (up)mendex
+    - svn42506 new random number primitives for e(u)ptex
   * remove mips(el) from ICU broken list (Closes: #836454)
     (Thanks to James Cowgill for tracking down and testing!)
+  * remove s390 special treatment, gcc has been fixed
 
- -- Norbert Preining <preining@debian.org>  Sun, 13 Nov 2016 22:12:49 +0900
+ -- Norbert Preining <preining@debian.org>  Tue, 15 Nov 2016 07:20:21 +0900
 
 texlive-bin (2016.20160513.41080-7) unstable; urgency=medium
 

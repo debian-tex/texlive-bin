@@ -1,3 +1,13 @@
+texlive-bin (2016.20160513.41080-9) UNRELEASED; urgency=medium
+
+  * cherrypick several upstream fixes:
+    - svn42692..42695,42703 dvips: fix emstring initialization errors
+    - svn42711, 42715, 42720, 42723 fix various contact email adresses
+    - svn42784 upmendex: Cyrillic Extended-C for upmendex
+    - svn42803 dvipdfmx: update cid base font info
+
+ -- Norbert Preining <preining@debian.org>  Fri, 06 Jan 2017 11:02:39 +0900
+
 texlive-bin (2016.20160513.41080-8) unstable; urgency=medium
 
   * cherrypick several upstream fixes:

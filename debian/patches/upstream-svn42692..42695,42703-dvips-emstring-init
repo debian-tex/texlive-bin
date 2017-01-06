@@ -1,0 +1,27 @@
+---
+ texk/dvipsk/ChangeLog   |    5 +++++
+ texk/dvipsk/emspecial.c |    2 +-
+ 2 files changed, 6 insertions(+), 1 deletion(-)
+
+--- texlive-bin.orig/texk/dvipsk/ChangeLog
++++ texlive-bin/texk/dvipsk/ChangeLog
+@@ -1,3 +1,8 @@
++2016-12-13  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
++
++	* emspecial.c: Fix a bug in emspecial(), reported by Norbert Klingen:
++	http://tug.org/pipermail/tex-live/2016-December/039483.html.
++
+ 2016-10-30  Karl Berry  <karl@tug.org>
+ 
+ 	* output.c (INVALID_EPOCH_VALUE): define as (time_t) -1,
+--- texlive-bin.orig/texk/dvipsk/emspecial.c
++++ texlive-bin/texk/dvipsk/emspecial.c
+@@ -276,7 +276,7 @@
+ 	   int i;
+ 	   for (emp = emp+5; *emp && isspace((unsigned char)*emp); emp++); /* skip blanks */
+ 	   for (i=0; *emp && !isspace((unsigned char)*emp) && !(*emp==','); emp++) {
+-	      if (strlen(emstr) - 2 >= sizeof(emstr)) {
++	      if (i > (int)sizeof(emstr) - 2) {
+                 fprintf(stderr, "em:graph: special too long, truncating\n");
+                 break;
+ 	      }

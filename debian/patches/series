@@ -34,3 +34,10 @@ upstream-svn42383-invalid-epoch
 upstream-svn42391-invalid-epoch-dvipdfmx
 upstream-svn42489-svn42493-mendex-fix-access-violation
 upstream-svn42506-eptex-euptex-randsupport
+upstream-svn42692..42695,42703-dvips-emstring-init
+upstream-svn42711-texjp-contact
+upstream-svn42715-correct-email
+upstream-svn42720-more-texjp
+upstream-svn42723-moremore-texjp
+upstream-svn42784-upmendex-cyrillic
+upstream-svn42803-dvipdfmx-cid-font-info

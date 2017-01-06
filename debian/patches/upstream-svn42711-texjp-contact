@@ -1,0 +1,118 @@
+---
+ texk/mendexk/ChangeLog             |    4 ++++
+ texk/mendexk/main.c                |    2 +-
+ texk/web2c/eptexdir/ChangeLog      |    4 ++++
+ texk/web2c/eptexdir/eptexextra.h   |    2 +-
+ texk/web2c/euptexdir/ChangeLog     |    4 ++++
+ texk/web2c/euptexdir/euptexextra.h |    2 +-
+ texk/web2c/ptexdir/ChangeLog       |    4 ++++
+ texk/web2c/ptexdir/ptexextra.h     |    2 +-
+ texk/web2c/uptexdir/ChangeLog      |    4 ++++
+ texk/web2c/uptexdir/uptexextra.h   |    2 +-
+ 10 files changed, 25 insertions(+), 5 deletions(-)
+
+--- texlive-bin.orig/texk/mendexk/ChangeLog
++++ texlive-bin/texk/mendexk/ChangeLog
+@@ -1,3 +1,7 @@
++2016-12-15  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
++
++	* main.c: Remove email address "ptex-staff@ml.asciimw.jp" as in upmendex.
++
+ 2016-11-12  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+ 
+ 	* mendex.h: Sync with W32TeX (W32 only).
+--- texlive-bin.orig/texk/mendexk/main.c
++++ texlive-bin/texk/mendexk/main.c
+@@ -198,7 +198,7 @@
+ 
+ 			default:
+ 				fprintf(stderr,"mendex - Japanese index processor, %s (%s) (%s).\n",VERSION, get_enc_string(), TL_VERSION);
+-				fprintf(stderr," Copyright 2009 ASCII MEDIA WORKS.(ptex-staff@ml.asciimw.jp)\n");
++				fprintf(stderr," Copyright 2009 ASCII MEDIA WORKS.\n");
+ 				fprintf(stderr,"usage:\n");
+ 				fprintf(stderr,"%% mendex [-ilqrcgfEJS"
+ #ifdef WIN32
+--- texlive-bin.orig/texk/web2c/eptexdir/ChangeLog
++++ texlive-bin/texk/web2c/eptexdir/ChangeLog
+@@ -1,3 +1,7 @@
++2016-12-15  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
++
++	* eptexextra.h: Use "issue@texjp.org" as BUG_ADDRESS.
++
+ 2016-11-14  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+ 
+ 	* eptex.ech, eptex_version.h, pdfutils.ch: Add new primitives
+--- texlive-bin.orig/texk/web2c/eptexdir/eptexextra.h
++++ texlive-bin/texk/web2c/eptexdir/eptexextra.h
+@@ -11,7 +11,7 @@
+ #define COPYRIGHT_HOLDER "D.E. Knuth"
+ #define AUTHOR "Peter Breitenlohner"
+ #define PROGRAM_HELP EPTEXHELP
+-#define BUG_ADDRESS "tex-k@tug.org"
++#define BUG_ADDRESS "issue@texjp.org"
+ #define DUMP_VAR TEXformatdefault
+ #define DUMP_LENGTH_VAR formatdefaultlength
+ #define DUMP_OPTION "fmt"
+--- texlive-bin.orig/texk/web2c/euptexdir/ChangeLog
++++ texlive-bin/texk/web2c/euptexdir/ChangeLog
+@@ -1,3 +1,7 @@
++2016-12-15  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
++
++	* euptexextra.h: Use "issue@texjp.org" as BUG_ADDRESS.
++
+ 2016-11-14  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+ 
+ 	* euptrip/texmf.cnf: Increase pool_size.
+--- texlive-bin.orig/texk/web2c/euptexdir/euptexextra.h
++++ texlive-bin/texk/web2c/euptexdir/euptexextra.h
+@@ -12,7 +12,7 @@
+ #define COPYRIGHT_HOLDER "D.E. Knuth"
+ #define AUTHOR "Peter Breitenlohner"
+ #define PROGRAM_HELP EUPTEXHELP
+-#define BUG_ADDRESS "tex-k@tug.org"
++#define BUG_ADDRESS "issue@texjp.org"
+ #define DUMP_VAR TEXformatdefault
+ #define DUMP_LENGTH_VAR formatdefaultlength
+ #define DUMP_OPTION "fmt"
+--- texlive-bin.orig/texk/web2c/ptexdir/ChangeLog
++++ texlive-bin/texk/web2c/ptexdir/ChangeLog
+@@ -1,3 +1,7 @@
++2016-12-15  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
++
++	* ptexextra.h: Use "issue@texjp.org" as BUG_ADDRESS.
++
+ 2016-09-12  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+ 
+ 	* ptex-base.ch: New primitive \ifmbox to realize better box in math mode.
+--- texlive-bin.orig/texk/web2c/ptexdir/ptexextra.h
++++ texlive-bin/texk/web2c/ptexdir/ptexextra.h
+@@ -9,7 +9,7 @@
+ #define COPYRIGHT_HOLDER "D.E. Knuth"
+ #define AUTHOR NULL
+ #define PROGRAM_HELP PTEXHELP
+-#define BUG_ADDRESS "ptex-staff@ml.asciimw.jp"
++#define BUG_ADDRESS "issue@texjp.org"
+ #define DUMP_VAR TEXformatdefault
+ #define DUMP_LENGTH_VAR formatdefaultlength
+ #define DUMP_OPTION "fmt"
+--- texlive-bin.orig/texk/web2c/uptexdir/ChangeLog
++++ texlive-bin/texk/web2c/uptexdir/ChangeLog
+@@ -1,3 +1,7 @@
++2016-12-15  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
++
++	* uptexextra.h: Use "issue@texjp.org" as BUG_ADDRESS.
++
+ 2016-02-20  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+ 
+ 	* uptex-m.ch, kanji.c:
+--- texlive-bin.orig/texk/web2c/uptexdir/uptexextra.h
++++ texlive-bin/texk/web2c/uptexdir/uptexextra.h
+@@ -10,7 +10,7 @@
+ #define COPYRIGHT_HOLDER "D.E. Knuth"
+ #define AUTHOR NULL
+ #define PROGRAM_HELP UPTEXHELP
+-#define BUG_ADDRESS "ptex-staff@ml.asciimw.jp"
++#define BUG_ADDRESS "issue@texjp.org"
+ #define DUMP_VAR TEXformatdefault
+ #define DUMP_LENGTH_VAR formatdefaultlength
+ #define DUMP_OPTION "fmt"

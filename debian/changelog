@@ -5,8 +5,10 @@ texlive-bin (2016.20160513.41080-9) UNRELEASED; urgency=medium
     - svn42711, 42715, 42720, 42723 fix various contact email adresses
     - svn42784 upmendex: Cyrillic Extended-C for upmendex
     - svn42803 dvipdfmx: update cid base font info
+  * update luatex (luatexdir and mplibdir) to version 1.0.0
+    - drop old SDE support, replaced by luatex internal mode
 
- -- Norbert Preining <preining@debian.org>  Fri, 06 Jan 2017 11:02:39 +0900
+ -- Norbert Preining <preining@debian.org>  Fri, 06 Jan 2017 11:42:06 +0900
 
 texlive-bin (2016.20160513.41080-8) unstable; urgency=medium
 

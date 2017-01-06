@@ -15,7 +15,7 @@ fix-format-gcc-errors
 fix-mktexlsr-bashims
 disable-seetex-stdin-tests
 upupstream-xdvi-desktop-file
-SDE-support-for-luatex
+#SDE-support-for-luatex
 upstream-svn41295-fix-ptex-checkbox
 upstream-svn41417-rename-sdetp
 upstream-svn41418-pdftex-match-fix
@@ -41,3 +41,5 @@ upstream-svn42720-more-texjp
 upstream-svn42723-moremore-texjp
 upstream-svn42784-upmendex-cyrillic
 upstream-svn42803-dvipdfmx-cid-font-info
+update-mplibdir-luatex1
+update-luatexdir-luatex1

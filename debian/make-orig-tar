@@ -75,6 +75,11 @@ for i in \
 	; do
   rm -rf $verstr/libs/$i
 done
+
+# remove non-free stuff from teckit
+rm -rf $verstr/libs/teckit/TECkit-src/SFconv
+
+# remove VCS traces
 find $verstr -name \.svn -exec rm -rf '{}' \;
 find $verstr -name \.git -exec rm -rf '{}' \;
 find $verstr -name autom4te.cache -exec rm -rf '{}' \;

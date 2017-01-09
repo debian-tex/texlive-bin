@@ -1,9 +1,14 @@
 ---
+ texk/detex/detex-src/detex.man       |    2 
  texk/mendexk/mendex.1                |    2 
  texk/web2c/man/mf.man                |   26 +++++-----
+ texk/web2c/man/ofm2opl.man           |    2 
+ texk/web2c/man/opl2ofm.man           |    2 
+ texk/web2c/man/ovf2ovp.man           |    2 
+ texk/web2c/man/ovp2ovf.man           |    2 
  texk/web2c/synctexdir/man5/synctex.5 |    6 +-
  texk/xdvik/xdvi.1.in                 |   88 +++++++++++++++++------------------
- 4 files changed, 61 insertions(+), 61 deletions(-)
+ 9 files changed, 66 insertions(+), 66 deletions(-)
 
 --- texlive-bin.orig/texk/web2c/man/mf.man
 +++ texlive-bin/texk/web2c/man/mf.man
@@ -513,3 +518,43 @@
  .SH 名称
  mendex \- 索引整形ツール
  .SH 使用法
+--- texlive-bin.orig/texk/detex/detex-src/detex.man
++++ texlive-bin/texk/detex/detex-src/detex.man
+@@ -1,4 +1,4 @@
+-.TH DETEX 1L "12 August 1993" "Purdue University"
++.TH DETEX 1 "12 August 1993" "Purdue University"
+ .SH NAME
+ detex \- a filter to strip \fITeX\fP commands from a .tex file.
+ .SH SYNOPSIS
+--- texlive-bin.orig/texk/web2c/man/ofm2opl.man
++++ texlive-bin/texk/web2c/man/ofm2opl.man
+@@ -1,4 +1,4 @@
+-.TH OFM2OPL "14 April 2016" "Web2C @VERSION@"
++.TH OFM2OPL 1 "14 April 2016" "Web2C @VERSION@"
+ .PP 
+ .SH "NAME" 
+ ofm2opl \- convert Omega and TeX font-metric files to property-list files
+--- texlive-bin.orig/texk/web2c/man/opl2ofm.man
++++ texlive-bin/texk/web2c/man/opl2ofm.man
+@@ -1,4 +1,4 @@
+-.TH OPL2OFM "16 June 2015" "Web2C @VERSION@"
++.TH OPL2OFM 1 "16 June 2015" "Web2C @VERSION@"
+ .PP 
+ .SH "NAME" 
+ opl2ofm \- convert Omega and TeX property-list files to font-metric files
+--- texlive-bin.orig/texk/web2c/man/ovf2ovp.man
++++ texlive-bin/texk/web2c/man/ovf2ovp.man
+@@ -1,4 +1,4 @@
+-.TH OVF2OVP "14 April 2016" "Web2C @VERSION@"
++.TH OVF2OVP 1 "14 April 2016" "Web2C @VERSION@"
+ .PP 
+ .SH "NAME" 
+ ovf2ovp \- convert virtual font file and associated font metrics to property-list format
+--- texlive-bin.orig/texk/web2c/man/ovp2ovf.man
++++ texlive-bin/texk/web2c/man/ovp2ovf.man
+@@ -1,4 +1,4 @@
+-.TH OVP2OVF "16 June 2015" "Web2C @VERSION@"
++.TH OVP2OVF 1 "16 June 2015" "Web2C @VERSION@"
+ .PP 
+ .SH "NAME" 
+ ovp2ovf \- convert a virtual property-list file into a virtual font file and its associated font metric file

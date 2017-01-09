@@ -9,9 +9,9 @@ if [ -n "$1" ] ; then
   svnroot="$1"
 else
   if [ $gitmode = 1 ] ; then
-    svnroot=/src/TeX/texlive.git/Build/source
+    svnroot=~/Development/TeX/texlive.git/Build/source
   else
-    svnroot=/src/TeX/texlive-svn/Build/source
+    svnroot=~/Development/TeX/texlive-svn/Build/source
   fi
 fi
 baseyear=2016

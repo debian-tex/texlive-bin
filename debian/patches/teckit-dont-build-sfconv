@@ -1,0 +1,61 @@
+SFConv has been removed due to unclear license status,
+make sure that we do not try to build sfconv.
+Patch by Julian Gilbey
+---
+ libs/teckit/Makefile.am            |   22 +++++++++++-----------
+ libs/teckit/TECkit-src/Makefile.am |    2 +-
+ 2 files changed, 12 insertions(+), 12 deletions(-)
+
+--- texlive-bin.orig/libs/teckit/Makefile.am
++++ texlive-bin/libs/teckit/Makefile.am
+@@ -22,18 +22,18 @@
+ AM_CFLAGS = $(WARNING_CFLAGS)
+ AM_CXXFLAGS = $(WARNING_CXXFLAGS)
+ 
+-bin_PROGRAMS = teckit_compile
++# bin_PROGRAMS = teckit_compile
+ 
+ noinst_LIBRARIES = libTECkit_Compiler.a libTECkit.a
+ 
+ # teckit_compile
+ #
+-nodist_teckit_compile_SOURCES = \
+-	@TECKIT_TREE@/source/Sample-tools/TECkit_Compile.cpp
+-
+-teckit_compile_LDADD = libTECkit_Compiler.a $(ZLIB_LIBS)
+-
+-$(teckit_compile_OBJECTS): libTECkit_Compiler.a
++# nodist_teckit_compile_SOURCES = \
++# 	@TECKIT_TREE@/source/Sample-tools/TECkit_Compile.cpp
++# 
++# teckit_compile_LDADD = libTECkit_Compiler.a $(ZLIB_LIBS)
++# 
++# $(teckit_compile_OBJECTS): libTECkit_Compiler.a
+ 
+ # libTECkit_Compiler.a and libTECkit.a
+ #
+@@ -50,10 +50,10 @@
+ 
+ ## Tests
+ ##
+-if build
+-TESTS = teckit.test
+-endif build
+-teckit.log: teckit_compile$(EXEEXT)
++# if build
++# TESTS = teckit.test
++# endif build
++# teckit.log: teckit_compile$(EXEEXT)
+ 
+ EXTRA_DIST += \
+ 	teckit.test \
+--- texlive-bin.orig/libs/teckit/TECkit-src/Makefile.am
++++ texlive-bin/libs/teckit/TECkit-src/Makefile.am
+@@ -1,6 +1,6 @@
+ ACLOCAL_AMFLAGS = -I m4
+ 
+-SUBDIRS = lib bin docs test
++SUBDIRS = lib
+ 
+ pkgconfigdir = $(libdir)/pkgconfig
+ pkgconfig_DATA = teckit.pc

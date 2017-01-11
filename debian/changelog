@@ -1,4 +1,4 @@
-texlive-bin (2016.20160513.41080.dfsg-1~1) UNRELEASED; urgency=medium
+texlive-bin (2016.20160513.41080.dfsg-1) unstable; urgency=medium
 
   * drop SFConv from upstream tarball as it contains non-free files
   * cherrypick several upstream fixes:
@@ -10,7 +10,7 @@ texlive-bin (2016.20160513.41080.dfsg-1~1) UNRELEASED; urgency=medium
     - drop old SDE support, replaced by luatex internal mode
   * fix five man-page lintian warnings
 
- -- Norbert Preining <preining@debian.org>  Mon, 09 Jan 2017 23:09:51 +0900
+ -- Norbert Preining <preining@debian.org>  Wed, 11 Jan 2017 13:29:14 +0900
 
 texlive-bin (2016.20160513.41080-8) unstable; urgency=medium
 

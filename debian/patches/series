@@ -41,6 +41,6 @@ upstream-svn42720-more-texjp
 upstream-svn42723-moremore-texjp
 upstream-svn42784-upmendex-cyrillic
 upstream-svn42803-dvipdfmx-cid-font-info
-update-mplibdir-luatex1
-update-luatexdir-luatex1
+#update-mplibdir-luatex1
+#update-luatexdir-luatex1
 teckit-dont-build-sfconv

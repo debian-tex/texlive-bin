@@ -1,16 +1,15 @@
 texlive-bin (2016.20160513.41080.dfsg-1) unstable; urgency=medium
 
-  * drop SFConv from upstream tarball as it contains non-free files
+  * new upstream repackaging:
+    - drop SFConv from upstream tarball as it contains non-free files
   * cherrypick several upstream fixes:
     - svn42692..42695,42703 dvips: fix emstring initialization errors
     - svn42711, 42715, 42720, 42723 fix various contact email addresses
     - svn42784 upmendex: Cyrillic Extended-C for upmendex
     - svn42803 dvipdfmx: update cid base font info
-  * update luatex (luatexdir and mplibdir) to version 1.0.0
-    - drop old SDE support, replaced by luatex internal mode
   * fix five man-page lintian warnings
 
- -- Norbert Preining <preining@debian.org>  Wed, 11 Jan 2017 13:29:14 +0900
+ -- Norbert Preining <preining@debian.org>  Wed, 11 Jan 2017 22:45:03 +0900
 
 texlive-bin (2016.20160513.41080-8) unstable; urgency=medium
 

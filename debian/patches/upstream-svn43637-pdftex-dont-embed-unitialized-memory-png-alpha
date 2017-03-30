@@ -1,0 +1,93 @@
+Fixes for reproducible build caused by embedding
+unintialized memory into the resulting pdf file.
+
+Analysis by David Fifield
+I think I found the cause of this bug. It's a bug in pdfTeX that results
+in uninitialized memory being copied to the output file. I have reported
+the bug upstream:
+        https://www.tug.org/pipermail/pdftex/2017-March/009100.html
+
+The function write_png_rgb_alpha allocates twice as much memory as is
+necessary for the smask buffer. The second half of the buffer is left
+uninitialized and the whole buffer is copied to the output PDF file. It
+only arises with PNG images that have an alpha channel. (I suppose
+optipng removes the alpha channel when possible, which is why it made
+the problem go away.)
+
+I think the bug is in texk/web2c/pdftexdir/writepng.c, where a "/ 2"
+should be "/ 4"; i.e., 1 in 4 bytes is an alpha byte:
+    smask_size = (png_get_rowbytes(png_ptr(img), png_info(img)) / 2)
+                 * png_get_image_height(png_ptr(img), png_info(img));
+Interestingly, texk/web2c/luatexdir/image/writepng.w gets it right:
+    smask_size = (int) ((png_get_rowbytes(png_p, info_p) / 4) * png_get_image_height(png_p, info_p));
+
+Reproduction instructions:
+1. (optional) Install texlive-binaries-dbgsym (for line numbers in
+   valgrind output).
+     sudo sh -c 'echo "deb http://debug.mirrors.debian.org/debian-debug/ stretch-debug main" > /etc/apt/sources.list.d/debian-debug.list'
+     sudo apt-get update
+     sudo apt-get install texlive-binaries-dbgsym
+2. Run valgrind and see errors.
+     valgrind pdflatex ownCloudClientManual.tex
+   Note that the valgrind stack trace says write_png_gray_alpha, not
+   write_png_rgb_alpha, probably as an artifact of optimization.
+
+==13526== Conditional jump or move depends on uninitialised value(s)
+==13526==    at 0x4C300D3: memcpy@GLIBC_2.2.5 (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==13526==    by 0x506E425: ??? (in /lib/x86_64-linux-gnu/libz.so.1.2.8)
+==13526==    by 0x506EE67: ??? (in /lib/x86_64-linux-gnu/libz.so.1.2.8)
+==13526==    by 0x506FE53: deflate (in /lib/x86_64-linux-gnu/libz.so.1.2.8)
+==13526==    by 0x199F99: writezip (writezip.c:71)
+==13526==    by 0x15215C: pdfflush.part.39 (pdftex0.c:18943)
+==13526==    by 0x18FA1D: write_png_rgb_alpha (writepng.c:381)
+==13526==    by 0x18FA1D: write_png (writepng.c:662)
+==13526==    by 0x18A836: writeimage (writeimg.c:370)
+==13526==    by 0x16BB78: zpdfwriteimage (pdftex0.c:22285)
+==13526==    by 0x16D794: zpdfshipout (pdftex0.c:24722)
+==13526==    by 0x17F65C: maincontrol (pdftex0.c:38501)
+==13526==    by 0x12F5B9: mainbody (pdftexini.c:5656)
+==13526==
+==13526== Conditional jump or move depends on uninitialised value(s)
+==13526==    at 0x4C301EB: memcpy@GLIBC_2.2.5 (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==13526==    by 0x506E425: ??? (in /lib/x86_64-linux-gnu/libz.so.1.2.8)
+==13526==    by 0x506EE67: ??? (in /lib/x86_64-linux-gnu/libz.so.1.2.8)
+==13526==    by 0x506FE53: deflate (in /lib/x86_64-linux-gnu/libz.so.1.2.8)
+==13526==    by 0x199F99: writezip (writezip.c:71)
+==13526==    by 0x15215C: pdfflush.part.39 (pdftex0.c:18943)
+==13526==    by 0x18FA1D: write_png_rgb_alpha (writepng.c:381)
+==13526==    by 0x18FA1D: write_png (writepng.c:662)
+==13526==    by 0x18A836: writeimage (writeimg.c:370)
+==13526==    by 0x16BB78: zpdfwriteimage (pdftex0.c:22285)
+==13526==    by 0x16D794: zpdfshipout (pdftex0.c:24722)
+==13526==    by 0x17F65C: maincontrol (pdftex0.c:38501)
+==13526==    by 0x12F5B9: mainbody (pdftexini.c:5656)
+.. more ..
+
+---
+ texk/web2c/pdftexdir/ChangeLog  |    6 ++++++
+ texk/web2c/pdftexdir/writepng.c |    2 +-
+ 2 files changed, 7 insertions(+), 1 deletion(-)
+
+--- texlive-bin.orig/texk/web2c/pdftexdir/ChangeLog
++++ texlive-bin/texk/web2c/pdftexdir/ChangeLog
+@@ -1,3 +1,9 @@
++2017-03-29  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
++
++	* writepng.c: Fix the size of memory to allocate when writing
++	SMask in write_png_rgb_alpha. Reported by David Fifield:
++	http://tug.org/pipermail/pdftex/2017-March/009100.html.
++
+ 2016-07-16  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+ 
+ 	* pdftoepdf.cc: Use zround(stemV->getNum()) instead of stemV->getInt()
+--- texlive-bin.orig/texk/web2c/pdftexdir/writepng.c
++++ texlive-bin/texk/web2c/pdftexdir/writepng.c
+@@ -335,7 +335,7 @@
+     pdfcreateobj(0, 0);
+     smask_objnum = objptr;
+     pdf_printf("/SMask %i 0 R\n", (int) smask_objnum);
+-    smask_size = (png_get_rowbytes(png_ptr(img), png_info(img)) / 2)
++    smask_size = (png_get_rowbytes(png_ptr(img), png_info(img)) / 4)
+                  * png_get_image_height(png_ptr(img), png_info(img));
+     smask = xtalloc(smask_size, png_byte);
+     pdfbeginstream();

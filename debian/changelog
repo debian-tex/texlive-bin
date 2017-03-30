@@ -1,3 +1,12 @@
+texlive-bin (2016.20160513.41080.dfsg-2) unstable; urgency=medium
+
+  * cherrypick upstream svn43637 (Closes: #796490)
+    When embedding png images with alpha channel, pdftex did embed
+    twice as much memory and left the second half uninitialized.
+    Thanks to David Fifield for research and fix.
+
+ -- Norbert Preining <preining@debian.org>  Thu, 30 Mar 2017 10:02:29 +0900
+
 texlive-bin (2016.20160513.41080.dfsg-1) unstable; urgency=medium
 
   * new upstream repackaging:

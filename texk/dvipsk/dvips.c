@@ -137,6 +137,7 @@ quarterword *raster;         /* area for raster manipulations */
 integer hh, vv;              /* horizontal and vertical pixel positions */
 Boolean noomega = 0;         /* Omega extensions are enabled */
 Boolean noptex = 0;          /* pTeX extensions are enabled */
+Boolean lastpsizwins = 1;    /* if 1, last \special{papersize=w,h} wins */
 
 /*-----------------------------------------------------------------------*
  * The PATH definitions cannot be defined on the command line because so many
@@ -281,7 +282,7 @@ static const char *helparr[] = {
 "-i*  Separate file per section",
 "-j*  Download fonts partially",
 "-k*  Print crop marks                -K*  Pull comments from inclusions",
-"-l # Last page",
+"-l # Last page                       -L*  Last special papersize wins",
 "-m*  Manual feed                     -M*  Don't make fonts",
 "-mode s Metafont device name",
 "-n # Maximum number of pages         -N*  No structured comments",
@@ -662,21 +663,6 @@ main(int argc, char **argv)
 #endif /* DEBUG */
 #ifdef KPATHSEA
    if (argc > 1) {
-      if (strcmp (argv[1], "--help") == 0) {
-        help (0);
-        exit (0);
-      } else if (strcmp (argv[1], "--version") == 0) {
-        puts (BANNER);
-        puts (kpathsea_version_string);
-        puts ("Copyright 2016 Radical Eye Software.\n\
-There is NO warranty.  You may redistribute this software\n\
-under the terms of the GNU General Public License\n\
-and the Dvips copyright.\n\
-For more information about these matters, see the files\n\
-named COPYING and dvips.h.\n\
-Primary author of Dvips: T. Rokicki.");
-        exit (0);
-      }
       if (argc == 2 && strncmp(argv[1], "-?", 2) == 0) {
          printf("%s %s\n", banner, banner2);
          help(0);
@@ -687,8 +673,8 @@ Primary author of Dvips: T. Rokicki.");
          exit(0);
       }
    }
-#endif
-#endif
+#endif /* KPATHSEA */
+#endif /* VMS */
    dvips_debug_flag = 0;
    { /* for compilers incompatible with c99 */
       char *s = getenv ("DVIPSDEBUG");
@@ -723,6 +709,27 @@ Primary author of Dvips: T. Rokicki.");
          if (*argv[i]=='-') {
             char *p=argv[i]+2;
             char c=argv[i][1];
+#ifdef KPATHSEA
+            /* print information and exit if dvips finds options
+               --help or --version */
+            if (strlen (argv[i] + 1) == 5 && strcmp (argv[i] + 1, "-help") == 0) {
+               help (0);
+               exit (0);
+            }
+            if (strlen (argv[i] + 1) == 8 &&
+                strcmp (argv[i] + 1, "-version") == 0) {
+               puts (BANNER);
+               puts (kpathsea_version_string);
+               puts ("Copyright 2017 Radical Eye Software.\n\
+There is NO warranty.  You may redistribute this software\n\
+under the terms of the GNU General Public License\n\
+and the Dvips copyright.\n\
+For more information about these matters, see the files\n\
+named COPYING and dvips.h.\n\
+Primary author of Dvips: T. Rokicki.");
+               exit (0);
+            }
+#endif /* KPATHSEA */
             switch (c) {
 case '-':
                queryoptions = 1;
@@ -881,6 +888,7 @@ case 'T' :
               "both landscape and papersize specified; ignoring landscape");
                   landscape = 0;
                }
+               lastpsizwins = 0;
                break;
 case 'p' :
 #if defined(MSDOS) || defined(OS2) || defined(ATARIST)
@@ -1010,6 +1018,9 @@ case 'E' :
                break;
 case 'K' :
                removecomments = (*p != '0');
+               break;
+case 'L' :
+               lastpsizwins = (*p != '0');
                break;
 case 'U' :
                nosmallchars = (*p != '0');

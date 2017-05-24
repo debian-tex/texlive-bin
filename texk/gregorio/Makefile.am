@@ -1,12 +1,15 @@
+## $Id$
 ## Makefile.am for the TeX Live subdirectory texk/gregorio/
 ##
-## Copyright (C) 2015 Peter Breitenlohner <tex-live@tug.org>
+## Copyright 2016-2017 Karl Berry <tex-live@tug.org>
+## Copyright 2015 Peter Breitenlohner <tex-live@tug.org>
 ## You may freely use, modify and/or distribute this file.
-##
+
 ## We want to re-distribute the whole original gregorio source tree.
 EXTRA_DIST = $(GREGORIO_TREE)
+
 ## Patches applied to the original source tree
-EXTRA_DIST += gregorio-PATCHES
+EXTRA_DIST += TLpatches
 
 # Files not to be distributed
 include $(srcdir)/../../am/dist_hook.am
@@ -34,6 +37,7 @@ gregorio_SOURCES = \
 	@GREGORIO_TREE@/src/gabc/gabc-elements-determination.c \
 	@GREGORIO_TREE@/src/gabc/gabc-glyphs-determination.c \
 	@GREGORIO_TREE@/src/gabc/gabc-notes-determination-l.c \
+	@GREGORIO_TREE@/src/gabc/gabc-score-determination.c \
 	@GREGORIO_TREE@/src/gabc/gabc-score-determination-l.c \
 	@GREGORIO_TREE@/src/gabc/gabc-score-determination-y.c \
 	@GREGORIO_TREE@/src/gabc/gabc-write.c \
@@ -51,10 +55,9 @@ $(gregorio_OBJECTS): $(KPATHSEA_DEPEND)
 @KPATHSEA_RULE@
 
 ## TESTS
-##
-TESTS_ENVIRONMENT = GREGORIO_TREE='$(GREGORIO_TREE)'
+AM_TESTS_ENVIRONMENT = GREGORIO_TREE='$(GREGORIO_TREE)'; export GREGORIO_TREE;
 TESTS = gregorio.test
 gregorio.log: gregorio$(EXEEXT)
+
 EXTRA_DIST += $(TESTS)
 DISTCLEANFILES = factus.gtex veni.gtex
-

@@ -116,7 +116,7 @@ change them in the file |"common.w"|.
   must be less than 10240; used in |"common.w"| */
 @d max_texts 2500 /* number of replacement texts, must be less than 10240 */
 @d hash_size 353 /* should be prime; used in |"common.w"| */
-@d longest_name 10000 /* section names shouldn't be longer than this */
+@d longest_name 10000 /* section names and strings shouldn't be longer than this */
 @d stack_size 50 /* number of simultaneous levels of macro expansion */
 @d buf_size 100 /* for \.{CWEAVE} and \.{CTANGLE} */
 
@@ -1224,11 +1224,14 @@ file name.
 
 @<Insert the line...@>=
 store_two_bytes(0150000);
-if (changing) id_first=change_file_name;
-else id_first=cur_file_name;
+if (changing && include_depth==change_depth) { /* correction made Feb 2017 */
+  id_first=change_file_name;
+   store_two_bytes((sixteen_bits)change_line);
+}@+else {
+  id_first=cur_file_name;
+  store_two_bytes((sixteen_bits)cur_line);
+}
 id_loc=id_first+strlen(id_first);
-if (changing) store_two_bytes((sixteen_bits)change_line);
-else store_two_bytes((sixteen_bits)cur_line);
 {int a=id_lookup(id_first,id_loc,0)-name_dir; app_repl((a / 0400)+0200);
   app_repl(a % 0400);}
 

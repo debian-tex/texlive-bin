@@ -3,13 +3,13 @@
 @d banner=='This is pTFtoPL, Version 3.3-p1.7'
 @y
 @d my_name=='uptftopl'
-@d banner=='This is upTFtoPL, Version 3.3-p1.7-u1.21'
+@d banner=='This is upTFtoPL, Version 3.3-p1.7-u1.22'
 @z
 
 @x
-      usage_help (PTFTOPL_HELP, nil);
+      usage_help (PTFTOPL_HELP, 'issue@@texjp.org');
 @y
-      usage_help (UPTFTOPL_HELP, nil);
+      usage_help (UPTFTOPL_HELP, 'issue@@texjp.org');
 @z
 
 @x

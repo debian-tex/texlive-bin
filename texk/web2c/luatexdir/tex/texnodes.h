@@ -127,6 +127,18 @@ typedef enum {
 #  define penalty_node_size    3
 #  define penalty(a)           vlink((a)+2)
 
+typedef enum {
+    user_penalty,
+    linebreak_penalty, /* includes widow, club, broken ect */
+    line_penalty,
+    word_penalty,
+    final_penalty,
+    noad_penalty,
+    before_display_penalty,
+    after_display_penalty,
+    equation_number_penalty,
+} penalty_subtypes ;
+
 /*
 #  define glue_node_size       4
 #  define glue_ptr(a)          vinfo((a)+2)
@@ -148,30 +160,33 @@ typedef enum {
 #  define synctex_line_glue(a) vlink((a)+6)
 
 #define glue_is_zero(p) \
-	((p == null) || (width(p) == 0 && stretch(p) == 0 && shrink(p) == 0))
+    ((p == null) || (width(p) == 0 && stretch(p) == 0 && shrink(p) == 0))
+
+#define glue_is_positive(p) \
+    ((p == null) || (width(p) > 0))
 
 #define reset_glue_to_zero(p) \
-	if (p != null) { \
-	    width(p) = 0; \
-	    stretch(p) = 0; \
-	    shrink(p) = 0; \
-	    stretch_order(p) = 0; \
-	    shrink_order(p) = 0; \
-	}
+    if (p != null) { \
+        width(p) = 0; \
+        stretch(p) = 0; \
+        shrink(p) = 0; \
+        stretch_order(p) = 0; \
+        shrink_order(p) = 0; \
+    }
 
 #define copy_glue_values(p,q) \
-	if (q == null) { \
-	    width(p) = 0; \
-	    stretch(p) = 0; \
-	    shrink(p) = 0; \
-	    stretch_order(p) = 0; \
-	    shrink_order(p) = 0; \
-	} else { \
-	    width(p) = width(q); \
-	    stretch(p) = stretch(q); \
-	    shrink(p) = shrink(q); \
-	    stretch_order(p) = stretch_order(q); \
-	    shrink_order(p) = shrink_order(q); \
+    if (q == null) { \
+        width(p) = 0; \
+        stretch(p) = 0; \
+        shrink(p) = 0; \
+        stretch_order(p) = 0; \
+        shrink_order(p) = 0; \
+    } else { \
+        width(p) = width(q); \
+        stretch(p) = stretch(q); \
+        shrink(p) = shrink(q); \
+        stretch_order(p) = stretch_order(q); \
+        shrink_order(p) = shrink_order(q); \
     }
 
 
@@ -258,6 +273,10 @@ typedef enum {
     image_rule,
     empty_rule,
     user_rule,
+    math_over_rule,
+    math_under_rule,
+    math_fraction_rule,
+    math_radical_rule,
 } rule_subtypes;
 
 #  define rule_node_size       8
@@ -266,6 +285,9 @@ typedef enum {
 #  define rule_transform(a)    vlink((a)+6)
 #  define synctex_tag_rule(a)  vinfo((a)+7)
 #  define synctex_line_rule(a) vlink((a)+7)
+
+#  define rule_math_size       rule_index
+#  define rule_math_font       rule_transform
 
 #  define mark_node_size   3
 #  define mark_ptr(a)      vlink((a)+2)
@@ -366,7 +388,7 @@ typedef enum {
     math_text_char_node,
     delim_node,                 /* shield fields */
     margin_kern_node,
-    glyph_node,
+    glyph_node,                 /* this and below have attributes */
     align_record_node,
     pseudo_file_node,
     pseudo_line_node,
@@ -417,10 +439,16 @@ typedef enum {
 #  define last_known_node temp_node     /* used by \lastnodetype */
 
 #  define movement_node_size    3
-#  define expr_node_size        3
 #  define if_node_size          2
 #  define align_stack_node_size 6
 #  define nesting_node_size     2
+
+#  define expr_node_size        3
+#  define expr_type(A)          type((A)+1)
+#  define expr_state(A)         subtype((A)+1)  /* enum defined in scanning.w */
+#  define expr_e_field(A)       vlink((A)+1)    /* saved expression so far */
+#  define expr_t_field(A)       vlink((A)+2)    /* saved term so far */
+#  define expr_n_field(A)       vinfo((A)+2)    /* saved numerator */
 
 #  define span_node_size        3
 #  define span_span(a)          vlink((a)+1)
@@ -707,6 +735,7 @@ typedef enum {
     set_origin = 0,
     direct_page,
     direct_always,
+    direct_raw,
     scan_special,
 } ctm_transform_modes;
 
@@ -930,6 +959,7 @@ typedef enum {
 #  define ss_glue          fill_glue+glue_spec_size
 #  define fil_neg_glue     ss_glue+glue_spec_size
 #  define page_ins_head    fil_neg_glue+glue_spec_size
+
 #  define contrib_head     page_ins_head+temp_node_size
 #  define page_head        contrib_head+temp_node_size
 #  define temp_head        page_head+temp_node_size
@@ -944,7 +974,10 @@ typedef enum {
 #  define var_mem_stat_max (end_point+glyph_node_size-1)
 
 #  define stretching 1
-#  define shrinking 2
+#  define shrinking  2
+
+#  define last_normal_node  shape_node
+#  define last_whatsit_node pdf_restore_node
 
 #  define is_running(A) ((A)==null_flag)        /* tests for a running dimension */
 
@@ -972,16 +1005,11 @@ extern halfword new_param_glue(int n);
 extern halfword new_glue(halfword q);
 extern halfword new_skip_param(int n);
 extern halfword new_kern(scaled w);
-extern halfword new_penalty(int m);
+extern halfword new_penalty(int m, int s);
 
 extern int lua_properties_enabled ;
 extern int lua_properties_level ;
 extern int lua_properties_use_metatable ;
-
-#define local_inter_line_penalty int_par(local_inter_line_penalty_code)
-#define local_broken_penalty int_par(local_broken_penalty_code)
-#define local_left_box equiv(local_left_box_base)
-#define local_right_box equiv(local_right_box_base)
 
 extern halfword make_local_par_node(int mode);
 

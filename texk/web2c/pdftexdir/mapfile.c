@@ -1,5 +1,5 @@
 /* mapfile.c: handling of map files/lines
-Copyright 1996-2014 Han The Thanh, <thanh@pdftex.org>
+Copyright 1996-2017 Han The Thanh, <thanh@pdftex.org>
 
 This file is part of pdfTeX.
 
@@ -46,10 +46,12 @@ mapitem *mitem = NULL;
 
 static const char nontfm[] = "<nontfm>";
 
-#define read_field(r, q, buf) do {  \
+#define read_field(r, q, buf, buf_size) do {  \
     q = buf;                        \
-    while (*r != ' ' && *r != '<' && *r != '"' && *r != '\0') \
+    while (*r != ' ' && *r != '<' && *r != '"' && *r != '\0') { \
+        check_buf(q - (buf) + 1, (buf_size)); \
         *q++ = *r++;                \
+    }                               \
     *q = '\0';                      \
     skip (r, ' ');                  \
 } while (0)
@@ -271,29 +273,30 @@ static char *add_encname(char *s)
     return p;
 }
 
+
 /**********************************************************************/
-/* consistency check for map entry, with warn flag */
+/* consistency check for map entry, with warn flag; return zero if ok,
+   nonzero bits of warnings otherwise. */
 
 static int check_fm_entry(fm_entry * fm, boolean warn)
 {
     int a = 0;
     assert(fm != NULL);
+    assert(fm->tfm_name);
 
     if (is_fontfile(fm) && !is_included(fm)) {
         if (warn)
             pdftex_warn
-                ("ambiguous entry for `%s': font file present but not included, "
-                 "will be treated as font file not present", fm->tfm_name);
+              ("ambiguous entry for `%s': font file present but not included, "
+               "will be treated as font file not present", fm->tfm_name);
         xfree(fm->ff_name);
-        /* do not set variable |a| as this entry will be still accepted */
+        /* do not set variable |a| as this entry will still be accepted */
     }
 
-    /* if both ps_name and font file are missing, drop this entry */
-    if (fm->ps_name == NULL && !is_fontfile(fm)) {
+    /* if no tfm name, nothing to do here; a bare tfm is ok */
+    if (*(fm->tfm_name) == '\0') {
         if (warn)
-            pdftex_warn
-                ("invalid entry for `%s': both ps_name and font file missing",
-                 fm->tfm_name);
+            pdftex_warn ("invalid map entry: tfm missing");
         a += 1;
     }
 
@@ -301,14 +304,15 @@ static int check_fm_entry(fm_entry * fm, boolean warn)
     if (is_truetype(fm) && is_reencoded(fm) && !is_subsetted(fm)) {
         if (warn)
             pdftex_warn
-                ("invalid entry for `%s': only subsetted TrueType font can be reencoded",
+                ("invalid entry for `%s': only subsetted TrueType fonts can be reencoded",
                  fm->tfm_name);
         a += 2;
     }
 
     /* SlantFont and ExtendFont can be used only with Type1 fonts */
     if ((fm->slant != 0 || fm->extend != 0)
-        && !(is_t1fontfile(fm) && is_included(fm))) {
+        && (strlen(fm->tfm_name) == 0
+            || !(is_t1fontfile(fm) && is_included(fm)))) {
         if (warn)
             pdftex_warn
                 ("invalid entry for `%s': SlantFont/ExtendFont can be used only with embedded Type1 fonts",
@@ -320,14 +324,14 @@ static int check_fm_entry(fm_entry * fm, boolean warn)
     if (abs(fm->slant) > 1000) {
         if (warn)
             pdftex_warn
-                ("invalid entry for `%s': too big value of SlantFont (%g)",
+                ("invalid entry for `%s': SlantFont value too big: %g",
                  fm->tfm_name, fm->slant / 1000.0);
         a += 8;
     }
     if (abs(fm->extend) > 2000) {
         if (warn)
             pdftex_warn
-                ("invalid entry for `%s': too big value of ExtendFont (%g)",
+                ("invalid entry for `%s': ExtendFont value too big: %g",
                  fm->tfm_name, fm->extend / 1000.0);
         a += 16;
     }
@@ -426,10 +430,12 @@ static void fm_scan_line(void)
     if (*r == '\0' || is_cfg_comment(*r))
         return;
     fm = new_fm_entry();
-    read_field(r, q, buf);
+    read_field(r, q, buf, FM_BUF_SIZE);
     set_field(tfm_name);
+    if (fm->tfm_name == NULL) /* used in messages, so don't let be null */
+      fm->tfm_name = xstrdup ("");
     if (!isdigit((unsigned char)*r)) {         /* 2nd field ps_name may not start with a digit */
-        read_field(r, q, buf);
+        read_field(r, q, buf, FM_BUF_SIZE);
         set_field(ps_name);
     }
     if (isdigit((unsigned char)*r)) {          /* font descriptor /Flags given? */
@@ -500,7 +506,7 @@ static void fm_scan_line(void)
                 if (*r == '<' || *r == '[')
                     b = *r++;
             }
-            read_field(r, q, buf);
+            read_field(r, q, buf, FM_BUF_SIZE);
             /* encoding, formats: '8r.enc' or '<8r.enc' or '<[8r.enc' */
             if (strlen(buf) > 4 && strcasecmp(strend(buf) - 4, ".enc") == 0) {
                 fm->encname = add_encname(buf);
@@ -539,10 +545,11 @@ static void fm_scan_line(void)
             set_type1(fm);
     } else
         set_type1(fm);          /* assume a builtin font is Type1 */
+
     if (check_fm_entry(fm, true) != 0)
         goto bad_line;
     /*
-       Until here the map line has been completely scanned without errors;
+       If we get here, the map line has been completely scanned without errors;
        fm points to a valid, freshly filled-out fm_entry structure.
        Now follows the actual work of registering/deleting.
      */

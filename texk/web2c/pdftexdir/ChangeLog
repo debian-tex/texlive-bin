@@ -1,3 +1,88 @@
+2017-04-19  Karl Berry  <karl@freefriends.org>
+
+	* mapfile.c (read_field): new parameter buf_size,
+	and check buffer for overflow, as in append_char_to_buf.
+	(fm_scan_line): change read_field calls;
+	set tfm_name to empty string instead of leaving NULL.
+	(check_fm_entry): remove checks of tfm_name on every print;
+	check for empty tfm_name rather than lack of ps_name and font file;
+	check for non-empty tfm_name on slant/extend warnings.
+
+2017-04-12  Karl Berry  <karl@freefriends.org>
+
+	* mapfile.c (check_fm_entry): do not try to print fm->tfm_name,
+	etc., in warnings if null.
+	(fm_scan_line): goto bad_line if a null tfm_name,
+	even if check_fm_entry returns true.
+
+2017-04-12  Pali Roh\'ar <pali.rohar@gmail.com>
+
+	* ptexmac.h (set_subfont, unset_subfont, is_subfont): remove
+        these duplicate macros.
+
+2017-03-29  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+        * writepng.c: Fix the size of memory to allocate when writing
+        SMask in write_png_rgb_alpha. Reported by David Fifield:
+        http://tug.org/pipermail/pdftex/2017-March/009100.html
+
+2017-03-18  Karl Berry  <karl@tug.org>
+
+        * NEWS,
+        * pdftex_version.h,
+        * pdftex.web (pdftex_revision, pdftex_version_string):
+        version [1.40.]18 for TL17.
+
+2017-02-18  Heiko Oberdiek  <heiko.oberdiek@googlemail.com>
+
+	* pdftex.web (substr_of_str): move earlier.
+	(Write out page object): if \MediaBox was given in \pdfpageattr,
+	do not output our own.
+	Mail from Michael Altmann to pdftex, 9 Feb 2017 13:19:05.
+	http://tug.org/pipermail/pdftex/2017-February/009097.html
+
+2017-02-16  Karl Berry  <karl@freefriends.org>
+
+	* regex/regex_internal.h (alloca) [!alloca]: do not try
+	to #define if already #defined.
+	Report from Vincent Torri on tex-live list, 7 Jul 2016 10:48:15.
+	(pdftex r765)
+
+2016-11-05  Karl Berry  <karl@tug.org>
+
+	* pdftoepdf.cc: doc fix.
+
+2016-07-16  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* pdftoepdf.cc: Use zround(stemV->getNum()) instead of stemV->getInt()
+	in epdf_create_fontdescriptor(), since the value of stemV may be real
+	in general.
+
+2016-06-12  Karl Berry  <karl@freefriends.org>
+        and Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* utils.c (last_match_succeeded): new static boolean.
+	(matchstrings): set it.
+	(getmatch): use it, plus check for non-NULL match_string sooner,
+	plus check that rm_eo >= rm_so.
+	Original bug report from David Carlisle,
+        http://tug.org/pipermail/tex-live/2016-June/038664.html
+        (pdftex r759)
+
+2016-06-12  Karl Berry  <karl@freefriends.org>
+        and Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* utils.c (last_match_succeeded): new static boolean.
+	(matchstrings): set it.
+	(getmatch): use it, plus check for non-NULL match_string sooner,
+	plus check that rm_eo >= rm_so.
+	Original bug report from David Carlisle,
+        http://tug.org/pipermail/tex-live/2016-June/038664.html
+
+2016-05-20  Karl Berry  <karl@tug.org>
+
+	* TeX Live 2016 release.
+
 2016-04-06  Karl Berry  <karl@tug.org>
 
 	* pdftexextra.h (COPYRIGHT_HOLDER): don't specifically mention peb
@@ -312,7 +397,7 @@
 2012-08-08  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
 
 	* ptexlib.h: extern void writestreamlength(longinteger, longinteger);
-	for largefile. 
+	for largefile.
 	extern void storepacket(internalfontnumber, integer, strnumber); to
 	avoid a compiler warning.
 	* utils.c: void writestreamlength(longinteger length, longinteger offset)
@@ -397,7 +482,7 @@
 	(escape_eol): new fn, replacing print_str, now returning a string.
 
 	* writettf.c (ttf_reindex_glyphs): use %n to sscanf forms
-	uniABCD and index123. 
+	uniABCD and index123.
 
 	* mapfile.c (suppress_warn): way to avoid dup warnings.
 	
@@ -570,7 +655,7 @@
 	* pdftexextra.c (new): #include <pdftexd.h> and <lib/texmfmp.c>.
 
 	* am/pdftex.am: pdftexextra.[ch] are now distributed;
-	create {e,pdf}tex_version.h instead of {e,pdf}tex.version. 
+	create {e,pdf}tex_version.h instead of {e,pdf}tex.version.
 
 2010-12-01  Peter Breitenlohner  <peb@mppmu.mpg.de>
 
@@ -779,7 +864,7 @@
 
 	* writet1.c (append_cs_return): Drop unused local variable 'k'.
 
-	* avlstuff.c (destroy_oentry, PdfObjTree_free), 
+	* avlstuff.c (destroy_oentry, PdfObjTree_free),
 	writet1.c (free_glyph_names):
 	Skip unused static functions (via #if 0 ... #endif).
 
@@ -892,7 +977,7 @@
 
 2009-06-25  Peter Breitenlohner  <peb@mppmu.mpg.de>
 
-	* epdf.h, ttf2afm.c, writet1.c: 
+	* epdf.h, ttf2afm.c, writet1.c:
 	removed #include <kpathsea/c-proto.h>.
 	* avlstuff.c, epdf.c: removed #include <kpathsea/c-proto.h> and
 	#include <stdarg.h>.

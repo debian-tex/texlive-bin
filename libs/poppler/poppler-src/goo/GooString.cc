@@ -18,13 +18,14 @@
 // Copyright (C) 2006 Kristian Høgsberg <krh@redhat.com>
 // Copyright (C) 2006 Krzysztof Kowalczyk <kkowalczyk@gmail.com>
 // Copyright (C) 2007 Jeff Muizelaar <jeff@infidigm.net>
-// Copyright (C) 2008-2011 Albert Astals Cid <aacid@kde.org>
+// Copyright (C) 2008-2011, 2016 Albert Astals Cid <aacid@kde.org>
 // Copyright (C) 2011 Kenji Uno <ku@digitaldolphins.jp>
 // Copyright (C) 2012, 2013 Fabio D'Urso <fabiodurso@hotmail.it>
 // Copyright (C) 2012 Adrian Johnson <ajohnson@redneon.com>
 // Copyright (C) 2012 Pino Toscano <pino@kde.org>
 // Copyright (C) 2013 Jason Crain <jason@aquaticape.us>
 // Copyright (C) 2015 William Bader <williambader@hotmail.com>
+// Copyright (C) 2016 Jakub Alba <jakubalba@gmail.com>
 //
 // To see a description of the changes please see the Changelog file that
 // came with your tarball or type make ChangeLog if you are building from git
@@ -162,7 +163,7 @@ void inline GooString::resize(int newLength) {
       // assert(s != s1) the roundedSize condition ensures this
       if (newLength < length) {
 	memcpy(s1, s, newLength);
-      } else {
+      } else if (length > 0) {
 	memcpy(s1, s, length);
       }
       if (s != sStatic)
@@ -176,37 +177,22 @@ void inline GooString::resize(int newLength) {
   s[length] = '\0';
 }
 
-GooString* GooString::Set(const char *s1, int s1Len, const char *s2, int s2Len)
+GooString* GooString::Set(const char *newStr, int newLen)
 {
-    int newLen = 0;
-    char *p;
-
-    if (s1) {
-        if (CALC_STRING_LEN == s1Len) {
-            s1Len = strlen(s1);
-        } else
-            assert(s1Len >= 0);
-        newLen += s1Len;
+    if (!newStr) {
+        clear();
+        return this;
     }
 
-    if (s2) {
-        if (CALC_STRING_LEN == s2Len) {
-            s2Len = strlen(s2);
-        } else
-            assert(s2Len >= 0);
-        newLen += s2Len;
+    if (newLen == CALC_STRING_LEN) {
+        newLen = strlen(newStr);
+    } else {
+        assert(newLen >= 0);
     }
 
     resize(newLen);
-    p = s;
-    if (s1) {
-        memcpy(p, s1, s1Len);
-        p += s1Len;
-    }
-    if (s2) {
-        memcpy(p, s2, s2Len);
-        p += s2Len;
-    }
+    memmove(s, newStr, newLen);
+
     return this;
 }
 
@@ -214,6 +200,10 @@ GooString::GooString() {
   s = NULL;
   length = 0;
   Set(NULL);
+
+#if __cplusplus >= 201103L
+  static_assert(sizeof(GooString) == GooString::STR_FINAL_SIZE, "You should check memory alignment or STR_STATIC_SIZE calculation.");
+#endif
 }
 
 GooString::GooString(const char *sA) {
@@ -244,7 +234,9 @@ GooString::GooString(const GooString *str) {
 GooString::GooString(GooString *str1, GooString *str2) {
   s = NULL;
   length = 0;
-  Set(str1->getCString(), str1->length, str2->getCString(), str2->length);
+  resize(str1->length + str2->length);
+  memcpy(s, str1->getCString(), str1->length);
+  memcpy(s + str1->length, str2->getCString(), str2->length);
 }
 
 GooString *GooString::fromInt(int x) {
@@ -920,7 +912,7 @@ GBool GooString::endsWith(const char *suffix) const {
   return strcmp(s + length - suffixLen, suffix) == 0;
 }
 
-GBool GooString::hasUnicodeMarker(void)
+GBool GooString::hasUnicodeMarker(void) const
 {
   return length > 1 && (s[0] & 0xff) == 0xfe && (s[1] & 0xff) == 0xff;
 }

@@ -1,7 +1,7 @@
 /* tex-file.c: high-level file searching by format.
 
    Copyright 1993, 1994, 1995, 1996, 1997, 2007, 2008, 2009, 2010, 2011
-             2012, 2014 Karl Berry.
+             2012, 2014, 2016 Karl Berry.
    Copyright 1998-2005 Olaf Weber.
 
    This library is free software; you can redistribute it and/or
@@ -771,7 +771,8 @@ kpathsea_init_format_return_varlist(kpathsea kpse,kpse_file_format_type format)
       break;
     case kpse_opentype_format:
       INIT_FORMAT ("opentype fonts", DEFAULT_OPENTYPEFONTS, OPENTYPE_ENVS);
-      SUFFIXES (".otf");
+#define OPENTYPE_SUFFIXES ".otf", ".OTF"
+      SUFFIXES (OPENTYPE_SUFFIXES);
       FMT_INFO.suffix_search_only = true;
       FMT_INFO.binmode = true;
       break;
@@ -1304,7 +1305,7 @@ executable_filep (kpathsea kpse, const_string fname, boolean silent)
       pp = kpse->suffixlist;
       if (pp && q) {
         while (*pp) {
-          if (strchr (fname, ':') || !strcmp (q, *pp)) {
+          if (!strcmp (q, *pp)) {
             if (!silent)
               fprintf (stderr, "\n%s: Forbidden to open for writing\n", fname);
             free (base);

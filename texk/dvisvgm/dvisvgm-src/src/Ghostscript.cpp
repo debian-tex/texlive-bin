@@ -2,7 +2,7 @@
 ** Ghostscript.cpp                                                      **
 **                                                                      **
 ** This file is part of dvisvgm -- a fast DVI to SVG converter          **
-** Copyright (C) 2005-2016 Martin Gieseking <martin.gieseking@uos.de>   **
+** Copyright (C) 2005-2017 Martin Gieseking <martin.gieseking@uos.de>   **
 **                                                                      **
 ** This program is free software; you can redistribute it and/or        **
 ** modify it under the terms of the GNU General Public License as       **
@@ -19,7 +19,7 @@
 *************************************************************************/
 
 #include <config.h>
-#include "Ghostscript.h"
+#include "Ghostscript.hpp"
 #if !defined(DISABLE_GS)
 #include <cstring>
 #include <iomanip>
@@ -28,7 +28,7 @@
 	#include <ghostscript/ierrors.h>
 #else
 	#include "ierrors.h"
-	#include "FileFinder.h"
+	#include "FileFinder.hpp"
 #endif
 
 using namespace std;
@@ -38,14 +38,14 @@ string Ghostscript::LIBGS_NAME;
 
 #ifndef HAVE_LIBGS
 
-#ifdef __WIN32__
+#ifdef _WIN32
 /** Looks up the path of the Ghostscript DLL in the Windows registry and returns it.
  *  If there is no proper registry entry, the returned string is empty. */
 static string get_path_from_registry () {
 #ifdef RRF_RT_REG_SZ   // RegGetValueA and RRF_RT_REG_SZ may not be defined for some oldish MinGW
 	REGSAM mode = KEY_READ|KEY_QUERY_VALUE;
 #ifdef KEY_WOW64_64KEY
-#ifdef __WIN64__
+#ifdef _WIN64
 	mode |= KEY_WOW64_64KEY;
 #else
 	mode |= KEY_WOW64_32KEY;
@@ -79,7 +79,7 @@ static string get_path_from_registry () {
 #endif  // RRF_RT_REG_SZ
 	return "";
 }
-#endif  // __WIN32__
+#endif  // _WIN32
 
 
 /** Try to detect name of the Ghostscript shared library depending on the user settings.
@@ -89,24 +89,24 @@ static string get_libgs (const string &fname) {
 	if (!fname.empty())
 		return fname;
 #ifdef MIKTEX
-#if defined(__WIN64__)
+#if defined(_WIN64)
 	const char *gsdll = "mgsdll64.dll";
 #else
 	const char *gsdll = "mgsdll32.dll";
 #endif
 	// try to look up the Ghostscript DLL coming with MiKTeX
-	if (const char *gsdll_path = FileFinder::lookup(gsdll))
+	if (const char *gsdll_path = FileFinder::instance().lookup(gsdll))
 		return gsdll_path;
 #endif // MIKTEX
-#if defined(__WIN32__)
+#if defined(_WIN32)
 	// try to look up the path of the Ghostscript DLL in the Windows registry
 	string gsdll_path = get_path_from_registry();
 	if (!gsdll_path.empty())
 		return gsdll_path;
 #endif
-#if defined(__WIN64__)
+#if defined(_WIN64)
 	return "gsdll64.dll";
-#elif defined(__WIN32__)
+#elif defined(_WIN32)
 	return "gsdll32.dll";
 #else
 	// try to find libgs.so.X on the user's system
@@ -340,7 +340,7 @@ const char* Ghostscript::error_name (int code) {
 #if defined(HAVE_LIBGS)
 	// use array defined in libgs to avoid linking the error strings into the binary
 	return gs_error_names[code-1];
-#elif defined(__WIN32__)
+#elif defined(_WIN32)
 	// gs_error_names is private in the Ghostscript DLL so we can't access it here
 	return error_names[code-1];
 #else

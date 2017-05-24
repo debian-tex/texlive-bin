@@ -2348,6 +2348,7 @@ void Gfx::doShadingPatternFill(GfxShadingPattern *sPat,
   det = ctm[0] * ctm[3] - ctm[1] * ctm[2];
   if (fabs(det) < 0.000001) {
     error(errSyntaxError, getPos(), "Singular matrix in shading pattern fill");
+    restoreStateStack(savedState);
     return;
   }
   det = 1 / det;
@@ -4046,6 +4047,7 @@ void Gfx::doShowText(GooString *s) {
       curX += tdx;
       curY += tdy;
       state->moveTo(curX, curY);
+      out->updateCTM(state, 0, 0, 0, 0, 0, 0);
       p += n;
       len -= n;
     }

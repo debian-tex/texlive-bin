@@ -2,7 +2,7 @@
  * sha1.c - Functions to compute SHA1 message digest of files or
  * memory blocks according to the NIST specification FIPS-180-1.
  *
- * Copyright (C) 2015 The Gregorio Project (see CONTRIBUTORS.md)
+ * Copyright (C) 2015-2017 The Gregorio Project (see CONTRIBUTORS.md)
  * Copyright (C) 2000-2001, 2003-2006, 2008-2014 Free Software Foundation, Inc.
  *
  * This file is part of Gregorio.
@@ -36,15 +36,6 @@
 #endif
 #include <stdlib.h>
 #include <string.h>
-
-#ifdef HAVE_STDALIGN_H
-#include <stdalign.h>
-#ifdef __clang__
-#pragma clang diagnostic ignored "-Wc11-extensions"
-#endif
-#else
-#define alignof(x) sizeof(x)
-#endif
 
 #ifdef WORDS_BIGENDIAN
 #define SWAP(n) (n)
@@ -167,7 +158,7 @@ void sha1_process_bytes(const void *buffer, size_t len, struct sha1_ctx *ctx)
     if (len >= 64) {
         /* architecture and data-specific; LCOV_EXCL_START */
 #if !_STRING_ARCH_unaligned
-#define UNALIGNED_P(p) ((uintptr_t) (p) % alignof (uint32_t) != 0)
+#define UNALIGNED_P(p) ((uintptr_t) (p) % ALIGNOF_UINT32_T != 0)
         if (UNALIGNED_P(buffer)) {
             while (len > 64) {
                 sha1_process_block(memcpy(ctx->buffer, buffer, 64), 64, ctx);

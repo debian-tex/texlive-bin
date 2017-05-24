@@ -298,17 +298,16 @@ void vf_out_image(PDF pdf, unsigned i)
 {
     image *a, **aa;
     image_dict *ad;
-    lua_State *L = Luas;
-    lua_rawgeti(L, LUA_REGISTRYINDEX, (int) i);
-    aa = (image **) luaL_checkudata(L, -1, TYPE_IMG);
+    lua_rawgeti(Luas, LUA_REGISTRYINDEX, (int) i);
+    aa = (image **) luaL_checkudata(Luas, -1, TYPE_IMG);
     a = *aa;
     ad = img_dict(a);
     if (ad == NULL) {
-        luaL_error(L, "invalid image dictionary");
+        luaL_error(Luas, "invalid image dictionary");
     }
     setup_image(pdf, a, WR_VF_IMG);
     place_img(pdf, ad, img_dimen(a), img_transform(a));
-    lua_pop(L, 1);
+    lua_pop(Luas, 1);
 }
 
 /* metamethods for image */
@@ -395,6 +394,8 @@ static int m_img_get(lua_State * L)
         lua_pushinteger(L, img_yres(d));
     } else if (lua_key_eq(s,rotation)) {
         lua_pushinteger(L, img_rotation(d));
+    } else if (lua_key_eq(s,orientation)) {
+        lua_pushinteger(L, img_orientation(d));
     } else if (lua_key_eq(s,colorspace)) {
         if (img_colorspace(d) == 0) {
             lua_pushnil(L);
@@ -483,7 +484,7 @@ static void lua_to_image(lua_State * L, image * a, image_dict * d)
         if (t == LUA_TNIL) {
             set_wd_running(a);
         } else if (t == LUA_TNUMBER) {
-            img_width(a) = (int) lua_tointeger(L, -1);
+            img_width(a) = (int) lua_roundnumber(L, -1);
         } else if (t == LUA_TSTRING) {
             img_width(a) = dimen_to_number(L, lua_tostring(L, -1));
         } else {
@@ -493,7 +494,7 @@ static void lua_to_image(lua_State * L, image * a, image_dict * d)
         if (t == LUA_TNIL) {
             set_ht_running(a);
         } else if (t == LUA_TNUMBER) {
-            img_height(a) = (int) lua_tointeger(L, -1);
+            img_height(a) = (int) lua_roundnumber(L, -1);
         } else if (t == LUA_TSTRING) {
             img_height(a) = dimen_to_number(L, lua_tostring(L, -1));
         } else {
@@ -503,7 +504,7 @@ static void lua_to_image(lua_State * L, image * a, image_dict * d)
         if (t == LUA_TNIL) {
             set_dp_running(a);
         } else if (t == LUA_TNUMBER) {
-            img_depth(a) = (int) lua_tointeger(L, -1);
+            img_depth(a) = (int) lua_roundnumber(L, -1);
         } else if (t == LUA_TSTRING) {
             img_depth(a) = dimen_to_number(L, lua_tostring(L, -1));
         } else {
@@ -619,7 +620,7 @@ static void lua_to_image(lua_State * L, image * a, image_dict * d)
                 lua_gettable(L, -2);        /* int v k t ... */
                 t = lua_type(L, -1);
                 if (t == LUA_TNUMBER) {
-                    img_bbox(d)[i - 1] = (int) lua_tointeger(L, -1);
+                    img_bbox(d)[i - 1] = (int) lua_roundnumber(L, -1);
                 } else if (t == LUA_TSTRING) {
                     img_bbox(d)[i - 1] = dimen_to_number(L, lua_tostring(L, -1));
                 } else {
@@ -760,12 +761,11 @@ int luaopen_img(lua_State * L)
     luaL_register(L, NULL, img_m);
     luaL_newmetatable(L, TYPE_IMG_DICT);
     luaL_register(L, NULL, img_dict_m);
-    luaL_register(L, "img", imglib_f);
 #else
     luaL_setfuncs(L, img_m, 0);
     luaL_newmetatable(L, TYPE_IMG_DICT);
     luaL_setfuncs(L, img_dict_m, 0);
-    luaL_newlib(L, imglib_f);
 #endif
+    luaL_register(L, "img", imglib_f);
     return 1;
 }

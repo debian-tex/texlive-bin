@@ -6,8 +6,9 @@
 //
 // Copyright 2015, 2016 André Guerreiro <aguerreiro1985@gmail.com>
 // Copyright 2015 André Esser <bepandre@hotmail.com>
-// Copyright 2015 Albert Astals Cid <aacid@kde.org>
+// Copyright 2015, 2016 Albert Astals Cid <aacid@kde.org>
 // Copyright 2015 Markus Kilås <digital@markuspage.com>
+// Copyright 2017 Sebastian Rasmussen <sebras@gmail.com>
 //
 //========================================================================
 
@@ -82,6 +83,7 @@ GooString *SignatureHandler::getDefaultFirefoxCertDB_Linux()
   } while (subFolder != NULL);
 
   closedir(toSearchIn);
+  delete homePath;
   return NULL;
 }
 
@@ -104,7 +106,8 @@ void SignatureHandler::init_nss()
 
 
 SignatureHandler::SignatureHandler(unsigned char *p7, int p7_length)
- : CMSMessage(NULL),
+ : hash_context(NULL),
+   CMSMessage(NULL),
    CMSSignedData(NULL),
    CMSSignerInfo(NULL),
    temp_certs(NULL)
@@ -114,8 +117,10 @@ SignatureHandler::SignatureHandler(unsigned char *p7, int p7_length)
   CMSitem.len = p7_length;
   CMSMessage = CMS_MessageCreate(&CMSitem);
   CMSSignedData = CMS_SignedDataCreate(CMSMessage);
-  CMSSignerInfo = CMS_SignerInfoCreate(CMSSignedData);
-  hash_context = initHashContext();
+  if (CMSSignedData) {
+    CMSSignerInfo = CMS_SignerInfoCreate(CMSSignedData);
+    hash_context = initHashContext();
+  }
 }
 
 HASHContext * SignatureHandler::initHashContext()
@@ -130,7 +135,9 @@ HASHContext * SignatureHandler::initHashContext()
 
 void SignatureHandler::updateHash(unsigned char * data_block, int data_len)
 {
-  HASH_Update(hash_context, data_block, data_len);
+  if (hash_context) {
+    HASH_Update(hash_context, data_block, data_len);
+  }
 }
 
 SignatureHandler::~SignatureHandler()

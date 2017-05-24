@@ -1,5 +1,5 @@
 /*
-Copyright 1996-2014 Han The Thanh, <thanh@pdftex.org>
+Copyright 1996-2016 Han The Thanh, <thanh@pdftex.org>
 
 This file is part of pdfTeX.
 
@@ -71,6 +71,7 @@ extern "C" {
 // does not allow it.
 extern int getpdfsuppresswarningpagegroup(void);
 extern integer getpdfsuppressptexinfo(void);
+extern integer zround(double);
 }
 
 // The prefix "PTEX" for the PDF keys is special to pdfTeX;
@@ -425,9 +426,11 @@ static void copyFont(char *tag, Object * fontRef)
                                                      &ffsubtype)->isName()
                 && !strcmp(ffsubtype->getName(), "Type1C")))
         && (fontmap = lookup_fontmap(basefont->getName())) != NULL) {
-        // copy the value of /StemV
+        // round /StemV value, since the PDF input is a float
+        // (see Font Descriptors in PDF reference), but we only store an
+        // integer, since we don't want to change the struct.
         fontdesc->dictLookup("StemV", &stemV);
-        fd = epdf_create_fontdescriptor(fontmap, stemV->getInt());
+        fd = epdf_create_fontdescriptor(fontmap, zround(stemV->getNum()));
         if (fontdesc->dictLookup("CharSet", &charset) &&
             charset->isString() && is_subsetable(fontmap))
             epdf_mark_glyphs(fd, charset->getString()->getCString());

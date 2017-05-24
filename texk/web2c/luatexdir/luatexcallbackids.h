@@ -66,6 +66,9 @@ typedef enum {
     process_rule_callback,
     insert_local_par_callback,
     contribute_filter_callback,
+    call_edit_callback,
+    build_page_insert_callback,
+    glyph_stream_provider_callback,
     total_callbacks
 } callback_callback_types;
 

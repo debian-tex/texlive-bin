@@ -310,7 +310,7 @@ void hlist_out(PDF pdf, halfword this_box, int rule_callback_id)
     int i;                      /* index to scan |pdf_link_stack| */
     int save_loc = 0;           /* DVI! \.{DVI} byte location upon entry */
     scaledpos save_dvi = { 0, 0 };      /* DVI! what |dvi| should pop to */
-    int synctex = int_par(synctex_code) ;
+    int synctex = synctex_par ;
 
     g_order = glue_order(this_box);
     g_sign = glue_sign(this_box);
@@ -437,6 +437,18 @@ cur.h += x_advance(p);
                         }
                     }
                     break;
+                case math_node:
+                    if (synctex) {
+                        synctexmath(p, this_box);
+                    }
+                    /* begin mathskip code */
+                    if (glue_is_zero(p)) {
+                        cur.h += surround(p);
+                        break;
+                    } else {
+                        /* fall through: mathskip */
+                    }
+                    /* end mathskip code */
                 case glue_node:
                     {
                         /* move right or output leaders, we use real multiplication */
@@ -646,18 +658,6 @@ cur.h += x_advance(p);
                             out_what(pdf, p);
                     }
                     break;
-                case math_node:
-                    if (synctex) {
-                        synctexmath(p, this_box);
-                    }
-                    /* begin mathskip code */
-                    if (glue_is_zero(p)) {
-                        cur.h += surround(p);
-                        break;
-                    } else {
-                        /* fall through: mathskip */
-                    }
-                    /* end mathskip code */
                 case margin_kern_node:
                     cur.h += width(p);
                     break;
@@ -764,7 +764,7 @@ void vlist_out(PDF pdf, halfword this_box, int rule_callback_id)
     scaled_whd rule;
     int save_loc = 0;              /* DVI byte location upon entry */
     scaledpos save_dvi = { 0, 0 }; /* DVI! what |dvi| should pop to */
-    int synctex = int_par(synctex_code) ;
+    int synctex = synctex_par ;
 
     g_order = (glue_ord) glue_order(this_box);
     g_sign = glue_sign(this_box);

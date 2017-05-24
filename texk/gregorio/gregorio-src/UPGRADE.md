@@ -2,7 +2,133 @@
 
 This file contains instructions to upgrade to a new release of Gregorio.
 
-## Unreleased
+## 5.0
+
+### Auto-compilation
+
+The `autocompile` option is now the default option for the behavior of `\gregorioscore`.  If you want to go back to the old, manual behavior, then you should pass the `nevercompile` option when loading `gregoriotex`.
+
+### Additional fonts
+
+With the addition of more cavum shapes, the number of font options which come with Gregorio (the package) by default has been reduced in order to control the download size.  From now on only Greciliae (and its "-op" Dominican variant) will be installed by default.  The Gregorio and Grana Padano fonts, as well as their "-op" Dominican variants, will now be available as a separate download.  If you were using these fonts, either download `supp_fonts-5_0_0.zip` and install them or switch to Greciliae.
+
+To install the new versions of Gregorio (the font) and Grana Padano, unzip `supp_fonts-5_0_0.zip`, navigate to the uncompressed folder in Terminal (or Command Prompt on Windows) and execute `texlua install_supp_fonts.lua` after you have installed the main Gregorio distribution.  This script will look for the location of Greciliae and copy the other fonts to that location.  If you wish to control the installation of the fonts manually, the script takes an optional argument with one of the following values:
+
+ * `auto` (optional): the same folder as Greciliae
+ * `system`: the appropriate font folder in `$TEXMFLOCAL`
+ * `user`: the appropriate font folder in `$TEXMFHOME`
+ * `<dir>`: the name of an alternate texmf root directory you want to use
+ 
+Additionally, if you are building the fonts yourself from a git clone, `install-gtex.sh` and `install_supp_fonts.lua` will install all the fonts you have built, not just the ones they are normally distributed with.
+
+**Note:** All the above methods assume you only need to access the fonts from within a TeX document (and thus are designed to put them into the correct folder in a texmf tree).  If you want to use the fonts in other programs, then you will need to consult the documentation appropriate to your platform and/or the program and manually move, copy, or link the fonts to the necessary location.
+
+### Ledger lines
+
+As of version 5.0, ledger lines are extended through notes on either side of a ledger line that crosses a stem, as long as the notes are within the same element.
+
+The algorithm for this is simple so it can be predictable, and it cannot take into account spacing adjustments made it TeX.  This means it may not produce the exactly desired results.  In order to get the results you want, you can override the automatic behavior in gabc:
+
+- `[oll:1]` will force an over-the-staff ledger line on a note.
+- `[oll:0]` will suppress an over-the-staff ledger line on a note.
+- `[ull:1]` will force an under-the-staff ledger line on a note.
+- `[ull:0]` will suppress an under-the-staff ledger line on a note.
+
+The other `oll` and `ull` forms take precendence over and will interfere with the above settings, so if you are using them, you may need to adjust them to get the output you want.
+
+Note: You may need to use a construct such as `/!` to keep notes that are separated in the same element.  For example, `abcV` is two elements (`ab` and `cV`), so the ledger line on `b` is not extended to `cV`.  In contrast, `ab/!cV` is one element, so the ledger line on `b` is extended to `cV`.
+
+### End-of-line hyphen protrusion factor
+
+As of version 5.0, the `\gresethyphenprotrusion{percentage}` command is deprecated.  To set this protrusion factor, use `\gresetprotrusionfactor{eolhyphen}{factor}` instead.  Note that the `factor` taken by the new command is a factor rather than the percentage taken by the deprecated command, so for example, use `\gresetprotrusionfactor{eolhyphen}{0.5}` instead of `\gresethyphenprotrusion{50}`.
+
+### Oriscus orientation at the unison
+
+As of version 5.0, when the note after the oriscus is at the same pitch as the oriscus, the oriscus will point towards the first non-unison note after the oriscus or downwards if at the end of the score.  Use the `0` (for downwards) `1` (for upwards) modifiers to force a different orientation.
+
+### Elisions in vowel centering
+
+As of version 5.0, elisions after a vowel centering prefix will not cause the center to be placed on the vowel at the end of the prefix.  Since elisions are unvoiced vowels, this makes more sense than the previous behavior.  However, if this change does not produce your desired output, you may surround the center manually with `{` and `}` in gabc.
+
+## 4.2
+
+### Executable file name
+
+In order to facilitate installation alongside TeX Live, the version number is now appended to the gregorio executable file name.  In version 4.2.0, the filename is `gregorio-4_2_0`.  If you run the executable directly, you will need to modify your procedures and/or scripts to use the new name.  Alternately, creating a symbolic link, if your system supports it, may work for you.
+
+If you auto-compile or force-compile your GABC files and are *not* using the Gregorio packaged with TeX Live, you will probably need to use the `--shell-escape` option when compiling your `.tex` files.  Alternately, you can add the new filename to your system's `shell_escape_commands` TeX option.
+
+Unfortunately, there appears to be no easier way to let a user-installed Gregorio coexist with the TeX-Live-packaged Gregorio.  Please note: in TeX Live 2016, which includes Gregorio 4.1.1, the executable filename does not include the version number, though that will change starting with TeX Live 2017.
+
+### Stemmed oriscus flexus orientation
+
+As of version 4.2, the orientation of the stemmed oriscus flexus `(gOe)` is consistent with the unstemmed oriscus flexus `(goe)` in that the oriscus points downwards (since the note which follows is of lower pitch).  If you prefer the oriscus to point upwards, you will need to use the `1` modifier (as in `(gO1e)`), which will force an upward orientation of the oriscus.
+
+### Podatus followed by a virga
+
+As of version 4.2, a podatus followed by a virga of the same or higher pitch as the second note in the podatus (e.g., `(eghv)`) will be kept together, disallowing a line break between the two shapes.  If you would like to allow a line break between the two shapes, use a `/` or some other breakable space between them (e.g., `(eg/hv)`).
+
+### Penalties
+
+As of version 4.2, the penalties should be changed by using `\grechangecount` rather than the old way of redefining macros.  The following tunable values are available (they have the same name as their old macro counterparts, minus the `gre`):
+
+- `brokenpenalty`
+- `clubpenalty`
+- `endafterbaraltpenalty`
+- `endafterbarpenalty`
+- `endofelementpenalty`
+- `endofsyllablepenalty`
+- `endofwordpenalty`
+- `finalpenalty`
+- `hyphenpenalty`
+- `looseness`
+- `newlinepenalty`
+- `nobreakpenalty`
+- `pretolerance`
+- `tolerance`
+- `widowpenalty`
+
+See GregorioRef for descriptions.
+
+Additionally, if you were redefining `\greemergencystretch`, you should now be changing the `emergencystretch` dimension using the `\grechangedim` command.
+
+### Custos with alteration
+
+If the note following a custos has an alteration (flat, natural, or sharp), the custos will now also have that alteration typeset before it.  If you prefer the old behavior, use `\gresetcustosalteration{invisible}`.  This setting may be switched to `visible` and `invisible` between scores.
+
+### Punctum inclinatum orientation
+
+As of version 4.2, a different glyph is used for puncta inclinata in an ascent versus puncta inclinata in a descent.  However, because the two shapes clash with each other, Gregorio will attempt to use the same shape for all notes within a string of puncta inclinata.  This is accomplished by a heuristic algorithm that determines the glyph to use, but tastes differ, so you may override the shape by appending `0` (to force descending) or `1` (to force ascending) after the letter used for the punctum inclinatum.
+
+Two additional distances have been added to handle strings of puncta inclinata which both ascend and descend.  `descendingpunctuminclinatumascendingshift` will be used between two descending punctum inclinatum glyphs which ascend in pitch, and `ascendingpunctuminclinatumdescendingshift` will be used between two ascending punctum inclinatum glyphs which descend in pitch.
+
+### Styles spanning syllables
+
+From version 4.2, gabc styles persist through syllables so you can now, for instance, style an entire verse differently from the rest of the piece by starting the style at the beginning of the verse and ending it at the end of the verse.  This covers italics (`<i>`), bold (`<b>`), small capitals (`<sc>`), underlined text (`<ul>`), colored text (`<c>`), and "teletype" text (`<tt>`).
+
+Prior to version 4.2, Gregorio inconsistenly indicated style errors.  Now, errors like ending a style that is not started and starting a style that is already started will be caught more consistently.  If you are getting errors to this effect, double-check the styles in your score to make sure that styles are started and ended properly.
+
+
+## 4.1.2
+
+### Changes to texmf tree
+
+To better comply with the TeXLive directory structure, the location of `gregoriotex.sty` and `gregoriosyms.sty` have changed.
+
+*Linux and other users installing from source:* `install-gtex.sh` should remove the old versions before installing the new one.
+
+*Mac users installing via pkg installer:* The installer does not attempt to remove the old versions before installing the new ones.  Please run Uninstall-Gregorio.pkg before installing 4.2 to ensure that the old versions don't cause any problems.
+
+*Windows users:* Your installer already should remove old versions of GregorioTeX before installing the new ones.
+
+As always, please file a bug report if you have any problems with the update process.
+
+### Parmesan font renamed to Grana Padano
+
+To avoid conflicts with the LilyPond Parmesan font, the Gregorio Parmesan font is now called Grana Padano.  If you were using `\gresetgregoriofont{parmesan}`, you should now use `\gresetgregoriofont{granapadano}`.
+
+
+## 4.1.1
 
 ### Vertical spacings
 
@@ -137,7 +263,7 @@ Old command names should still work for now, but will raise a deprecation warnin
 
 - `\grescaledim`: This function now takes two arguments.  The second should be `yes`, `true`, `on`, or `scalable` to acheive the old behavior.
 
-Additionally a new package option has been added. This option, `deprecated=false`, is helpful if you wish to ensure that your TeX file is compliant with the new naming system. This option causes all deprecated commands to raise an error, halting TeX, thus allowing you to actively find all deprecated commands and update them in your TeX file.
+Additionally a new package option has been added. This option, `allowdeprecated=false`, is helpful if you wish to ensure that your TeX file is compliant with the new naming system. This option causes all deprecated commands to raise an error, halting TeX, thus allowing you to actively find all deprecated commands and update them in your TeX file.
 
 ### Barred letters
 

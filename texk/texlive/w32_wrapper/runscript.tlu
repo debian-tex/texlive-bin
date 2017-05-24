@@ -1,7 +1,7 @@
 
 
-local svnrevision = string.match("$Revision: 39067 $", "%d+") or "0"
-local svndate     = string.match("$Date: 2015-12-10 23:28:26 +0100 (Thu, 10 Dec 2015) $", "[-%d]+") or "2009-12-04"
+local svnrevision = string.match("$Revision: 44235 $", "%d+") or "0"
+local svndate     = string.match("$Date: 2017-05-07 11:20:39 +0200 (Sun, 07 May 2017) $", "[-%d]+") or "2009-12-04"
 local bannerstr   = "runscript wrapper utility (rev. " ..
                     svnrevision .. ", " .. svndate .. ")\n" .. 
                     "usage:   runscript script-name [arguments]\n" ..
@@ -253,6 +253,15 @@ local docstr = [[
         - more slash flipping for the sake of vbscript and unc paths
     2015/12/11
     	- fix spurious arguments for updmap and fmtutil
+    2016/04/22
+    	- Warning if external perl is requested but missing
+    2017/04/22 (exactly one year later ;-)
+        - Cater for fmtutil-user and updmap-user => -user arg        
+    2017/04/24
+        - GS_LIB setting for tlgs.
+    2017/05/06
+        - introduce sys_user_progs, make checks for updmap/fmtutil
+          use sys_user_progs instead, add kanji-config-updmap
 ]]
 
 -- HELPER SUBROUTINES --
@@ -301,6 +310,16 @@ local function is_tex4ht_command(progname)
         -- we have a hit, but not all combinations are valid
         return (p ~= 'teim' and p ~=  'dbm') or (q ~= 'xelatex' and q~= 'xetex')
       end
+    end
+  end
+  return false
+end
+
+-- checks whether an item is in an array
+local function contains (tab, val)
+  for index, value in ipairs(tab) do
+    if value == val then
+      return true
     end
   end
   return false
@@ -435,8 +454,13 @@ end
 -- special case of sys programs
 progname, substcount = string.gsub(progname, '%-sys$', '')
 local sysprog = (substcount > 0) -- true if there was a -sys suffix removed
+-- special case of user programs
+-- we do not guard against programs foobar-user-sys ... we don't ship them
+progname, substcount = string.gsub(progname, '%-user$', '')
+local userprog = (substcount > 0) -- true if there was a -user suffix removed
 -- prevent recursive calls to this script
 assert(progname ~= 'runscript', "oops! wrapping the wrapper?")
+
 
 -- kpse and environment set-up
 
@@ -445,11 +469,16 @@ local k = -1
 while arg[k-1] do k = k - 1 end -- in case of a call: luatex --luaonly ...
 local lua_binary = arg[k]
 kpse.set_program_name(lua_binary, progname)
+
 -- various dir-vars
 local TEXDIR = kpse.var_value('SELFAUTOPARENT')
 local TEXMFDIST = kpse.var_value('TEXMFDIST')
 local BINDIR = kpse.var_value('SELFAUTOLOC')
 local PATH = os.getenv('PATH') or ''
+
+-- list of programs that have -sys and -user variants
+local sys_user_progs = { 'updmap', 'fmtutil', 'kanji-config-updmap' }
+
 -- restricted programs
 local shell_escape_commands = string.lower(kpse.var_value('shell_escape_commands') or '')
 local is_restricted_progname = string.find( ','..shell_escape_commands..',', 
@@ -471,7 +500,15 @@ local scripts4tlperl = {
 local try_extern_perl = (kpse.var_value('TEXLIVE_WINDOWS_TRY_EXTERNAL_PERL') == '1') and 
                         not (guimode or is_restricted_progname or scripts4tlperl[progname])
 local PERLEXE = try_extern_perl and search_path('perl.exe', PATH)
-if not PERLEXE then 
+local extperl_warn
+if not PERLEXE then
+  if try_extern_perl then extperl_warn = [[
+External Perl missing or outdated. Please install a recent Perl, or configure
+TeX Live to always use the builtin Perl:
+  tlmgr conf texmf TEXLIVE_WINDOWS_TRY_EXTERNAL_PERL 0
+Meanwhile, continuing with built-in Perl...
+]]
+  end -- if try_extern_perl
   PERLEXE = TEXDIR..'/tlpkg/tlperl/bin/perl.exe'
   os.setenv('PERL5LIB', TEXDIR..'/tlpkg/tlperl/lib')
   PATH = prepend_path(PATH, TEXDIR..'/tlpkg/tlperl/bin')
@@ -520,8 +557,12 @@ if GSEXE then
   end
 else
   -- use built in gs
-  os.setenv('GS_LIB', TEXDIR..'/tlpkg/tlgs/lib;'..TEXDIR..'/tlpkg/tlgs/fonts;'
-    ..os.getenv('WINDIR')..'/Fonts;'..TEXMFDIST..'/fonts')
+   os.setenv('GS_LIB', TEXDIR..'/tlpkg/tlgs/lib;'
+	     ..TEXDIR..'/tlpkg/tlgs/fonts;'
+	     ..TEXDIR..'/tlpkg/tlgs/Resource/Init;'
+	     ..TEXDIR..'/tlpkg/tlgs/Resource;'
+	     ..TEXDIR..'/tlpkg/tlgs/kanji;'
+	     ..os.getenv('WINDIR')..'/Fonts;'..TEXMFDIST..'/fonts')
   os.setenv('GS_DLL', TEXDIR..'/tlpkg/tlgs/bin/gsdll32.dll')
   GSEXE = TEXDIR..'/tlpkg/tlgs/bin/gswin32c.exe'
   GSNAME = 'gswin32c.exe'
@@ -532,7 +573,7 @@ PATH = prepend_path(PATH, GSDIR, BINDIR)
 os.setenv('PATH', PATH);
 
 -- sys stuff
-if (sysprog and not (progname == 'updmap') and not (progname == 'fmtutil')) then
+if (sysprog and not contains(sys_user_progs, progname)) then
   os.setenv('TEXMFVAR', kpse.var_value('TEXMFSYSVAR'))
   os.setenv('TEXMFCONFIG', kpse.var_value('TEXMFSYSCONFIG'))
 end
@@ -576,13 +617,11 @@ if is_tex4ht_command(progname) then
   progname = 'mk4ht'
 elseif progname == 'a2ping' then 
   table.insert(extension_map['.pl'], '-x')
-elseif progname == 'updmap' then 
+elseif contains(sys_user_progs, progname) then 
   if sysprog then
     argline = ' --sys ' .. argline
-  end
-elseif progname == 'fmtutil' then 
-  if sysprog then
-    argline = ' --sys ' .. argline
+  elseif userprog then
+    argline = ' --user ' .. argline
   end
 elseif progname == 'asy' then
   os.setenv('ASYMPTOTE_GS', GSEXE)
@@ -662,6 +701,10 @@ end
 
 if ARGV then
   table.insert(ARGV, argline) -- pass through original arguments
+  if string.find (table.concat(ARGV, ' '), 'perl.exe') and extperl_warn then
+
+    io.stderr:write(extperl_warn)
+  end
   local ret = assert(os.spawn(ARGV))
   if ret ~= 0 then
     local dbginfo = debug.getinfo(1)
@@ -687,6 +730,6 @@ if not success then
 end
 
 -- about RUNSCRIPT_ERROR_MESSAGE environment variable:
--- it stores an error message that is catched and displayed 
+-- it stores an error message that is caught and displayed 
 -- in a message box on the C side at process exit 
 -- (currently used only by gui mode stubs)

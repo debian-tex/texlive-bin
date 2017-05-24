@@ -198,7 +198,7 @@ int main(int argc, char **argv)
 
 			default:
 				fprintf(stderr,"mendex - Japanese index processor, %s (%s) (%s).\n",VERSION, get_enc_string(), TL_VERSION);
-				fprintf(stderr," Copyright 2009 ASCII MEDIA WORKS.(ptex-staff@ml.asciimw.jp)\n");
+				fprintf(stderr," Copyright 2009 ASCII MEDIA WORKS.\n");
 				fprintf(stderr,"usage:\n");
 				fprintf(stderr,"%% mendex [-ilqrcgfEJS"
 #ifdef WIN32
@@ -253,10 +253,8 @@ int main(int argc, char **argv)
 		}
 	}
 
-	if (styfile!=NULL) styread(styfile);
-
 	if (!indfile &&(idxcount-fsti>0)) {
-		indfile=xmalloc(strlen(idxfile[0]+6));
+		indfile=xmalloc(strlen(idxfile[0])+6);
 		for (i=strlen(idxfile[0]);i>=0;i--) {
 			if (idxfile[0][i]=='.') {
 				strncpy(indfile,idxfile[0],i);
@@ -268,7 +266,7 @@ int main(int argc, char **argv)
 	}
 
 	if (!logfile && (idxcount-fsti > 0)) {
-		logfile=xmalloc(strlen(idxfile[0]+6));
+		logfile=xmalloc(strlen(idxfile[0])+6);
 		for (i=strlen(idxfile[0]);i>=0;i--) {
 			if (idxfile[0][i]=='.') {
 				strncpy(logfile,idxfile[0],i);
@@ -284,6 +282,8 @@ int main(int argc, char **argv)
 		efp=stderr;
 		logfile=xstrdup("stderr");
 	}
+
+	if (styfile!=NULL) styread(styfile);
 
 	if (strcmp(argv[0],"makeindex")==0) {
 		verb_printf(efp,"This is Not `MAKEINDEX\', But `MENDEX\' %s (%s) (%s).\n",

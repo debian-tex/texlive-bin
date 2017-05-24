@@ -25,10 +25,6 @@
 #include <string.h>
 #include <kpathsea/absolute.h>
 
-@ @c
-#define end_line_char int_par(end_line_char_code)
-
-
 @ The bane of portability is the fact that different operating systems treat
 input and output quite differently, perhaps because computer scientists
 have not given sufficient attention to this problem. People have felt somehow
@@ -111,13 +107,21 @@ static char *find_in_output_directory(const char *s)
 @ find an \.{\\input} or \.{\\read} file. |n| differentiates between those case.
 
 @c
+int kpse_available(const char *m) {
+    if (!kpse_init) {
+          fprintf(stdout,"missing kpse replacement callback '%s', quitting\n",m);
+          exit(1);
+    }
+    return 1 ;
+}
+
 char *luatex_find_read_file(const char *s, int n, int callback_index)
 {
     char *ftemp = NULL;
     int callback_id = callback_defined(callback_index);
     if (callback_id > 0) {
-        (void) run_callback(callback_id, "dS->S", n, s, &ftemp);
-    } else {
+        (void) run_callback(callback_id, "dS->R", n, s, &ftemp);
+    } else if (kpse_available("find_read_file")) {
         /* use kpathsea here */
         ftemp = find_in_output_directory(s);
         if (!ftemp)
@@ -140,7 +144,7 @@ char *luatex_find_file(const char *s, int callback_index)
     if (callback_id > 0) {
         (void) run_callback(callback_id, "S->R", s, &ftemp);
 
-    } else {
+    } else if (kpse_available("find_read_file")) {
         /* use kpathsea here */
         switch (callback_index) {
         case find_enc_file_callback:
@@ -166,12 +170,12 @@ char *luatex_find_file(const char *s, int callback_index)
         case find_data_file_callback:
             ftemp = find_in_output_directory(s);
             if (!ftemp)
-                ftemp = kpse_find_file(s, kpse_tex_format, 0);
+                ftemp = kpse_find_file(s, kpse_tex_format, 1);
             break;
         case find_font_file_callback:
-            ftemp = kpse_find_file(s, kpse_ofm_format, 0);
+            ftemp = kpse_find_file(s, kpse_ofm_format, 1);
             if (ftemp == NULL)
-                ftemp = kpse_find_file(s, kpse_tfm_format, 0);
+                ftemp = kpse_find_file(s, kpse_tfm_format, 1);
             break;
         case find_vf_file_callback:
             ftemp = kpse_find_file(s, kpse_ovf_format, 0);
@@ -844,7 +848,7 @@ void open_log_file(void)
         input_stack[input_ptr] = cur_input;     /* make sure bottom level is in memory */
         tprint_nl("**");
         l = input_stack[0].limit_field; /* last position of first line */
-        if (buffer[l] == end_line_char)
+        if (buffer[l] == end_line_char_par)
             decr(l);            /* TODO: multichar endlinechar */
         for (k = 1; k <= l; k++)
             print_char(buffer[k]);
@@ -978,7 +982,7 @@ void start_input(void)
     if (end_line_char_inactive)
         decr(ilimit);
     else
-        buffer[ilimit] = (packed_ASCII_code) end_line_char;
+        buffer[ilimit] = (packed_ASCII_code) end_line_char_par;
     first = ilimit + 1;
     iloc = istart;
 }
@@ -1137,7 +1141,7 @@ boolean zopen_w_input(FILE ** f, const char *fname, int format,
     char *fnam;
     callbackid = callback_defined(find_format_file_callback);
     if (callbackid > 0) {
-        res = run_callback(callbackid, "S->S", fname, &fnam);
+        res = run_callback(callbackid, "S->R", fname, &fnam);
         if (res && fnam && strlen(fnam) > 0) {
             *f = fopen(fnam, fopen_mode);
             if (*f == NULL) {

@@ -113,11 +113,13 @@ int new_font(void)
     font_tables[id]->_param_base = NULL;
     font_tables[id]->_math_param_base = NULL;
 
-    set_font_bc(id, 1);         /* ec = 0 */
+    set_font_bc(id, 1);          /* ec = 0 */
+    set_font_writingmode(id, 0);
+    set_font_identity(id, 0);
     set_hyphen_char(id, '-');
     set_skew_char(id, -1);
-    font_slant(id) = 0;         /* vertical */
-    font_extend(id) = 1000;     /* normal width */
+    font_slant(id) = 0;          /* vertical */
+    font_extend(id) = 1000;      /* normal width */
 
     /* allocate eight values including 0 */
     set_font_params(id, 7);
@@ -267,18 +269,25 @@ charinfo *copy_charinfo(charinfo * ci)
     x = ci->top_left_math_kerns;
     co->top_left_math_kerns = x;
     if (x > 0) {
-        co->top_left_math_kern_array =
-            xmalloc((unsigned) (2 * (int) sizeof(scaled) * x));
+        co->top_left_math_kern_array = xmalloc((unsigned) (2 * (int) sizeof(scaled) * x));
         for (k = 0; k < co->top_left_math_kerns; k++) {
             co->top_left_math_kern_array[(2 * k)] = ci->top_left_math_kern_array[(2 * k)];
             co->top_left_math_kern_array[(2 * k) + 1] = ci->top_left_math_kern_array[(2 * k) + 1];
         }
     }
+    x = ci->bottom_left_math_kerns;
+    co->bottom_left_math_kerns = x;
+    if (x > 0) {
+        co->bottom_left_math_kern_array = xmalloc((unsigned) (2 * (int) sizeof(scaled) * x));
+        for (k = 0; k < co->bottom_left_math_kerns; k++) {
+            co->bottom_left_math_kern_array[(2 * k)] = ci->bottom_left_math_kern_array[(2 * k)];
+            co->bottom_left_math_kern_array[(2 * k) + 1] = ci->bottom_left_math_kern_array[(2 * k) + 1];
+        }
+    }
     x = ci->top_right_math_kerns;
     co->top_right_math_kerns = x;
     if (x > 0) {
-        co->top_right_math_kern_array =
-            xmalloc((unsigned) (2 * (int) sizeof(scaled) * x));
+        co->top_right_math_kern_array = xmalloc((unsigned) (2 * (int) sizeof(scaled) * x));
         for (k = 0; k < co->top_right_math_kerns; k++) {
             co->top_right_math_kern_array[(2 * k)] = ci->top_right_math_kern_array[(2 * k)];
             co->top_right_math_kern_array[(2 * k) + 1] = ci->top_right_math_kern_array[(2 * k) + 1];
@@ -287,21 +296,10 @@ charinfo *copy_charinfo(charinfo * ci)
     x = ci->bottom_right_math_kerns;
     co->bottom_right_math_kerns = x;
     if (x > 0) {
-        co->bottom_right_math_kern_array =
-            xmalloc((unsigned) (2 * (int) sizeof(scaled) * x));
+        co->bottom_right_math_kern_array = xmalloc((unsigned) (2 * (int) sizeof(scaled) * x));
         for (k = 0; k < co->bottom_right_math_kerns; k++) {
             co->bottom_right_math_kern_array[(2 * k)] = ci->bottom_right_math_kern_array[(2 * k)];
             co->bottom_right_math_kern_array[(2 * k) + 1] = ci->bottom_right_math_kern_array[(2 * k) + 1];
-        }
-    }
-    x = ci->bottom_left_math_kerns;
-    co->bottom_left_math_kerns = x;
-    if (x > 0) {
-        co->bottom_left_math_kern_array =
-            xmalloc((unsigned) (2 * (int) sizeof(scaled) * x));
-        for (k = 0; k < co->bottom_left_math_kerns; k++) {
-            co->bottom_left_math_kern_array[(2 * k)] = ci->bottom_left_math_kern_array[(2 * k)];
-            co->bottom_left_math_kern_array[(2 * k) + 1] = ci->bottom_left_math_kern_array[(2 * k) + 1];
         }
     }
     return co;
@@ -354,22 +352,21 @@ int char_exists(internal_font_number f, int c)
 static int lua_char_exists_callback(internal_font_number f, int c)
 {
     int callback_id;
-    lua_State *L = Luas;
     int ret = 0;
     callback_id = callback_defined(char_exists_callback);
     if (callback_id != 0) {
-        if (!get_callback(L, callback_id)) {
-            lua_pop(L, 2);
+        if (!get_callback(Luas, callback_id)) {
+            lua_pop(Luas, 2);
             return 0;
         }
-        lua_pushinteger(L, f);
-        lua_pushinteger(L, c);
-        if (lua_pcall(L, 2, 1, 0) != 0) {       /* two args, 1 result */
-            fprintf(stdout, "error: %s\n", lua_tostring(L, -1));
-            lua_pop(L, 2);
+        lua_pushinteger(Luas, f);
+        lua_pushinteger(Luas, c);
+        if (lua_pcall(Luas, 2, 1, 0) != 0) {       /* two args, 1 result */
+            fprintf(stdout, "error: %s\n", lua_tostring(Luas, -1));
+            lua_pop(Luas, 2);
             error();
         } else {
-            ret = lua_toboolean(L, -1);
+            ret = lua_toboolean(Luas, -1);
         }
     }
     return ret;
@@ -653,10 +650,10 @@ int get_charinfo_math_kerns(charinfo * ci, int id)
         k = ci->top_left_math_kerns;
     } else if (id == bottom_left_kern) {
         k = ci->bottom_left_math_kerns;
-    } else if (id == bottom_right_kern) {
-        k = ci->bottom_right_math_kerns;
     } else if (id == top_right_kern) {
         k = ci->top_right_math_kerns;
+    } else if (id == bottom_right_kern) {
+        k = ci->bottom_right_math_kerns;
     } else {
         confusion("get_charinfo_math_kerns");
     }
@@ -675,25 +672,22 @@ void add_charinfo_math_kern(charinfo * ci, int id, scaled ht, scaled krn)
         ci->top_left_math_kerns++;
     } else if (id == bottom_left_kern) {
         k = ci->bottom_left_math_kerns;
-        do_realloc(ci->bottom_left_math_kern_array, ((k + 1) * 2),
-                   sizeof(scaled));
+        do_realloc(ci->bottom_left_math_kern_array, ((k + 1) * 2), sizeof(scaled));
         ci->bottom_left_math_kern_array[(2 * (k))] = ht;
         ci->bottom_left_math_kern_array[(2 * (k)) + 1] = krn;
         ci->bottom_left_math_kerns++;
-    } else if (id == bottom_right_kern) {
-        k = ci->bottom_right_math_kerns;
-        do_realloc(ci->bottom_right_math_kern_array, ((k + 1) * 2),
-                   sizeof(scaled));
-        ci->bottom_right_math_kern_array[(2 * (k))] = ht;
-        ci->bottom_right_math_kern_array[(2 * (k)) + 1] = krn;
-        ci->bottom_right_math_kerns++;
     } else if (id == top_right_kern) {
         k = ci->top_right_math_kerns;
-        do_realloc(ci->top_right_math_kern_array, ((k + 1) * 2),
-                   sizeof(scaled));
+        do_realloc(ci->top_right_math_kern_array, ((k + 1) * 2), sizeof(scaled));
         ci->top_right_math_kern_array[(2 * (k))] = ht;
         ci->top_right_math_kern_array[(2 * (k)) + 1] = krn;
         ci->top_right_math_kerns++;
+    } else if (id == bottom_right_kern) {
+        k = ci->bottom_right_math_kerns;
+        do_realloc(ci->bottom_right_math_kern_array, ((k + 1) * 2), sizeof(scaled));
+        ci->bottom_right_math_kern_array[(2 * (k))] = ht;
+        ci->bottom_right_math_kern_array[(2 * (k)) + 1] = krn;
+        ci->bottom_right_math_kerns++;
     } else {
         confusion("add_charinfo_math_kern");
     }
@@ -716,17 +710,17 @@ static void dump_math_kerns(charinfo * ci)
         dump_int(ci->bottom_left_math_kern_array[(2 * k)]);
         dump_int(ci->bottom_left_math_kern_array[(2 * k) + 1]);
     }
+    l = ci->top_right_math_kerns;
+    dump_int(l);
+    for (k = 0; k < l; k++) {
+        dump_int(ci->top_right_math_kern_array[(2 * k)]);
+        dump_int(ci->top_right_math_kern_array[(2 * k) + 1]);
+    }
     l = ci->bottom_right_math_kerns;
     dump_int(l);
     for (k = 0; k < l; k++) {
         dump_int(ci->bottom_right_math_kern_array[(2 * k)]);
         dump_int(ci->bottom_right_math_kern_array[(2 * k) + 1]);
-    }
-    l = ci->top_right_math_kerns;
-    dump_int(l);
-    for (k = 0; k < l; k++) {
-        dump_int(ci->bottom_left_math_kern_array[(2 * k)]);
-        dump_int(ci->bottom_left_math_kern_array[(2 * k) + 1]);
     }
 }
 
@@ -738,8 +732,7 @@ static void undump_math_kerns(charinfo * ci)
     undump_int(x);
     ci->top_left_math_kerns = x;
     if (x > 0)
-        ci->top_left_math_kern_array =
-            xmalloc((unsigned) (2 * (int) sizeof(scaled) * x));
+        ci->top_left_math_kern_array = xmalloc((unsigned) (2 * (int) sizeof(scaled) * x));
     for (k = 0; k < ci->top_left_math_kerns; k++) {
         undump_int(x);
         ci->top_left_math_kern_array[(2 * k)] = (scaled) x;
@@ -749,8 +742,7 @@ static void undump_math_kerns(charinfo * ci)
     undump_int(x);
     ci->bottom_left_math_kerns = x;
     if (x > 0)
-        ci->bottom_left_math_kern_array =
-            xmalloc((unsigned) (2 * (int) sizeof(scaled) * x));
+        ci->bottom_left_math_kern_array = xmalloc((unsigned) (2 * (int) sizeof(scaled) * x));
     for (k = 0; k < ci->bottom_left_math_kerns; k++) {
         undump_int(x);
         ci->bottom_left_math_kern_array[(2 * k)] = (scaled) x;
@@ -758,26 +750,24 @@ static void undump_math_kerns(charinfo * ci)
         ci->bottom_left_math_kern_array[(2 * k) + 1] = (scaled) x;
     }
     undump_int(x);
-    ci->bottom_right_math_kerns = x;
-    if (x > 0)
-        ci->bottom_right_math_kern_array =
-            xmalloc((unsigned) (2 * (int) sizeof(scaled) * x));
-    for (k = 0; k < ci->bottom_right_math_kerns; k++) {
-        undump_int(x);
-        ci->bottom_right_math_kern_array[(2 * k)] = (scaled) x;
-        undump_int(x);
-        ci->bottom_right_math_kern_array[(2 * k) + 1] = (scaled) x;
-    }
-    undump_int(x);
     ci->top_right_math_kerns = x;
     if (x > 0)
-        ci->top_right_math_kern_array =
-            xmalloc((unsigned) (2 * (int) sizeof(scaled) * x));
+        ci->top_right_math_kern_array = xmalloc((unsigned) (2 * (int) sizeof(scaled) * x));
     for (k = 0; k < ci->top_right_math_kerns; k++) {
         undump_int(x);
         ci->top_right_math_kern_array[(2 * k)] = (scaled) x;
         undump_int(x);
         ci->top_right_math_kern_array[(2 * k) + 1] = (scaled) x;
+    }
+    undump_int(x);
+    ci->bottom_right_math_kerns = x;
+    if (x > 0)
+        ci->bottom_right_math_kern_array = xmalloc((unsigned) (2 * (int) sizeof(scaled) * x));
+    for (k = 0; k < ci->bottom_right_math_kerns; k++) {
+        undump_int(x);
+        ci->bottom_right_math_kern_array[(2 * k)] = (scaled) x;
+        undump_int(x);
+        ci->bottom_right_math_kern_array[(2 * k) + 1] = (scaled) x;
     }
 }
 
@@ -1549,7 +1539,10 @@ static void dump_font_entry(texfont * f)
     dump_int(f->_font_tounicode);
     dump_int(f->_font_type);
     dump_int(f->_font_format);
+    dump_int(f->_font_writingmode);
+    dump_int(f->_font_identity);
     dump_int(f->_font_embedding);
+    dump_int(f->_font_streamprovider);
     dump_int(f->_font_bc);
     dump_int(f->_hyphen_char);
     dump_int(f->_skew_char);
@@ -1726,7 +1719,10 @@ static void undump_font_entry(texfont * f)
     undump_int(x); f->_font_tounicode = (char)x;
     undump_int(x); f->_font_type = x;
     undump_int(x); f->_font_format = x;
+    undump_int(x); f->_font_writingmode = x;
+    undump_int(x); f->_font_identity = x;
     undump_int(x); f->_font_embedding = x;
+    undump_int(x); f->_font_streamprovider = x;
     undump_int(x); f->_font_bc = x;
     undump_int(x); f->_hyphen_char = x;
     undump_int(x); f->_skew_char = x;
@@ -1798,8 +1794,6 @@ void undump_font(int f)
 /* moved from pdffont.w */
 
 @ @c
-#define font_id_text(A) cs_text(font_id_base+(A)) /* a frozen font identifier's name */
-
 int pk_dpi; /* PK pixel density value from \.{texmf.cnf} */
 
 @ @c

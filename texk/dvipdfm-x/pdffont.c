@@ -1,6 +1,6 @@
 /* This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
 
-    Copyright (C) 2008-2016 by Jin-Hwan Cho, Matthias Franz, and Shunsaku Hirata,
+    Copyright (C) 2008-2017 by Jin-Hwan Cho, Matthias Franz, and Shunsaku Hirata,
     the dvipdfmx project team.
     
     Copyright (C) 1998, 1999 by Mark A. Wicks <mwicks@kettering.edu>
@@ -50,7 +50,6 @@
 #include "type0.h"
 #include "tt_cmap.h"
 #include "cidtype0.h"
-#include "otl_conf.h"
 
 #include "pdffont.h"
 
@@ -67,7 +66,6 @@ pdf_font_set_verbose (void)
   CIDFont_set_verbose  ();
   pdf_encoding_set_verbose();
   agl_set_verbose();
-  otl_conf_set_verbose();
   otf_cmap_set_verbose ();
 }
 
@@ -90,7 +88,7 @@ pdf_font_set_dpi (int font_dpi)
 
 /* If an environment variable SOURCE_DATE_EPOCH is correctly defined like
  * SOURCE_DATE_EPOCH=1456304492, then returns this value, to be used as the
- * 'current time', otherwise returns INVALID_EPOCH_VALUE (= 0x7fffffffffffffffULL).
+ * 'current time', otherwise returns INVALID_EPOCH_VALUE (= (time_t)-1).
  * In the case of Microsoft Visual Studio 2010, the value should be less
  * than 32535291600.
  */
@@ -308,7 +306,6 @@ pdf_init_fonts (void)
   ASSERT(font_cache.fonts == NULL);  
 
   agl_init_map();
-  otl_init_conf();
 
   CMap_cache_init();
   pdf_init_encodings();
@@ -600,7 +597,6 @@ pdf_close_fonts (void)
   CMap_cache_close();
   pdf_close_encodings();
 
-  otl_close_conf();
   agl_close_map (); /* After encoding */
 
   return;

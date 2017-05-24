@@ -1,4 +1,4 @@
-% $Id: mpmathdouble.w 2070 2015-10-06 10:35:23Z luigi $
+% $Id: mpmathdouble.w 2118 2017-02-15 17:49:54Z luigi $
 %
 % This file is part of MetaPost;
 % the MetaPost program is in the public domain.
@@ -10,6 +10,9 @@
 \font\logos=logosl10
 \def\MF{{\tenlogo META}\-{\tenlogo FONT}}
 \def\MP{{\tenlogo META}\-{\tenlogo POST}}
+\def\pct!{{\char`\%}} % percent sign in ordinary text
+\def\psqrt#1{\sqrt{\mathstrut#1}}
+
 
 \def\title{Math support functions for IEEE double based math}
 \pdfoutput=1
@@ -645,7 +648,7 @@ double mp_double_make_scaled (MP mp, double p, double q);
 @ 
 @d halfp(A) (integer)((unsigned)(A) >> 1)
 
-@* Scanning numbers in the input
+@* Scanning numbers in the input.
 
 The definitions below are temporarily here
 
@@ -814,6 +817,11 @@ void mp_ab_vs_cd (MP mp, mp_number *ret, mp_number a_orig, mp_number b_orig, mp_
   integer q, r; /* temporary registers */
   integer a, b, c, d;
   (void)mp;
+  
+  mp_double_ab_vs_cd(mp,ret, a_orig, b_orig, c_orig, d_orig);
+  if (1>0) 
+    return ;
+  /* TODO: remove this code until the end */
   a = a_orig.data.dval;
   b = b_orig.data.dval;
   c = c_orig.data.dval;
@@ -1208,9 +1216,21 @@ any loss of accuracy. Then |x| and~|y| are divided by~|r|.
 @c
 void mp_double_sin_cos (MP mp, mp_number z_orig, mp_number *n_cos, mp_number *n_sin) {
   double rad;
-  rad = (z_orig.data.dval / angle_multiplier) * PI/180.0;
-  n_cos->data.dval = cos(rad) * fraction_multiplier;
-  n_sin->data.dval = sin(rad) * fraction_multiplier;
+  rad = (z_orig.data.dval / angle_multiplier); /* still degrees */
+  if ((rad == 90.0)||(rad == -270)){
+    n_cos->data.dval = 0.0;
+    n_sin->data.dval = fraction_multiplier;
+  } else if ((rad == -90.0)||(rad == 270.0)) {
+    n_cos->data.dval = 0.0;
+    n_sin->data.dval = -fraction_multiplier;
+  } else if ((rad == 180.0) || (rad == -180.0)) {
+    n_cos->data.dval = -fraction_multiplier;
+    n_sin->data.dval = 0.0;
+  } else {
+    rad = rad * PI/180.0;
+    n_cos->data.dval = cos(rad) * fraction_multiplier;
+    n_sin->data.dval = sin(rad) * fraction_multiplier;
+  }
 #if DEBUG
   fprintf(stdout, "\nsin_cos(%f,%f,%f)", mp_number_to_double(z_orig),
 mp_number_to_double(*n_cos), mp_number_to_double(*n_sin));
@@ -1240,7 +1260,7 @@ static void ran_array(long aa[],int n) /* put n new random numbers in aa */
 }
 /* */ 
 /* the following routines are from exercise 3.6--15 */
-/* after calling ran_start, get new randoms by, e.g., "x=ran_arr_next()" */
+/* after calling |ran_start|, get new randoms by, e.g., |x=ran_arr_next()| */
 /* */ 
 #define QUALITY 1009 /* recommended quality level for high-res use */
 static long ran_arr_buf[QUALITY];
@@ -1250,7 +1270,7 @@ static long *ran_arr_ptr=&ran_arr_dummy; /* the next random number, or -1 */
 #define TT  70   /* guaranteed separation between streams */
 #define is_odd(x)  ((x)&1)          /* units bit of x */
 /* */ 
-static void ran_start(long seed) /* do this before using ran_array */
+static void ran_start(long seed) /* do this before using |ran_array| */
   /* long seed             selector for different streams */
 {
   register int t,j;
@@ -1447,7 +1467,7 @@ static void mp_double_m_norm_rand (MP mp, mp_number *ret) {
 
 
 
-@ The following subroutine is used only in norm_rand and tests  if $ab$ is
+@ The following subroutine is used only in |norm_rand| and tests  if $ab$ is
 greater than, equal to, or less than~$cd$.
 The result is $+1$, 0, or~$-1$ in the three respective cases.
 

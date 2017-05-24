@@ -1,4 +1,4 @@
-% This is a change file for upTeX u1.21
+% This is a change file for upTeX u1.22
 % By Takuji Tanaka.
 %
 % (02/26/2007) TTK  upTeX u0.01
@@ -34,19 +34,21 @@
 % (08/13/2012) TTK  upTeX u1.11
 % (12/29/2014) TTK  upTeX u1.20
 % (02/20/2016) TTK  upTeX u1.21
+% (01/15/2017) TTK  upTeX u1.22
+% (04/09/2017) TTK  Hironori Kitagawa fixed a bug in \endlinechar.
 
 @x upTeX: banner
-  {printed when p\TeX\ starts}
+  {printed when \pTeX\ starts}
 @y
-  {printed when p\TeX\ starts}
+  {printed when \pTeX\ starts}
 @#
 @d upTeX_version=1
-@d upTeX_revision==".21"
-@d upTeX_version_string=='-u1.21' {current up\TeX\ version}
+@d upTeX_revision==".22"
+@d upTeX_version_string=='-u1.22' {current u\pTeX\ version}
 @#
 @d upTeX_banner=='This is upTeX, Version 3.14159265',pTeX_version_string,upTeX_version_string
 @d upTeX_banner_k==upTeX_banner
-  {printed when up\TeX\ starts}
+  {printed when u\pTeX\ starts}
 @z
 
 @x upTeX: banner
@@ -70,7 +72,7 @@
 @!trick_buf2:array[0..ssup_error_line] of 0..@'24; {pTeX: buffer for KANJI}
 @!kcode_pos: 0..@'24; {pTeX: denotes whether first byte or second byte of KANJI
   1..2:2byte-char, 11..13:3byte-char, 21..24:4byte-char}
-@!kcp: 0..@'24; {temporary kcode_pos}
+@!kcp: 0..@'24; {temporary |kcode_pos|}
 @z
 
 @x
@@ -243,24 +245,24 @@ for k:=0 to 511 do
 { $\.{@@"20}+|k| = |kcatcodekey|(|fromKUTEN|(|HILO|(k,1))$ }
 @y
 if (isinternalUPTEX) then begin
-  { default: other_kchar }
+  { default: |other_kchar| }
   @t\hskip10pt@>kcat_code(@"0):=not_cjk;
   @t\hskip10pt@>kcat_code(@"23):=hangul; { Hangul Jamo }
-  @+@t\1@>for k:=@"64 to @"66 do kcat_code(k):=kanji; { CJK Radicals Supplement .. Ideographic Description Characters }
-  @+@t\1@>for k:=@"68 to @"69 do kcat_code(k):=kana;  { Hiragana, Katakana }
-  @t\hskip10pt@>kcat_code(@"6A):=kanji; { Bopomofo }
-  @t\hskip10pt@>kcat_code(@"6B):=hangul; { Hangul Compatibility Jamo }
-  @+@t\1@>for k:=@"6C to @"6E do kcat_code(k):=kanji; { Kanbun .. CJK Strokes }
-  @t\hskip10pt@>kcat_code(@"6F):=kana; { Katakana Phonetic Extensions }
-  @t\hskip10pt@>kcat_code(@"72):=kanji; { CJK Unified Ideographs Extension A }
-  @t\hskip10pt@>kcat_code(@"74):=kanji; { CJK Unified Ideographs }
-  @t\hskip10pt@>kcat_code(@"84):=hangul; { Hangul Jamo Extended-A }
-  @t\hskip10pt@>kcat_code(@"8F):=hangul; { Hangul Syllables }
-  @t\hskip10pt@>kcat_code(@"90):=hangul; { Hangul Jamo Extended-B }
-  @t\hskip10pt@>kcat_code(@"95):=kanji; { CJK Compatibility Ideographs }
-  { @t\hskip10pt@>kcat_code(@"9E):=other_kchar; Halfwidth and Fullwidth Forms }
-  @t\hskip10pt@>kcat_code(@"E4):=kana; { Kana Supplement }
-  @+@t\1@>for k:=@"FD to @"101 do kcat_code(k):=kanji; { CJK Unified Ideographs Extension B .. CJK Compatibility Ideographs Supplement }
+  @+@t\1@>for k:=@"65 to @"67 do kcat_code(k):=kanji; { CJK Radicals Supplement .. Ideographic Description Characters }
+  @+@t\1@>for k:=@"69 to @"6A do kcat_code(k):=kana;  { Hiragana, Katakana }
+  @t\hskip10pt@>kcat_code(@"6B):=kanji; { Bopomofo }
+  @t\hskip10pt@>kcat_code(@"6C):=hangul; { Hangul Compatibility Jamo }
+  @+@t\1@>for k:=@"6D to @"6F do kcat_code(k):=kanji; { Kanbun .. CJK Strokes }
+  @t\hskip10pt@>kcat_code(@"70):=kana; { Katakana Phonetic Extensions }
+  @t\hskip10pt@>kcat_code(@"73):=kanji; { CJK Unified Ideographs Extension A }
+  @t\hskip10pt@>kcat_code(@"75):=kanji; { CJK Unified Ideographs }
+  @t\hskip10pt@>kcat_code(@"85):=hangul; { Hangul Jamo Extended-A }
+  @t\hskip10pt@>kcat_code(@"90):=hangul; { Hangul Syllables }
+  @t\hskip10pt@>kcat_code(@"91):=hangul; { Hangul Jamo Extended-B }
+  @t\hskip10pt@>kcat_code(@"96):=kanji; { CJK Compatibility Ideographs }
+  { \hskip10pt|kcat_code(@"9F):=other_kchar;| Halfwidth and Fullwidth Forms }
+  @t\hskip10pt@>kcat_code(@"ED):=kana; { Kana Supplement }
+  @+@t\1@>for k:=@"108 to @"10C do kcat_code(k):=kanji; { CJK Unified Ideographs Extension B .. CJK Compatibility Ideographs Supplement }
   @t\hskip10pt@>kcat_code(@"1FE):=kana; { Fullwidth digit and latin alphabet }
   @t\hskip10pt@>kcat_code(@"1FF):=kana; { Halfwidth katakana }
 end else begin
@@ -308,7 +310,7 @@ token that stands for a control sequence; is a multiple of~256, less~1}
 @d end_match_token=@'7000 {$2^8\cdot|end_match|$}
 @y
 @d cs_token_flag=@"1FFFFFFF {amount added to the |eqtb| location in a
-  token that stands for a control sequence; is a multiple of~@"1000000, less~1}
+  token that stands for a control sequence; is a multiple of~@@"1000000, less~1}
 @d max_char_val=@"100 {to separate char and command code}
 @d left_brace_token=@"100 {$2^8\cdot|left_brace|$}
 @d left_brace_limit=@"200 {$2^8\cdot(|left_brace|+1)$}
@@ -389,11 +391,11 @@ if ((kcp mod @'10)>0)and(nrestmultichr(kcp)>0) then p:=p-(kcp mod @'10);
     else reswitch: cur_cmd:=cat_code(cur_chr);
 @y
   begin
-    cur_chr:=fromBUFF(ustringcast(buffer), limit, loc);
+    cur_chr:=fromBUFF(ustringcast(buffer), limit+1, loc);
     cur_cmd:=kcat_code(kcatcodekey(cur_chr));
-    if (multistrlen(ustringcast(buffer), limit, loc)>1) and check_kcat_code(cur_cmd) then begin
+    if (multistrlen(ustringcast(buffer), limit+1, loc)>1) and check_kcat_code(cur_cmd) then begin
       if (cur_cmd=not_cjk) then cur_cmd:=other_kchar;
-      loc:=loc+multistrlen(ustringcast(buffer), limit, loc) end
+      loc:=loc+multistrlen(ustringcast(buffer), limit+1, loc) end
     else begin
       cur_chr:=buffer[loc]; incr(loc);
       reswitch: cur_cmd:=cat_code(cur_chr);
@@ -431,11 +433,11 @@ start_cs:
   if (cat=letter)or(cat=kanji)or(cat=kana) then state:=skip_blanks
 @y
 else  begin k:=loc;
-  cur_chr:=fromBUFF(ustringcast(buffer), limit, k);
+  cur_chr:=fromBUFF(ustringcast(buffer), limit+1, k);
   cat:=kcat_code(kcatcodekey(cur_chr));
-  if (multistrlen(ustringcast(buffer), limit, k)>1) and check_kcat_code(cat) then begin
+  if (multistrlen(ustringcast(buffer), limit+1, k)>1) and check_kcat_code(cat) then begin
     if (cat=not_cjk) then cat:=other_kchar;
-    k:=k+multistrlen(ustringcast(buffer), limit, k) end
+    k:=k+multistrlen(ustringcast(buffer), limit+1, k) end
   else begin {not multi-byte char}
     cur_chr:=buffer[k];
     cat:=cat_code(cur_chr);
@@ -452,6 +454,12 @@ start_cs:
 @z
 
 @x
+  if (cat=kanji)or(cat=kana) then
+@y
+  if (cat=kanji)or(cat=kana)or(cat=hangul) then
+@z
+
+@x
 begin repeat cur_chr:=buffer[k]; incr(k);
   if multistrlen(ustringcast(buffer), limit+1, k-1)=2 then
     begin cat:=kcat_code(kcatcodekey(fromBUFF(ustringcast(buffer), limit+1, k-1))); incr(k);
@@ -459,11 +467,11 @@ begin repeat cur_chr:=buffer[k]; incr(k);
   else cat:=cat_code(cur_chr);
 @y
 begin repeat
-  cur_chr:=fromBUFF(ustringcast(buffer), limit, k);
+  cur_chr:=fromBUFF(ustringcast(buffer), limit+1, k);
   cat:=kcat_code(kcatcodekey(cur_chr));
-  if (multistrlen(ustringcast(buffer), limit, k)>1) and check_kcat_code(cat) then begin
+  if (multistrlen(ustringcast(buffer), limit+1, k)>1) and check_kcat_code(cat) then begin
     if (cat=not_cjk) then cat:=other_kchar;
-    k:=k+multistrlen(ustringcast(buffer), limit, k) end
+    k:=k+multistrlen(ustringcast(buffer), limit+1, k) end
   else begin {not multi-byte char}
     cur_chr:=buffer[k];
     cat:=cat_code(cur_chr);

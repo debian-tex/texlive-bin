@@ -1,5 +1,5 @@
 $Id$
-Copyright 2006-2016 TeX Users Group.
+Copyright 2006-2017 TeX Users Group.
 You may freely use, modify and/or distribute this file.
 
 This TeX Live directory contains the programs that use the kpathsea
@@ -27,7 +27,7 @@ bibtex-x - maintained here, contains
   bibtexu
     http://omega.enstb.org/yannis/bibtexu/
 
-chktex 1.7.4 - checked 12apr15
+chktex 1.7.6 - checked 15sep16
   http://mirror.ctan.org/support/chktex/
   http://download.savannah.gnu.org/releases/chktex/
 
@@ -46,7 +46,7 @@ dvidvi - maintained here.
 
 dviljk - maintained here, by Joachim Schrod
 
-dvipdfm-x - maintained here, by Khaled Hosny, Akira Kakuto, et al., contains
+dvipdfm-x - maintained here, by us, contains
   dvipdfmx
   xdvipdfmx
 
@@ -58,17 +58,17 @@ dvipos - ?
 
 dvipsk - maintained here, by us
 
-dvisvgm 1.15.1 - checked 20apr16
+dvisvgm 2.1.3 - checked 21feb17
   http://dvisvgm.bplaced.net/Downloads
 
-gregorio 4.1.1 - checked 11mar16
+gregorio 5.0.1 - checked 16apr17
   https://github.com/gregorio-project/gregorio/releases/
 
 gsftopk - from Paul Vojta's xdvi?
 
 kpathsea - maintained here, by us
 
-lcdf-typetools 2.105 - checked 27sep15
+lcdf-typetools 2.106 - checked 22jun16
   http://www.lcdf.org/type/
 
 makeindexk - maintained here, by us
@@ -96,9 +96,9 @@ texlive - scripts maintained here, by us
 
 ttf2pk2 - maintained here, by us
 
-ttfdump - ?
+ttfdump - maintained here, by us, since Taiwan upstream apparently gone.
 
-upmendex 0.50 - 
+upmendex 0.51 - by Takuji Tanaka
   http://www.ctan.org/pkg/upmendex
   http://www.t-lab.opal.ne.jp/tex/uptex_en.html
 
@@ -108,16 +108,16 @@ web2c - maintained here, by us - core web2c, plain tex, etc.
        aleph - maintained here
         ctie - CTAN
         cweb - knuth, ftp://ftp.cs.stanford.edu/pub/cweb/
-       eptex - https://osdn.jp/projects/eptex/
+       eptex - https://osdn.jp/projects/eptex,https://texwiki.texjp.org/?e-pTeX
         etex - maintained here
-      euptex - https://texwiki.texjp.org/?e-pTeX
+      euptex - https://texwiki.texjp.org/?upTeX%2CupLaTeX
   mflua[jit] - https://foundry.supelec.fr/projects/mflua/
     mplibdir - http://tug.org/metapost
       luatex - http://luatex.org
       pdftex - http://pdftex.org
       pmpost - none
         ptex - nothing current, old info: http://ascii.asciimw.jp/pb/ptex/
-     synctex - maintained here
+     synctex - maintained here, but also https://github.com/jlaurens/synctex
      upmpost - ? (Kitagawa-san)
        uptex - https://texwiki.texjp.org/?upTeX%2CupLaTeX
        xetex - http://tug.org/xetex/

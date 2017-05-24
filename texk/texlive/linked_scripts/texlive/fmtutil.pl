@@ -1,9 +1,9 @@
 #!/usr/bin/env perl
-# $Id: fmtutil.pl 40678 2016-04-22 13:16:07Z siepo $
+# $Id: fmtutil.pl 44190 2017-05-04 21:38:43Z preining $
 # fmtutil - utility to maintain format files.
 # (Maintained in TeX Live:Master/texmf-dist/scripts/texlive.)
 # 
-# Copyright 2014-2016 Norbert Preining
+# Copyright 2014-2017 Norbert Preining
 # This file is licensed under the GNU General Public License version 2
 # or any later version.
 #
@@ -24,11 +24,11 @@ BEGIN {
   TeX::Update->import();
 }
 
-my $svnid = '$Id: fmtutil.pl 40678 2016-04-22 13:16:07Z siepo $';
-my $lastchdate = '$Date: 2016-04-22 15:16:07 +0200 (Fri, 22 Apr 2016) $';
+my $svnid = '$Id: fmtutil.pl 44190 2017-05-04 21:38:43Z preining $';
+my $lastchdate = '$Date: 2017-05-04 23:38:43 +0200 (Thu, 04 May 2017) $';
 $lastchdate =~ s/^\$Date:\s*//;
 $lastchdate =~ s/ \(.*$//;
-my $svnrev = '$Revision: 40678 $';
+my $svnrev = '$Revision: 44190 $';
 $svnrev =~ s/^\$Revision:\s*//;
 $svnrev =~ s/\s*\$$//;
 my $version = "r$svnrev ($lastchdate)";
@@ -62,6 +62,9 @@ my @deferred_stdout;
 
 (our $prg = basename($0)) =~ s/\.pl$//;
 
+# make sure that the main binary path is available at the front
+TeXLive::TLUtils::prepend_own_path();
+
 # sudo sometimes does not reset the home dir of root, check on that
 # see more comments at the definition of the function itself
 # this function checks by itself whether it is running on windows or not
@@ -91,7 +94,9 @@ if (win32()) {
 our $texmfconfig = $TEXMFCONFIG;
 our $texmfvar    = $TEXMFVAR;
 our $alldata;
-our %opts = ( quiet => 0 );
+# command line options with defaults
+# 20160623 - switch to turn on strict mode
+our %opts = ( quiet => 0 , strict => 1 );
 
 # make a list of all the commands (as opposed to options), so we can
 # reasonably check for multiple commands being (erroneously) given.
@@ -110,6 +115,7 @@ my @cmdline_cmds = (  # in same order as help message
 
 our @cmdline_options = (  # in same order as help message
   "sys",
+  "user",
   "cnffile=s@", 
   "fmtdir=s",
   "no-engine-subdir",
@@ -117,7 +123,7 @@ our @cmdline_options = (  # in same order as help message
   "no-error-if-no-format",
   "nohash",
   "recorder",
-  "strict",
+  "strict!",
   "quiet|silent|q",
   "catcfg",
   "dolinks",
@@ -149,6 +155,12 @@ sub main {
     # first generated filename after successful generation to stdout then
     # (and nothing else), since kpathsea can only deal with one.
     $mktexfmtMode = 1;
+
+    # TODO TODO
+    # which mode are we running in?
+    # what happens if root runs mktexfmt?
+    $opts{'user'} = 1;
+
     GetOptions ( "help" => \$opts{'help'}, "version" => \$opts{'version'} )
         or die "Unknown option in mktexfmt command line arguments\n";
     if ($ARGV[0]) {
@@ -196,7 +208,10 @@ sub main {
   }
   
   # these two functions should go to TLUtils (for use in updmap)
-  check_hidden_sysmode();
+  ($texmfconfig, $texmfvar) = 
+    TeXLive::TLUtils::setup_sys_user_mode($prg, \%opts,
+      $TEXMFCONFIG, $TEXMFSYSCONFIG, $TEXMFVAR, $TEXMFSYSVAR);
+
   determine_config_files("fmtutil.cnf");
   my $changes_config_file = $alldata->{'changes_config'};
   # we do changes always in the used config file with the highest priority
@@ -554,6 +569,8 @@ sub rebuild_one_format {
     $fmtfile .= ".fmt" ; 
     $kpsefmt = "tex" ; 
     $enginedir = $eng;
+    # strip final -dev from enginedir to support engines like luatex-dev
+    $enginedir =~ s/-dev$//;
   }
   
   # check for existence of ini file before doing anything else
@@ -564,7 +581,15 @@ sub rebuild_one_format {
     # all activated formats are also buildable, thus return failure.
     return $FMT_FAILURE;
   }
-  
+
+  #
+  # If the 4th field in fmtutil.cnf contains
+  #  -progname=...
+  # then we do not add our own progname!
+  if ($addargs =~ /-progname=/) {
+    $prgswitch = '';
+  }
+
   # NLS support
   #   Example (for fmtutil.cnf):
   #     mex-pl tex mexconf.tex nls=tex-pl,il2-pl mex.ini
@@ -952,32 +977,6 @@ sub read_fmtutil_file {
 # and also be reused in updmap.pl!!!
 
 
-sub check_hidden_sysmode {
-  #
-  # check if we are in *hidden* sys mode, in which case we switch
-  # to sys mode
-  # Nowdays we use -sys switch instead of simply overriding TEXMFVAR
-  # and TEXMFCONFIG
-  # This is used to warn users when they run updmap in usermode the first time.
-  # But it might happen that this script is called via another wrapper that
-  # sets TEXMFCONFIG and TEXMFVAR, and does not pass on the -sys option.
-  # for this case we check whether the SYS and non-SYS variants agree,
-  # and if, then switch to sys mode (with a warning)
-  if (($TEXMFSYSCONFIG eq $TEXMFCONFIG) && ($TEXMFSYSVAR eq $TEXMFVAR)) {
-    if (!$opts{'sys'}) {
-      print_warning("hidden sys mode found, switching to sys mode.\n");
-      $opts{'sys'} = 1;
-    }
-  }
-
-  if ($opts{'sys'}) {
-    # we are running as updmap-sys, make sure that the right tree is used
-    $texmfconfig = $TEXMFSYSCONFIG;
-    $texmfvar    = $TEXMFSYSVAR;
-  }
-}
-
-
 # sets global $alldata->{'changes_config'} to the config file to be
 # changed if requested.
 #
@@ -1252,12 +1251,13 @@ sub version {
 
 sub help {
   my $usage = <<"EOF";
-Usage: $prg     [OPTION] ... [COMMAND]
-   or: $prg-sys [OPTION] ... [COMMAND]
-   or: mktexfmt FORMAT.fmt|BASE.base|MEM.mem|FMTNAME.EXT
+Usage: $prg      [-user|-sys] [OPTION] ... [COMMAND]
+   or: $prg-sys  [OPTION] ... [COMMAND]
+   or: $prg-user [OPTION] ... [COMMAND]
+   or: mktexfmt  FORMAT.fmt|BASE.base|FMTNAME.EXT
 
-Rebuild and manage TeX fmts, Metafont bases and MetaPost mems,
-collectively called "formats" here.
+Rebuild and manage TeX fmts and Metafont bases, collectively called
+"formats" here. (MetaPost no longer uses the past-equivalent "mems".)
 
 If the command name ends in mktexfmt, only one format can be created.
 The only options supported are --help and --version, and the command
@@ -1269,8 +1269,12 @@ If not operating in mktexfmt mode, exactly one command must be given,
 extensions should generally not be specified, no non-option arguments
 are allowed, and multiple formats can be generated, as follows.
 
+By default, the return status is zero if all formats requested are
+successfully built, else nonzero.
+
 Options:
-  --sys                   use TEXMFSYS{VAR,CONFIG} instead of TEXMF{VAR,CONFIG}
+  --sys                   use TEXMFSYS{VAR,CONFIG}
+  --user                  use TEXMF{VAR,CONFIG}
   --cnffile FILE          read FILE instead of fmtutil.cnf
                            (can be given multiple times, in which case
                            all the files are used)
@@ -1280,9 +1284,9 @@ Options:
   --no-error-if-no-engine=ENGINE1,ENGINE2,...
                           exit successfully even if a required engine
                            is missing, if it is included in the list.
+  --no-strict             exit successfully even if a format fails to build
   --nohash                don't update ls-R files
   --recorder              pass the -recorder option and save .fls files
-  --strict                exit with bad status if a format fails to build
   --quiet                 be silent
   --catcfg                (does nothing, exists for compatibility)
   --dolinks               (does nothing, exists for compatibility)
@@ -1326,7 +1330,7 @@ Explanation of trees and files normally used:
   TEXMFLOCAL     \$TEXLIVE/texmf-local/web2c/fmtutil.cnf
   TEXMFDIST      \$TEXLIVE/YYYY/texmf-dist/web2c/fmtutil.cnf
 
-  For fmtutil:
+  For fmtutil-user:
   TEXMFCONFIG    \$HOME/.texliveYYYY/texmf-config/web2c/fmtutil.cnf
   TEXMFVAR       \$HOME/.texliveYYYY/texmf-var/web2c/fmtutil.cnf
   TEXMFHOME      \$HOME/texmf/web2c/fmtutil.cnf
@@ -1394,15 +1398,24 @@ Disabling formats:
   --no-error-if-no-engine option exists, since luajittex cannot be
   compiled on all platforms.)
 
-fmtutil vs. fmtutil-sys (fmtutil --sys):
+fmtutil-user (fmtutil -user) vs. fmtutil-sys (fmtutil -sys):
 
-  When fmtutil-sys is run or the command line option --sys is used, 
+  When fmtutil-sys is run or the command line option -sys is used, 
   TEXMFSYSCONFIG and TEXMFSYSVAR are used instead of TEXMFCONFIG and 
   TEXMFVAR, respectively.  This is the primary difference between 
-  fmtutil-sys and fmtutil.
+  fmtutil-sys and fmtutil-user.
+
+  See http://tug.org/texlive/scripts-sys-user.html for details.
 
   Other locations may be used if you give them on the command line, or
   these trees don't exist, or you are not using the original TeX Live.
+
+Supporting development binaries
+
+  If an engine name ends with "-dev", formats are created in
+  the respective directory with the -dev stripped.  This allows for
+  easily running development binaries in parallel with the released
+  binaries.
 
 Report bugs to: tex-live\@tug.org
 TeX Live home page: <http://tug.org/texlive/>

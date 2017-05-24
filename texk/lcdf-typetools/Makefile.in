@@ -13,6 +13,9 @@
 # PARTICULAR PURPOSE.
 
 @SET_MAKE@
+
+#  Adapted for TeX Live from lcdf-typetools-src/Makefile.am
+#  Copyright (c) 2003-2011 Eddie Kohler
 VPATH = @srcdir@
 am__is_gnu_make = { \
   if test -z '$(MAKELEVEL)'; then \
@@ -377,11 +380,11 @@ am__DIST_COMMON = $(srcdir)/../../am/dist_hook.am \
 	$(top_srcdir)/../../build-aux/ltmain.sh \
 	$(top_srcdir)/../../build-aux/missing \
 	$(top_srcdir)/../../build-aux/test-driver \
-	../../build-aux/compile ../../build-aux/config.guess \
-	../../build-aux/config.sub ../../build-aux/depcomp \
-	../../build-aux/install-sh ../../build-aux/ltmain.sh \
-	../../build-aux/missing ../../build-aux/texinfo.tex \
-	../../build-aux/ylwrap ChangeLog
+	../../build-aux/ar-lib ../../build-aux/compile \
+	../../build-aux/config.guess ../../build-aux/config.sub \
+	../../build-aux/depcomp ../../build-aux/install-sh \
+	../../build-aux/ltmain.sh ../../build-aux/missing \
+	../../build-aux/texinfo.tex ../../build-aux/ylwrap ChangeLog
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 distdir = $(PACKAGE)-$(VERSION)
 top_distdir = $(distdir)
@@ -559,17 +562,9 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-
-#************************************************************************
-#
-#  Adapted for TeX Live from lcdf-typetools-src/Makefile.am
-#  Copyright (c) 2003-2011 Eddie Kohler
-#
-#************************************************************************
 SUBDIRS = . $(LCDF_TYPETOOLS_TREE)
 DIST_SUBDIRS = $(SUBDIRS)
-EXTRA_DIST = lcdf-typetools-PATCHES \
-	$(LCDF_TYPETOOLS_TREE)/autoconf.h.in \
+EXTRA_DIST = TLpatches $(LCDF_TYPETOOLS_TREE)/autoconf.h.in \
 	$(LCDF_TYPETOOLS_TREE)/configure.ac $(LCDF_TYPETOOLS_TREE)/m4 \
 	$(TESTS) tests/t2c.enc tests/uhvrrc8a.pfb tests/uhv_dl.pfa \
 	tests/uhv_dl.pfb tests/uhv_dl.ps tests/uhv_re.afm \
@@ -584,8 +579,8 @@ NEVER_NAMES_SUB = -o -name .deps -o -name .dirstamp -o -name '*.$(OBJEXT)'
 NEVER_NAMES_LT = -o -name .libs -o -name '*.lo'
 DISTCLEANFILES = config.force CXXLD.sh uhv* Ant* a_enhg3c.enc Fon* \
 	tmf.*
+AM_TESTS_ENVIRONMENT = LCDF_TYPETOOLS_TREE=$(LCDF_TYPETOOLS_TREE); export LCDF_TYPETOOLS_TREE;
 TESTS = tests/t1.test tests/tfm.test tests/ttf.test
-TESTS_ENVIRONMENT = LCDF_TYPETOOLS_TREE=$(LCDF_TYPETOOLS_TREE)
 all: autoconf.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 

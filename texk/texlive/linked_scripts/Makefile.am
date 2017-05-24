@@ -1,12 +1,12 @@
 ## Makefile.am for the TeX Live subdirectory texk/texlive/linked_scripts/
 ##
-## Copyright (C) 2016 Karl Berry <tex-live@tug.org>
-## Copyright (C) 2009-2015 Peter Breitenlohner <tex-live@tug.org>
+## Copyright 2016-2017 Karl Berry <tex-live@tug.org>
+## Copyright 2009-2015 Peter Breitenlohner <tex-live@tug.org>
 ## You may freely use, modify and/or distribute this file.
 ##
 ## TeX Live's extra scripts.
 
-## Build lists of texmf and texmf-dist scripts.
+## Build lists of scripts.
 ##
 scripts-list: Makefile
 	@echo "Create $@"
@@ -79,6 +79,9 @@ texmf_shell_scripts = \
 	pdfxup/pdfxup \
 	pst-pdf/ps4pdf \
 	simpdftex/simpdftex \
+	texosquery/texosquery.sh \
+	texosquery/texosquery-jre5.sh \
+	texosquery/texosquery-jre8.sh \
 	typeoutfileinfo/typeoutfileinfo.sh
 texmf_other_scripts = \
 	a2ping/a2ping.pl \
@@ -94,7 +97,9 @@ texmf_other_scripts = \
 	cjk-gs-integrate/cjk-gs-integrate.pl \
 	context/perl/mptopdf.pl \
 	convbkmk/convbkmk.rb \
+	crossrefware/bbl2bib.pl \
 	crossrefware/bibdoiadd.pl \
+	crossrefware/bibmradd.pl \
 	crossrefware/bibzbladd.pl \
 	crossrefware/ltx2crossrefxml.pl \
 	ctanify/ctanify \
@@ -117,14 +122,13 @@ texmf_other_scripts = \
 	getmap/getmapdl.lua \
 	glossaries/makeglossaries \
 	glossaries/makeglossaries-lite.lua \
-	jfontmaps/kanji-config-updmap-sys.sh \
-	jfontmaps/kanji-config-updmap.pl \
-	jfontmaps/kanji-fontmap-creator.pl \
 	kotex-utils/jamo-normalize.pl \
 	kotex-utils/komkindex.pl \
 	kotex-utils/ttf2kotexfont.pl \
 	latex-git-log/latex-git-log \
+	latex-papersize/latex-papersize.py \
 	latex2man/latex2man \
+	latex2nemeth/latex2nemeth \
 	latexdiff/latexdiff-vc.pl \
 	latexdiff/latexdiff.pl \
 	latexdiff/latexrevise.pl \
@@ -136,6 +140,7 @@ texmf_other_scripts = \
 	lilyglyphs/lily-rebuild-pdfs.py \
 	ltximg/ltximg.pl \
 	luaotfload/luaotfload-tool.lua \
+	lwarp/lwarpmk.lua \
 	m-tx/m-tx.lua \
 	makedtx/makedtx.pl \
 	make4ht/make4ht \
@@ -151,6 +156,7 @@ texmf_other_scripts = \
 	oberdiek/pdfatfi.pl \
 	pax/pdfannotextractor.pl \
 	pdfcrop/pdfcrop.pl \
+	pdflatexpicscale/pdflatexpicscale.pl \
 	pedigree-perl/pedigree.pl \
 	perltex/perltex.pl \
 	petri-nets/pn2pdf \
@@ -158,9 +164,12 @@ texmf_other_scripts = \
 	pfarrei/pfarrei.tlu \
 	pkfix-helper/pkfix-helper \
 	pkfix/pkfix.pl \
-	pmx/pmx2pdf.lua \
 	pmxchords/pmxchords.lua \
 	pst2pdf/pst2pdf.pl \
+	ptex-fontmaps/kanji-config-updmap-sys.sh \
+	ptex-fontmaps/kanji-config-updmap-user.sh \
+	ptex-fontmaps/kanji-config-updmap.pl \
+	ptex-fontmaps/kanji-fontmap-creator.pl \
 	ptex2pdf/ptex2pdf.lua \
 	purifyeps/purifyeps \
 	pygmentex/pygmentex.py \
@@ -179,10 +188,12 @@ texmf_other_scripts = \
 	texdoc/texdoc.tlu \
 	texfot/texfot.pl \
 	texlive/fmtutil-sys.sh \
+	texlive/fmtutil-user.sh \
 	texlive/fmtutil.pl \
 	texlive/rungs.tlu \
 	texlive/tlmgr.pl \
 	texlive/updmap-sys.sh \
+	texlive/updmap-user.sh \
 	texlive/updmap.pl \
 	texliveonfly/texliveonfly.py \
 	texloganalyser/texloganalyser \

@@ -29,43 +29,15 @@ else
     echo "Please try running the Gregorio intaller again"
     exit 1
 fi
-
-#Add 'gabc' to the list of file extensions which TeXShop knows
-TeXShopDir=`osascript -e 'POSIX path of (path to app "TeXShop")'`
-
-echo "Adding gabc to list of valid extensions in TeXShop"
-defaults write "$TeXShopDir/Contents/Info.plist" CFBundleDocumentTypes -array-add '<dict>
-<key>CFBundleTypeExtensions</key>
-<array>
-<string>gabc</string>
-</array>
-<key>CFBundleTypeName</key>
-<string>gabc</string>
-<key>CFBundleTypeOSTypes</key>
-<array>
-<string>GABC</string>
-</array>
-<key>CFBundleTypeRole</key>
-<string>Editor</string>
-<key>LSItemContentTypes</key>
-<array>
-<string>com.unknown.gabc</string>
-</array>
-<key>LSTypeIsPackage</key>
-<false/>
-<key>NSDocumentClass</key>
-<string>TSDocument</string>
-<key>NSPersistentStoreTypeKey</key>
-<string>Binary</string>
-</dict>'
-
-echo "Adding Gregorio file extensions to appropriate preference lists"
-#enable syntax coloring and the Typeset button for gabc files
-defaults write TeXShop OtherTeXExtensions -array-add "gabc"
-
-#Add gtex and gaux to the list of aux files deleted with Trash Aux Files
-defaults write TeXShop OtherTrashExtensions -array-add "gtex"
-defaults write TeXShop OtherTrashExtensions -array-add "gaux"
+SOURCE="/Users/Shared/Gregorio/contrib/TeXShop/LuaTeX+se.engine"
+if [ -e "$SOURCE" ]; then
+    echo "Copying LuaTeX+se.engine into TeXShop configuration"
+    cp "$SOURCE" "$ENGINEDIR"
+else
+    echo "Cannot find LuaTeX+se.engine"
+    echo "Please try running the Gregorio intaller again"
+    exit 1
+fi
 
 echo "Configuration complete"
 exit 0

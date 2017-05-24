@@ -445,11 +445,11 @@ am__DIST_COMMON = $(srcdir)/../../am/bin_links.am \
 	$(top_srcdir)/../../build-aux/missing \
 	$(top_srcdir)/../../build-aux/test-driver \
 	$(top_srcdir)/../texlive/w32_wrapper/callexe.c \
-	../../build-aux/compile ../../build-aux/config.guess \
-	../../build-aux/config.sub ../../build-aux/depcomp \
-	../../build-aux/install-sh ../../build-aux/ltmain.sh \
-	../../build-aux/missing ../../build-aux/texinfo.tex \
-	../../build-aux/ylwrap ChangeLog
+	../../build-aux/ar-lib ../../build-aux/compile \
+	../../build-aux/config.guess ../../build-aux/config.sub \
+	../../build-aux/depcomp ../../build-aux/install-sh \
+	../../build-aux/ltmain.sh ../../build-aux/missing \
+	../../build-aux/texinfo.tex ../../build-aux/ylwrap ChangeLog
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 distdir = $(PACKAGE)-$(VERSION)
 top_distdir = $(distdir)
@@ -633,13 +633,10 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 
-#************************************************************************
-#
 #  Adapted for TeX Live from dvipng-src/Makefile.in
 #  Copyright (C) 2002-2008 Jan-Åke Larsson
 #
-#************************************************************************
-EXTRA_DIST = $(DVIPNG_TREE) dvipng-PATCHES dvipng.test dvipng-test.dvi
+EXTRA_DIST = $(DVIPNG_TREE) TLpatches dvipng.test dvipng-test.dvi
 NEVER_DIST = `find . $(NEVER_NAMES)`
 
 # Files not to be distributed
@@ -1512,9 +1509,13 @@ config.force: $(dvipng_dependencies)
 @GD_RULE@
 @FREETYPE2_RULE@
 @LIBPNG_RULE@
+
+# $Id: bin_links.am 43248 2017-02-16 21:38:29Z karl $
+# am/bin_links.am: Makefile fragment for bindir links.
 .PHONY: install-bin-links uninstall-bin-links
 
 install-bin-links:
+@WIN32_FALSE@	$(MKDIR_P) $(DESTDIR)$(bindir)
 @WIN32_FALSE@	@cd $(DESTDIR)$(bindir) && \
 @WIN32_FALSE@	  for s in $(bin_links); do \
 @WIN32_FALSE@	    link=`echo $$s | sed 's,.*:,,'`; \

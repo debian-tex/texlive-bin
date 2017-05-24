@@ -2,7 +2,7 @@
 
     DVIPDFMx, an eXtended version of DVIPDFM by Mark A. Wicks.
 
-    Copyright (C) 2002-2016 by Jin-Hwan Cho, Matthias Franz, and Shunsaku Hirata,
+    Copyright (C) 2002-2017 by Jin-Hwan Cho, Matthias Franz, and Shunsaku Hirata,
     the DVIPDFMx project team.
     
     Copyright (c) 2006 SIL. (xdvipdfmx extensions for XeTeX support)
@@ -66,7 +66,11 @@
 int is_xdv = 0;
 int translate_origin = 0;
 
+#if defined(LIBDPX)
+const char *my_name = "ApTeX";
+#else
 const char *my_name;
+#endif /* LIBDPX */
 
 int compat_mode = 0;     /* 0 = dvipdfmx, 1 = dvipdfm */
 
@@ -115,6 +119,8 @@ double paper_height = 842.0;
 static double x_offset = 72.0;
 static double y_offset = 72.0;
 int    landscape_mode  = 0;
+static int psize_optionp = 0;
+static char *psize_optarg = NULL;
 
 int always_embed = 0; /* always embed fonts, regardless of licensing flags */
 
@@ -158,8 +164,8 @@ show_version (void)
   if (*my_name == 'x')
     printf ("an extended version of DVIPDFMx, which in turn was\n");
   printf ("an extended version of dvipdfm-0.13.2c developed by Mark A. Wicks.\n");
-  printf ("\nCopyright (C) 2002-2016 the DVIPDFMx project team\n");
-  printf ("Copyright (C) 2006-2016 SIL International.\n");
+  printf ("\nCopyright (C) 2002-2017 the DVIPDFMx project team\n");
+  printf ("Copyright (C) 2006-2017 SIL International.\n");
   printf ("\nThis is free software; you can redistribute it and/or modify\n");
   printf ("it under the terms of the GNU General Public License as published by\n");
   printf ("the Free Software Foundation; either version 2 of the License, or\n");
@@ -190,7 +196,7 @@ show_usage (void)
   printf ("  -r resolution\tSet resolution (in DPI) for raster fonts [600]\n");
   printf ("  -s pages\tSelect page ranges [all pages]\n");
   printf ("  --showpaper\tShow available paper formats and exit\n");
-  printf ("  -t \t\tEmbed thumbnail images of PNG format [DVIFILE.1] \n");
+  printf ("  -t \t\tEmbed thumbnail images of PNG format (DVIFILE.pageno, pageno=int) \n");
   printf ("  --version\tOutput version information and exit\n");
   printf ("  -v \t\tBe verbose\n");
   printf ("  -vv\t\tBe more verbose\n");
@@ -251,7 +257,11 @@ read_length (double *vp, const char **pp, const char *endptr)
 #define K_UNIT__CM  2
 #define K_UNIT__MM  3
 #define K_UNIT__BP  4
-    "pt", "in", "cm", "mm", "bp",
+#define K_UNIT__PC  5
+#define K_UNIT__DD  6
+#define K_UNIT__CC  7
+#define K_UNIT__SP  8
+    "pt", "in", "cm", "mm", "bp", "pc", "dd", "cc", "sp",
      NULL
   };
   int     k, error = 0;
@@ -286,6 +296,10 @@ read_length (double *vp, const char **pp, const char *endptr)
       case K_UNIT__CM: u *= 72.0 / 2.54 ; break;
       case K_UNIT__MM: u *= 72.0 / 25.4 ; break;
       case K_UNIT__BP: u *= 1.0 ; break;
+      case K_UNIT__PC: u *= 12.0 * 72.0 / 72.27 ; break;
+      case K_UNIT__DD: u *= 1238.0 / 1157.0 * 72.0 / 72.27 ; break;
+      case K_UNIT__CC: u *= 12.0 * 1238.0 / 1157.0 * 72.0 / 72.27 ; break;
+      case K_UNIT__SP: u *= 72.0 / (72.27 * 65536) ; break;
       default:
         WARN("Unknown unit of measure: %s", q);
         error = -1;
@@ -388,7 +402,7 @@ select_pages (const char *pagespec)
   return;
 }
 
-static const char *optstrig = ":hD:r:m:g:x:y:o:s:t:p:clf:i:qvV:z:d:I:S:K:P:O:MC:Ee";
+static const char *optstrig = ":hD:r:m:g:x:y:o:s:p:clf:i:qtvV:z:d:I:K:P:O:MSC:Ee";
 
 static struct option long_options[] = {
   {"help", 0, 0, 'h'},
@@ -456,14 +470,23 @@ do_early_args (int argc, char *argv[])
   }
 }
 
+/* Set "unsafe" to non-zero value when parsing config specials to
+ * disallow overriding "D" option value.
+ */
 static void
-do_args (int argc, char *argv[], const char *source)
+do_args (int argc, char *argv[], const char *source, int unsafe)
 {
   int c;
   char *nextptr;
   const char *nnextptr;
 
   optind = 1;
+  /* clear psize_optionp and psize_optarg here, since do_args()
+     is called several times */
+  psize_optionp = 0;
+  if (psize_optarg)
+    RELEASE(psize_optarg);
+  psize_optarg = NULL;
 
   while ((c = getopt_long(argc, argv, optstrig, long_options, NULL)) != -1) {
     switch(c) {
@@ -479,7 +502,11 @@ do_args (int argc, char *argv[], const char *source)
       break;
 
     case 'D':
+      if (unsafe) {
+        WARN("Ignoring \"D\" option for dvipdfmx:config special. (unsafe)");
+      } else {
       set_distiller_template(optarg);
+      }
       break;
 
     case 'r':
@@ -522,6 +549,14 @@ do_args (int argc, char *argv[], const char *source)
 
     case 'p':
       select_paper(optarg);
+      /* save data for later use in order to overwrite papersize and
+         pagesize specials */
+      psize_optionp = 1;
+      /* there may be multiple -p options */
+      if (psize_optarg)
+        RELEASE(psize_optarg);
+      psize_optarg = NEW(strlen(optarg) + 1, char);
+      strcpy(psize_optarg, optarg);
       break;
 
     case 'c':
@@ -696,7 +731,7 @@ read_config_file (const char *config)
           argv[2] = parse_ident (&start, end);
       }
     }
-    do_args (argc, argv, config);
+    do_args (argc, argv, config, 0);
     while (argc > 1) {
       RELEASE (argv[--argc]);
     }
@@ -736,7 +771,7 @@ read_config_special (const char **start, const char *end)
 	argv[2] = parse_ident (start, end);
     }
   }
-  do_args (argc, argv, argv0);
+  do_args (argc, argv, argv0, 1); /* Set to unsafe */
   while (argc > 1) {
     RELEASE (argv[--argc]);
   }
@@ -909,6 +944,7 @@ do_mps_pages (void)
   }
 }
 
+#if !defined(LIBDPX)
 /* Support to make DLL in W32TeX */
 #define DLLPROC dlldvipdfmxmain
 
@@ -917,6 +953,7 @@ extern __declspec(dllexport) int DLLPROC (int argc, char *argv[]);
 #else
 #undef DLLPROC
 #endif
+#endif /* !LIBDPX */
 
 #if defined(MIKTEX)
 #  define main Main
@@ -926,7 +963,11 @@ int
 #if defined(DLLPROC)
 DLLPROC (int argc, char *argv[])
 #else
+#if defined(LIBDPX)
+dvipdfmx_main (int argc, char *argv[])
+#else
 main (int argc, char *argv[])
+#endif /* LIBDPX */
 #endif
 {
   double dvi2pts;
@@ -991,7 +1032,7 @@ main (int argc, char *argv[])
 
   read_config_file(DPX_CONFIG_FILE);
 
-  do_args (argc, argv, NULL);
+  do_args (argc, argv, NULL, 0);
 
 #ifndef MIKTEX
   kpse_init_prog("", font_dpi, NULL, NULL);
@@ -1071,6 +1112,13 @@ main (int argc, char *argv[])
         do_encryption = 1;
         pdf_enc_set_passwd(key_bits, permission, owner_pw, user_pw);
       }
+    }
+    /* overwrite previous papersize by that given in -p option */
+    if (psize_optionp) {
+      select_paper(psize_optarg);
+      RELEASE(psize_optarg);
+      psize_optarg = NULL;
+      psize_optionp = 0;
     }
     if (landscape_mode) {
       SWAP(paper_width, paper_height);

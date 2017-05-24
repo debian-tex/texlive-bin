@@ -6,7 +6,7 @@
 //
 // Copyright 2006 Julien Rebetez <julienr@svn.gnome.org>
 // Copyright 2007, 2008, 2011 Carlos Garcia Campos <carlosgc@gnome.org>
-// Copyright 2007-2010, 2012, 2015 Albert Astals Cid <aacid@kde.org>
+// Copyright 2007-2010, 2012, 2015, 2016 Albert Astals Cid <aacid@kde.org>
 // Copyright 2010 Mark Riedesel <mark@klowner.com>
 // Copyright 2011 Pino Toscano <pino@kde.org>
 // Copyright 2012 Fabio D'Urso <fabiodurso@hotmail.it>
@@ -98,6 +98,7 @@ public:
   double getFontSize() const;
 
   GooString *getPartialName() const;
+  void setPartialName(const GooString &name);
   GooString *getAlternateUiName() const;
   GooString *getMappingName() const;
   GooString *getFullyQualifiedName();
@@ -106,8 +107,8 @@ public:
 
   bool isReadOnly() const;
 
-  LinkAction *getActivationAction();
-  LinkAction *getAdditionalAction(Annot::FormAdditionalActionsType type);
+  LinkAction *getActivationAction(); // The caller should not delete the result
+  LinkAction *getAdditionalAction(Annot::FormAdditionalActionsType type); // The caller should delete the result
 
   // return the unique ID corresponding to pageNum/fieldNum
   static int encodeID (unsigned pageNum, unsigned fieldNum);
@@ -167,8 +168,8 @@ public:
   void updateWidgetAppearance();
 
 protected:
+  FormFieldButton *parent() const;
   GooString *onStr;
-  FormFieldButton *parent;
 };
 
 //------------------------------------------------------------------------
@@ -197,7 +198,7 @@ public:
   bool isRichText () const;
   int getMaxLen () const;
 protected:
-  FormFieldText *parent;
+  FormFieldText *parent() const;
 };
 
 //------------------------------------------------------------------------
@@ -238,7 +239,7 @@ public:
   bool isListBox () const;
 protected:
   bool _checkRange (int i);
-  FormFieldChoice *parent;
+  FormFieldChoice *parent() const;
 };
 
 //------------------------------------------------------------------------
@@ -251,9 +252,6 @@ public:
   void updateWidgetAppearance();
 
   SignatureInfo *validateSignature(bool doVerifyCert, bool forceRevalidation);
-
-protected:
-  FormFieldSignature *parent;
 };
 
 //------------------------------------------------------------------------
@@ -282,6 +280,7 @@ public:
   VariableTextQuadding getTextQuadding() const { return quadding; }
 
   GooString *getPartialName() const { return partialName; }
+  void setPartialName(const GooString &name);
   GooString *getAlternateUiName() const { return alternateUiName; }
   GooString *getMappingName() const { return mappingName; }
   GooString *getFullyQualifiedName();

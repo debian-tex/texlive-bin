@@ -1,12 +1,15 @@
+## $Id$
 ## Makefile.am for the TeX Live subdirectory utils/pmx/
 ##
-## Copyright (C) 2012-2015 Peter Breitenlohner <tex-live@tug.org>
+## Copyright 2017 Karl Berry <tex-live@tug.org>
+## Copyright 2012-2015 Peter Breitenlohner <tex-live@tug.org>
 ## You may freely use, modify and/or distribute this file.
-##
+
 ## We want to re-distribute the whole original pmx source tree.
 EXTRA_DIST = $(PMX_TREE)
+
 ## Patches applied to the original source tree
-EXTRA_DIST += pmx-PATCHES
+EXTRA_DIST += TLpatches
 
 # Files not to be distributed
 include $(srcdir)/../../am/dist_hook.am
@@ -237,11 +240,10 @@ EXTRA_libf2c_a_SOURCES += \
 dist_man1_MANS = pmxab.1 scor2prt.1
 
 ## Tests
-##
+AM_TESTS_ENVIRONMENT = test_src=$(srcdir)/$(PMX_TREE)/tests; export test_src;
+#
 TESTS = $(PMX_TREE)/pmx.test
 $(PMX_TREE)/pmx.log: pmxab$(EXEEXT) scor2prt$(EXEEXT)
-
-TESTS_ENVIRONMENT = test_src=$(srcdir)/$(PMX_TREE)/tests
 
 ## $(PMX_TREE)/pmx.test
 DISTCLEANFILES = barsant* pmxaerr.dat

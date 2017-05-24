@@ -15,7 +15,7 @@
 //
 // Copyright (C) 2005 Takashi Iwai <tiwai@suse.de>
 // Copyright (C) 2006 Stefan Schweizer <genstef@gentoo.org>
-// Copyright (C) 2006-2015 Albert Astals Cid <aacid@kde.org>
+// Copyright (C) 2006-2016 Albert Astals Cid <aacid@kde.org>
 // Copyright (C) 2006 Krzysztof Kowalczyk <kkowalczyk@gmail.com>
 // Copyright (C) 2006 Scott Turner <scotty1024@mac.com>
 // Copyright (C) 2007 Koji Otani <sho@bbr.jp>
@@ -36,6 +36,7 @@
 // Copyright (C) 2014 Richard PALO <richard@netbsd.org>
 // Copyright (C) 2015 Tamas Szekeres <szekerest@gmail.com>
 // Copyright (C) 2015 Kenji Uno <ku@digitaldolphins.jp>
+// Copyright (C) 2016 Takahiro Hashimoto <kenya888.en@gmail.com>
 //
 // To see a description of the changes please see the Changelog file that
 // came with your tarball or type make ChangeLog if you are building from git
@@ -91,6 +92,13 @@ extern "C" int unlink(char *filename);
 #include <ieeefp.h>
 #ifndef isfinite
 #define isfinite(x) finite(x)
+#endif
+#endif
+
+#if __cplusplus > 199711L
+#include <cmath>
+#ifndef isfinite
+#define isfinite(x) std::isfinite(x)
 #endif
 #endif
 
@@ -1315,6 +1323,10 @@ T3FontCache::~T3FontCache() {
 struct T3GlyphStack {
   Gushort code;			// character code
 
+  GBool haveDx;			// set after seeing a d0/d1 operator
+  GBool doNotCache;		// set if we see a gsave/grestore before
+				//   the d0/d1
+
   //----- cache info
   T3FontCache *cache;		// font cache for the current font
   T3FontCacheTag *cacheTag;	// pointer to cache tag for the glyph
@@ -1592,11 +1604,21 @@ void SplashOutputDev::endPage() {
 
 void SplashOutputDev::saveState(GfxState *state) {
   splash->saveState();
+  if (t3GlyphStack && !t3GlyphStack->haveDx) {
+    t3GlyphStack->doNotCache = gTrue;
+    error(errSyntaxWarning, -1,
+	  "Save (q) operator before d0/d1 in Type 3 glyph");
+  }
 }
 
 void SplashOutputDev::restoreState(GfxState *state) {
   splash->restoreState();
   needFontUpdate = gTrue;
+  if (t3GlyphStack && !t3GlyphStack->haveDx) {
+    t3GlyphStack->doNotCache = gTrue;
+    error(errSyntaxWarning, -1,
+	  "Restore (Q) operator before d0/d1 in Type 3 glyph");
+  }
 }
 
 void SplashOutputDev::updateAll(GfxState *state) {
@@ -2052,6 +2074,7 @@ void SplashOutputDev::doUpdateFont(GfxState *state) {
 reload:
   delete id;
   delete fontLoc;
+  fontLoc = NULL;
   if (fontsrc && !fontsrc->isFile)
       fontsrc->unref();
 
@@ -2659,8 +2682,8 @@ GBool SplashOutputDev::beginType3Char(GfxState *state, double x, double y,
   t3GlyphStack->cache = t3Font;
   t3GlyphStack->cacheTag = NULL;
   t3GlyphStack->cacheData = NULL;
-
-  haveT3Dx = gFalse;
+  t3GlyphStack->haveDx = gFalse;
+  t3GlyphStack->doNotCache = gFalse;
 
   return gFalse;
 }
@@ -2690,7 +2713,7 @@ void SplashOutputDev::endType3Char(GfxState *state) {
 }
 
 void SplashOutputDev::type3D0(GfxState *state, double wx, double wy) {
-  haveT3Dx = gTrue;
+  t3GlyphStack->haveDx = gTrue;
 }
 
 void SplashOutputDev::type3D1(GfxState *state, double wx, double wy,
@@ -2702,10 +2725,14 @@ void SplashOutputDev::type3D1(GfxState *state, double wx, double wy,
   int i, j;
 
   // ignore multiple d0/d1 operators
-  if (haveT3Dx) {
+  if (t3GlyphStack->haveDx) {
     return;
   }
-  haveT3Dx = gTrue;
+  t3GlyphStack->haveDx = gTrue;
+  // don't cache if we got a gsave/grestore before the d1
+  if (t3GlyphStack->doNotCache) {
+    return;
+  }
 
   if (unlikely(t3GlyphStack == NULL)) {
     error(errSyntaxWarning, -1, "t3GlyphStack was null in SplashOutputDev::type3D1");
@@ -3269,17 +3296,17 @@ void SplashOutputDev::iccTransform(void *data, SplashBitmap *bitmap) {
       Guchar *q;
       Guchar *b = p;
       int x;
-      for (x = 0, q = rgbxLine; x < bitmap->getWidth(); ++x, ++b) {
-        *q++ = *b++;
-        *q++ = *b++;
-        *q++ = *b++;
+      for (x = 0, q = rgbxLine; x < bitmap->getWidth(); ++x, b+=4) {
+        *q++ = b[2];
+        *q++ = b[1];
+        *q++ = b[0];
       }
       imgData->colorMap->getRGBLine(rgbxLine, colorLine, bitmap->getWidth());
       b = p;
-      for (x = 0, q = colorLine; x < bitmap->getWidth(); ++x, ++b) {
-        *b++ = *q++;
-        *b++ = *q++;
-        *b++ = *q++;
+      for (x = 0, q = colorLine; x < bitmap->getWidth(); ++x, b+=4) {
+        b[2] = *q++;
+        b[1] = *q++;
+        b[0] = *q++;
       }
       break;
     }
@@ -3988,6 +4015,16 @@ void SplashOutputDev::drawSoftMaskedImage(GfxState *state, Object *ref,
 
   //----- set up the soft mask
 
+  if (maskColorMap->getMatteColor() != NULL) {
+    Guchar *data = (Guchar *) gmalloc(maskWidth * maskHeight);
+    maskStr->reset();
+    maskStr->doGetChars(maskWidth * maskHeight, data);
+    maskStr->close();
+    Object *maskDict = new Object();
+    maskDict->initDict(maskStr->getDict());
+    maskStr = new MemStream((char *)data, 0, maskWidth * maskHeight, maskDict);
+    ((MemStream *) maskStr)->setNeedFree(gTrue);
+  }
   imgMaskData.imgStr = new ImageStream(maskStr, maskWidth,
 				       maskColorMap->getNumPixelComps(),
 				       maskColorMap->getBits());
@@ -4015,6 +4052,9 @@ void SplashOutputDev::drawSoftMaskedImage(GfxState *state, Object *ref,
   maskSplash->drawImage(&imageSrc, NULL, &imgMaskData, splashModeMono8, gFalse,
 			maskWidth, maskHeight, mat, maskInterpolate);
   delete imgMaskData.imgStr;
+  if (maskColorMap->getMatteColor() == NULL) {
+    maskStr->close();
+  }
   gfree(imgMaskData.lookup);
   delete maskSplash;
   splash->setSoftMask(maskBitmap);
@@ -4114,7 +4154,10 @@ void SplashOutputDev::drawSoftMaskedImage(GfxState *state, Object *ref,
   gfree(imgData.lookup);
   delete imgData.maskStr;
   delete imgData.imgStr;
-  maskStr->close();
+  if (maskColorMap->getMatteColor() != NULL) {
+    maskStr->close();
+    delete maskStr;
+  }
   str->close();
 }
 
@@ -4753,17 +4796,17 @@ GBool SplashOutputDev::gouraudTriangleShadedFill(GfxState *state, GfxGouraudTria
     default:
     break;
   }
-  SplashGouraudColor *splashShading = new SplashGouraudPattern(bDirectColorTranslation, state, shading, colorMode);
   // restore vector antialias because we support it here
   if (shading->isParameterized()) {
+    SplashGouraudColor *splashShading = new SplashGouraudPattern(bDirectColorTranslation, state, shading, colorMode);
     GBool vaa = getVectorAntialias();
     GBool retVal = gFalse;
     setVectorAntialias(gTrue);
     retVal = splash->gouraudTriangleShadedFill(splashShading);
     setVectorAntialias(vaa);
+    delete splashShading;
     return retVal;
   }
-  delete splashShading;
   return gFalse;
 }
 

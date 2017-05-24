@@ -1,7 +1,8 @@
+## $Id$
 ## Proxy Makefile.am to build poppler for TeX Live.
 ##
-##   Copyright (C) 2016 Karl Berry <tex-live@tug.org>
-##   Copyright (C) 2011-2015 Peter Breitenlohner <tex-live@tug.org>
+##   Copyright 2016-2017 Karl Berry <tex-live@tug.org>
+##   Copyright 2011-2015 Peter Breitenlohner <tex-live@tug.org>
 ##
 ##   This file is free software; the copyright holder
 ##   gives unlimited permission to copy and/or distribute it,
@@ -13,7 +14,7 @@ EXTRA_DIST = $(POPPLER_TREE)
 
 ## Changes applied to the original source tree
 ##
-EXTRA_DIST += poppler-PATCHES
+EXTRA_DIST += TLpatches
 
 # Files not to be distributed
 include $(srcdir)/../../am/dist_hook.am
@@ -41,6 +42,7 @@ nodist_libpoppler_a_SOURCES = \
 
 goo_libGoo_a_sources = \
 	@POPPLER_TREE@/goo/gfile.cc \
+	@POPPLER_TREE@/goo/glibc.cc \
 	@POPPLER_TREE@/goo/gmem.cc \
 	@POPPLER_TREE@/goo/gmempp.cc \
 	@POPPLER_TREE@/goo/grandom.cc \

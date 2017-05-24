@@ -1,9 +1,9 @@
 #!/usr/bin/env perl
-# $Id: updmap.pl 37866 2015-07-17 19:00:04Z preining $
+# $Id: updmap.pl 44331 2017-05-14 02:15:43Z preining $
 # updmap - maintain map files for outline fonts.
 # (Maintained in TeX Live:Master/texmf-dist/scripts/texlive.)
 # 
-# Copyright 2011-2015 Norbert Preining
+# Copyright 2011-2017 Norbert Preining
 # This file is licensed under the GNU General Public License version 2
 # or any later version.
 #
@@ -14,7 +14,7 @@
 # the original versions were licensed under the following agreement:
 # Anyone may freely use, modify, and/or distribute this file, without
 
-my $svnid = '$Id: updmap.pl 37866 2015-07-17 19:00:04Z preining $';
+my $svnid = '$Id: updmap.pl 44331 2017-05-14 02:15:43Z preining $';
 
 my $TEXMFROOT;
 BEGIN {
@@ -27,10 +27,10 @@ BEGIN {
   unshift(@INC, "$TEXMFROOT/tlpkg");
 }
 
-my $lastchdate = '$Date: 2015-07-17 21:00:04 +0200 (Fri, 17 Jul 2015) $';
+my $lastchdate = '$Date: 2017-05-14 04:15:43 +0200 (Sun, 14 May 2017) $';
 $lastchdate =~ s/^\$Date:\s*//;
 $lastchdate =~ s/ \(.*$//;
-my $svnrev = '$Revision: 37866 $';
+my $svnrev = '$Revision: 44331 $';
 $svnrev =~ s/^\$Revision:\s*//;
 $svnrev =~ s/\s*\$$//;
 my $version = "r$svnrev ($lastchdate)";
@@ -73,6 +73,7 @@ my $updLSR;
 
 my @cmdline_options = (
   "sys",
+  "user",
   "listfiles",
   "cnffile=s@", 
   "copy", 
@@ -136,13 +137,25 @@ my %settings = (
     type     => "binary",
     default  => "false",
   },
-  kanjiEmbed            => {
+  jaEmbed               => {
     type     => "any",
     default  => "noEmbed",
   },
-  kanjiVariant          => {
+  jaVariant             => {
     type     => "any",
     default  => "",
+  },
+  scEmbed            => {
+    type     => "any",
+    default  => "noEmbed",
+  },
+  tcEmbed            => {
+    type     => "any",
+    default  => "noEmbed",
+  },
+  koEmbed            => {
+    type     => "any",
+    default  => "noEmbed",
   },
 );
 
@@ -160,27 +173,9 @@ sub main {
     exit (0);
   }
 
-  # check if we are in *hidden* sys mode, in which case we switch
-  # to sys mode
-  # Nowdays we use -sys switch instead of simply overriding TEXMFVAR
-  # and TEXMFCONFIG
-  # This is used to warn users when they run updmap in usermode the first time.
-  # But it might happen that this script is called via another wrapper that
-  # sets TEXMFCONFIG and TEXMFVAR, and does not pass on the -sys option.
-  # for this case we check whether the SYS and non-SYS variants agree,
-  # and if, then switch to sys mode (with a warning)
-  if (($TEXMFSYSCONFIG eq $TEXMFCONFIG) && ($TEXMFSYSVAR eq $TEXMFVAR)) {
-    if (!$opts{'sys'}) {
-      print_warning("hidden sys mode found, switching to sys mode.\n");
-      $opts{'sys'} = 1;
-    }
-  }
-
-  if ($opts{'sys'}) {
-    # we are running as updmap-sys, make sure that the right tree is used
-    $texmfconfig = $TEXMFSYSCONFIG;
-    $texmfvar    = $TEXMFSYSVAR;
-  }
+  ($texmfconfig, $texmfvar) = 
+    TeXLive::TLUtils::setup_sys_user_mode($prg, \%opts,
+      $TEXMFCONFIG, $TEXMFSYSCONFIG, $TEXMFVAR, $TEXMFSYSVAR);
 
   if ($opts{'dvipdfmoutputdir'} && !defined($opts{'dvipdfmxoutputdir'})) {
     $opts{'dvipdfmxoutputdir'} = $opts{'dvipdfmoutputdir'};
@@ -871,6 +866,10 @@ sub cidx2dvips {
       $italicmax = .3;
       s/,Italic//;
     }
+    # replace supported "/AJ16" and co. for ptex-fontmaps CID emulation
+    # note that the emulation method in GS is incomplete
+    # due to "Reversal CMap method" (cf. "ToUnicode method")
+    s!/A[JGCK]1[0-6]!!;
     # break out if unsupported constructs are found: @ / ,
     next if (m![\@/,]!);
     # make everything single spaced
@@ -995,8 +994,19 @@ sub mkMaps {
   my ($pdftexDownloadBase14, $pdftexDownloadBase14_origin) = 
     get_cfg('pdftexDownloadBase14');
   my ($pxdviUse, $pxdviUse_origin) = get_cfg('pxdviUse');
-  my ($kanjiEmbed, $kanjiEmbed_origin) = get_cfg('kanjiEmbed');
-  my ($kanjiVariant, $kanjiVariant_origin) = get_cfg('kanjiVariant');
+  my ($jaEmbed, $jaEmbed_origin) = get_cfg('jaEmbed');
+  my ($jaVariant, $jaVariant_origin) = get_cfg('jaVariant');
+  my ($scEmbed, $scEmbed_origin) = get_cfg('scEmbed');
+  my ($tcEmbed, $tcEmbed_origin) = get_cfg('tcEmbed');
+  my ($koEmbed, $koEmbed_origin) = get_cfg('koEmbed');
+
+  # keep backward compatibility with old definitions
+  # of kanjiEmbed, kanjiVariant
+  ($jaEmbed, $jaEmbed_origin) = get_cfg('kanjiEmbed')
+    if (!defined($jaEmbed));
+  ($jaVariant, $jaVariant_origin) = get_cfg('kanjiVariant')
+    if (!defined($jaVariant));
+
 
   # pxdvi is optional, and off by default.  Don't create the output
   # directory unless we are going to put something there.
@@ -1014,10 +1024,16 @@ sub mkMaps {
          .      "$dvipsDownloadBase35 ($dvipsDownloadBase35_origin)"
          . "\n  download standard fonts (pdftex) : "
          .      "$pdftexDownloadBase14 ($pdftexDownloadBase14_origin)"
-         . "\n  kanjiEmbed replacement string    : "
-         .      "$kanjiEmbed ($kanjiEmbed_origin)"
-         . "\n  kanjiVariant replacement string  : "
-         .      "$kanjiVariant ($kanjiVariant_origin)"
+         . "\n  jaEmbed replacement string       : "
+         .      "$jaEmbed ($jaEmbed_origin)"
+         . "\n  jaVariant replacement string     : "
+         .      ($jaVariant ? $jaVariant : "<empty>") . " ($jaVariant_origin)"
+         . "\n  scEmbed replacement string       : "
+         .      "$scEmbed ($scEmbed_origin)"
+         . "\n  tcEmbed replacement string       : "
+         .      "$tcEmbed ($tcEmbed_origin)"
+         . "\n  koEmbed replacement string       : "
+         .      "$koEmbed ($koEmbed_origin)"
          . "\n  create a mapfile for pxdvi       : "
          .      "$pxdviUse ($pxdviUse_origin)"
          . "\n\n");
@@ -1311,16 +1327,23 @@ sub mkMaps {
   # all kind of warning messages
   if ($first_time_creation_in_usermode) {
     print_and_log("
-WARNING: you are switching to updmap's per-user mappings.
+*************************************************************
+*                                                           *
+* WARNING: you are switching to updmap's per-user mappings. *
+*            Please read the following explanations.        *
+*                                                           *
+*************************************************************
 
-You have run updmap (as opposed to updmap-sys) for the first time; this
+You have run updmap-user (as opposed to updmap-sys) for the first time; this
 has created configuration files which are local to your personal account.
 
 Any changes in system map files will *not* be automatically reflected in
 your files; furthermore, running updmap-sys will no longer have any
-effect for you.  As a consequence, you have to rerun updmap yourself
+effect for you.  As a consequence, you have to rerun updmap-user yourself
 after any change in the system directories; for example, if a new font
 package is added.
+
+See http://tug.org/texlive/scripts-sys-user.html for details.
 
 If you want to undo this, remove the files mentioned above.
 
@@ -1457,12 +1480,16 @@ sub enable_disable_maps {
   my $tc = $alldata->{'changes_config'};
   die "$prg: top config file $tc has not been read."
     if (!defined($alldata->{'updmap'}{$tc}));
-  my $changed = 0;
 
   for my $w (@what) {
     if ($w =~ m/=/) {
       # this is --enable MapType=MapName
       my ($type, $map) = split ('=', $w);
+      # allow for all lowercase map types (map/mixedmap/kanjimap)
+      $type =~ s/map$/Map/;
+      $type = ucfirst($type);
+      # don't allow map names containing /
+      die "$prg: map names cannot contain /: $map\n" if ($map =~ m{/});
       enable_map($tc, $type, $map);
     } else {
       # this is --disable MapName
@@ -1639,6 +1666,16 @@ sub check_option {
 #
 sub setOption {
   my ($opt, $val) = @_;
+
+  # allow backward compatility with old kanjiEmbed and kanjiVariant settings
+  if ($opt eq "kanjiEmbed") {
+    print_warning("using jaEmbed instead of kanjiEmbed\n");
+    $opt = "jaEmbed";
+  }
+  if ($opt eq "kanjiVariant") {
+    print_warning("using jaVariant instead of kanjiVariant\n");
+    $opt = "jaVariant";
+  }
 
   die "$prg: Unsupported option $opt." if (!defined($settings{$opt}));
   die "$0: Invalid value $val for option $opt." 
@@ -1863,8 +1900,19 @@ sub merge_settings_replace_kanji {
     }
   }
   #
-  my ($kanjiEmbed, $kanjiEmbed_origin) = get_cfg('kanjiEmbed');
-  my ($kanjiVariant, $kanjiVariant_origin) = get_cfg('kanjiVariant');
+  my ($jaEmbed, $jaEmbed_origin) = get_cfg('jaEmbed');
+  my ($jaVariant, $jaVariant_origin) = get_cfg('jaVariant');
+  my ($scEmbed, $scEmbed_origin) = get_cfg('scEmbed');
+  my ($tcEmbed, $tcEmbed_origin) = get_cfg('tcEmbed');
+  my ($koEmbed, $koEmbed_origin) = get_cfg('koEmbed');
+
+  # keep backward compatibility with old definitions
+  # of kanjiEmbed, kanjiVariant
+  ($jaEmbed, $jaEmbed_origin) = get_cfg('kanjiEmbed')
+    if (!defined($jaEmbed));
+  ($jaVariant, $jaVariant_origin) = get_cfg('kanjiVariant')
+    if (!defined($jaVariant));
+
   #
   # go through all map files and check that the text is properly replaced
   # after the replacement check that the generated map file actually
@@ -1872,10 +1920,19 @@ sub merge_settings_replace_kanji {
   #
   for my $l (@l) {
     for my $m (keys %{$alldata->{'updmap'}{$l}{'maps'}}) {
-      if ($m =~ m/\@kanjiEmbed@/ || $m =~ m/\@kanjiVariant@/) {
-        my $newm = $m;
-        $newm =~ s/\@kanjiEmbed@/$kanjiEmbed/;
-        $newm =~ s/\@kanjiVariant@/$kanjiVariant/;
+      my $newm = $m;
+      # do all kinds of substitutions
+      $newm =~ s/\@jaEmbed@/$jaEmbed/;
+      $newm =~ s/\@jaVariant@/$jaVariant/;
+      $newm =~ s/\@scEmbed@/$scEmbed/;
+      $newm =~ s/\@tcEmbed@/$tcEmbed/;
+      $newm =~ s/\@koEmbed@/$koEmbed/;
+      # also do substitutions of old strings in case they are left
+      # over somewhere
+      $newm =~ s/\@kanjiEmbed@/$jaEmbed/;
+      $newm =~ s/\@kanjiVariant@/$jaVariant/;
+      if ($newm ne $m) {
+        # something was substituted
         if (locateMap($newm)) {
           # now we have to update various linked items
           $alldata->{'updmap'}{$l}{'maps'}{$newm}{'type'} =
@@ -1886,7 +1943,7 @@ sub merge_settings_replace_kanji {
             $alldata->{'updmap'}{$l}{'maps'}{$m}{'line'};
           $alldata->{'updmap'}{$l}{'maps'}{$newm}{'original'} = $m;
         } else {
-          print_warning("generated map $newm (from $m) does not exists, not activating it!\n");
+          print_warning("generated map $newm (from $m) does not exist, not activating it!\n");
         }
         # in any case delete the @kanji...@ entry line, such a map will
         # never exist
@@ -1953,6 +2010,9 @@ sub read_updmap_file {
     if (@rest) {
       print_warning("line $i in $fn contains a syntax error, more than two words!\n");
     }
+    # backward compatibility with kanjiEmbed/kanjiVariant
+    $a = ($a eq "kanjiEmbed" ? "jaEmbed" : $a);
+    $a = ($a eq "kanjiVariant" ? "jaVariant" : $a);
     if (defined($settings{$a})) {
       if (check_option($a, $b)) {
         $data{'setting'}{$a}{'val'} = $b;
@@ -2179,8 +2239,9 @@ sub version {
 
 sub help {
   my $usage = <<"EOF";
-Usage: $prg     [OPTION] ... [COMMAND]
-   or: $prg-sys [OPTION] ... [COMMAND]
+Usage: $prg [-user|-sys] [OPTION] ... [COMMAND]
+   or: $prg-user [OPTION] ... [COMMAND]
+   or: $prg-sys  [OPTION] ... [COMMAND]
 
 Update the default font map files used by pdftex (pdftex.map), dvips
 (psfonts.map), and dvipdfm(x), and optionally pxdvi, as determined by
@@ -2191,16 +2252,20 @@ Among other things, these map files are used to determine which fonts
 should be used as bitmaps and which as outlines, and to determine which
 font files are included, typically subsetted, in the PDF or PostScript output.
 
-updmap-sys is intended to affect the system-wide configuration, while
-updmap affects personal configuration files only, overriding the system
-files.  As a consequence, once updmap has been run, even a single time,
+updmap-sys (or updmap -sys) is intended to affect the system-wide 
+configuration, while updmap-user (or updmap -user) affects personal
+configuration files only, overriding the system files.  
+As a consequence, once updmap-user has been run, even a single time,
 running updmap-sys no longer has any effect.  (updmap-sys issues a
 warning in this situation.)
+
+See http://tug.org/texlive/scripts-sys-user.html for details.
 
 By default, the TeX filename database (ls-R) is also updated.
 
 The updmap system is regrettably complicated, for both inherent and
 historical reasons.  A general overview:
+
 - updmap.cfg files are mainly about listing other files, namely the
   font-specific .maps, in which each line gives information about a
   different TeX (.tfm) font.
@@ -2227,6 +2292,7 @@ Options:
   --nomkmap                 do not recreate map files
   --nohash                  do not run texhash
   --sys                     affect system-wide files (equivalent to updmap-sys)
+  --user                    affect personal files (equivalent to updmap-user)
   -n, --dry-run             only show the configuration, no output
   --quiet, --silent         reduce verbosity
 
@@ -2247,12 +2313,39 @@ Commands:
   --listavailablemaps       list available maps (details below)
   --syncwithtrees           disable unavailable map files in updmap.cfg
 
-Explanation of the map types: the (only) difference between Map and
-MixedMap is that MixedMap entries are not added to psfonts_pk.map.
-The purpose is to help users with devices that render Type 1 outline
-fonts worse than mode-tuned Type 1 bitmap fonts.  So, MixedMap is used
-for fonts that are available as both Type 1 and Metafont.
-KanjiMap entries are added to psfonts_t1.map and kanjix.map.
+The main output:
+
+  The main output of updmap is the files containing the individual font
+  map lines which the drivers (dvips, pdftex, etc.) read to handle fonts.
+  
+  The map files for dvips (psfonts.map) and pdftex and dvipdfmx
+  (pdftex.map) are written to TEXMFVAR/fonts/map/updmap/{dvips,pdftex}/.
+  
+  In addition, information about Kanji fonts is written to
+  TEXMFVAR/fonts/map/updmap/dvipdfmx/kanjix.map, and optionally to 
+  TEXMFVAR/fonts/map/updmap/pxdvi/xdvi-ptex.map.  These are for Kanji
+  only and are not like other map files.  dvipdfmx reads pdftex.map for
+  the map entries for non-Kanji fonts.
+  
+  If no option is given, so the invocation is just "updmap-user" or
+  "updmap-sys", these output files are always recreated.
+
+  Otherwise, if an option such as --enable or --disable is given, the
+  output files are recreated if the list of enabled map files (from
+  updmap.cfg) has changed.  The --force option overrides this,
+  always recreating the output files.
+  
+Explanation of the map types:
+
+  The normal type is Map.
+  
+  The only difference between Map and MixedMap is that MixedMap entries
+  are not added to psfonts_pk.map.  The purpose is to help users with
+  devices that render Type 1 outline fonts worse than mode-tuned Type 1
+  bitmap fonts.  So, MixedMap is used for fonts that are available as
+  both Type 1 and Metafont.
+
+  KanjiMap entries are added to psfonts_t1.map and kanjix.map.
 
 Explanation of the OPTION names for --showoptions, --showoption, --setoption:
 
@@ -2264,8 +2357,11 @@ Explanation of the OPTION names for --showoptions, --showoption, --setoption:
     Whether pdftex includes the standard 14 PDF fonts in its output.
   pxdviUse              true,false  (default false)
     Whether maps for pxdvi (Japanese-patched xdvi) are under updmap's control.
-  kanjiEmbed            (any string)
-  kanjiVariant          (any string)
+  jaEmbed               (any string)
+  jaVariant             (any string)
+  scEmbed               (any string)
+  tcEmbed               (any string)
+  koEmbed               (any string)
     See below.
   LW35                  URWkb,URW,ADOBEkb,ADOBE  (default URWkb)
     Adapt the font and file names of the standard 35 PostScript fonts.
@@ -2281,11 +2377,13 @@ Explanation of the OPTION names for --showoptions, --showoption, --setoption:
   command-line options or configuration files to the programs, as
   explained at the beginning of updmap.cfg.
 
-  The options kanjiEmbed and kanjiVariant specify special replacements
-  in the map lines.  If a map contains the string \@kanjiEmbed\@, then
-  this will be replaced by the value of that option; similarly for
-  kanjiVariant.  In this way, users of Japanese TeX can select different
-  fonts to be included in the final output.
+  The options jaEmbed and jaVariant (formerly kanjiEmbed and kanjiVariant)
+  specify special replacements in the map lines.  If a map contains the 
+  string \@jaEmbed\@, then this will be replaced by the value of that option;
+  similarly for jaVariant.  In this way, users of Japanese TeX can select
+  different fonts to be included in the final output.  The counterpart for
+  Simplified Chinese, Traditional Chinese and Korean fonts are
+  scEmbed, tcEmbed and koEmbed respectively.
 
 Explanation of trees and files normally used:
 
@@ -2308,7 +2406,7 @@ Explanation of trees and files normally used:
   TEXMFLOCAL     \$TEXLIVE/texmf-local/web2c/updmap.cfg
   TEXMFDIST      \$TEXLIVE/YYYY/texmf-dist/web2c/updmap.cfg
 
-  For updmap:
+  For updmap-user:
   TEXMFCONFIG    \$HOME/.texliveYYYY/texmf-config/web2c/updmap.cfg
   TEXMFVAR       \$HOME/.texliveYYYY/texmf-var/web2c/updmap.cfg
   TEXMFHOME      \$HOME/texmf/web2c/updmap.cfg
@@ -2329,7 +2427,7 @@ Where and which updmap.cfg changes are saved:
   specified that an updmap.cfg needs to be updated.  In this case:
 
   1) If config files are given on the command line, then the first one
-  given will be used to save any such changes.
+  given is used to save any such changes.
   
   2) If the config files are taken from kpsewhich output, then the
   algorithm is more complex:
@@ -2376,20 +2474,6 @@ Disabling maps:
     Map mt-yy.map
   and call $prg.
 
-The main output:
-
-  The main output of updmap is the files containing the individual font
-  map lines which the drivers (dvips, pdftex, etc.) read to handle fonts.
-  
-  The map files for dvips (psfonts.map) and pdftex (pdftex.map) are
-  written to TEXMFVAR/fonts/map/updmap/{dvips,pdftex}/.
-  
-  In addition, information about Kanji fonts is written to
-  TEXMFVAR/fonts/map/updmap/dvipdfmx/kanjix.map, and optionally to 
-  TEXMFVAR/fonts/map/updmap/pxdvi/xdvi-ptex.map.  These are for Kanji
-  only and are not like other map files.  dvipdfmx reads pdftex.map for
-  the map entries for non-Kanji fonts.
-
 Listing of maps:
 
   The two options --listmaps and --listavailablemaps list all maps
@@ -2404,11 +2488,11 @@ Listing of maps:
   (again separated by tab) containing '(not available)' for those
   map files that cannot be found.
  
-updmap vs. updmap-sys:
+updmap-user vs. updmap-sys:
 
   When updmap-sys is run, TEXMFSYSCONFIG and TEXMFSYSVAR are used
   instead of TEXMFCONFIG and TEXMFVAR, respectively.  This is the
-  primary difference between updmap-sys and updmap.
+  primary difference between updmap-sys and updmap-user.
 
   Other locations may be used if you give them on the command line, or
   these trees don't exist, or you are not using the original TeX Live.
@@ -2420,7 +2504,7 @@ The log file is written to TEXMFVAR/web2c/updmap.log.
 
 For step-by-step instructions on making new fonts known to TeX, read
 http://tug.org/fonts/fontinstall.html.  For even more terse
-instructions, read the beginning of the main updmap.cfg.
+instructions, read the beginning of the main updmap.cfg file.
 
 Report bugs to: tex-live\@tug.org
 TeX Live home page: <http://tug.org/texlive/>

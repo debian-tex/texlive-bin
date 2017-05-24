@@ -1,3 +1,36 @@
+2017-03-27  Karl Berry  <karl@freefriends.org>
+
+	* Makefile.am (AM_TESTS_ENVIRONMENT): use instead of TESTS_ENVIRONMENT.
+
+2017-03-18  Karl Berry  <karl@tug.org>
+
+	* NEWS,
+	* doc/web.texi: version 2017 for TL17.
+
+2017-02-09  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* Makefile.am: Sync with the LuaTeX upstream.
+
+2017-01-28  Karl Berry  <karl@freefriends.org>
+
+	* tex.ch (texarray),
+	* mf.ch (texarray): don't mention nonexistent pool files in error.
+	Thread from http://tug.org/pipermail/tex-live/2017-January/039647.html.
+
+2016-11-14  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* texmfmp.h: Change a condition to support new primitives in
+	eptex and euptex.
+
+2016-11-05  Karl Berry  <karl@tug.org>
+
+	* help.h (CWEAVEHELP) <-x>: mention section names,
+        since that is what is actually omitted. Report from Igor Liferenko.
+
+2016-05-20  Karl Berry  <karl@tug.org>
+
+	* TeX Live 2016 release.
+
 2016-05-04  Karl Berry  <karl@freefriends.org>
 
 	* texmfmp-help.h (PDFTEXHELP) [pdfTeX]: mention pdftex.org.
@@ -52,7 +85,7 @@
 	* Makefile.am, am/bootstrap.am, am/cweb.am, am/texmf.am,
 	am/web.am, libmd5/am/md5.am: Dependencies for 'make check'.
 
-2015-07-09  Akira Kakuto  <kakuto@fuk.kinidai.ac.jp>
+2015-07-09  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
 
 	* texmfmp.h: Add \pdfmdfivesum to XeTeX.
 

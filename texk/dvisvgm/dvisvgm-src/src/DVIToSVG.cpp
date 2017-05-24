@@ -2,7 +2,7 @@
 ** DVIToSVG.cpp                                                         **
 **                                                                      **
 ** This file is part of dvisvgm -- a fast DVI to SVG converter          **
-** Copyright (C) 2005-2016 Martin Gieseking <martin.gieseking@uos.de>   **
+** Copyright (C) 2005-2017 Martin Gieseking <martin.gieseking@uos.de>   **
 **                                                                      **
 ** This program is free software; you can redistribute it and/or        **
 ** modify it under the terms of the GNU General Public License as       **
@@ -24,55 +24,63 @@
 #include <fstream>
 #include <set>
 #include <sstream>
-#include "Calculator.h"
-#include "DVIToSVG.h"
-#include "DVIToSVGActions.h"
-#include "Font.h"
-#include "FontManager.h"
-#include "GlyphTracerMessages.h"
-#include "InputBuffer.h"
-#include "InputReader.h"
-#include "PageRanges.h"
-#include "PageSize.h"
-#include "SVGOutput.h"
-//
+#include "Calculator.hpp"
+#include "DVIToSVG.hpp"
+#include "DVIToSVGActions.hpp"
+#include "Font.hpp"
+#include "FontManager.hpp"
+#include "GlyphTracerMessages.hpp"
+#include "InputBuffer.hpp"
+#include "InputReader.hpp"
+#include "PageRanges.hpp"
+#include "PageSize.hpp"
+#include "PreScanDVIReader.hpp"
+#include "SignalHandler.hpp"
+#include "SVGOutput.hpp"
+#include "version.hpp"
+
 ///////////////////////////////////
 // special handlers
 
-#include "BgColorSpecialHandler.h"
-#include "ColorSpecialHandler.h"
-#include "DvisvgmSpecialHandler.h"
-#include "EmSpecialHandler.h"
-#include "PdfSpecialHandler.h"
-#include "HtmlSpecialHandler.h"
+#include "BgColorSpecialHandler.hpp"
+#include "ColorSpecialHandler.hpp"
+#include "DvisvgmSpecialHandler.hpp"
+#include "EmSpecialHandler.hpp"
+#include "HtmlSpecialHandler.hpp"
+#include "PapersizeSpecialHandler.hpp"
+#include "PdfSpecialHandler.hpp"
 #ifndef HAVE_LIBGS
-	#include "NoPsSpecialHandler.h"
+	#include "NoPsSpecialHandler.hpp"
 #endif
 #ifndef DISABLE_GS
-	#include "PsSpecialHandler.h"
+	#include "PsSpecialHandler.hpp"
 #endif
-#include "TpicSpecialHandler.h"
-#include "PreScanDVIReader.h"
+#include "TpicSpecialHandler.hpp"
 
 ///////////////////////////////////
 
 using namespace std;
 
-
 /** 'a': trace all glyphs even if some of them are already cached
  *  'm': trace missing glyphs, i.e. glyphs not yet cached
  *   0 : only trace actually required glyphs */
 char DVIToSVG::TRACE_MODE = 0;
+bool DVIToSVG::COMPUTE_PROGRESS = false;
 
 
 DVIToSVG::DVIToSVG (istream &is, SVGOutputBase &out) : DVIReader(is), _out(out)
 {
-	replaceActions(new DVIToSVGActions(*this, _svg));
+	_pageHeight = _pageWidth = 0;
+	_tx = _ty = 0;    // no cursor translation
+	_pageByte = 0;
+	_prevXPos = _prevYPos = numeric_limits<double>::min();
+	_prevWritingMode = WritingMode::LR;
+	_actions = new DVIToSVGActions(*this, _svg);
 }
 
 
 DVIToSVG::~DVIToSVG () {
-	delete replaceActions(0);
+	delete _actions;
 }
 
 
@@ -91,16 +99,20 @@ void DVIToSVG::convert (unsigned first, unsigned last, pair<int,int> *pageinfo) 
 		throw DVIException(oss.str());
 	}
 	last = min(last, numberOfPages());
-
 	for (unsigned i=first; i <= last; ++i) {
 		executePage(i);
 		_svg.removeRedundantElements();
 		embedFonts(_svg.rootNode());
-		_svg.write(_out.getPageStream(getCurrentPageNumber(), numberOfPages()));
+		bool success = _svg.write(_out.getPageStream(currentPageNumber(), numberOfPages()));
 		string fname = _out.filename(i, numberOfPages());
-		Message::mstream(false, Message::MC_PAGE_WRITTEN) << "\npage written to " << (fname.empty() ? "<stdout>" : fname) << '\n';
+		if (fname.empty())
+			fname = "<stdout>";
+		if (success)
+			Message::mstream(false, Message::MC_PAGE_WRITTEN) << "\noutput written to " << fname << '\n';
+		else
+			Message::wstream(true) << "failed to write output to " << fname << '\n';
 		_svg.reset();
-		static_cast<DVIToSVGActions*>(getActions())->reset();
+		static_cast<DVIToSVGActions*>(_actions)->reset();
 	}
 	if (pageinfo) {
 		pageinfo->first = last-first+1;
@@ -117,8 +129,8 @@ void DVIToSVG::convert (const string &rangestr, pair<int,int> *pageinfo) {
 	if (!ranges.parse(rangestr, numberOfPages()))
 		throw MessageException("invalid page range format");
 
-	Message::mstream(false, Message::MC_PAGE_NUMBER) << "pre-processing DVI file (format "  << getDVIFormat() << ")\n";
-	if (DVIToSVGActions *actions = dynamic_cast<DVIToSVGActions*>(getActions())) {
+	Message::mstream(false, Message::MC_PAGE_NUMBER) << "pre-processing DVI file (format version "  << getDVIVersion() << ")\n";
+	if (DVIToSVGActions *actions = dynamic_cast<DVIToSVGActions*>(_actions)) {
 		PreScanDVIReader prescan(getInputStream(), actions);
 		actions->setDVIReader(prescan);
 		prescan.executeAllPages();
@@ -126,8 +138,8 @@ void DVIToSVG::convert (const string &rangestr, pair<int,int> *pageinfo) {
 		SpecialManager::instance().notifyPreprocessingFinished();
 	}
 
-	FORALL(ranges, PageRanges::ConstIterator, it)
-		convert(it->first, it->second);
+	for (const auto &range : ranges)
+		convert(range.first, range.second);
 	if (pageinfo) {
 		pageinfo->first = ranges.numberOfPages();
 		pageinfo->second = numberOfPages();
@@ -135,42 +147,58 @@ void DVIToSVG::convert (const string &rangestr, pair<int,int> *pageinfo) {
 }
 
 
+int DVIToSVG::executeCommand () {
+	SignalHandler::instance().check();
+	const streampos cmdpos = tell();
+	int opcode = DVIReader::executeCommand();
+	if (dviState().v+_ty != _prevYPos) {
+		_tx = _ty = 0;
+		_prevYPos = dviState().v;
+	}
+	_prevXPos = dviState().h+_tx;
+	_prevWritingMode = dviState().d;
+	if (COMPUTE_PROGRESS && inPage() && _actions) {
+		size_t pagelen = numberOfPageBytes(currentPageNumber()-1);
+		_pageByte += tell()-cmdpos;
+		_actions->progress(_pageByte, pagelen);
+	}
+	return opcode;
+}
+
+
 /** This template method is called by parent class DVIReader before
  *  executing the BOP actions.
  *  @param[in] pageno physical page number (1 = first page)
  *  @param[in] c contains information about the page (page number etc.) */
-void DVIToSVG::beginPage (unsigned pageno, Int32 *c) {
-	if (dynamic_cast<DVIToSVGActions*>(getActions())) {
+void DVIToSVG::enterBeginPage (unsigned pageno, const vector<int32_t> &c) {
+	if (dynamic_cast<DVIToSVGActions*>(_actions)) {
 		Message::mstream().indent(0);
 		Message::mstream(false, Message::MC_PAGE_NUMBER) << "processing page " << pageno;
 		if (pageno != (unsigned)c[0])  // Does page number shown on page differ from physical page number?
 			Message::mstream(false) << " [" << c[0] << ']';
 		Message::mstream().indent(1);
-		_svg.appendToDoc(new XMLCommentNode(" This file was generated by dvisvgm " VERSION " "));
-		SpecialManager::instance().notifyBeginPage(pageno);
+		_svg.appendToDoc(new XMLCommentNode(" This file was generated by dvisvgm " + string(PROGRAM_VERSION) + " "));
 	}
 }
 
 
-/** This template method is called by parent class DVIReader before
+/** This template method is called by DVIReader::cmdEop() after
  *  executing the EOP actions. */
-void DVIToSVG::endPage (unsigned pageno) {
-	if (!dynamic_cast<DVIToSVGActions*>(getActions()))
+void DVIToSVG::leaveEndPage (unsigned) {
+	if (!dynamic_cast<DVIToSVGActions*>(_actions))
 		return;
 
-	SpecialManager::instance().notifyEndPage(pageno);
 	// set bounding box and apply page transformations
-	BoundingBox &bbox = getActions()->bbox();
-	bbox.unlock();
-	Matrix matrix;
-	getPageTransformation(matrix);
-	static_cast<DVIToSVGActions*>(getActions())->setPageMatrix(matrix);
-	if (_bboxFormatString == "min" || _bboxFormatString == "preview")
+	BoundingBox bbox = _actions->bbox();  // bounding box derived from the DVI commands executed
+	if (_bboxFormatString == "min" || _bboxFormatString == "preview" || _bboxFormatString == "papersize") {
+		Matrix matrix;
+		getPageTransformation(matrix);
 		bbox.transform(matrix);
+	}
 	else if (_bboxFormatString == "dvi") {
 		// center page content
-		double dx = (getPageWidth()-bbox.width())/2;
-		double dy = (getPageHeight()-bbox.height())/2;
+		double dx = (_pageWidth-bbox.width())/2;
+		double dy = (_pageHeight-bbox.height())/2;
 		bbox += BoundingBox(-dx, -dy, dx, dy);
 	}
 	else if (_bboxFormatString != "none") {
@@ -189,7 +217,15 @@ void DVIToSVG::endPage (unsigned pageno) {
 		}
 		else { // set/modify bounding box by explicitly given values
 			try {
-				bbox.set(_bboxFormatString);
+				vector<Length> lengths;
+				BoundingBox::extractLengths(_bboxFormatString, lengths);
+				if (lengths.size() == 1 || lengths.size() == 2) {  // relative box size?
+					// apply the page transformation and adjust the bbox afterwards
+					Matrix matrix;
+					getPageTransformation(matrix);
+					bbox.transform(matrix);
+				}
+				bbox.set(lengths);
 			}
 			catch (const MessageException &e) {
 			}
@@ -199,11 +235,10 @@ void DVIToSVG::endPage (unsigned pageno) {
 		Message::wstream(false) << "\npage is empty\n";
 	if (_bboxFormatString != "none") {
 		_svg.setBBox(bbox);
-
 		const double bp2pt = 72.27/72;
 		const double bp2mm = 25.4/72;
 		Message::mstream(false) << '\n';
-		Message::mstream(false, Message::MC_PAGE_SIZE) << "page size: " << XMLString(bbox.width()*bp2pt) << "pt"
+		Message::mstream(false, Message::MC_PAGE_SIZE) << "graphic size: " << XMLString(bbox.width()*bp2pt) << "pt"
 			" x " << XMLString(bbox.height()*bp2pt) << "pt"
 			" (" << XMLString(bbox.width()*bp2mm) << "mm"
 			" x " << XMLString(bbox.height()*bp2mm) << "mm)";
@@ -217,9 +252,9 @@ void DVIToSVG::getPageTransformation(Matrix &matrix) const {
 		matrix.set(1);  // unity matrix
 	else {
 		Calculator calc;
-		if (getActions()) {
+		if (_actions) {
 			const double bp2pt = 72.27/72;
-			BoundingBox &bbox = getActions()->bbox();
+			BoundingBox &bbox = _actions->bbox();
 			calc.setVariable("ux", bbox.minX()*bp2pt);
 			calc.setVariable("uy", bbox.minY()*bp2pt);
 			calc.setVariable("w",  bbox.width()*bp2pt);
@@ -234,12 +269,11 @@ void DVIToSVG::getPageTransformation(Matrix &matrix) const {
 }
 
 
-static void collect_chars (map<const Font*, set<int> > &fm) {
-	typedef const map<const Font*, set<int> > UsedCharsMap;
-	FORALL(fm, UsedCharsMap::const_iterator, it) {
-		if (it->first->uniqueFont() != it->first) {
-			FORALL(it->second, set<int>::const_iterator, cit)
-				fm[it->first->uniqueFont()].insert(*cit);
+static void collect_chars (map<const Font*, set<int>> &fontmap) {
+	for (const auto &entry : fontmap) {
+		if (entry.first->uniqueFont() != entry.first) {
+			for (int c : entry.second)
+				fontmap[entry.first->uniqueFont()].insert(c);
 		}
 	}
 }
@@ -250,19 +284,18 @@ static void collect_chars (map<const Font*, set<int> > &fm) {
 void DVIToSVG::embedFonts (XMLElementNode *svgElement) {
 	if (!svgElement)
 		return;
-	if (!getActions())  // no dvi actions => no chars written => no fonts to embed
+	if (!_actions)  // no dvi actions => no chars written => no fonts to embed
 		return;
 
-	typedef map<const Font*, set<int> > UsedCharsMap;
-	const DVIToSVGActions *svgActions = static_cast<DVIToSVGActions*>(getActions());
-	UsedCharsMap &usedChars = svgActions->getUsedChars();
+	const DVIToSVGActions *svgActions = static_cast<DVIToSVGActions*>(_actions);
+	map<const Font*,set<int>> &usedCharsMap = svgActions->getUsedChars();
 
-	collect_chars(usedChars);
+	collect_chars(usedCharsMap);
 
 	GlyphTracerMessages messages;
 	set<const Font*> tracedFonts;  // collect unique fonts already traced
-	FORALL(usedChars, UsedCharsMap::const_iterator, it) {
-		const Font *font = it->first;
+	for (const auto &fontchar : usedCharsMap) {
+		const Font *font = fontchar.first;
 		if (const PhysicalFont *ph_font = dynamic_cast<const PhysicalFont*>(font)) {
 			// Check if glyphs should be traced. Only trace the glyphs of unique fonts, i.e.
 			// avoid retracing the same glyphs again if they are referenced in various sizes.
@@ -271,7 +304,7 @@ void DVIToSVG::embedFonts (XMLElementNode *svgElement) {
 				tracedFonts.insert(ph_font->uniqueFont());
 			}
 			if (font->path())  // does font file exist?
-				_svg.append(*ph_font, it->second, &messages);
+				_svg.append(*ph_font, fontchar.second, &messages);
 			else
 				Message::wstream(true) << "can't embed font '" << font->name() << "'\n";
 		}
@@ -297,14 +330,15 @@ void DVIToSVG::setProcessSpecials (const char *ignorelist, bool pswarning) {
 	else {
 		// add special handlers
 		SpecialHandler *handlers[] = {
-			0,                          // placeholder for PsSpecialHandler
-			new BgColorSpecialHandler,  // handles background color special
-			new ColorSpecialHandler,    // handles color specials
-			new DvisvgmSpecialHandler,  // handles raw SVG embeddings
-			new EmSpecialHandler,       // handles emTeX specials
-			new HtmlSpecialHandler,     // handles hyperref specials
-			new PdfSpecialHandler,      // handles pdf specials
-			new TpicSpecialHandler,     // handles tpic specials
+			0,                           // placeholder for PsSpecialHandler
+			new BgColorSpecialHandler,   // handles background color special
+			new ColorSpecialHandler,     // handles color specials
+			new DvisvgmSpecialHandler,   // handles raw SVG embeddings
+			new EmSpecialHandler,        // handles emTeX specials
+			new HtmlSpecialHandler,      // handles hyperref specials
+			new PapersizeSpecialHandler, // handles papersize special
+			new PdfSpecialHandler,       // handles pdf specials
+			new TpicSpecialHandler,      // handles tpic specials
 			0
 		};
 		SpecialHandler **p = handlers;
@@ -333,4 +367,130 @@ void DVIToSVG::setProcessSpecials (const char *ignorelist, bool pswarning) {
 
 string DVIToSVG::getSVGFilename (unsigned pageno) const {
 	return _out.filename(pageno, numberOfPages());
+}
+
+
+void DVIToSVG::moveRight (double dx) {
+	DVIReader::moveRight(dx);
+	if (_actions) {
+		if (dviState().d == WritingMode::LR)
+			_actions->moveToX(dviState().h+_tx);
+		else
+			_actions->moveToY(dviState().v+_ty);
+	}
+}
+
+
+void DVIToSVG::moveDown (double dy) {
+	DVIReader::moveDown(dy);
+	if (_actions) {
+		if (dviState().d == WritingMode::LR)
+			_actions->moveToY(dviState().v+_ty);
+		else
+			_actions->moveToX(dviState().h+_tx);
+	}
+}
+
+
+void DVIToSVG::dviPost (uint16_t, uint16_t pages, uint32_t pw, uint32_t ph, uint32_t, uint32_t, uint32_t, uint32_t) {
+	_pageHeight = ph; // height of tallest page in dvi units
+	_pageWidth  = pw; // width of widest page in dvi units
+}
+
+
+void DVIToSVG::dviBop (const std::vector<int32_t> &c, int32_t) {
+	_pageByte = 0;
+	enterBeginPage(currentPageNumber(), c);
+	if (_actions) {
+		_actions->progress(0, 1);  // ensure that progress is called at 0%
+		_actions->beginPage(currentPageNumber(), c);
+	}
+}
+
+
+void DVIToSVG::dviEop () {
+	if (_actions) {
+		_actions->endPage(currentPageNumber());
+		_pageByte = numberOfPageBytes(currentPageNumber()-1);
+		_actions->progress(_pageByte, _pageByte); // ensure that progress is called at 100%
+	}
+	leaveEndPage(currentPageNumber());
+}
+
+
+void DVIToSVG::dviSetChar0 (uint32_t c, const Font *font) {
+	if (_actions && !dynamic_cast<const VirtualFont*>(font))
+		_actions->setChar(dviState().h+_tx, dviState().v+_ty, c, dviState().d != WritingMode::LR, *font);
+}
+
+
+void DVIToSVG::dviSetChar (uint32_t c, const Font *font) {
+	dviSetChar0(c, font);
+}
+
+
+void DVIToSVG::dviPutChar (uint32_t c, const Font *font) {
+	dviSetChar0(c, font);
+}
+
+
+void DVIToSVG::dviSetRule (double height, double width) {
+	if (_actions && height > 0 && width > 0)
+		_actions->setRule(dviState().h+_tx, dviState().v+_ty, height, width);
+}
+
+
+void DVIToSVG::dviPutRule (double height, double width) {
+	dviSetRule(height, width);
+}
+
+
+void DVIToSVG::dviPop () {
+	if (_actions) {
+		if (_prevXPos != dviState().h+_tx)
+			_actions->moveToX(dviState().h + _tx);
+		if (_prevYPos != dviState().v+_ty)
+			_actions->moveToY(dviState().v + _ty);
+		if (_prevWritingMode != dviState().d)
+			_actions->setTextOrientation(dviState().d != WritingMode::LR);
+	}
+}
+
+
+void DVIToSVG::dviFontNum (uint32_t fontnum, SetFontMode, const Font *font) {
+	if (_actions && font && !dynamic_cast<const VirtualFont*>(font))
+		_actions->setFont(FontManager::instance().fontID(fontnum), *font);  // all fonts get a recomputed ID
+}
+
+
+void DVIToSVG::dviDir (WritingMode dir) {
+	if (_actions)
+		_actions->setTextOrientation(dir != WritingMode::LR);
+}
+
+
+void DVIToSVG::dviXXX (const std::string &str) {
+	if (_actions)
+		_actions->special(str, dvi2bp());
+}
+
+
+void DVIToSVG::dviXGlyphArray (std::vector<double> &dx, vector<double> &dy, vector<uint16_t> &glyphs, const Font &font) {
+	if (_actions) {
+		for (size_t i=0; i < glyphs.size(); i++)
+			_actions->setChar(dviState().h+dx[i]+_tx, dviState().v+dy[i]+_ty, glyphs[i], false, font);
+	}
+}
+
+
+void DVIToSVG::dviXGlyphString (vector<double> &dx, vector<uint16_t> &glyphs, const Font &font) {
+	if (_actions) {
+		for (size_t i=0; i < glyphs.size(); i++)
+			_actions->setChar(dviState().h+dx[i]+_tx, dviState().v+_ty, glyphs[i], false, font);
+	}
+}
+
+
+void DVIToSVG::dviXTextAndGlyphs (vector<double> &dx, vector<double> &dy, vector<uint16_t>&, vector<uint16_t> &glyphs, const Font &font) {
+	dviXGlyphArray(dx, dy, glyphs, font);
 }

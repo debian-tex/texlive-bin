@@ -43,6 +43,8 @@ static int luapdfprint(lua_State * L)
                 literal_mode = direct_always;
             else if (lua_key_eq(modestr_s,page))
                 literal_mode = direct_page;
+            else if (lua_key_eq(modestr_s,raw))
+                literal_mode = direct_raw;
             else {
                 luaL_error(L, "invalid first argument for print literal mode");
             }
@@ -62,6 +64,9 @@ static int luapdfprint(lua_State * L)
             (void) calc_pdfpos(static_pdf->pstruct, static_pdf->posstruct->pos);
             break;
         case (direct_always):
+            pdf_end_string_nl(static_pdf);
+            break;
+        case (direct_raw):
             pdf_end_string_nl(static_pdf);
             break;
         default:
@@ -783,6 +788,36 @@ static int l_set_obj_compress_level(lua_State * L)
     return 0 ;
 }
 
+/* fonts */
+
+static int getpdfgentounicode(lua_State * L)
+{
+    lua_pushinteger(L, (pdf_gen_tounicode));
+    return 1 ;
+}
+
+static int getpdfomitcidset(lua_State * L)
+{
+    lua_pushinteger(L, (pdf_omit_cidset));
+    return 1 ;
+}
+
+static int setpdfgentounicode(lua_State * L)
+{
+    if (lua_type(L, 1) == LUA_TNUMBER) {
+        set_pdf_gen_tounicode(lua_tointeger(L, 1));
+    }
+    return 0 ;
+}
+
+static int setpdfomitcidset(lua_State * L)
+{
+    if (lua_type(L, 1) == LUA_TNUMBER) {
+        set_pdf_omit_cidset(lua_tointeger(L, 1));
+    }
+    return 0 ;
+}
+
 /* accuracy */
 
 static int l_get_decimal_digits(lua_State * L)
@@ -907,6 +942,13 @@ static int getpdfversion(lua_State * L)
     return 1 ;
 }
 
+static int getpdfcreationdate(lua_State * L)
+{
+    initialize_start_time(static_pdf);
+    lua_pushstring(L,static_pdf->start_time_str);
+    return 1 ;
+}
+
 static int getpdfminorversion(lua_State * L)
 {
  /* lua_pushinteger(L,static_pdf->minor_version); */
@@ -931,9 +973,9 @@ static int setpdforigin(lua_State * L)
     int h = 0 ;
     int v = 0 ;
     if (lua_type(L, 1) == LUA_TNUMBER) {
-        h = (int) lua_tointeger(L, 1);
+        h = (int) lua_roundnumber(L, 1);
         if (lua_type(L, 2) == LUA_TNUMBER) {
-            v = (int) lua_tointeger(L, 1);
+            v = (int) lua_roundnumber(L, 1);
         } else {
             v = h;
         }
@@ -950,30 +992,44 @@ static int getpdforigin(lua_State * L)
     return 2 ;
 }
 
+static int setpdfimageresolution(lua_State * L)
+{
+    if (lua_type(L, 1) == LUA_TNUMBER) {
+        set_tex_extension_count_register(c_pdf_image_resolution,lua_tointeger(L, 1));
+    }
+    return 0;
+}
+
+static int getpdfimageresolution(lua_State * L)
+{
+    lua_pushinteger(L,get_tex_extension_count_register(c_pdf_image_resolution));
+    return 1 ;
+}
+
 static int setpdfthreadmargin(lua_State * L) {
     if (lua_type(L, 1) == LUA_TNUMBER) {
-        set_tex_extension_dimen_register(d_pdf_thread_margin,lua_tointeger(L, 1));
+        set_tex_extension_dimen_register(d_pdf_thread_margin,lua_roundnumber(L, 1));
     }
     return 0;
 }
 
 static int setpdfdestmargin(lua_State * L) {
     if (lua_type(L, 1) == LUA_TNUMBER) {
-        set_tex_extension_dimen_register(d_pdf_dest_margin,lua_tointeger(L, 1));
+        set_tex_extension_dimen_register(d_pdf_dest_margin,lua_roundnumber(L, 1));
     }
     return 0;
 }
 
 static int setpdflinkmargin(lua_State * L) {
     if (lua_type(L, 1) == LUA_TNUMBER) {
-        set_tex_extension_dimen_register(d_pdf_link_margin,lua_tointeger(L, 1));
+        set_tex_extension_dimen_register(d_pdf_link_margin,lua_roundnumber(L, 1));
     }
     return 0;
 }
 
 static int setpdfxformmargin(lua_State * L) {
     if (lua_type(L, 1) == LUA_TNUMBER) {
-        set_tex_extension_dimen_register(d_pdf_xform_margin,lua_tointeger(L, 1));
+        set_tex_extension_dimen_register(d_pdf_xform_margin,lua_roundnumber(L, 1));
     }
     return 0;
 }
@@ -1048,11 +1104,13 @@ static int newpdfcolorstack(lua_State * L)
     if (lua_type(L,2) == LUA_TSTRING) {
         l =	lua_tostring(L, 2);
         if (lua_key_eq(l,origin)) {
-            literal_mode = 0;
+            literal_mode = set_origin;
         } else if (lua_key_eq(l,page))  {
-            literal_mode = 1; /* direct_page */
+            literal_mode = direct_page;
         } else if (lua_key_eq(l,direct)) {
-            literal_mode = 2; /* direct_always */
+            literal_mode = direct_always;
+        } else if (lua_key_eq(l,raw)) {
+            literal_mode = direct_raw;
         } else {
             luaL_error(L, "invalid literal mode in pdf.newcolorstack()");
         }
@@ -1064,6 +1122,24 @@ static int newpdfcolorstack(lua_State * L)
     lua_pushinteger(L, id);
     return 1 ;
 }
+
+
+static int l_set_font_attributes(lua_State * L)
+{
+    int f = luaL_checkinteger(L, -2);
+    int i ;
+    /*char *s;*/
+    const char *st;
+    if ((lua_type(L,-1) == LUA_TSTRING) && (st = lua_tostring(L, -1)) != NULL) {
+        /* is this dup needed? */
+        /*s = xstrdup(st);*/
+        i = maketexstring(st); /* brrr */
+        set_pdf_font_attr(f, i);
+        /*free(s);*/
+    }
+    return 0;
+}
+
 
 static const struct luaL_Reg pdflib[] = {
     { "gethpos", l_gethpos },
@@ -1081,6 +1157,7 @@ static const struct luaL_Reg pdflib[] = {
     { "objtype", l_objtype },
     { "getmatrix", l_getmatrix },
     { "hasmatrix", l_hasmatrix },
+    { "setfontattributes", l_set_font_attributes },
     { "setcatalog", l_set_catalog },
     { "setinfo", l_set_info },
     { "setnames", l_set_names },
@@ -1121,11 +1198,14 @@ static const struct luaL_Reg pdflib[] = {
     { "fontsize", getpdffontsize },
     { "xformname", getpdfxformname },
     { "getversion", getpdfversion },
+    { "getcreationdate", getpdfcreationdate },
     { "getminorversion", getpdfminorversion },
     { "setminorversion", setpdfminorversion },
     { "newcolorstack", newpdfcolorstack },
     { "setorigin", setpdforigin },
     { "getorigin", getpdforigin },
+    { "setimageresolution", setpdfimageresolution },
+    { "getimageresolution", getpdfimageresolution },
     { "setthreadmargin", setpdfthreadmargin },
     { "setdestmargin", setpdfdestmargin },
     { "setlinkmargin", setpdflinkmargin },
@@ -1136,8 +1216,12 @@ static const struct luaL_Reg pdflib[] = {
     { "getxformmargin", getpdfxformmargin },
     { "getinclusionerrorlevel", getpdfinclusionerrorlevel },
     { "getignoreunknownimages", getpdfignoreunknownimages },
+    { "getgentounicode", getpdfgentounicode },
+    { "getomitcidset", getpdfomitcidset },
     { "setinclusionerrorlevel", setpdfinclusionerrorlevel },
     { "setignoreunknownimages", setpdfignoreunknownimages },
+    { "setgentounicode", setpdfgentounicode },
+    { "setomitcidset", setpdfomitcidset },
     { "mapfile", l_mapfile },
     { "mapline", l_mapline },
     /* sentinel */

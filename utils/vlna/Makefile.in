@@ -196,11 +196,12 @@ am__DIST_COMMON = $(srcdir)/../../am/dist_hook.am \
 	$(srcdir)/Makefile.in $(top_srcdir)/../../build-aux/compile \
 	$(top_srcdir)/../../build-aux/depcomp \
 	$(top_srcdir)/../../build-aux/install-sh \
-	$(top_srcdir)/../../build-aux/missing ../../build-aux/compile \
-	../../build-aux/config.guess ../../build-aux/config.sub \
-	../../build-aux/depcomp ../../build-aux/install-sh \
-	../../build-aux/ltmain.sh ../../build-aux/missing \
-	../../build-aux/texinfo.tex ../../build-aux/ylwrap ChangeLog
+	$(top_srcdir)/../../build-aux/missing ../../build-aux/ar-lib \
+	../../build-aux/compile ../../build-aux/config.guess \
+	../../build-aux/config.sub ../../build-aux/depcomp \
+	../../build-aux/install-sh ../../build-aux/ltmain.sh \
+	../../build-aux/missing ../../build-aux/texinfo.tex \
+	../../build-aux/ylwrap ChangeLog
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 distdir = $(PACKAGE)-$(VERSION)
 top_distdir = $(distdir)
@@ -308,7 +309,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-EXTRA_DIST = $(VLNA_TREE) vlna-PATCHES vlna.dvi vlna.tex vlna.idx \
+EXTRA_DIST = $(VLNA_TREE) TLpatches vlna.dvi vlna.tex vlna.idx \
 	vlna.scn
 NEVER_DIST = `find . $(NEVER_NAMES)`
 NEVER_NAMES = -name .svn

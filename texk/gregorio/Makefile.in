@@ -124,6 +124,7 @@ am_gregorio_OBJECTS = @GREGORIO_TREE@/src/characters.$(OBJEXT) \
 	@GREGORIO_TREE@/src/gabc/gabc-elements-determination.$(OBJEXT) \
 	@GREGORIO_TREE@/src/gabc/gabc-glyphs-determination.$(OBJEXT) \
 	@GREGORIO_TREE@/src/gabc/gabc-notes-determination-l.$(OBJEXT) \
+	@GREGORIO_TREE@/src/gabc/gabc-score-determination.$(OBJEXT) \
 	@GREGORIO_TREE@/src/gabc/gabc-score-determination-l.$(OBJEXT) \
 	@GREGORIO_TREE@/src/gabc/gabc-score-determination-y.$(OBJEXT) \
 	@GREGORIO_TREE@/src/gabc/gabc-write.$(OBJEXT) \
@@ -414,11 +415,11 @@ am__DIST_COMMON = $(srcdir)/../../am/dist_hook.am \
 	$(top_srcdir)/../../build-aux/ltmain.sh \
 	$(top_srcdir)/../../build-aux/missing \
 	$(top_srcdir)/../../build-aux/test-driver \
-	../../build-aux/compile ../../build-aux/config.guess \
-	../../build-aux/config.sub ../../build-aux/depcomp \
-	../../build-aux/install-sh ../../build-aux/ltmain.sh \
-	../../build-aux/missing ../../build-aux/texinfo.tex \
-	../../build-aux/ylwrap ChangeLog
+	../../build-aux/ar-lib ../../build-aux/compile \
+	../../build-aux/config.guess ../../build-aux/config.sub \
+	../../build-aux/depcomp ../../build-aux/install-sh \
+	../../build-aux/ltmain.sh ../../build-aux/missing \
+	../../build-aux/texinfo.tex ../../build-aux/ylwrap ChangeLog
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 distdir = $(PACKAGE)-$(VERSION)
 top_distdir = $(distdir)
@@ -462,7 +463,6 @@ ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 FGREP = @FGREP@
-FILENAME_VERSION = @FILENAME_VERSION@
 GREGORIO_TREE = @GREGORIO_TREE@
 GREP = @GREP@
 INSTALL = @INSTALL@
@@ -561,7 +561,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-EXTRA_DIST = $(GREGORIO_TREE) gregorio-PATCHES $(TESTS)
+EXTRA_DIST = $(GREGORIO_TREE) TLpatches $(TESTS)
 NEVER_DIST = `find . $(NEVER_NAMES)`
 
 # Files not to be distributed
@@ -588,6 +588,7 @@ gregorio_SOURCES = \
 	@GREGORIO_TREE@/src/gabc/gabc-elements-determination.c \
 	@GREGORIO_TREE@/src/gabc/gabc-glyphs-determination.c \
 	@GREGORIO_TREE@/src/gabc/gabc-notes-determination-l.c \
+	@GREGORIO_TREE@/src/gabc/gabc-score-determination.c \
 	@GREGORIO_TREE@/src/gabc/gabc-score-determination-l.c \
 	@GREGORIO_TREE@/src/gabc/gabc-score-determination-y.c \
 	@GREGORIO_TREE@/src/gabc/gabc-write.c \
@@ -598,7 +599,7 @@ gregorio_SOURCES = \
 	@GREGORIO_TREE@/src/vowel/vowel-rules-y.c
 
 LDADD = $(KPATHSEA_LIBS)
-TESTS_ENVIRONMENT = GREGORIO_TREE='$(GREGORIO_TREE)'
+AM_TESTS_ENVIRONMENT = GREGORIO_TREE='$(GREGORIO_TREE)'; export GREGORIO_TREE;
 TESTS = gregorio.test
 DISTCLEANFILES = factus.gtex veni.gtex
 all: config_.h
@@ -755,6 +756,9 @@ clean-binPROGRAMS:
 @GREGORIO_TREE@/src/gabc/gabc-notes-determination-l.$(OBJEXT):  \
 	@GREGORIO_TREE@/src/gabc/$(am__dirstamp) \
 	@GREGORIO_TREE@/src/gabc/$(DEPDIR)/$(am__dirstamp)
+@GREGORIO_TREE@/src/gabc/gabc-score-determination.$(OBJEXT):  \
+	@GREGORIO_TREE@/src/gabc/$(am__dirstamp) \
+	@GREGORIO_TREE@/src/gabc/$(DEPDIR)/$(am__dirstamp)
 @GREGORIO_TREE@/src/gabc/gabc-score-determination-l.$(OBJEXT):  \
 	@GREGORIO_TREE@/src/gabc/$(am__dirstamp) \
 	@GREGORIO_TREE@/src/gabc/$(DEPDIR)/$(am__dirstamp)
@@ -820,6 +824,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@@GREGORIO_TREE@/src/gabc/$(DEPDIR)/gabc-notes-determination-l.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@@GREGORIO_TREE@/src/gabc/$(DEPDIR)/gabc-score-determination-l.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@@GREGORIO_TREE@/src/gabc/$(DEPDIR)/gabc-score-determination-y.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@@GREGORIO_TREE@/src/gabc/$(DEPDIR)/gabc-score-determination.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@@GREGORIO_TREE@/src/gabc/$(DEPDIR)/gabc-write.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@@GREGORIO_TREE@/src/gregoriotex/$(DEPDIR)/gregoriotex-position.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@@GREGORIO_TREE@/src/gregoriotex/$(DEPDIR)/gregoriotex-write.Po@am__quote@

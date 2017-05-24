@@ -3,13 +3,13 @@
 @d banner=='This is pPLtoTF, Version 3.6-p1.8'
 @y
 @d my_name=='uppltotf'
-@d banner=='This is upPLtoTF, Version 3.6-p1.8-u1.21'
+@d banner=='This is upPLtoTF, Version 3.6-p1.8-u1.22'
 @z
 
 @x
-      usage_help (PPLTOTF_HELP, nil);
+      usage_help (PPLTOTF_HELP, 'issue@@texjp.org');
 @y
-      usage_help (UPPLTOTF_HELP, nil);
+      usage_help (UPPLTOTF_HELP, 'issue@@texjp.org');
 @z
 
 @x

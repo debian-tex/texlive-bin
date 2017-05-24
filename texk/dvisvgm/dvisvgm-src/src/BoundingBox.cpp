@@ -2,7 +2,7 @@
 ** BoundingBox.cpp                                                      **
 **                                                                      **
 ** This file is part of dvisvgm -- a fast DVI to SVG converter          **
-** Copyright (C) 2005-2016 Martin Gieseking <martin.gieseking@uos.de>   **
+** Copyright (C) 2005-2017 Martin Gieseking <martin.gieseking@uos.de>   **
 **                                                                      **
 ** This program is free software; you can redistribute it and/or        **
 ** modify it under the terms of the GNU General Public License as       **
@@ -21,10 +21,11 @@
 #include <config.h>
 #include <algorithm>
 #include <sstream>
-#include "BoundingBox.h"
-#include "Matrix.h"
-#include "XMLNode.h"
-#include "XMLString.h"
+#include "BoundingBox.hpp"
+#include "Matrix.hpp"
+#include "utility.hpp"
+#include "XMLNode.hpp"
+#include "XMLString.hpp"
 
 using namespace std;
 
@@ -52,8 +53,8 @@ BoundingBox::BoundingBox (const DPair &p1, const DPair &p2)
 
 
 BoundingBox::BoundingBox (const Length &ulxx, const Length &ulyy, const Length &lrxx, const Length &lryy)
-	: _ulx(min(ulxx.pt(),lrxx.pt())), _uly(min(ulyy.pt(),lryy.pt())),
-	  _lrx(max(ulxx.pt(),lrxx.pt())), _lry(max(ulyy.pt(),lryy.pt())),
+	: _ulx(min(ulxx.bp(),lrxx.bp())), _uly(min(ulyy.bp(),lryy.bp())),
+	  _lrx(max(ulxx.bp(),lrxx.bp())), _lry(max(ulyy.bp(),lryy.bp())),
 	  _valid(true), _locked(false)
 {
 }
@@ -66,17 +67,28 @@ BoundingBox::BoundingBox (const string &boxstr)
 }
 
 
-/** Removes leading and trailing whitespace from the given string. */
-static string& strip (string &str) {
-	size_t n=0;
-	while (n < str.length() && isspace(str[n]))
-		++n;
-	str.erase(0, n);
-	n=str.length()-1;
-	while (n > 0 && isspace(str[n]))
-		--n;
-	str.erase(n+1);
-	return str;
+/** Extracts a sequence of length values from a string like "5cm, 2.4in, 0pt".
+ *  @param[in] boxstr whitespace and/or comma separated string of lengths.
+ *  @param[out] the extracted lengths */
+void BoundingBox::extractLengths (string boxstr, vector<Length> &lengths) {
+	boxstr = util::trim(boxstr);
+	const size_t len = boxstr.length();
+	size_t left=0;
+	string lenstr;
+	do {
+		while (left < len && isspace(boxstr[left]))
+			left++;
+		size_t right=left;
+		while (right < len && !isspace(boxstr[right]) && boxstr[right] != ',')
+			right++;
+		lenstr = boxstr.substr(left, right-left);
+		if (!lenstr.empty()) {
+			lengths.emplace_back(Length(lenstr));
+			if (boxstr[right] == ',')
+				right++;
+			left = right;
+		}
+	} while (!lenstr.empty() && lengths.size() < 4);
 }
 
 
@@ -85,45 +97,32 @@ static string& strip (string &str) {
  *  of a single length value l the current box is enlarged by adding (-l,-l) the upper
  *  left and (l,l) to the lower right corner.
  *  @param[in] boxstr whitespace and/or comma separated string of lengths. */
-void BoundingBox::set (string boxstr) {
+void BoundingBox::set (const string &boxstr) {
 	vector<Length> coord;
-	const size_t len = boxstr.length();
-	size_t l=0;
-	strip(boxstr);
-	string lenstr;
-	do {
-		while (l < len && isspace(boxstr[l]))
-			l++;
-		size_t r=l;
-		while (r < len && !isspace(boxstr[r]) && boxstr[r] != ',')
-			r++;
-		lenstr = boxstr.substr(l, r-l);
-		if (!lenstr.empty()) {
-			coord.push_back(Length(lenstr));
-			if (boxstr[r] == ',')
-				r++;
-			l = r;
-		}
-	} while (!lenstr.empty() && coord.size() < 4);
+	extractLengths(boxstr, coord);
+	set(coord);
+}
 
+
+void BoundingBox::set (const std::vector<Length> &coord) {
 	switch (coord.size()) {
 		case 1:
-			_ulx -= coord[0].pt();
-			_uly -= coord[0].pt();
-			_lrx += coord[0].pt();
-			_lry += coord[0].pt();
+			_ulx -= coord[0].bp();
+			_uly -= coord[0].bp();
+			_lrx += coord[0].bp();
+			_lry += coord[0].bp();
 			break;
 		case 2:
-			_ulx -= coord[0].pt();
-			_uly -= coord[1].pt();
-			_lrx += coord[0].pt();
-			_lry += coord[1].pt();
+			_ulx -= coord[0].bp();
+			_uly -= coord[1].bp();
+			_lrx += coord[0].bp();
+			_lry += coord[1].bp();
 			break;
 		case 4:
-			_ulx = min(coord[0].pt(), coord[2].pt());
-			_uly = min(coord[1].pt(), coord[3].pt());
-			_lrx = max(coord[0].pt(), coord[2].pt());
-			_lry = max(coord[1].pt(), coord[3].pt());
+			_ulx = min(coord[0].bp(), coord[2].bp());
+			_uly = min(coord[1].bp(), coord[3].bp());
+			_lrx = max(coord[0].bp(), coord[2].bp());
+			_lry = max(coord[1].bp(), coord[3].bp());
 			break;
 		default:
 			throw BoundingBoxException("1, 2 or 4 length parameters expected");
@@ -218,21 +217,17 @@ void BoundingBox::operator += (const BoundingBox &bbox) {
 }
 
 
-bool BoundingBox::operator == (const BoundingBox &bbox) const {
-	return _valid && bbox._valid
-		&& _ulx == bbox._ulx
-		&& _uly == bbox._uly
-		&& _lrx == bbox._lrx
-		&& _lry == bbox._lry;
+static inline bool almost_equal (double v1, double v2) {
+	return fabs(v1-v2) < 1e-10;
 }
 
 
-bool BoundingBox::operator != (const BoundingBox &bbox) const {
-	return !_valid || !bbox._valid
-		|| _ulx != bbox._ulx
-		|| _uly != bbox._uly
-		|| _lrx != bbox._lrx
-		|| _lry != bbox._lry;
+bool BoundingBox::operator == (const BoundingBox &bbox) const {
+	return _valid && bbox._valid
+		&& almost_equal(_ulx, bbox._ulx)
+		&& almost_equal(_uly, bbox._uly)
+		&& almost_equal(_lrx, bbox._lrx)
+		&& almost_equal(_lry, bbox._lry);
 }
 
 
@@ -270,8 +265,10 @@ string BoundingBox::toSVGViewBox () const {
 
 
 ostream& BoundingBox::write (ostream &os) const {
-	return os << '('  << _ulx << ", " << _uly
-				 << ", " << _lrx << ", " << _lry << ')';
+	os << '('  << _ulx << ", " << _uly << ", " << _lrx << ", " << _lry << ')';
+	if (!_valid)
+		os << " (invalid)";
+	return os;
 }
 
 

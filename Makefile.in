@@ -153,8 +153,6 @@ am__aclocal_m4_deps = $(top_srcdir)/m4/kpse-cairo-flags.m4 \
 	$(top_srcdir)/texk/dvipos/ac/withenable.ac \
 	$(top_srcdir)/texk/dvipsk/ac/withenable.ac \
 	$(top_srcdir)/texk/dvisvgm/ac/withenable.ac \
-	$(top_srcdir)/texk/dvisvgm/ac/dvisvgm.ac \
-	$(top_srcdir)/texk/dvisvgm/ac/libgs.ac \
 	$(top_srcdir)/texk/gregorio/ac/withenable.ac \
 	$(top_srcdir)/texk/gsftopk/ac/withenable.ac \
 	$(top_srcdir)/texk/lcdf-typetools/ac/withenable.ac \
@@ -287,9 +285,10 @@ am__DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/am/dist_hook.am \
 	$(top_srcdir)/build-aux/install-sh \
 	$(top_srcdir)/build-aux/ltmain.sh \
 	$(top_srcdir)/build-aux/missing ChangeLog README \
-	build-aux/compile build-aux/config.guess build-aux/config.sub \
-	build-aux/depcomp build-aux/install-sh build-aux/ltmain.sh \
-	build-aux/missing build-aux/texinfo.tex build-aux/ylwrap
+	build-aux/ar-lib build-aux/compile build-aux/config.guess \
+	build-aux/config.sub build-aux/depcomp build-aux/install-sh \
+	build-aux/ltmain.sh build-aux/missing build-aux/texinfo.tex \
+	build-aux/ylwrap
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 distdir = $(PACKAGE)-$(VERSION)
 top_distdir = $(distdir)
@@ -494,11 +493,18 @@ DIST_SUBDIRS = auxdir/auxsub doc $(CONF_SUBDIRS) libs utils texk
 recurse_this = 
 recurse_top = 
 
-# We must configure all subdirs since 'make dist' needs the Makefile.
-# For those not required for the current set of configure options
+# $Id$
+#
+# Requires $(recurse_this) and $(recurse_top).
+# Uses CONF_SUBDIRS and MAKE_SUBDIRS (set by kpse-setup.m4).
+#
+# For subdirs not required for the current set of configure options
 # we append '--disable-build' so they can skip tests that would
 # fail because, e.g., some required libraries were not built.
+# (By manually testing $enable_build in configure, e.g., dvisvgm/configure.)
+#
 # Code inspired by automake's way to handle recursive targets.
+#
 cf_silent = $(cf_silent_@AM_V@)
 cf_silent_ = $(cf_silent_@AM_DEFAULT_V@)
 cf_silent_0 = --silent
@@ -919,7 +925,8 @@ install-dvi: install-dvi-recursive
 install-dvi-am:
 
 install-exec-am:
-
+	@$(NORMAL_INSTALL)
+	$(MAKE) $(AM_MAKEFLAGS) install-exec-hook
 install-html: install-html-recursive
 
 install-html-am:
@@ -960,7 +967,8 @@ ps-am:
 
 uninstall-am:
 
-.MAKE: $(am__recursive_targets) install-am install-strip
+.MAKE: $(am__recursive_targets) install-am install-exec-am \
+	install-strip
 
 .PHONY: $(am__recursive_targets) CTAGS GTAGS TAGS all all-am all-local \
 	am--refresh check check-am clean clean-cscope clean-generic \
@@ -971,13 +979,13 @@ uninstall-am:
 	distcleancheck distdir distuninstallcheck dvi dvi-am html \
 	html-am info info-am install install-am install-data \
 	install-data-am install-dvi install-dvi-am install-exec \
-	install-exec-am install-html install-html-am install-info \
-	install-info-am install-man install-pdf install-pdf-am \
-	install-ps install-ps-am install-strip installcheck \
-	installcheck-am installdirs installdirs-am maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-generic \
-	mostlyclean-libtool pdf pdf-am ps ps-am tags tags-am uninstall \
-	uninstall-am
+	install-exec-am install-exec-hook install-html install-html-am \
+	install-info install-info-am install-man install-pdf \
+	install-pdf-am install-ps install-ps-am install-strip \
+	installcheck installcheck-am installdirs installdirs-am \
+	maintainer-clean maintainer-clean-generic mostlyclean \
+	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
+	tags tags-am uninstall uninstall-am
 
 .PRECIOUS: Makefile
 
@@ -1029,10 +1037,16 @@ world: all
 	@echo "top-level make $@: running $(check_target)..."
 	$(MAKE) $(AM_MAKEFLAGS) $(check_target)
 	@echo "top-level make $@ done."
+
+install-exec-hook:
+	@echo "WARNING: make install does not result in a usable TeX!"
+	@echo "  ! The binaries require the myriad support files."
+	@echo "  ! See http://tug.org/texlive/distro.html"
+	@echo "  ! and http://tug.org/texlive/build.html#deploy, for example."
 skip:
 .PHONY: skip
 
-# Directly run texlinks.
+# Convenience targets to run texlinks and reautoconf.
 .PHONY: texlinks
 texlinks:
 	cd $(texlinks_dir) && $(MAKE) $(AM_MAKEFLAGS) run-texlinks

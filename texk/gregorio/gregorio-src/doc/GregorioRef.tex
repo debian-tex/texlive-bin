@@ -1,4 +1,22 @@
 % !TEX program = LuaLaTeX+se
+%
+% Copyright (C) 2006-2017 The Gregorio Project (see CONTRIBUTORS.md)
+%
+% This file is part of Gregorio.
+%
+% Gregorio is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation, either version 3 of the License, or
+% (at your option) any later version.
+%
+% Gregorio is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+%
+% You should have received a copy of the GNU General Public License
+% along with Gregorio.  If not, see <http://www.gnu.org/licenses/>.
+%
 \documentclass[12pt,a4paper]{article}
 \usepackage[titletoc,toc,title]{appendix}
 \usepackage{fontspec}
@@ -32,7 +50,6 @@
 \usepackage{url}
 \usepackage{tabulary}
 \usepackage{tabularx}
-\usepackage{adjustbox}
 \usepackage{xparse}
 
 \usepackage{makeidx}
@@ -43,6 +60,7 @@
 \definecolor{green}{HTML}{0c700c}
 \definecolor{myred}{HTML}{FF3333}
 
+\usepackage{adjustbox} % must be after xcolor
 \usepackage{minted} % must be after xcolor
 \makeatletter
 \@ifpackagelater{minted}{2013/12/21}{%
@@ -87,7 +105,7 @@
 	\ifbreakable%
 		\filbreak%
 	\else%
-		\breakabletrue%
+		\global\breakabletrue%
 	\fi%
 	\makebox[\linewidth]{\ttfamily\bfseries #1#2%
 	\hspace{\fill}\normalfont\itshape #3}%
@@ -106,11 +124,9 @@
 
 % for the character tables
 \font\greciliae = {name:greciliae} at 1000000 sp\relax
-\font\gregorio = {name:gregorio} at 1000000 sp\relax
-\font\parmesan = {name:parmesan} at 1000000 sp\relax
+\font\greciliaeHollow = {name:greciliae-hollow} at 1000000 sp\relax
 \font\greciliaeOp = {name:greciliae-op} at 1000000 sp\relax
-\font\gregorioOp = {name:gregorio-op} at 1000000 sp\relax
-\font\parmesanOp = {name:parmesan-op} at 1000000 sp\relax
+\font\greciliaeOpHollow = {name:greciliae-op-hollow} at 1000000 sp\relax
 \font\greextra = {name:greextra} at 12 pt\relax
 \newcommand{\excluded}[1]{{\tiny\itshape #1}}
 
@@ -132,10 +148,19 @@
 	\fi%
 }
 
+\NewDocumentEnvironment{gcount}{m}{\macroname{#1}{}{gsp-default.tex}}{%
+
+	Default: \expandafter$\expandafter\the\csname gre@space@count@#1\endcsname$
+}
+
 \newcommand{\writemode}[3]{%
 	\gre@style@modeline #1\endgre@style@modeline %
 	\gre@style@modemodifier #2\endgre@style@modemodifier %
 	\gre@style@modedifferentia #3\endgre@style@modedifferentia %
+}
+
+\newcommand{\getgrecount}[1]{%
+	\the\csname gre@count@#1\endcsname%
 }
 \makeatother
 
@@ -152,7 +177,7 @@
 
 		\vspace{1cm}
 
-		\large Version \textbf{4.1.1}, 10 March 2016 %% PARSE_VERSION_DATE
+		\large Version \textbf{5.0.1}, 16 April 2017 %% PARSE_VERSION_DATE
 
 		\vspace{1.5cm}
 	\end{center}

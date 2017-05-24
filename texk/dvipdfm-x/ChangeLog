@@ -1,3 +1,110 @@
+2017-05-19  Karl Berry  <karl@tug.org>
+
+	* Version 20170318 for TeX Live 2017 release.
+
+2017-05-08  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* pdfdraw.c: Replace a small number 1.0e-8 by OUR_EPSILON = 2.5e-16,
+	responding incompletely to
+	http://tug.org/pipermail/tex-live/2017-May/040090.html.
+
+2017-04-26  Paul Vojta  <vojta@math.berkeley.edu>
+
+	* dvi.c, dvipdfmx.c, spc_html.c, spc_util.c: Support additional
+	length units.
+
+2017-04-16  Shunsaku Hirata  <shunsaku.hirata74@gmail.com>
+
+	* tt_cmap.c: Fix a bug that generation of GID to CID mapping for
+	format 2 CFF charsets was wrong. "unicode" encoding support was
+	broken for fonts using this format.
+
+2017-04-15  Shunsaku Hirata  <shunsaku.hirata74@gmail.com>
+
+	* fontmap.c, tt_cmap.c, tt_gsub.c, tt_gsub.h, pdffont.c: Removed
+	undocumented OpenType Layout GSUB support.  Added simplified version of
+	OpenType Layout GSUB support. Fontmap option "-l otl_tags" enables
+	OpenType GSUB features specified by otl_tags, where otl_tags is a ":"
+	separated list of OpenType Layout feature tags
+	(or strings of script.language.feature form).
+	
+2017-04-12  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* dvipdfmx.c: Fix a bug in static const char *optstrig.
+	
+2017-04-09  Shunsaku Hirata  <shunsaku.hirata74@gmail.com>
+
+	* tt_cmap.c: Vertical writing support had been broken since at some
+	point of xdvipdfmx merge for "unicode" encoding. Apply vert/vrt2 GSUB
+	feature when generating Unicode mapping.
+	
+2017-03-18  Karl Berry  <karl@tug.org>
+
+	* xbb.c: update copyright years.
+	
+	* xdvipdfm-bb.test: remove any ^%%Creat line, not just %%CreationDate.
+	* tests/*.[x]bb: remove %%Creator: lines since they embed version.
+
+2017-03-18  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	Bump version to 20170318 for TeX Live 2017.
+
+2017-03-01  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* dvipdfmx.c: Command line -p option wins papersize and pagesize
+	specials, as dvips.
+
+2017-02-17  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* dvi.c: Add possibly forgotten braces.
+
+2017-01-24  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* jpegimage.c: Support Exif tags 0x5110, 0x5111, and 0x5112 in order to
+	avoid warnings for some kind of jpeg images. Changes are borrowed from
+	writejpg.w by Luigi in the recent LuaTeX.
+
+2016-12-29  Hironobu Yamashita  <h.y.acetaminophen@gmail.com>
+
+	* cid_basefont.h: Add data for STHeiti-Regular-Acro, and correct
+	several data.
+
+2016-12-18  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* dvi.c, dvi.h, dvipdfmx.c, mpost.c, pdfencoding.c, pdfobj.c,
+	pdfparse.c, pdfparse.h, tt_cmap.c, type0.c, type1.c, vf.c, xbb.c:
+	Merge libdpx by Clerk Ma at https://github.com/clerkma/ptex-ng.
+
+2016-10-30  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* pdffont.c, pdfobj.h: Use (time_t)-1 for INVALID_EPOCH_VALUE.
+
+2016-10-05  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* dpxfile.c: Use PATH_MAX instead of _MAX_PATH.
+
+2016-10-03  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* dpxfile.c: Sync with MikTeX.
+
+2016-06-25  Shunsaku Hirata  <shunsaku.hirata74@gmail.com>
+
+	Modify to make PDF/A generation a bit easier.
+	* pdfobj.c: Do not compress XMP Metadata.
+	* cidtype2.c, type1.c, type1c.c: Always write CIDSet for CIDType2 and
+	CharSet for Type1 font. Check consistency of glyph width.
+
+2016-06-19  Shunsaku Hirata  <shunsaku.hirata74@gmail.com>
+
+	* dvipdfmx.c: Disable overriding "D" option setting from
+	dvipdfmx:config special.
+	* configure.ac: Change version from 20160307 to 20160619 in order to
+	distinguish the new one from that in TeX Live 2016.
+
+2016-05-20  Karl Berry  <karl@tug.org>
+
+	* Version 20160307 for TeX Live 2016.
+
 2016-05-10  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
 
 	* cidtype2.c: Fix bugs in horizontal-vertical mixed scripts by

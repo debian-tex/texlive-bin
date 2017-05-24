@@ -1,3 +1,39 @@
+2017-04-24  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* eptex.ech, etex.ch1, euptex.ch0, pdfutils.ch:
+	Adapt to changes in ptexdir/ptex-base.ch (p\TeX -> \pTeX).
+
+2016-12-15  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* eptexextra.h: Use "issue@texjp.org" as BUG_ADDRESS.
+
+2016-11-14  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* eptex.ech, eptex_version.h, pdfutils.ch: Add new primitives
+	\pdfuniformdeviate, \pdfnormaldeviate, \pdfrandomseed, \pdfsetrandomseed,
+	\pdfelapsedtime, \pdfresettimer.
+
+2016-10-31  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* pdfutils.ch: Remove an unused variable to avoid a compiler warning.
+
+2016-10-30  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* eptex.defines, eptex.ech, eptex_version.h, pdfutils.ch:
+	Use initstarttime() to improve CreationDate.
+
+2016-09-12  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* eptex.ech, pdfutils.ch: Realize better box in math mode.
+
+2016-09-06  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* fam256.ch: Allow only 8bit arguments for \catcode etc.
+
+2016-07-29  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* pdfutils.ch: Improve \pdfsavepos as pointed out by N. Abe.
+
 2016-03-04  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
 
 	* etex.ch1: Adapt to changes in ptexdir/ptex-base.ch.

@@ -1,4 +1,4 @@
-% $Id: mp.w 2080 2016-03-06 21:26:30Z luigi $
+% $Id: mp.w 2123 2017-03-08 12:49:56Z luigi $
 %
 % This file is part of MetaPost;
 % the MetaPost program is in the public domain.
@@ -73,12 +73,12 @@ undergoes any modifications, so that it will be clear which version of
 @^extensions to \MP@>
 @^system dependencies@>
 
-@d default_banner "This is MetaPost, Version 1.9991" /* printed when \MP\ starts */
+@d default_banner "This is MetaPost, Version 2.000" /* printed when \MP\ starts */
 @d true 1
 @d false 0
 
 @<Metapost version header@>=
-#define metapost_version "1.9991"
+#define metapost_version "2.000"
 
 @ The external library header for \MP\ is |mplib.h|. It contains a
 few typedefs and the header defintions for the externally used
@@ -140,6 +140,28 @@ typedef struct MP_instance {
 #endif
 
 @ @c
+/*\#define DEBUGENVELOPE */
+#ifdef DEBUGENVELOPE 
+static int DEBUGENVELOPECOUNTER=0;
+#define dbg_str(A)	  printf("\n--[==[%03d DEBUGENVELOPE ]==] %s",		   DEBUGENVELOPECOUNTER++, #A)
+#define dbg_n(A) 	  printf("\n--[==[%03d DEBUGENVELOPE ]==] ['%s']=%s, ",	   DEBUGENVELOPECOUNTER++, #A, number_tostring(A))
+#define dbg_in(A) 	  printf("\n--[==[%03d DEBUGENVELOPE ]==] ['%s']=%d, ",	   DEBUGENVELOPECOUNTER++, #A, (int)(A))
+#define dbg_dn(A) 	  printf("\n--[==[%03d DEBUGENVELOPE ]==] ['%s']=%.100f, ",DEBUGENVELOPECOUNTER++, #A, (double)(A))
+#define dbg_key(A) 	  printf("\n--[==[%03d DEBUGENVELOPE ]==] ['%s']= ",	   DEBUGENVELOPECOUNTER++, #A)
+#define dbg_key_nval(K,V) printf("\n--[==[%03d DEBUGENVELOPE ]==] ['%s']=%s",	   DEBUGENVELOPECOUNTER++, #K,number_tostring(V))
+#define dbg_key_ival(K,V) printf("\n--[==[%03d DEBUGENVELOPE ]==] ['%s']=%d",	   DEBUGENVELOPECOUNTER++, #K,(int)(V))
+#define dbg_key_dval(K,V) printf("\n--[==[%03d DEBUGENVELOPE ]==] ['%s']=%.100f",  DEBUGENVELOPECOUNTER++, #K,(double)(V))
+#define dbg_comment(A) 	  printf("\n--[==[%03d DEBUGENVELOPE ]==] --[==[%s]==]",   DEBUGENVELOPECOUNTER++, #A)
+#define dbg_sp 		  printf("\n--[==[%03d DEBUGENVELOPE ]==]  ",   	   DEBUGENVELOPECOUNTER++)
+#define dbg_open_t 	  printf("\n--[==[%03d DEBUGENVELOPE ]==] {",   	   DEBUGENVELOPECOUNTER++)
+#define dbg_close_t 	  printf("\n--[==[%03d DEBUGENVELOPE ]==] }",   	   DEBUGENVELOPECOUNTER++)
+#define dbg_comma 	  printf("\n--[==[%03d DEBUGENVELOPE ]==] ,",   	   DEBUGENVELOPECOUNTER++)
+#define dbg_nl 		  printf("\n--[==[%03d DEBUGENVELOPE ]==] \n",   	   DEBUGENVELOPECOUNTER++)
+#define dbg_CUBIC         dbg_n(p->x_coord); dbg_n(p->y_coord); \
+			  dbg_n(p->right_x); dbg_n(p->right_y); \
+			  dbg_n(q->left_x);  dbg_n(q->left_y);  \
+			  dbg_n(q->x_coord); dbg_n(q->y_coord)
+#endif
 #define KPATHSEA_DEBUG_H 1
 #include <w2c/config.h>
 #include <stdio.h>
@@ -154,23 +176,50 @@ typedef struct MP_instance {
 #include <time.h>               /* for struct tm \& co */
 #include <zlib.h>               /* for |ZLIB_VERSION|, zlibVersion() */
 #include <png.h>                /* for |PNG_LIBPNG_VER_STRING|, |png_libpng_ver| */
-#include <pixman.h>             /* for |PIXMAN_VERSION_STRING|, |pixman_version_string()| */
-#include <cairo.h>              /* for |CAIRO_VERSION_STRING|, |cairo_version_string()| */
+/*\#include <pixman.h>*/             /* for |PIXMAN_VERSION_STRING|, |pixman_version_string()| */
+/*\#include <cairo.h>*/              /* for |CAIRO_VERSION_STRING|, |cairo_version_string()| */
 #include <gmp.h>                /* for |gmp_version| */
 #include <mpfr.h>               /* for |MPFR_VERSION_STRING|, |mpfr_get_version()| */
 #include "mplib.h"
 #include "mplibps.h"            /* external header */
-#include "mplibsvg.h"           /* external header */
-#include "mplibpng.h"           /* external header */
+/*\#include "mplibsvg.h" */          /* external header */
+/*\#include "mplibpng.h" */          /* external header */
 #include "mpmp.h"               /* internal header */
 #include "mppsout.h"            /* internal header */
-#include "mpsvgout.h"           /* internal header */
-#include "mppngout.h"           /* internal header */
+/*\#include "mpsvgout.h"*/           /* internal header */
+/*\#include "mppngout.h"*/           /* internal header */
 #include "mpmath.h"             /* internal header */
 #include "mpmathdouble.h"       /* internal header */
 #include "mpmathdecimal.h"      /* internal header */
 #include "mpmathbinary.h"       /* internal header */
 #include "mpstrings.h"          /* internal header */
+/* BEGIN PATCH */
+mp_number dx_ap;    /* approximation of dx */
+mp_number dy_ap;    /* approximation of dy */
+mp_number dxin_ap;  /* approximation of dxin */
+mp_number dyin_ap;  /* approximation of dyin */
+mp_number ueps_ap;  /* epsilon for above approximations */
+boolean is_dxdy, is_dxindyin;
+/* END PATCH */
+
+@ We move the {\tt cairo} and {\tt pixman} libraries outside {\tt mp.w}, 
+to minimize dependencies.
+
+@c
+extern const char *COMPILED_CAIRO_VERSION_STRING;
+extern const char* cairo_version_string (void);
+extern const char *COMPILED_PIXMAN_VERSION_STRING;
+extern const char* pixman_version_string (void);
+extern void mp_png_backend_initialize (MP mp);
+extern void mp_png_backend_free (MP mp);
+extern int mp_png_gr_ship_out (void *hh, const char  *options, int standalone);
+extern int mp_png_ship_out (void *hh, const char *options);
+extern void mp_svg_backend_initialize (MP mp);
+extern void mp_svg_backend_free (MP mp);
+extern int mp_svg_ship_out (mp_edge_object  *hh, int prologues);
+extern int mp_svg_gr_ship_out (mp_edge_object  *hh, int prologues, int standalone);
+
+@ @c
 extern font_number mp_read_font_info (MP mp, char *fname);      /* tfmin.w */
 @h @<Declarations@>;
 @<Basic printing procedures@>;
@@ -183,7 +232,7 @@ most compilers understand the non-debug version.
 @^system dependencies@>
 
 @<MPlib internal header stuff@>=
-#define DEBUG 0
+/*\#define DEBUG 2*/
 #if DEBUG
 #define debug_number(A) printf("%d: %s=%.32f (%d)\n", __LINE__, #A, number_to_double(A), number_to_scaled(A))
 #else
@@ -607,12 +656,20 @@ if (mp->start_sym != NULL) {    /* insert the `\&{everyjob}' symbol */
 extern MP_options *mp_options (void);
 extern MP mp_initialize (MP_options * opt);
 extern int mp_status (MP mp);
+extern boolean mp_finished (MP mp);
 extern void *mp_userdata (MP mp);
 
 @ @c
 int mp_status (MP mp) {
   return mp->history;
 }
+
+
+@ @c
+boolean mp_finished (MP mp) {
+  return mp->finished;
+}
+
 
 
 @ @c
@@ -2236,8 +2293,11 @@ in a row.
 
 
 @ @<Put help message on the transcript file@>=
-if (mp->interaction > mp_batch_mode)
-  decr (mp->selector);          /* avoid terminal output */
+if (! mp->noninteractive) {
+    if (mp->interaction > mp_batch_mode) {
+        decr (mp->selector);          /* avoid terminal output */
+    }
+}
 if (mp->use_err_help) {
   mp_print_nl (mp, "");
   @<Print the string |err_help|, possibly on several lines@>;
@@ -2247,8 +2307,10 @@ if (mp->use_err_help) {
     mp_print_nl (mp, help_line[help_ptr]);
   };
   mp_print_ln (mp);
-  if (mp->interaction > mp_batch_mode)
-    incr (mp->selector);        /* re-enable terminal output */
+  if (! mp->noninteractive) {
+   if (mp->interaction > mp_batch_mode)
+     incr (mp->selector);        /* re-enable terminal output */
+  }
   mp_print_ln (mp);
 }
 
@@ -2574,12 +2636,12 @@ true to the original as much as possibile.
 
 @c
 /* Unused.
-static void mp_next_random (MP mp, mp_number *ret) {
-  if ( mp->j_random==0 )
-    mp_new_randoms(mp);
+static void mp\_next\_random (MP mp, mp\_number *ret) {
+  if ( mp->j\_random==0 )
+    mp\_new\_randoms(mp);
   else
-    decr(mp->j_random);
-  number_clone (*ret, mp->randoms[mp->j_random]);
+    decr(mp->j\_random);
+  number\_clone (*ret, mp->randoms[mp->j\_random]);
 }
 */
 
@@ -2596,31 +2658,31 @@ As said before, now each number system has its own implementation.
 
 @c
 /*Unused.
-static void mp_unif_rand (MP mp, mp_number *ret, mp_number x_orig) {
-  mp_number y;     // trial value 
-  mp_number x, abs_x;
-  mp_number u;
-  new_fraction (y);
-  new_number (x);
-  new_number (abs_x);
-  new_number (u);
-  number_clone (x, x_orig);
-  number_clone (abs_x, x);
-  number_abs (abs_x);
-  mp_next_random(mp, &u);
-  take_fraction (y, abs_x, u);
-  free_number (u);
-  if (number_equal(y, abs_x)) {
-    set_number_to_zero(*ret);
-  } else if (number_positive(x)) {
-    number_clone (*ret, y);
+static void mp\_unif\_rand (MP mp, mp\_number *ret, mp\_number x\_orig) {
+  mp\_number y;     // trial value 
+  mp\_number x, abs\_x;
+  mp\_number u;
+  new\_fraction (y);
+  new\_number (x);
+  new\_number (abs\_x);
+  new\_number (u);
+  number\_clone (x, x\_orig);
+  number\_clone (abs\_x, x);
+  number\_abs (abs\_x);
+  mp\_next\_random(mp, \&u);
+  take\_fraction (y, abs\_x, u);
+  free\_number (u);
+  if (number\_equal(y, abs\_x)) {
+    set\_number\_to\_zero(*ret);
+  } else if (number\_positive(x)) {
+    number\_clone (*ret, y);
   } else {
-    number_clone (*ret, y);
-    number_negate (*ret);
+    number\_clone (*ret, y);
+    number\_negate (*ret);
   }
-  free_number (abs_x);
-  free_number (x);
-  free_number (y);
+  free\_number (abs\_x);
+  free\_number (x);
+  free\_number (y);
 }
 */
 
@@ -2634,43 +2696,43 @@ true to the original as much as possibile.
 
 @c
 /*  Unused.
-static void mp_norm_rand (MP mp, mp_number *ret) {
-  mp_number ab_vs_cd;
-  mp_number abs_x;
-  mp_number u;
-  mp_number r;
-  mp_number la, xa;
-  new_number (ab_vs_cd);
-  new_number (la);
-  new_number (xa);
-  new_number (abs_x);
-  new_number (u);
-  new_number (r);
+static void mp\_norm\_rand (MP mp, mp\_number *ret) {
+  mp\_number ab\_vs\_cd;
+  mp\_number abs\_x;
+  mp\_number u;
+  mp\_number r;
+  mp\_number la, xa;
+  new\_number (ab\_vs\_cd);
+  new\_number (la);
+  new\_number (xa);
+  new\_number (abs\_x);
+  new\_number (u);
+  new\_number (r);
   do {
     do {
-      mp_number v;
-      new_number (v);
-      mp_next_random(mp, &v);
-      number_substract (v, fraction_half_t);
-      take_fraction (xa, sqrt_8_e_k, v);
-      free_number (v);
-      mp_next_random(mp, &u);
-      number_clone (abs_x, xa);
-      number_abs (abs_x);
-    } while (number_greaterequal (abs_x, u));
-    make_fraction (r, xa, u);
-    number_clone (xa, r);
-    m_log (la, u);
-    set_number_from_substraction(la, twelve_ln_2_k, la);
-    ab_vs_cd (ab_vs_cd, one_k, la, xa, xa);
-  } while (number_negative(ab_vs_cd));
-  number_clone (*ret, xa);
-  free_number (ab_vs_cd);
-  free_number (r);
-  free_number (abs_x);
-  free_number (la);
-  free_number (xa);
-  free_number (u);
+      mp\_number v;
+      new\_number (v);
+      mp\_next\_random(mp, \&v);
+      number\_substract (v, fraction\_half\_t);
+      take\_fraction (xa, sqrt\_8\_e\_k, v);
+      free\_number (v);
+      mp\_next\_random(mp, \&u);
+      number\_clone (abs\_x, xa);
+      number\_abs (abs\_x);
+    } while (number\_greaterequal (abs\_x, u));
+    make\_fraction (r, xa, u);
+    number\_clone (xa, r);
+    m\_log (la, u);
+    set\_number\_from\_substraction(la, twelve\_ln\_2\_k, la);
+    ab\_vs\_cd (ab\_vs\_cd, one\_k, la, xa, xa);
+  } while (number\_negative(ab\_vs\_cd));
+  number\_clone (*ret, xa);
+  free\_number (ab\_vs\_cd);
+  free\_number (r);
+  free\_number (abs\_x);
+  free\_number (la);
+  free\_number (xa);
+  free\_number (u);
 }
 */
 
@@ -2836,7 +2898,7 @@ void *do_alloc_node (MP mp, size_t size) {
 
 @c
 void mp_xfree (void *x) {
-  if (x != NULL)
+  if (x != NULL) 
     free (x);
 }
 void *mp_xrealloc (MP mp, void *p, size_t nmem, size_t size) {
@@ -3618,6 +3680,7 @@ mp_pen_offset_of, /* operation code for \.{penoffset} */
 mp_arc_time_of, /* operation code for \.{arctime} */
 mp_version, /* operation code for \.{mpversion} */
 mp_envelope_of, /* operation code for \.{envelope} */
+mp_boundingpath_of, /* operation code for \.{boundingpath} */
 mp_glyph_infont, /* operation code for \.{glyph} */
 mp_kern_flag /* operation code for \.{kern} */
 
@@ -3929,6 +3992,9 @@ static void mp_print_op (MP mp, quarterword c) {
       break;
     case mp_envelope_of:
       mp_print (mp, "envelope");
+      break;
+    case mp_boundingpath_of:
+      mp_print (mp, "boundingpath");
       break;
     case mp_glyph_infont:
       mp_print (mp, "glyph");
@@ -4705,7 +4771,7 @@ static mp_sym mp_frozen_id_lookup (MP mp, char *j, size_t l,
   return mp_do_id_lookup (mp, mp->frozen_symbols, j, l, insert_new);
 }
 
-/* see mp_print_sym  (mp_sym sym) */
+/* see mp\_print\_sym  (mp\_sym sym) */
 @ Get a numeric value from \MP\ is not easy. We have to consider
 the macro and the loops, as also the internal type (this is a
 first attempt, and more work is needed). If we are inside
@@ -13144,6 +13210,12 @@ Since an envelope spec only determines relative changes in pen offsets,
 @<Glob...@>=
 integer spec_offset;    /* number of pen edges between |h| and the initial offset */
 
+@ The next function calculates $1/3 B'(t) = (-p + (3c_1 + (-3c_2 + q)))*t^2 + (2p + (-4c_1 + 2*c_2))t + (-p + c_1)$,
+for cubic curve |B(t)| given by |p|,|c1|,|c2|,|q|
+and it's used for |t| near 0 and |t| near 1. We use double mode, otherwise we have to
+take care of overflow.
+
+
 @ @c
 static mp_knot mp_offset_prep (MP mp, mp_knot c, mp_knot h) {
   int n;   /* the number of vertices in the pen polygon */
@@ -13183,6 +13255,14 @@ static mp_knot mp_offset_prep (MP mp, mp_knot c, mp_knot h) {
   new_number(u1);
   new_number(v0);
   new_number(v1);
+  new_number(dx_m);
+  new_number(dy_m);
+  new_number(dxin_m);
+  new_number(dx_ap);
+  new_number(dy_ap);
+  new_number(dxin_ap);
+  new_number(dyin_ap);
+  new_number(ueps_ap);
   new_fraction (ss);
   new_fraction (s);
   new_fraction (t);
@@ -13191,17 +13271,57 @@ static mp_knot mp_offset_prep (MP mp, mp_knot c, mp_knot h) {
   p = c;
   c0 = c;
   k_needed = 0;
-  do {
+#ifdef DEBUGENVELOPE
+dbg_nl;dbg_str(--[==[BEGIN]==]);dbg_nl; 
+dbg_str(return {);dbg_nl; 
+dbg_n(w0->x_coord);
+dbg_n(w0->y_coord);
+#endif
+ do {
     q = mp_next_knot (p);
+#ifdef DEBUGENVELOPE
+dbg_nl;dbg_open_t;dbg_str(--[==[begin loop]==]);dbg_nl; 
+dbg_n(p->x_coord);dbg_n(p->y_coord);
+dbg_n(p->right_x);dbg_n(p->right_y);
+dbg_n(q->left_x);dbg_n(q->left_y);
+dbg_n(q->x_coord);dbg_n(q->y_coord);
+dbg_n(w0->x_coord);
+dbg_n(w0->y_coord);
+#endif 
     @<Split the cubic between |p| and |q|, if necessary, into cubics
       associated with single offsets, after which |q| should
       point to the end of the final such cubic@>;
+#ifdef DEBUGENVELOPE   
+dbg_key(end Split the cubic between |p| and |q|);dbg_open_t;dbg_nl;
+dbg_n(w->x_coord);dbg_n(w->y_coord);
+dbg_n(w0->x_coord);dbg_n(w0->y_coord);
+dbg_close_t; dbg_comma;dbg_nl;
+#endif
   NOT_FOUND:
     @<Advance |p| to node |q|, removing any ``dead'' cubics that
       might have been introduced by the splitting process@>;
+#ifdef DEBUGENVELOPE
+dbg_n(w0->x_coord);dbg_n(w0->y_coord);
+dbg_str(--[==[end loop]==]);dbg_nl; dbg_close_t;dbg_comma;dbg_nl;
+#endif 
   } while (q != c);
+#ifdef DEBUGENVELOPE
+ dbg_key(Fix the offset change);dbg_open_t;dbg_nl;
+ dbg_n(p->x_coord);dbg_n(p->y_coord);
+ dbg_key_ival(info pre,mp_knot_info(p));dbg_comma;dbg_nl;
+ dbg_n(c->x_coord);dbg_n(c->y_coord);
+ dbg_key_ival(info pre,mp_knot_info(c));dbg_close_t;dbg_comma;dbg_nl;
+#endif
   @<Fix the offset change in |mp_knot_info(c)| and set |c| to the return value of
     |offset_prep|@>;
+#ifdef DEBUGENVELOPE  
+dbg_n(p->x_coord);dbg_n(p->y_coord);
+dbg_key_ival(info post,mp_knot_info(p));dbg_comma;dbg_nl;
+dbg_n(c->x_coord);dbg_n(c->y_coord);
+dbg_key_ival(info post,mp_knot_info(c));
+dbg_close_t;
+dbg_nl;dbg_str(--[==[END]==]);dbg_nl;
+#endif
   free_number (ss);
   free_number (s);
   free_number (dxin);
@@ -13232,6 +13352,14 @@ static mp_knot mp_offset_prep (MP mp, mp_knot c, mp_knot h) {
   free_number (u1);
   free_number (v0);
   free_number (v1);
+  free_number(dx_m);
+  free_number(dy_m);
+  free_number(dxin_m);
+  free_number(dx_ap);
+  free_number(dy_ap);
+  free_number(dxin_ap);
+  free_number(dyin_ap);
+  free_number(ueps_ap);
   free_number (t);
   return c;
 }
@@ -13286,6 +13414,9 @@ the testcase reported by Bogus\l{}aw Jackowski in tracker id 267, case 52c
 on Sarovar.)
 
 @<Advance |p| to node |q|, removing any ``dead'' cubics...@>=
+#ifdef DEBUGENVELOPE 
+dbg_comment(Advance |p| to node |q|);dbg_nl;
+#endif
 q0 = q;
 do {
   r = mp_next_knot (p);
@@ -13308,6 +13439,11 @@ if ((q != q0) && (q != c || c == c0))
 
 @ @<Remove the cubic following |p| and update the data structures...@>=
 {
+ #ifdef DEBUGENVELOPE 
+ dbg_key(Remove the cubic following p);dbg_open_t;dbg_nl;
+ dbg_n(p->x_coord);dbg_n(p->y_coord);
+ dbg_key_ival(pre info p,mp_knot_info(p));  dbg_close_t;dbg_comma;dbg_nl;
+ #endif 
   k_needed = mp_knot_info (p) - zero_off;
   if (r == q) {
     q = p;
@@ -13325,6 +13461,11 @@ if ((q != q0) && (q != c || c == c0))
     mp->spec_p2 = p;
   r = p;
   mp_remove_cubic (mp, p);
+  #ifdef DEBUGENVELOPE 
+  dbg_key(Remove the cubic following p);dbg_open_t;dbg_nl;
+  dbg_n(p->x_coord);dbg_n(p->y_coord);
+  dbg_key_ival(post info p,mp_knot_info (p)); dbg_close_t;dbg_comma;dbg_nl;
+  #endif 
 }
 
 
@@ -13393,7 +13534,16 @@ We may have to split a cubic into many pieces before each
 piece corresponds to a unique offset.
 
 @<Split the cubic between |p| and |q|, if necessary, into cubics...@>=
+#ifdef DEBUGENVELOPE 
+dbg_comment(Split the cubic between |p| and |q|);dbg_nl;
+dbg_key(Split the cubic);dbg_open_t;dbg_nl;
+dbg_key_ival(pre info p,mp_knot_info(p));dbg_comma;
+dbg_n(w0->x_coord);dbg_n(w0->y_coord);
+#endif 
 mp_knot_info (p) = zero_off + k_needed;
+#ifdef DEBUGENVELOPE 
+dbg_key_ival(post info p,mp_knot_info(p));dbg_close_t;dbg_comma; dbg_nl;
+#endif 
 k_needed = 0;
 @<Prepare for derivative computations;
   |goto not_found| if the current cubic is dead@>;
@@ -13447,6 +13597,10 @@ mp_number dx0, dy0;       /* initial direction for the first cubic in the curve 
 mp_number x0a, x1a, x2a, y0a, y1a, y2a;   /* intermediate values */
 mp_number t;     /* where the derivative passes through zero */
 mp_number s;     /* a temporary value */
+mp_number dx_m;     /* signal a pertubation of dx */
+mp_number dy_m;     /* signal a pertubation of dx */
+mp_number dxin_m;   /* signal a pertubation of dxin */
+
 
 @ @<Prepare for derivative computations...@>=
 set_number_from_substraction(x0, p->right_x, p->x_coord);
@@ -13455,6 +13609,11 @@ set_number_from_substraction(x1, q->left_x, p->right_x);
 set_number_from_substraction(y0, p->right_y, p->y_coord);
 set_number_from_substraction(y2, q->y_coord, q->left_y);
 set_number_from_substraction(y1, q->left_y, p->right_y);
+#ifdef DEBUGENVELOPE
+dbg_key(Prepare for derivative computations);dbg_open_t;dbg_nl;
+dbg_n(x0);dbg_n(y0);dbg_n(x1);dbg_n(y1);dbg_n(x2);dbg_n(y2);
+dbg_close_t;dbg_comma;dbg_nl;
+#endif
 {
   mp_number absval;
   new_number (absval);
@@ -13551,25 +13710,56 @@ void mp_fin_offset_prep (MP mp, mp_knot p, mp_knot w, mp_number
   new_number(t2);
   new_fraction(s);
   new_fraction(t);
+#ifdef DEBUGENVELOPE 
+dbg_key(mp_fin_offset_prep);dbg_open_t;dbg_nl;
+#endif
   while (1) {
     if (rise > 0)
       ww = mp_next_knot (w);    /* a pointer to $w\k$ */
     else
       ww = mp_prev_knot (w);    /* a pointer to $w_{k-1}$ */
+#ifdef DEBUGENVELOPE 
+dbg_comment(begin iteration);
+dbg_open_t;dbg_nl;
+dbg_n(w->x_coord);dbg_n(w->y_coord);
+dbg_n(ww->x_coord);dbg_n(ww->y_coord);
+dbg_n(x0);dbg_n(x1);dbg_n(x2);
+dbg_n(y0);dbg_n(y1);dbg_n(y2);
+dbg_in(rise);
+#endif
     @<Compute test coefficients |(t0,t1,t2)|
       for $d(t)$ versus $d_k$ or $d_{k-1}$@>;
+#ifdef DEBUGENVELOPE 
+dbg_comment(crossing_point);
+#endif
     crossing_point (t, t0, t1, t2);
+#ifdef DEBUGENVELOPE 
+dbg_n(t);dbg_n(t0);dbg_n(t1);dbg_n(t2);
+dbg_in(number_greaterequal(t, fraction_one_t));
+dbg_in(turn_amt);
+dbg_close_t; dbg_comma;dbg_nl;
+#endif
     if (number_greaterequal(t, fraction_one_t)) {
       if (turn_amt > 0)
         number_clone(t, fraction_one_t);
       else
         goto RETURN;
     }
+#ifdef DEBUGENVELOPE 
+dbg_comment(Split the cubic at $t$ and split off another cubic if the derivative crosses back);
+#endif
     @<Split the cubic at $t$,
       and split off another cubic if the derivative crosses back@>;
     w = ww;
+#ifdef DEBUGENVELOPE 
+dbg_comment(end iteration);
+#endif
   }
 RETURN:
+#ifdef DEBUGENVELOPE 
+dbg_comment(RETURN);
+dbg_n(t);
+#endif
   free_number (s);
   free_number (t);
   free_number (du);
@@ -13578,6 +13768,9 @@ RETURN:
   free_number (t0);
   free_number (t1);
   free_number (t2);
+#ifdef DEBUGENVELOPE 
+dbg_close_t; dbg_comma;dbg_nl;
+#endif
 }
 
 
@@ -13591,12 +13784,25 @@ begins to fail.
   mp_number abs_du, abs_dv;
   new_number (abs_du);
   new_number (abs_dv);
+#ifdef DEBUGENVELOPE 
+dbg_key(Compute test coefficients |(t0,t1,t2)| for $d(t)$ versus...);dbg_open_t;dbg_nl;
+#endif
   set_number_from_substraction(du, ww->x_coord, w->x_coord);
   set_number_from_substraction(dv, ww->y_coord, w->y_coord);
   number_clone(abs_du, du);
   number_abs(abs_du);
   number_clone(abs_dv, dv);
   number_abs(abs_dv);
+#ifdef DEBUGENVELOPE 
+dbg_CUBIC;
+dbg_n(w->x_coord);dbg_n(w->y_coord);
+dbg_n(ww->x_coord);dbg_n(ww->y_coord);
+dbg_n(x0);dbg_n(x1);dbg_n(x2);
+dbg_n(y0);dbg_n(y1);dbg_n(y2);
+dbg_n(abs_du);dbg_n(abs_dv);
+dbg_n(du);dbg_n(dv);
+dbg_in(number_greaterequal(abs_du, abs_dv));
+#endif
   if (number_greaterequal(abs_du, abs_dv)) {
     mp_number r1;
     new_fraction (r1);
@@ -13634,6 +13840,10 @@ begins to fail.
   free_number (abs_dv);
   if (number_negative(t0))
     set_number_to_zero(t0); /* should be positive without rounding error */
+#ifdef DEBUGENVELOPE 
+dbg_n(t0);dbg_n(t1);dbg_n(t2);
+dbg_close_t; dbg_comma;dbg_nl;
+#endif
 }
 
 
@@ -13665,7 +13875,7 @@ respectively, yielding another solution of $(*)$.
     number_negate(arg2);
     number_clone(arg3, t2);
     number_negate(arg3);
-    crossing_point (t, arg1, arg2, arg3);
+    crossing_point (t, arg1, arg2, arg3); /* arg1 is zero */
     free_number (arg1);
     free_number (arg2);
     free_number (arg3);
@@ -13698,6 +13908,13 @@ the true initial direction for the given cubic, even if it is almost
 degenerate.
 
 @<Find the initial direction |(dx,dy)|@>=
+#ifdef DEBUGENVELOPE
+dbg_nl;
+dbg_comment(Find the initial direction |(dx,dy)|);dbg_nl;
+dbg_n(w0->x_coord);dbg_n(w0->y_coord);
+#endif
+number_clone(dx_m, zero_t);
+number_clone(dy_m, zero_t);
 number_clone(dx, x0);
 number_clone(dy, y0);
 if (number_zero(dx) && number_zero(dy)) {
@@ -13712,6 +13929,45 @@ if (p == c) {
   number_clone(dx0, dx);
   number_clone(dy0, dy);
 }
+/* BEGIN PATCH */
+#ifdef DEBUGENVELOPE
+dbg_nl;dbg_key(mp_dx_dy_approx_t_1);dbg_open_t;dbg_nl;
+dbg_n(ueps_ap);
+dbg_n(p->x_coord);dbg_n(p->y_coord);
+dbg_n(p->right_x);dbg_n(p->right_y);
+dbg_n(q->left_x);dbg_n(q->left_y);
+dbg_n(q->x_coord);dbg_n(q->y_coord);
+#endif
+#ifdef DEBUGENVELOPE
+dbg_n(dxin_ap);dbg_n(dyin_ap);
+dbg_close_t;dbg_comma;dbg_nl;
+#endif
+#ifdef DEBUGENVELOPE
+dbg_nl;dbg_key(mp_dx_dy_approx_t_0);dbg_open_t;dbg_nl;
+dbg_n(ueps_ap);
+dbg_n(p->x_coord);dbg_n(p->y_coord);
+dbg_n(p->right_x);dbg_n(p->right_y);
+dbg_n(q->left_x);dbg_n(q->left_y);
+dbg_n(q->x_coord);dbg_n(q->y_coord);
+#endif
+#ifdef DEBUGENVELOPE
+dbg_close_t;dbg_comma;dbg_nl;
+dbg_key(derivatives);dbg_open_t;dbg_nl;
+dbg_n(dx_m);dbg_n(dy_m);
+dbg_n(dx);dbg_n(dy);dbg_n(dx_ap);dbg_n(dy_ap);dbg_close_t;dbg_comma;dbg_nl;
+#endif
+#ifdef DEBUGENVELOPE
+dbg_key(derivatives after first patch );dbg_open_t;dbg_nl;
+dbg_n(dx_m);dbg_n(dy_m);
+dbg_n(dx);dbg_n(dy);dbg_n(dx_ap);dbg_n(dy_ap);dbg_close_t;dbg_comma;dbg_nl;
+#endif
+#ifdef DEBUGENVELOPE
+dbg_key(derivatives patched);dbg_open_t;dbg_nl;
+dbg_n(dx_m);dbg_n(dy_m);
+dbg_n(dx);dbg_n(dy);dbg_n(dx_ap);dbg_n(dy_ap);dbg_close_t;dbg_comma;dbg_nl;
+#endif
+/* END PATCH */
+
 
 @ @<Find the final direction |(dxin,dyin)|@>=
 number_clone(dxin, x2);
@@ -13724,6 +13980,24 @@ if (number_zero(dxin) && number_zero(dyin)) {
     number_clone(dyin, y0);
   }
 }
+#ifdef DEBUGENVELOPE
+dbg_key(dxin dyin before);dbg_open_t;dbg_nl;
+dbg_n(dxin);dbg_n(dyin);
+dbg_close_t;dbg_comma; 
+#endif
+#ifdef DEBUGENVELOPE
+dbg_key(dxin dyin after);dbg_open_t;dbg_nl;
+dbg_n(dxin);dbg_n(dyin);
+dbg_close_t;dbg_comma; 
+#endif
+/* BEGIN PATCH */
+#ifdef DEBUGENVELOPE
+dbg_key(dx dy dxin dyin after patch);dbg_open_t;dbg_nl;
+dbg_n(dx);dbg_n(dy);dbg_n(dx_ap);dbg_n(dy_ap);
+dbg_n(dxin);dbg_n(dyin);dbg_n(dxin_ap);dbg_n(dyin_ap);
+dbg_close_t;dbg_comma; 
+#endif
+/* END PATCH ****/
 
 @ The next step is to bracket the initial direction between consecutive
 edges of the pen polygon.  We must be careful to turn clockwise only if
@@ -13737,11 +14011,40 @@ right.) This code depends on |w0| being the offset for |(dxin,dyin)|.
   mp_number ab_vs_cd;
   new_number (ab_vs_cd);
   ab_vs_cd (ab_vs_cd, dy, dxin, dx, dyin);
-  turn_amt = mp_get_turn_amt (mp, w0, dx, dy, number_nonnegative(ab_vs_cd));
+#ifdef DEBUGENVELOPE
+dbg_nl;
+dbg_comment(Update |mp_knot_info(p)|);dbg_nl;
+dbg_key(mp_get_turn_amt_dx_dy);dbg_open_t;dbg_str(--[==[call mp_get_turn_amt]==]);dbg_nl; 
+dbg_n(w0->x_coord);dbg_n(w0->y_coord);dbg_n(dx);dbg_n(dy);dbg_in(number_nonnegative(ab_vs_cd));
+dbg_n(ab_vs_cd);
+#endif
+ is_dxdy=true;
+ turn_amt = mp_get_turn_amt (mp, w0, dx, dy, number_nonnegative(ab_vs_cd));
+ is_dxdy=false; 
+#ifdef DEBUGENVELOPE
+dbg_dn(turn_amt);
+dbg_close_t;dbg_comma;
+dbg_nl;
+#endif
   free_number (ab_vs_cd);
+#ifdef DEBUGENVELOPE
+dbg_key(w0 before walk);dbg_open_t;dbg_nl;
+dbg_n(w0->x_coord);dbg_n(w0->y_coord);
+dbg_dn(turn_amt);
+dbg_close_t;dbg_comma;
+#endif
   w = mp_pen_walk (mp, w0, turn_amt);
   w0 = w;
+#ifdef DEBUGENVELOPE
+dbg_key(w0 after walk);dbg_open_t;dbg_nl;
+dbg_n(w0->x_coord);dbg_n(w0->y_coord);
+dbg_close_t;dbg_comma;
+dbg_open_t;dbg_in(mp_knot_info(p));
+#endif
   mp_knot_info (p) = mp_knot_info (p) + turn_amt;
+#ifdef DEBUGENVELOPE
+  dbg_in(mp_knot_info(p));dbg_close_t;dbg_comma;
+#endif
 }
 
 @ Decide how many pen offsets to go away from |w| in order to find the offset
@@ -13762,18 +14065,35 @@ integer mp_get_turn_amt (MP mp, mp_knot w, mp_number dx, mp_number dy, boolean c
   mp_knot ww;   /* a neighbor of knot~|w| */
   integer s;    /* turn amount so far */
   mp_number t;    /* |ab_vs_cd| result */
+  mp_number t_ap;    /* |ab_vs_cd| approx. result */
   mp_number arg1, arg2;
   s = 0;
   new_number (arg1);
   new_number (arg2);
   new_number (t);
+  new_number (t_ap);
   if (ccw) {
     ww = mp_next_knot (w);
     do {
       set_number_from_substraction (arg1, ww->x_coord, w->x_coord);
       set_number_from_substraction (arg2, ww->y_coord, w->y_coord);
       ab_vs_cd (t, dy, arg1, dx, arg2);
-      if (number_negative(t))
+#ifdef DEBUGENVELOPE
+     dbg_sp;
+     dbg_open_t;dbg_str(--[==[inside mp_get_turn_amt do loop ]==]);dbg_nl; 
+     dbg_n(w->x_coord);dbg_n(w->y_coord);dbg_n(ww->x_coord);dbg_n(ww->y_coord);
+     dbg_n(t);dbg_n(dy);dbg_n(arg1);dbg_n(dx);dbg_n(arg2);
+     dbg_n(t_ap);dbg_n(dy_ap);dbg_n(dx_ap);dbg_n(dyin_ap);dbg_n(dxin_ap);
+     dbg_close_t;dbg_comma;
+     dbg_in(number_zero(dx) && number_zero(arg1) && number_positive(dy) && number_positive(arg2) && is_dxdy);
+     dbg_in(is_dxdy && number_zero(dx) && number_zero(arg1) && number_negative(dy) && number_negative(arg2)  && number_positive(dyin_ap)); 
+     dbg_in(is_dxindyin && number_zero(dx) && number_zero(arg1) && number_positive(dy) && number_positive(arg2) && number_negative(dyin_ap));
+     dbg_in(number_zero(dy) && number_zero(arg2) && number_negative(dx) && number_negative(arg1));
+     dbg_in(number_zero(dx) && number_zero(arg1) && number_negative(dy) && number_positive(arg2));
+     dbg_in(number_zero(dy) && number_zero(arg2) && number_positive(dx) && number_negative(arg1));
+     dbg_nl;
+#endif
+      if (number_negative(t)) 
         break;
       incr (s);
       w = ww;
@@ -13784,6 +14104,15 @@ integer mp_get_turn_amt (MP mp, mp_knot w, mp_number dx, mp_number dy, boolean c
     set_number_from_substraction (arg1, w->x_coord, ww->x_coord);
     set_number_from_substraction (arg2, w->y_coord, ww->y_coord);
     ab_vs_cd (t, dy, arg1, dx, arg2);
+#ifdef DEBUGENVELOPE
+     dbg_sp;
+     dbg_open_t;dbg_str(--[==[outside mp_get_turn_amt do loop ]==]);dbg_nl; 
+     dbg_n(w->x_coord);dbg_n(w->y_coord);dbg_n(ww->x_coord);dbg_n(ww->y_coord);
+     dbg_n(t);dbg_n(dy);dbg_n(arg1);dbg_n(dx);dbg_n(arg2);
+     dbg_n(t_ap);dbg_n(dy_ap);dbg_n(dx_ap);dbg_n(dyin_ap);dbg_n(dxin_ap);
+     dbg_close_t;dbg_comma;
+     dbg_nl;
+#endif
     while (number_negative(t)) {
       decr (s);
       w = ww;
@@ -13791,9 +14120,19 @@ integer mp_get_turn_amt (MP mp, mp_knot w, mp_number dx, mp_number dy, boolean c
       set_number_from_substraction (arg1, w->x_coord, ww->x_coord);
       set_number_from_substraction (arg2, w->y_coord, ww->y_coord);
       ab_vs_cd (t, dy, arg1, dx, arg2);
+#ifdef DEBUGENVELOPE
+     dbg_sp;
+     dbg_open_t;dbg_str(--[==[inside mp_get_turn_amt do loop for t<0 ]==]);dbg_nl; 
+     dbg_n(w->x_coord);dbg_n(w->y_coord);dbg_n(ww->x_coord);dbg_n(ww->y_coord);
+     dbg_n(t);dbg_n(dy);dbg_n(arg1);dbg_n(dx);dbg_n(arg2);
+     dbg_n(t_ap);dbg_n(dy_ap);dbg_n(dx_ap);
+     dbg_close_t;dbg_comma;
+     dbg_nl;
+#endif
     }
   }
   free_number (t);
+  free_number (t_ap);
   free_number (arg1);
   free_number (arg2);
   return s;
@@ -13836,10 +14175,30 @@ with respect to $d_{k-1}$, and apply |fin_offset_prep| to each part.
 
 @<Complete the offset splitting process@>=
 ww = mp_prev_knot (w);
+#ifdef DEBUGENVELOPE 
+dbg_key(Complete the offset splitting process);dbg_open_t;dbg_nl;
+dbg_n(w->x_coord);dbg_n(w->y_coord);
+dbg_n(ww->x_coord);dbg_n(ww->y_coord);
+dbg_close_t; dbg_comma;dbg_nl;
+#endif
 @<Compute test coeff...@>;
+#ifdef DEBUGENVELOPE 
+dbg_key(after Compute test coeff);dbg_open_t;dbg_nl;
+dbg_n(w->x_coord);dbg_n(w->y_coord);
+dbg_n(ww->x_coord);dbg_n(ww->y_coord);
+dbg_close_t; dbg_comma;dbg_nl;
+#endif
 @<Find the first |t| where $d(t)$ crosses $d_{k-1}$ or set
   |t:=fraction_one+1|@>;
 if (number_greater(t, fraction_one_t)) {
+#ifdef DEBUGENVELOPE 
+dbg_key(t > fraction_one_t);dbg_open_t;dbg_nl;
+dbg_n(p->x_coord);dbg_n(p->y_coord);
+dbg_n(w->x_coord);dbg_n(w->y_coord);
+dbg_n(x0);dbg_n(x1);dbg_n(x2);
+dbg_n(y0);dbg_n(y1);dbg_n(y2);
+dbg_close_t; dbg_comma;dbg_nl;
+#endif
   mp_fin_offset_prep (mp, p, w, x0, x1, x2, y0, y1, y2, 1, turn_amt);
 } else {
   mp_split_cubic (mp, p, t);
@@ -13850,6 +14209,16 @@ if (number_greater(t, fraction_one_t)) {
   set_number_from_of_the_way(y1a, t, y0, y1);
   set_number_from_of_the_way(y1,  t, y1, y2);
   set_number_from_of_the_way(y2a, t, y1a, y1);
+#ifdef DEBUGENVELOPE 
+dbg_key(t <= fraction_one_t);dbg_open_t;dbg_nl;
+dbg_n(p->x_coord);dbg_n(p->y_coord);
+dbg_n(t);
+dbg_n(r->x_coord);dbg_n(r->y_coord);
+dbg_n(w->x_coord);dbg_n(w->y_coord);
+dbg_n(x0);dbg_n(x1a);dbg_n(x2a);
+dbg_n(y0);dbg_n(y1a);dbg_n(y2a);
+dbg_close_t; dbg_comma;dbg_nl;
+#endif
   mp_fin_offset_prep (mp, p, w, x0, x1a, x2a, y0, y1a, y2a, 1, 0);
   number_clone(x0, x2a);
   number_clone(y0, y2a);
@@ -13878,7 +14247,13 @@ if (number_greater(t, fraction_one_t)) {
     mp_fin_offset_prep (mp, r, ww, x0, x1, x2, y0, y1, y2, -1, (-1 - turn_amt));
   }
 }
-
+#ifdef DEBUGENVELOPE 
+dbg_key(end Complete the offset splitting process);dbg_open_t;dbg_nl;
+dbg_n(w->x_coord);dbg_n(w->y_coord);
+dbg_n(w0->x_coord);dbg_n(w0->y_coord);
+dbg_in(turn_amt);
+dbg_close_t; dbg_comma;dbg_nl;
+#endif
 
 @ @<Split off another rising cubic for |fin_offset_prep|@>=
 mp_split_cubic (mp, r, t);
@@ -13903,6 +14278,9 @@ answer.  If |t2<0|, there is one crossing and it is antiparallel only if
 crossing and the first crossing cannot be antiparallel.
 
 @<Find the first |t| where $d(t)$ crosses $d_{k-1}$ or set...@>=
+#ifdef DEBUGENVELOPE
+dbg_key(Find the first |t| where);dbg_open_t;dbg_nl;
+#endif 
 crossing_point (t, t0, t1, t2);
 if (turn_amt >= 0) {
   if (number_negative(t2)) {
@@ -13917,13 +14295,13 @@ if (turn_amt >= 0) {
     set_number_from_of_the_way(u1, t, x1, x2);
     set_number_from_of_the_way(tmp, t, u0, u1);
     number_clone (arg1, du);
-    number_abs (arg1);
+    number_negate(arg1);
     take_fraction (ss, arg1, tmp);
     set_number_from_of_the_way(v0, t, y0, y1);
     set_number_from_of_the_way(v1, t, y1, y2);
     set_number_from_of_the_way(tmp, t, v0, v1);
     number_clone (arg1, dv);
-    number_abs (arg1);
+    number_negate(arg1);
     take_fraction (r1, arg1, tmp);
     number_add (ss, r1);
     free_number (tmp);
@@ -13937,6 +14315,11 @@ if (turn_amt >= 0) {
 } else if (number_greater(t, fraction_one_t)) {
   number_clone (t, fraction_one_t);
 }
+#ifdef DEBUGENVELOPE
+dbg_n(t);
+dbg_close_t; dbg_comma;dbg_nl;
+#endif 
+
 
 @ @<Other local variables for |offset_prep|@>=
 mp_number u0, u1, v0, v1; /* intermediate values for $d(t)$ calculation */
@@ -13950,8 +14333,23 @@ the path should always change the sign of |turn_amt|.
 @<Decide on the net change in pen offsets and set |turn_amt|@>=
 {
   mp_number ab_vs_cd;
+  mp_number t_ap;
+  new_number (t_ap);
   new_number (ab_vs_cd);
+#ifdef DEBUGENVELOPE
+dbg_sp;
+dbg_key(Decide on the net change in pen offsets and set turn_amt);dbg_open_t;dbg_nl;
+#endif
   ab_vs_cd (ab_vs_cd, dx, dyin, dxin, dy);
+#ifdef DEBUGENVELOPE
+dbg_n(ab_vs_cd);dbg_n(dx);dbg_n(dyin);dbg_n(dxin);dbg_n(dy);
+#endif
+/* BEGIN PATCH */
+#ifdef DEBUGENVELOPE
+dbg_key_nval(ab_vs_cd patched,ab_vs_cd);
+dbg_close_t;dbg_comma;dbg_nl;
+#endif
+/* END PATCH */
   if (number_negative (ab_vs_cd))
     d_sign = -1;
   else if (number_zero (ab_vs_cd))
@@ -13959,6 +14357,7 @@ the path should always change the sign of |turn_amt|.
   else
     d_sign = 1;
   free_number (ab_vs_cd);
+  free_number (t_ap);
 }
 if (d_sign == 0) {
   @<Check rotation direction based on node position@>
@@ -13978,9 +14377,29 @@ if (d_sign == 0) {
 }
 @<Make |ss| negative if and only if the total change in direction is
   more than $180^\circ$@>;
+#ifdef DEBUGENVELOPE
+dbg_nl;
+dbg_key(Make |ss| negative if and only if); dbg_open_t;dbg_nl;
+dbg_key(mp_get_turn_amt_dxin_dyin);dbg_open_t;dbg_str(--[==[call mp_get_turn_amt]==]);dbg_nl; ;
+dbg_n(w->x_coord);dbg_n(w->y_coord);dbg_n(dxin);dbg_n(dyin);dbg_in((d_sign > 0));
+#endif
+is_dxindyin=true;
 turn_amt = mp_get_turn_amt (mp, w, dxin, dyin, (d_sign > 0));
+is_dxindyin=false;
+#ifdef DEBUGENVELOPE
+dbg_key_dval(turn_amt 1,turn_amt);dbg_comma;dbg_nl;
+dbg_key_nval(ss,ss);dbg_comma;dbg_nl;
+dbg_key_ival(d_sign,d_sign);dbg_comma;dbg_nl;
+dbg_key_ival(n,n);dbg_comma;dbg_nl;
+#endif
 if (number_negative(ss))
-  turn_amt = turn_amt - d_sign * n
+  turn_amt = turn_amt - d_sign * n;
+#ifdef DEBUGENVELOPE
+dbg_key_dval(turn_amt 2,turn_amt);dbg_comma;dbg_nl;
+dbg_close_t;dbg_comma;dbg_nl;
+dbg_close_t;dbg_comma;dbg_nl;
+#endif
+
 
 @ We check rotation direction by looking at the vector connecting the current
 node with the next. If its angle with incoming and outgoing tangents has the
@@ -14024,13 +14443,18 @@ then swapped with |(x2,y2)|.  We make use of the identities
   new_fraction (r2);
   take_fraction (r1, x0, y2);
   take_fraction (r2, x2, y0);
+#ifdef DEBUGENVELOPE
+dbg_sp;
+dbg_open_t;dbg_dn(d_sign);dbg_close_t;dbg_comma;dbg_nl;
+#endif
   number_half (r1);
   number_half (r2);
   set_number_from_substraction(t0, r1, r2);
   set_number_from_addition (arg1, y0, y2);
   take_fraction (r1, x1, arg1);
   set_number_from_addition (arg1, x0, x2);
-  take_fraction (r1, y1, arg1);
+  /*|take_fraction (r1, y1, arg1);|*//* The old one, is it correct ?*/
+  take_fraction (r2, y1, arg1);
   number_half (r1);
   number_half (r2);
   set_number_from_substraction(t1, r1, r2);
@@ -14065,6 +14489,7 @@ if (number_positive(t0)) {
 }
 {
   mp_number tmp1, tmp2, r1, r2, arg1;
+  mp_number abs_ss, eps_ss;
   new_fraction (r1);
   new_fraction (r2);
   new_number(arg1);
@@ -14077,6 +14502,18 @@ if (number_positive(t0)) {
   set_number_from_addition(arg1, y0, y2);
   take_fraction (r2, arg1, tmp2);
   set_number_from_addition (ss, r1, r2);
+  /* BEGIN PATCH */
+#ifdef DEBUGENVELOPE
+dbg_key(patch ss before);dbg_open_t;
+dbg_n(ss);dbg_close_t;dbg_comma;
+#endif
+#ifdef DEBUGENVELOPE
+dbg_key(patch ss after);dbg_open_t;
+dbg_n(ss);dbg_close_t;dbg_comma;
+#endif
+  free_number(abs_ss);
+  free_number(eps_ss);
+  /* END PATCH */
   free_number (arg1);
   free_number (r1);
   free_number (r2);
@@ -14121,6 +14558,14 @@ static void mp_print_spec (MP mp, mp_knot cur_spec, mp_knot cur_pen,
 {
   w = mp_pen_walk (mp, w, (mp_knot_info (p) - zero_off));
   mp_print (mp, " % ");
+#ifdef DEBUGENVELOPE
+ dbg_nl;dbg_open_t;dbg_str(--[==[START]==]);dbg_nl;
+ dbg_key(Printing mp_knot_info (p));dbg_open_t;dbg_nl;
+ dbg_n(p->x_coord);dbg_n(p->y_coord);
+ dbg_in(mp_knot_info(p));
+ dbg_close_t;dbg_close_t;dbg_comma;dbg_nl;
+ dbg_nl;dbg_str(--[==[STOP]==]);dbg_nl;
+#endif
   if (mp_knot_info (p) > zero_off)
     mp_print (mp, "counter");
   mp_print (mp, "clockwise to offset ");
@@ -14203,6 +14648,8 @@ static mp_knot mp_make_envelope (MP mp, mp_knot c, mp_knot h, quarterword ljoin,
         set_number_from_addition (xtot, qx, w->x_coord);
         set_number_from_addition (ytot, qy, w->y_coord);
         q = mp_insert_knot (mp, q, xtot, ytot);
+ 	free_number (xtot);
+	free_number (ytot);
       }
     }
     if (q != mp_next_knot (p)) {
@@ -14468,7 +14915,7 @@ problems, so we just set |r:=NULL| in that case.
   take_fraction (ysub, tmp, dyout);
   set_number_from_addition(xtot, q->x_coord, xsub);
   set_number_from_addition(ytot, q->y_coord, ysub);
-  r = mp_insert_knot (mp, p, xtot, ytot);
+  r = mp_insert_knot (mp, r, xtot, ytot);
   free_number (xsub);
   free_number (ysub);
   free_number (xtot);
@@ -14893,8 +15340,8 @@ if (number_nonzero(x3) || number_nonzero(y3)) {
   n_arg (phi, x3, y3);
 }
 /* Exit to |found| if the curve whose derivatives are specified by
-   |x1,x2,x3,y1,y2,y3| travels eastward at some time~|tt| */
-/* In this step we want to use the |crossing_point| routine to find the
+   |x1,x2,x3,y1,y2,y3| travels eastward at some time~|tt|.*/
+/*In this step we want to use the |crossing_point| routine to find the
 roots of the quadratic equation $B(y_1,y_2,y_3;t)=0$.
 Several complications arise: If the quadratic equation has a double root,
 the curve never crosses zero, and |crossing_point| will find nothing;
@@ -14902,8 +15349,8 @@ this case occurs iff $y_1y_3=y_2^2$ and $y_1y_2<0$. If the quadratic
 equation has simple roots, or only one root, we may have to negate it
 so that $B(y_1,y_2,y_3;t)$ crosses from positive to negative at its first root.
 And finally, we need to do special things if $B(y_1,y_2,y_3;t)$ is
-identically zero. */
-if (number_negative(x1))
+identically zero.*/
+ if (number_negative(x1))
   if (number_negative(x2))
     if (number_negative(x3))
       goto DONE;
@@ -15915,8 +16362,8 @@ static mp_value_node mp_p_plus_fq (MP mp, mp_value_node p, mp_number f,
         } else {
           if (number_greaterequal (absv, coef_bound_k) && mp->watch_coefs) {
             mp_type (qq) = independent_needing_fix;
-	    /* If we set this , then we can drop (mp_type(pp) == independent_needing_fix && mp->fix_needed) later */
-	    /* set_number_from_scaled (value_number (qq), indep_value(qq)); */
+	    /* If we set this , then we can drop |(mp_type(pp) == independent_needing_fix && mp->fix_needed)| later */
+	    /* |set_number_from_scaled (value_number (qq), indep_value(qq));| */
             mp->fix_needed = true;
           }
           set_mp_link (r, (mp_node) s);
@@ -16060,8 +16507,8 @@ static mp_value_node mp_p_plus_q (MP mp, mp_value_node p, mp_value_node q,
         } else {
           if (number_greaterequal(test, coef_bound_k) && mp->watch_coefs) {
             mp_type (qq) = independent_needing_fix;
-	    /* If we set this , then we can drop (mp_type(pp) == independent_needing_fix && mp->fix_needed) later */
-	    /* set_number_from_scaled (value_number (qq), indep_value(qq)); */
+	    /* If we set this , then we can drop |(mp_type(pp) == independent_needing_fix && mp->fix_needed)| later */
+	    /* |set_number_from_scaled (value_number (qq), indep_value(qq));| */
             mp->fix_needed = true;
           }
           set_mp_link (r, (mp_node) s);
@@ -22850,7 +23297,7 @@ RESTART:
 
       q = mp_get_value_node (mp);
       mp_name_type (q) = mp_capsule;
-      if (cur_cmd() == mp_comma) {
+      if (cur_cmd() == mp_comma) { 
         mp_init_color_node (mp, q);
         r = value_node (q);
         mp_stash_in (mp, y_part (r));
@@ -22876,7 +23323,7 @@ RESTART:
         }
         mp_stash_in (mp, blue_part (r));
 
-        if (cur_cmd() == mp_comma) {
+        if (cur_cmd() == mp_comma) { 
           mp_node t;      /* a token */
           mp_init_cmykcolor_node (mp, q);
           t = value_node (q);
@@ -22886,8 +23333,27 @@ RESTART:
           set_value_number (magenta_part (t), value_number (green_part (r)));
           mp_type (yellow_part (t)) = mp_type (blue_part (r));
           set_value_number (yellow_part (t), value_number (blue_part (r)));
-          mp_recycle_value (mp, r);
-          r = t;
+	  /*see |mp_stash_in| */
+	  if ( ((mp_type (cyan_part (t))) != mp_independent) && ((mp_type (cyan_part (t))) != mp_known) ) {
+     	     /* Copy the dep list */
+            set_dep_list (cyan_part(t),dep_list ((mp_value_node) red_part(r)));
+            set_prev_dep (cyan_part(t),prev_dep ((mp_value_node) red_part(r)));
+            set_mp_link (prev_dep (cyan_part(t)), (mp_node) cyan_part(t));
+          }		
+	  if ( ((mp_type (magenta_part (t))) != mp_independent) && ((mp_type (magenta_part (t))) != mp_known) ) {
+     	     /* Copy the dep list */
+            set_dep_list (magenta_part(t),dep_list ((mp_value_node) green_part(r)));
+            set_prev_dep (magenta_part(t),prev_dep ((mp_value_node) green_part(r)));
+            set_mp_link (prev_dep (magenta_part(t)), (mp_node) magenta_part(t));
+          }		
+	  if ( ((mp_type (yellow_part (t))) != mp_independent) && ((mp_type (yellow_part (t))) != mp_known)) {
+     	     /* Copy the dep list */
+            set_dep_list (yellow_part(t),dep_list ((mp_value_node) blue_part(r)));
+            set_prev_dep (yellow_part(t),prev_dep ((mp_value_node) blue_part(r)));
+            set_mp_link (prev_dep (yellow_part(t)), (mp_node) yellow_part(t));
+          }
+	  mp_recycle_value (mp, r);
+	  r = t;
           /* Scan the last of a quartet of numerics */
           mp_get_x_next (mp);
           mp_scan_expression (mp);
@@ -22907,7 +23373,6 @@ RESTART:
             mp_flush_cur_exp (mp, new_expr);
           }
           mp_stash_in (mp, black_part (r));
-
         }
       } else {
         mp_init_pair_node (mp, q);
@@ -24628,8 +25093,10 @@ mp_primitive (mp, "intersectiontimes", mp_tertiary_binary, mp_intersect);
 @:intersection_times_}{\&{intersectiontimes} primitive@>;
 mp_primitive (mp, "envelope", mp_primary_binary, mp_envelope_of);
 @:envelope_}{\&{envelope} primitive@>;
+mp_primitive (mp, "boundingpath", mp_primary_binary, mp_boundingpath_of);
+@:boundingpath_}{\&{boundingpath} primitive@>;
 mp_primitive (mp, "glyph", mp_primary_binary, mp_glyph_infont);
-@:glyph_infont_}{\&{envelope} primitive@>
+@:glyph_infont_}{\&{glyph} primitive@>
 
 
 @ @<Cases of |print_cmd...@>=
@@ -24675,7 +25142,7 @@ static void mp_do_nullary (MP mp, quarterword c) {
     {
       mp_number r;
       new_number (r);
-      /*mp_norm_rand (mp, &r);*/
+      /*|mp_norm_rand (mp, &r)|;*/
       m_norm_rand (r);
       mp->cur_exp.type = mp_known;
       set_cur_exp_value_number (r);
@@ -24872,7 +25339,7 @@ static void mp_do_unary (MP mp, quarterword c) {
         {
           mp_number vvx;
           new_number (vvx);
-          /*mp_unif_rand (mp, &vvx, cur_exp_value_number ());*/
+          /*|mp_unif_rand (mp, &vvx, cur_exp_value_number ());|*/
           m_unif_rand (vvx, cur_exp_value_number ());
           set_cur_exp_value_number (vvx);
           free_number (vvx);
@@ -27011,6 +27478,12 @@ static void mp_do_binary (MP mp, mp_node p, integer c) {
     else
       mp_set_up_envelope (mp, p);
     break;
+  case mp_boundingpath_of:
+    if ((mp_type (p) != mp_pen_type) || (mp->cur_exp.type != mp_path_type))
+      mp_bad_binary (mp, p, mp_boundingpath_of);
+    else
+      mp_set_up_boundingpath (mp, p);
+    break;
   case mp_glyph_infont:
     if ((mp_type (p) != mp_string_type &&
          mp_type (p) != mp_known) || (mp->cur_exp.type != mp_string_type))
@@ -28510,6 +28983,99 @@ static void mp_set_up_envelope (MP mp, mp_node p) {
                     (mp, q, value_knot (p), ljoin, lcap, miterlim));
   mp->cur_exp.type = mp_path_type;
 }
+static void mp_set_up_boundingpath (MP mp, mp_node p) {
+  unsigned char ljoin, lcap;
+  mp_number miterlim;
+  mp_knot q = mp_copy_path (mp, cur_exp_knot ());       /* the original path */
+  mp_knot pen; 
+  mp_knot qq;
+
+  new_number(miterlim);
+  pen = (value_knot (p));
+  /* accept elliptical pens for s paths */
+  /* using |mp_make_path| to convert an elliptical pen to a polygonal one. */
+  /* The approximation of 8 knots should be good enough. */
+  if (pen_is_elliptical (value_knot (p))) {
+    mp_knot kp,kq;
+    pen = copy_pen (value_knot (p));
+    mp_make_path(mp, pen);
+    kq=pen;
+    do {
+      kp = kq;
+      kq = mp_next_knot (kq);
+      mp_prev_knot (kq) = kp;
+    } while (kq != pen);
+    mp_close_path_cycle (mp, kp, pen);
+  }
+  if (number_greater (internal_value (mp_linejoin), unity_t))
+    ljoin = 2;
+  else if (number_positive (internal_value (mp_linejoin)))
+    ljoin = 1;
+  else
+    ljoin = 0;
+  if (number_greater (internal_value (mp_linecap), unity_t))
+    lcap = 2;
+  else if (number_positive (internal_value (mp_linecap)))
+    lcap = 1;
+  else
+    lcap = 0;
+  if (number_less (internal_value (mp_miterlimit), unity_t))
+    set_number_to_unity(miterlim);
+  else
+    number_clone(miterlim, internal_value (mp_miterlimit));
+  qq = mp_make_envelope(mp, q, pen, ljoin, lcap, miterlim);
+  set_cur_exp_knot (qq);
+  mp->cur_exp.type = mp_path_type;
+  if (!mp_get_cur_bbox (mp)) {
+      mp_bad_binary (mp, p, mp_boundingpath_of);
+      set_cur_exp_knot (q);
+      mp->cur_exp.type = mp_path_type;
+      return;
+  }
+  else {
+      mp_knot ll,lr,ur,ul;
+      ll = mp_new_knot (mp);
+      lr = mp_new_knot (mp);
+      ur = mp_new_knot (mp);
+      ul = mp_new_knot (mp);
+      if (ll==NULL || lr==NULL || ur==NULL || ul==NULL){
+        mp_bad_binary (mp, p, mp_boundingpath_of);
+        set_cur_exp_knot (q);
+        mp->cur_exp.type = mp_path_type;
+        return;
+      }
+      mp_left_type (ll) = mp_endpoint;
+      mp_right_type (ll) = mp_endpoint;
+      mp_originator (ll) = mp_program_code;
+      number_clone(ll->x_coord,mp_minx);
+      number_clone(ll->y_coord,mp_miny);
+
+      mp_originator (lr) = mp_program_code;
+      number_clone(lr->x_coord,mp_maxx);
+      number_clone(lr->y_coord,mp_miny);
+
+      mp_originator (ur) = mp_program_code;
+      number_clone(ur->x_coord,mp_maxx);
+      number_clone(ur->y_coord,mp_maxy);
+
+      mp_originator (ul) = mp_program_code;
+      number_clone(ul->x_coord,mp_minx);
+      number_clone(ul->y_coord,mp_maxy);
+
+      mp_next_knot (ll) = lr;
+      mp_next_knot (lr) = ur;
+      mp_next_knot (ur) = ul;
+
+      mp_close_path_cycle (mp, ul, ll);
+      mp_make_path(mp,ll);
+      mp->cur_exp.type = mp_path_type;
+      set_cur_exp_knot(ll);
+      mp_free_path(mp,qq);
+
+  }
+}
+
+
 
 
 @ This is pretty straightfoward. The one silly thing is that
@@ -30103,8 +30669,8 @@ char *mp_metapost_version (void) {
   return mp_strdup (metapost_version);
 }
 void mp_show_library_versions (void) {
-  fprintf(stdout, "Compiled with cairo %s; using %s\n", CAIRO_VERSION_STRING, cairo_version_string());
-  fprintf(stdout, "Compiled with pixman %s; using %s\n", PIXMAN_VERSION_STRING, pixman_version_string());
+  fprintf(stdout, "Compiled with cairo %s; using %s\n", COMPILED_CAIRO_VERSION_STRING, cairo_version_string());
+  fprintf(stdout, "Compiled with pixman %s; using %s\n",COMPILED_PIXMAN_VERSION_STRING, pixman_version_string());
   fprintf(stdout, "Compiled with libpng %s; using %s\n", PNG_LIBPNG_VER_STRING, png_libpng_ver);
   fprintf(stdout, "Compiled with zlib %s; using %s\n", ZLIB_VERSION, zlibVersion());
   fprintf(stdout, "Compiled with mpfr %s; using %s\n", MPFR_VERSION_STRING, mpfr_get_version());
@@ -31118,15 +31684,10 @@ void mp_scan_with_list (MP mp, mp_node p) {
       }
     } else if (t == with_mp_post_script) {
       if (cur_exp_str ()->len) {
-        mp_node k = NULL;    /* for finding the near-last item in a list  */
         if (bp == MP_VOID)
-          k = p;
-        bp = k;
-        while (k && mp_link (k) != NULL) { /* clang: dereference null pointer 'k' */
-          k = mp_link (k);
-          if (has_color (k))
-            bp = k;
-        }
+           bp = p;
+        while ((bp != NULL) && (!has_color (bp)))
+        bp = mp_link (bp);
         if (bp != NULL) {
           if (mp_post_script (bp) != NULL) {
             unsigned old_setting; /* saved |selector| setting */
@@ -32671,9 +33232,15 @@ We may need to cancel skips that span more than 127 lig/kern steps.
 
 
 @ The header could contain ASCII zeroes, so can't use |strdup|.
+The index |j| can be beyond the index |header_last|, hence we 
+have to sure  to update the end of stream marker to reflect the
+actual position.
 
 @<Store a list of header bytes@>=
 j--;
+if (mp->header_last<j){
+  mp->header_last=j;
+}
 do {
   if (j >= mp->header_size) {
     size_t l = (size_t) (mp->header_size + (mp->header_size / 4));
@@ -32685,8 +33252,10 @@ do {
     mp->header_size = (int) l;
   }
   mp->header_byte[j] = (char) mp_get_code (mp);
+  if (mp->header_last<j){
+    incr (mp->header_last);
+  }
   incr (j);
-  incr (mp->header_last);
 } while (cur_cmd() == mp_comma)
 
 @ @<Store a list of font dimensions@>=

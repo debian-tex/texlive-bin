@@ -33,16 +33,8 @@ makes no sense, not even to make it configureable. There is a little more memory
 used but that is neglectable compared to other memory usage.
 
 @c
-#define attribute(A) eqtb[attribute_base+(A)].cint
-
-#define uc_hyph int_par(uc_hyph_code)
-#define cur_lang int_par(cur_lang_code)
-#define left_hyphen_min int_par(left_hyphen_min_code)
-#define right_hyphen_min int_par(right_hyphen_min_code)
-
-#define MAX_CHAIN_SIZE 13 /* why not a bit larger */
-
-#define CHECK_NODE_USAGE 1 /* this triggers checking */
+#define MAX_CHAIN_SIZE   13 /* why not a bit larger */
+#define CHECK_NODE_USAGE  1 /* this triggers checking */
 
 memory_word *volatile varmem = NULL;
 
@@ -61,8 +53,8 @@ int fix_node_lists = 1; /* used in font and lang */
 
 halfword slow_get_node(int s);  /* defined below */
 
-#define fake_node 100
-#define fake_node_size 2
+#define fake_node       100
+#define fake_node_size  2
 #define fake_node_name "fake"
 
 #define variable_node_size 2
@@ -144,18 +136,6 @@ const char *node_fields_noad[] = {
     "attr", "nucleus", "sub", "sup", NULL
 };
 
-#define node_fields_ord     node_fields_noad
-#define node_fields_op      node_fields_noad
-#define node_fields_bin     node_fields_noad
-#define node_fields_rel     node_fields_noad
-#define node_fields_open    node_fields_noad
-#define node_fields_close   node_fields_noad
-#define node_fields_punct   node_fields_noad
-#define node_fields_inner   node_fields_noad
-#define node_fields_under   node_fields_noad
-#define node_fields_over    node_fields_noad
-#define node_fields_vcenter node_fields_noad
-
 const char *node_fields_style[] = {
     "attr", "style", NULL
 };
@@ -163,17 +143,17 @@ const char *node_fields_choice[] = {
     "attr", "display", "text", "script", "scriptscript", NULL
 };
 const char *node_fields_radical[] = {
-    "attr", "nucleus", "sub", "sup", "left", "degree", NULL
+    "attr", "nucleus", "sub", "sup", "left", "degree", "width", "options", NULL
 };
 const char *node_fields_fraction[] = {
-    "attr", "width", "num", "denom", "left", "right", NULL
+    "attr", "width", "num", "denom", "left", "right", "middle", "options", NULL
 };
 const char *node_fields_accent[] = {
     "attr", "nucleus", "sub", "sup", "accent", "bot_accent", "top_accent",
-    "overlay_accent", NULL
+    "overlay_accent", "fraction", NULL
 };
 const char *node_fields_fence[] = {
-    "attr", "delim", NULL
+    "attr", "delim", "italic", "height", "depth", "options", "class", NULL
 };
 const char *node_fields_math_char[] = {
     "attr", "fam", "char", NULL
@@ -282,13 +262,14 @@ const char *node_subtypes_boundary[] = {
     "cancel", "user", "protrusion", "word", NULL
 };
 const char *node_subtypes_penalty[] = {
-    "userpenalty", NULL
+    "userpenalty", "linebreakpenalty", "linepenalty", "wordpenalty", "finalpenalty",
+    "noadpenalty", "beforedisplaypenalty", "afterdisplaypenalty", "equationnumberpenalty", NULL
 };
 const char *node_subtypes_kern[] = {
     "fontkern", "userkern", "accentkern", "italiccorrection", NULL
 };
 const char *node_subtypes_rule[] = {
-    "normal", "box", "image", "empty", "user", NULL
+    "normal", "box", "image", "empty", "user", "over", "under", "fraction", "radical", NULL
 };
 const char *node_subtypes_glyph[] = {
     "character", "glyph", "ligature", "ghost", "left", "right", NULL
@@ -342,7 +323,7 @@ node_info node_data[] = { /* the last entry in a row is the etex number */
     { unset_node,          box_node_size,         node_fields_unset,                         "unset",          14 },
     { style_node,          style_node_size,       node_fields_style,                         "style",          15 },
     { choice_node,         style_node_size,       node_fields_choice,                        "choice",         15 },
-    { simple_noad,         noad_size,             node_fields_ord,                           "noad",           15 },
+    { simple_noad,         noad_size,             node_fields_noad,                          "noad",           15 },
     { radical_noad,        radical_noad_size,     node_fields_radical,                       "radical",        15 },
     { fraction_noad,       fraction_noad_size,    node_fields_fraction,                      "fraction",       15 },
     { accent_noad,         accent_noad_size,      node_fields_accent,                        "accent",         15 },
@@ -376,8 +357,6 @@ node_info node_data[] = { /* the last entry in a row is the etex number */
     { shape_node,          variable_node_size,    NULL,                                      "shape",          -1 },
     { -1,                 -1,                     NULL,                                      NULL,             -1 },
 };
-
-#define last_normal_node shape_node
 
 const char *node_subtypes_pdf_destination[] = {
     "xyz", "fit", "fith", "fitv", "fitb", "fitbh", "fitbv", "fitr", NULL
@@ -552,6 +531,8 @@ important, don't keep resolving the registry index.
 
 /* isn't there a faster way to metatable? */
 
+/*
+
 #define lua_properties_copy(target,source) do { \
     if (lua_properties_enabled) { \
         if (lua_properties_level == 0) { \
@@ -578,6 +559,55 @@ important, don't keep resolving the registry index.
                     lua_newtable(Luas); \
                     lua_insert(Luas,-2); \
                     lua_setfield(Luas,-2,"__index"); \
+                    lua_newtable(Luas); \
+                    lua_insert(Luas,-2); \
+                    lua_setmetatable(Luas,-2); \
+                } \
+                lua_rawseti(Luas,-2,target); \
+            } else { \
+                lua_pop(Luas,1); \
+            } \
+        } \
+    } \
+} while(0)
+
+*/
+
+/*
+    A simple testrun on many pages of dumb text shows 1% gain (of course it depends
+    on how properties are used but some other tests confirm it).
+*/
+
+#define lua_properties_copy(target,source) do { \
+    if (lua_properties_enabled) { \
+        if (lua_properties_level == 0) { \
+            lua_get_metatablelua_l(Luas,node_properties); \
+            lua_rawgeti(Luas,-1,source); \
+            if (lua_type(Luas,-1)==LUA_TTABLE) { \
+                if (lua_properties_use_metatable) { \
+                    lua_newtable(Luas); \
+                    lua_insert(Luas,-2); \
+                    lua_push_string_by_name(Luas,__index); \
+                    lua_insert(Luas,-2); \
+                    lua_rawset(Luas, -3); \
+                    lua_newtable(Luas); \
+                    lua_insert(Luas,-2); \
+                    lua_setmetatable(Luas,-2); \
+                } \
+                lua_rawseti(Luas,-2,target); \
+            } else { \
+                lua_pop(Luas,1); \
+            } \
+            lua_pop(Luas,1); \
+        } else { \
+            lua_rawgeti(Luas,-1,source); \
+            if (lua_type(Luas,-1)==LUA_TTABLE) { \
+                if (lua_properties_use_metatable) { \
+                    lua_newtable(Luas); \
+                    lua_insert(Luas,-2); \
+                    lua_push_string_by_name(Luas,__index); \
+                    lua_insert(Luas,-2); \
+                    lua_rawset(Luas, -3); \
                     lua_newtable(Luas); \
                     lua_insert(Luas,-2); \
                     lua_setmetatable(Luas,-2); \
@@ -862,7 +892,7 @@ halfword new_node(int i, int j)
         default:
             break;
     }
-    if (int_par(synctex_code)) {
+    if (synctex_par) {
         /* handle synctex extension */
         switch (i) {
             case math_node:
@@ -1051,21 +1081,30 @@ void copy_node_wrapup_pdf(halfword p, halfword r)
 halfword copy_node(const halfword p)
 {
     halfword r;                 /* current node being fabricated for new list */
-    halfword w ;                /* whatsit subtype */
+    halfword w;                 /* whatsit subtype */
+    halfword t;                 /* type of node */
     register halfword s;        /* a helper variable for copying into variable mem  */
     register int i;
     if (copy_error(p)) {
         r = new_node(temp_node, 0);
         return r;
     }
-    i = get_node_size(type(p), subtype(p));
+    t = type(p);
+    i = get_node_size(t,subtype(p));
     r = get_node(i);
 
     (void) memcpy((void *) (varmem + r), (void *) (varmem + p), (sizeof(memory_word) * (unsigned) i));
 
-    if (int_par(synctex_code)) {
+    /* possible speedup: */
+    /*
+        if t == glue_spec) {
+            return r;
+        }
+    */
+
+    if (synctex_par) {
         /* handle synctex extension */
-        switch (type(p)) {
+        switch (t) {
             case math_node:
                 synctex_tag_math(r) = cur_input.synctex_tag_field;
                 synctex_line_math(r) = line;
@@ -1076,14 +1115,14 @@ halfword copy_node(const halfword p)
                 break;
         }
     }
-    if (nodetype_has_attributes(type(p))) {
+    if (nodetype_has_attributes(t)) {
         add_node_attr_ref(node_attr(p));
         alink(r) = null;
         lua_properties_copy(r,p);
     }
     vlink(r) = null;
 
-    switch (type(p)) {
+    switch (t) {
         case glyph_node:
             copy_sub_list(lig_ptr(r),lig_ptr(p)) ;
             break;
@@ -1223,6 +1262,9 @@ static void flush_node_wrapup_core(halfword p)
                 delete_attribute_ref(user_node_value(p));
                 break;
             case 'd':
+                break;
+            case 'l':
+                free_user_lua(user_node_value(p));
                 break;
             case 'n':
                 flush_node_list(user_node_value(p));
@@ -1759,16 +1801,42 @@ static void free_node_chain(halfword q, int s)
     free_chain[s] = q;
 }
 
-@ @c
+@ At the start of the node memory area we reserve some special nodes,
+for instance frequently used glue specifications. We could as well just
+use new_glue here but for the moment we stick to the traditional approach.
+
+@c
+#define initialize_glue(n,wi,st,sh,sto,sho) \
+    vlink(n) = null; \
+    type(n) = glue_spec_node; \
+    width(n) = wi; \
+    stretch(n) = st; \
+    shrink(n) = sh; \
+    stretch_order(n) = sto; \
+    shrink_order(n) = sho;
+
+#define initialize_whatever(n,t) \
+    vinfo(n) = 0; \
+    type(n) = t; \
+    vlink(n) = null; \
+    alink(n) = null;
+
+#define initialize_point(n) \
+    type(n) = glyph_node; \
+    subtype(n) = 0; \
+    vlink(n) = null; \
+    vinfo(n + 1) = null; \
+    alink(n) = null; \
+    font(n) = 0; \
+    character(n) = '.'; \
+    vinfo(n + 3) = 0; \
+    vlink(n + 3) = 0; \
+    vinfo(n + 4) = 0; \
+    vlink(n + 4) = 0;
+
 void init_node_mem(int t)
 {
     my_prealloc = var_mem_stat_max;
-
-    /*  message ?
-
-        assert(whatsit_node_data[user_defined_node].id == user_defined_node);
-        assert(node_data[passive_node].id == passive_node);
-    */
 
     varmem = (memory_word *) realloc((void *) varmem, sizeof(memory_word) * (unsigned) t);
     if (varmem == NULL) {
@@ -1787,112 +1855,32 @@ void init_node_mem(int t)
     vlink(rover) = rover;
     node_size(rover) = (t - rover);
     var_used = 0;
+
     /* initialize static glue specs */
-    width(zero_glue) = 0;
-    type(zero_glue) = glue_spec_node;
-    vlink(zero_glue) = null;
-    stretch(zero_glue) = 0;
-    stretch_order(zero_glue) = normal;
-    shrink(zero_glue) = 0;
-    shrink_order(zero_glue) = normal;
-    width(sfi_glue) = 0;
-    type(sfi_glue) = glue_spec_node;
-    vlink(sfi_glue) = null;
-    stretch(sfi_glue) = 0;
-    stretch_order(sfi_glue) = sfi;
-    shrink(sfi_glue) = 0;
-    shrink_order(sfi_glue) = normal;
-    width(fil_glue) = 0;
-    type(fil_glue) = glue_spec_node;
-    vlink(fil_glue) = null;
-    stretch(fil_glue) = unity;
-    stretch_order(fil_glue) = fil;
-    shrink(fil_glue) = 0;
-    shrink_order(fil_glue) = normal;
-    width(fill_glue) = 0;
-    type(fill_glue) = glue_spec_node;
-    vlink(fill_glue) = null;
-    stretch(fill_glue) = unity;
-    stretch_order(fill_glue) = fill;
-    shrink(fill_glue) = 0;
-    shrink_order(fill_glue) = normal;
-    width(ss_glue) = 0;
-    type(ss_glue) = glue_spec_node;
-    vlink(ss_glue) = null;
-    stretch(ss_glue) = unity;
-    stretch_order(ss_glue) = fil;
-    shrink(ss_glue) = unity;
-    shrink_order(ss_glue) = fil;
-    width(fil_neg_glue) = 0;
-    type(fil_neg_glue) = glue_spec_node;
-    vlink(fil_neg_glue) = null;
-    stretch(fil_neg_glue) = -unity;
-    stretch_order(fil_neg_glue) = fil;
-    shrink(fil_neg_glue) = 0;
-    shrink_order(fil_neg_glue) = normal;
+
+    initialize_glue(zero_glue,0,0,0,0,0);
+    initialize_glue(sfi_glue,0,0,0,sfi,0);
+    initialize_glue(fil_glue,0,unity,0,fil,0);
+    initialize_glue(fill_glue,0,unity,0,fill,0);
+    initialize_glue(ss_glue,0,unity,unity,fil,fil);
+    initialize_glue(fil_neg_glue,0,-unity,0,fil,0);
+
     /* initialize node list heads */
-    vinfo(page_ins_head) = 0;
-    type(page_ins_head) = temp_node;
-    vlink(page_ins_head) = null;
-    alink(page_ins_head) = null;
-    vinfo(contrib_head) = 0;
-    type(contrib_head) = temp_node;
-    vlink(contrib_head) = null;
-    alink(contrib_head) = null;
-    vinfo(page_head) = 0;
-    type(page_head) = temp_node;
-    vlink(page_head) = null;
-    alink(page_head) = null;
-    vinfo(temp_head) = 0;
-    type(temp_head) = temp_node;
-    vlink(temp_head) = null;
-    alink(temp_head) = null;
-    vinfo(hold_head) = 0;
-    type(hold_head) = temp_node;
-    vlink(hold_head) = null;
-    alink(hold_head) = null;
-    vinfo(adjust_head) = 0;
-    type(adjust_head) = temp_node;
-    vlink(adjust_head) = null;
-    alink(adjust_head) = null;
-    vinfo(pre_adjust_head) = 0;
-    type(pre_adjust_head) = temp_node;
-    vlink(pre_adjust_head) = null;
-    alink(pre_adjust_head) = null;
-    vinfo(active) = 0;
-    type(active) = unhyphenated_node;
-    vlink(active) = null;
-    alink(active) = null;
-    vinfo(align_head) = 0;
-    type(align_head) = temp_node;
-    vlink(align_head) = null;
-    alink(align_head) = null;
-    vinfo(end_span) = 0;
-    type(end_span) = span_node;
-    vlink(end_span) = null;
-    alink(end_span) = null;
-    type(begin_point) = glyph_node;
-    subtype(begin_point) = 0;
-    vlink(begin_point) = null;
-    vinfo(begin_point + 1) = null;
-    alink(begin_point) = null;
-    font(begin_point) = 0;
-    character(begin_point) = '.';
-    vinfo(begin_point + 3) = 0;
-    vlink(begin_point + 3) = 0;
-    vinfo(begin_point + 4) = 0;
-    vlink(begin_point + 4) = 0;
-    type(end_point) = glyph_node;
-    subtype(end_point) = 0;
-    vlink(end_point) = null;
-    vinfo(end_point + 1) = null;
-    alink(end_point) = null;
-    font(end_point) = 0;
-    character(end_point) = '.';
-    vinfo(end_point + 3) = 0;
-    vlink(end_point + 3) = 0;
-    vinfo(end_point + 4) = 0;
-    vlink(end_point + 4) = 0;
+
+    initialize_whatever(page_ins_head,temp_node);
+    initialize_whatever(contrib_head,temp_node);
+    initialize_whatever(page_head,temp_node);
+    initialize_whatever(temp_head,temp_node);
+    initialize_whatever(hold_head,temp_node);
+    initialize_whatever(adjust_head,temp_node);
+    initialize_whatever(pre_adjust_head,temp_node);
+    initialize_whatever(align_head,temp_node);
+
+    initialize_whatever(active,unhyphenated_node);
+    initialize_whatever(end_span,span_node);
+
+    initialize_point(begin_point);
+    initialize_point(end_point);
 }
 
 @ @c
@@ -2795,9 +2783,21 @@ void show_node_wrapup_pdf(int p)
 @ Recursive calls on |show_node_list| therefore use the following pattern:
 @c
 #define node_list_display(A) do { \
-    append_char('.');             \
-    show_node_list(A);            \
-    flush_char();                 \
+    append_char('.');  \
+    show_node_list(A); \
+    flush_char();      \
+} while (0)
+
+#define node_list_display_x(A,B) do { \
+    if ((B) != null) {     \
+        append_char('.');  \
+        append_char(A);    \
+        append_char(' ');  \
+        show_node_list(B); \
+        flush_char();      \
+        flush_char();      \
+        flush_char();      \
+    } \
 } while (0)
 
 /* prints a node list symbolically */
@@ -2815,7 +2815,7 @@ void show_node_list(int p)
     while (p != null) {
         print_ln();
         print_current_string(); /* display the nesting history */
-        if (int_par(tracing_online_code) < -2)
+        if (tracing_online_par < -2)
             print_int(p);
         incr(n);
         if (n > breadth_max) {  /* time to stop */
@@ -3113,17 +3113,26 @@ void show_node_list(int p)
                 /* Display discretionary |p|; */
                 /* The |post_break| list of a discretionary node is indicated by a prefixed
                    `\.{\char'174}' instead of the `\..' before the |pre_break| list. */
+                /* We're not compatible anyway  so ...
+                    tprint_esc("discretionary");
+                    print_int(disc_penalty(p));
+                    print_char('|');
+                    if (vlink(no_break(p)) != null) {
+                        tprint(" replacing ");
+                        node_list_display(vlink(no_break(p)));
+                    }
+                    node_list_display(vlink(pre_break(p)));
+                    append_char('|');
+                    show_node_list(vlink(post_break(p)));
+                    flush_char();
+                */
                 tprint_esc("discretionary");
+                tprint(" (penalty ");
                 print_int(disc_penalty(p));
-                print_char('|');
-                if (vlink(no_break(p)) != null) {
-                    tprint(" replacing ");
-                    node_list_display(vlink(no_break(p)));
-                }
-                node_list_display(vlink(pre_break(p))); /* recursive call */
-                append_char('|');
-                show_node_list(vlink(post_break(p)));
-                flush_char();   /* recursive call */
+                print_char(')');
+                node_list_display_x('<',vlink(pre_break(p)));
+                node_list_display_x('>',vlink(post_break(p)));
+                node_list_display_x('=',vlink(no_break(p)));
                 break;
             case mark_node:
                 /* Display mark |p|; */
@@ -3159,12 +3168,11 @@ void show_node_list(int p)
   that \TeX82 used for \.{\\predisplaywidth} */
 
 @c
-pointer actual_box_width(pointer r, scaled base_width)
+static pointer get_actual_box_width(pointer r,pointer p, scaled initial_width)
 {
-    scaled d;                                /* increment to |v| */
-    scaled w = -max_dimen;                   /* calculated |size| */
-    scaled v = shift_amount(r) + base_width; /* |w| plus possible glue amount */
-    pointer p = list_ptr(r);                 /* current node when calculating |pre_display_size| */
+    scaled d;                  /* increment to |v| */
+    scaled w = -max_dimen;     /* calculated |size| */
+    scaled v = initial_width;  /* |w| plus possible glue amount */
     while (p != null) {
         if (is_char_node(p)) {
             d = glyph_width(p);
@@ -3182,6 +3190,18 @@ pointer actual_box_width(pointer r, scaled base_width)
                 break;
             case kern_node:
                 d = width(p);
+                break;
+            case disc_node:
+                /* at the end of the line we should actually take the pre */
+                if (no_break(p) != null) {
+                    d = get_actual_box_width(r,vlink_no_break(p),0);
+                    if (d <= -max_dimen || d >= max_dimen) {
+                        d = 0;
+                    }
+                } else {
+                    d = 0;
+                }
+                goto FOUND;
                 break;
             case math_node:
                 /* begin mathskip code */
@@ -3229,6 +3249,15 @@ pointer actual_box_width(pointer r, scaled base_width)
         p = vlink(p);
     }
     return w;
+}
+
+pointer actual_box_width(pointer r, scaled base_width)
+{
+    /* often this is the same as:
+        return + shift_amount(r) + base_width +
+            natural_sizes(list_ptr(r),null,(glue_ratio) glue_set(r),glue_sign(r),glue_order(r),box_dir(r));
+    */
+    return get_actual_box_width(r,list_ptr(r),shift_amount(r) + base_width);
 }
 
 @ @c
@@ -3296,7 +3325,7 @@ The |subtype| field is set to |min_quarterword|, since that's the desired
 halfword new_null_box(void)
 {                               /* creates a new box node */
     halfword p = new_node(hlist_node, min_quarterword);
-    box_dir(p) = text_direction;
+    box_dir(p) = text_direction_par;
     return p;
 }
 
@@ -3413,7 +3442,7 @@ halfword new_char(int f, int c)
     set_to_character(p);
     font(p) = f;
     character(p) = c;
-    lang_data(p) = make_lang_data(uc_hyph, cur_lang, left_hyphen_min, right_hyphen_min);
+    lang_data(p) = make_lang_data(uc_hyph_par, cur_lang_par, left_hyphen_min_par, right_hyphen_min_par);
     return p;
 }
 
@@ -3471,7 +3500,7 @@ not chosen.
 halfword new_disc(void)
 {                               /* creates an empty |disc_node| */
     halfword p = new_node(disc_node, 0);
-    disc_penalty(p) = int_par(hyphen_penalty_code);
+    disc_penalty(p) = hyphen_penalty_par;
     return p;
 }
 
@@ -3556,9 +3585,24 @@ The reference count in the copy is |null|, because there is assumed
 to be exactly one reference to the new specification.
 
 @c
-halfword new_spec(halfword p)
+halfword new_spec(halfword q) /* safeguard for copying a glue node */
 {
-    return copy_node(p == null ? zero_glue : p);
+    if (q == null) {
+        return copy_node(zero_glue);
+    } else if (type(q) == glue_spec_node) {
+        return copy_node(q);
+    } else if (type(q) == glue_node) {
+        halfword p = copy_node(zero_glue);
+        width(p) = width(q);
+        stretch(p) = stretch(q);
+        shrink(p) = shrink(q);
+        stretch_order(p) = stretch_order(q);
+        shrink_order(p) = shrink_order(q);
+        return p;
+    } else {
+        /* alternatively we can issue a warning */
+        return copy_node(zero_glue);
+    }
 }
 
 @ And here's a function that creates a glue node for a given parameter
@@ -3649,10 +3693,11 @@ break will be forced.
 be able to guess what comes next.
 
 @c
-halfword new_penalty(int m)
+halfword new_penalty(int m, int s)
 {
     halfword p = new_node(penalty_node, 0); /* the |subtype| is not used */
     penalty(p) = m;
+    subtype(p) = s;
     return p;
 }
 
@@ -3694,19 +3739,19 @@ halfword make_local_par_node(int mode)
     int callback_id;
     halfword q;
     halfword p = new_node(local_par_node,0);
-    local_pen_inter(p) = local_inter_line_penalty;
-    local_pen_broken(p) = local_broken_penalty;
-    if (local_left_box != null) {
-        q = copy_node_list(local_left_box);
+    local_pen_inter(p) = local_inter_line_penalty_par;
+    local_pen_broken(p) = local_broken_penalty_par;
+    if (local_left_box_par != null) {
+        q = copy_node_list(local_left_box_par);
         local_box_left(p) = q;
-        local_box_left_width(p) = width(local_left_box);
+        local_box_left_width(p) = width(local_left_box_par);
     }
-    if (local_right_box != null) {
-        q = copy_node_list(local_right_box);
+    if (local_right_box_par != null) {
+        q = copy_node_list(local_right_box_par);
         local_box_right(p) = q;
-        local_box_right_width(p) = width(local_right_box);
+        local_box_right_width(p) = width(local_right_box_par);
     }
-    local_par_dir(p) = par_direction;
+    local_par_dir(p) = par_direction_par;
     /* callback with node passed */
     callback_id = callback_defined(insert_local_par_callback);
     if (callback_id > 0) {

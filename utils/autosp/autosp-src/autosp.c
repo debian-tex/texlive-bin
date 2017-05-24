@@ -1,6 +1,6 @@
-char version[12] = "2016-01-30";
+char version[12] = "2017-04-06";
 
-/*  Copyright (C) 2014-16 R. D. Tennent School of Computing,
+/*  Copyright (C) 2014-17 R. D. Tennent School of Computing,
  *  Queen's University, rdt@cs.queensu.ca
  *
  *  This program is free software; you can redistribute it
@@ -99,12 +99,11 @@ char version[12] = "2016-01-30";
 # define SHORT_LEN 256
 # define MAX_STAFFS 9
 
-# define SMALL_NOTE 256
+# define SMALL_NOTE 512
 # define SP(note) (SMALL_NOTE/note)  
 /* note = { 256 | 128 | 64 | 32 | 16 | 8 | 4 | 2 | 1 }  */
 # define MAX_SPACING 2*SP(1)
 # define APPOGG_SPACING SP(64)+SP(256)  /* not a legitimate spacing */
-# define BARREST_SPACING SP(1)+SP(2)+SP(16)   /* not a legitimate spacing */
 # define notespp "\\vnotes2.95\\elemskip"
 # define Notespp "\\vnotes3.95\\elemskip"
 # define NOtespp "\\vnotes4.95\\elemskip"
@@ -112,13 +111,14 @@ char version[12] = "2016-01-30";
 # define NOTEsp  "\\vnotes9.52\\elemskip"
 # define APPOGG_NOTES "\\vnotes1.45\\elemskip"
 
-PRIVATE bool debug = false;
+PRIVATE bool debug = true;
 PRIVATE char infilename[SHORT_LEN];
 PRIVATE char *infilename_n = infilename;
 PRIVATE char outfilename[SHORT_LEN];
 PRIVATE char *outfilename_n = outfilename;
 PRIVATE char logfilename[SHORT_LEN];
 PRIVATE char *logfilename_n = logfilename;
+
 
 PRIVATE FILE *infile, *outfile, *logfile;
 
@@ -164,8 +164,7 @@ PRIVATE int vspacingi;
 PRIVATE char collectivei[SHORT_LEN];
 PRIVATE bool first_collectivei;
 
-PRIVATE int xtuplet;                    /* x for xtuplet                      */
-PRIVATE int xi;                         /* xi'th staff is the xtuplet staff   */
+PRIVATE int xtuplet[MAX_STAFFS];        /* x for xtuplet in staff i          */
 
 PRIVATE bool appoggiatura;
 PRIVATE bool fixnotes = false;          /* process \Notes etc. like \anotes?  */
@@ -176,6 +175,11 @@ PRIVATE bool bar_rest[MAX_STAFFS];
 PRIVATE char outstrings[MAX_STAFFS][LINE_LEN];  
                                /* accumulate commands to be output    */
 PRIVATE char *n_outstrings[MAX_STAFFS];
+
+PRIVATE int global_skip;  
+   /* = 1, 2 or 4, for (non-standard) commands \QQsk \HQsk \Qsk */
+PRIVATE char global_skip_str[8];
+PRIVATE char *n_global_skip_str = global_skip_str;
 
 PRIVATE void
 usage (FILE *f)
@@ -189,7 +193,9 @@ PRIVATE
 char *ps(int spacing)
 /* convert spacing value to note value(s)  */
 { char *s = malloc(SHORT_LEN);
-  char *s_n = s; 
+  char *s_n;
+  if (s == NULL) error ("Not enough memory");
+  s_n = s; 
   *s = '\0';
   if (spacing == MAX_SPACING) 
     sprintf(s, "MAX_SPACING");
@@ -230,6 +236,9 @@ status (int i)
     fprintf (logfile, "spacings[%d]=%s\n", i, ps(spacings[i]));
     fprintf (logfile, "vspacing[%d]=%s\n", i, ps(vspacing[i]));
     fprintf (logfile, "outstrings[%d]=%s\n", i, outstrings[i]);
+    if (xtuplet[i] > 1)
+      fprintf (logfile, "xtuplet[%d]=%d\n", i, xtuplet[i]);
+      
   }
 }
 
@@ -275,6 +284,10 @@ void analyze_notes (char **ln)
   int i; char *s; char *t;  
   int newlines = 0;
   s = strpbrk (*ln+1, "|&\\\n"); /* skip initial command      */
+  if (s == NULL) 
+  {
+    error ("Can''t find end of command");
+  }
   while (true)
   { /* look for \en */
     t = strstr(s, "\\en");
@@ -327,8 +340,10 @@ void analyze_notes (char **ln)
   }
   spacing = MAX_SPACING;
   old_spacing = MAX_SPACING;
-  xtuplet = 1;
+  for (i=1; i <= nstaffs; i++)
+    xtuplet[i] = 1;
   appoggiatura = false;
+  global_skip = 0;
   if (debug) 
   { fprintf (logfile, "\nAfter analyze_notes:\n");
     status_all ();
@@ -355,14 +370,17 @@ void checkn (char *s)
 
 PRIVATE
 void output_filtered (int i)
-{ /* discard \sk \hsk and \Cpause */
+{ /* discard \sk \hsk \Qsk \HQsk \QQsk and \Cpause */
   char *s = notes[i];
   while (s < current[i])
   { char *t = strpbrk (s+1, "\\&|$");
     if (t == NULL || t > current[i]) t = current[i];
     if (!prefix ("\\sk", s)
      && !prefix ("\\hsk", s)
-     && !prefix ("\\Cpause", s) )
+     && !prefix ("\\Cpause", s) 
+     && !prefix ("\\Qsk", s) 
+     && !prefix ("\\HQsk", s) 
+     && !prefix ("\\QQsk", s) )
     {
       while (s < t) 
       { *n_outstrings[i] = *s; 
@@ -447,13 +465,15 @@ int collective_note (int i)
     status (i);
     status_collective (i);
   }
-  while (true) /* search for alphabetic note (or asterisk) */
+  while (true) /* search for alphabetic or numeric note (or asterisk) */
   {
     if (*s == '.' && new_beaming == 0 && !dottedbeamnotes) 
       spacing = spacing * 1.50; 
-    else if (isalpha (*s) || *s == '*')
+    else if (isalnum (*s) || *s == '*')
     {  
       s++; 
+      while (*s == '\'' || *s == '`' || *s == '!') /* transposition character */
+        s++;
       current[i] = s;
       if (debug)
       { fprintf (logfile, "\nAfter collective_note:\n");
@@ -622,7 +642,8 @@ int spacing_note (int i)
     { spacing = SP(1); break; }
     
     if ( prefix ("\\ha", s)
-      || prefix ("\\hl", s)
+      || (prefix ("\\hl", s)  && !prefix ( "\\hloff", s) )
+         
       || prefix ("\\hu", s)
       || prefix ("\\hp", s)
       || prefix ("\\hpause", s) )
@@ -686,7 +707,7 @@ int spacing_note (int i)
     if ( prefix ("\\Cpause", s) )
     { /* bar-centered rest */
       bar_rest[i] = true;
-      spacing = BARREST_SPACING;
+      spacing = MAX_SPACING;
       break;
     }
 
@@ -696,7 +717,7 @@ int spacing_note (int i)
       new_beaming = 0;
       if (debug)
       { fprintf (logfile, "\nAfter beam completion:\n");
-        status (i);
+        status (i); 
         status_beam (i);
       }
       break; 
@@ -747,8 +768,7 @@ int spacing_note (int i)
     else if ( prefix("\\xtuplet", s))
     { char *t = s+1;
       while (!isdigit(*t)) t++;
-      xi = i;
-      xtuplet = atoi(t);
+      xtuplet[i] = atoi(t);
     }
     else 
     if ( prefix("\\triolet", s)
@@ -757,8 +777,7 @@ int spacing_note (int i)
       || prefix("\\uptuplet", s)
       || prefix("\\downtuplet", s) )
     { 
-      xi = i;
-      xtuplet = 3;
+      xtuplet[i] = 3;
     }
 
     else if ( prefix("\\zchar", s) 
@@ -784,8 +803,8 @@ int spacing_note (int i)
     else if (prefix("\\ppt", s) 
        || prefix("\\pppt", s) )
       doubledotted = true;  /* triple-dotted spaced as double-dotted */
-      
-    else if (prefix("\\pt", s)) 
+
+    else if (prefix("\\pt", s) && !prefix("\\ptr", s)) 
       dotted = true;
 
     else if ( prefix ("\\Dqbb", s) )
@@ -832,6 +851,23 @@ int spacing_note (int i)
       nonvirtual_notes = true;
       return beaming[i];
     }
+    else if (prefix ("\\rlap", s) )
+    /*  skip the argument, as it must be regarded as non-spacing  */
+    { char *t;
+      t  = strpbrk (s+1, " {\\");
+      if (t == NULL) error ("Argument expected");
+      if (*t == '\\') 
+        s = t+1;
+      else 
+        s = skip_arg(t); 
+    }
+    else if (prefix ("\\Qsk", s) )
+    /* may have global skips in more than one staff */
+    {  if (global_skip < 4) global_skip = 4; }
+    else if (prefix ("\\HQsk", s) )
+    {  if (global_skip < 2) global_skip = 2; }
+    else if (prefix ("\\QQsk", s) )
+    {  if (global_skip < 1) global_skip = 1; }
 
     /* Command is non-spacing.         */
     /* Skip ahead to the next command. */
@@ -1023,7 +1059,9 @@ void initialize_notes ()
   { fprintf (logfile, "\nEntering initialize_notes\n");
     status_all ();
   }
-  if (spacing == SP(1)+SP(2) || spacing == SP(1)+SP(2)+SP(4))
+  if (spacing == MAX_SPACING)
+    fprintf (outfile, "\\znotes");
+  else if (spacing == SP(1)+SP(2) || spacing == SP(1)+SP(2)+SP(4))
     fprintf (outfile, NOTEsp); 
   else if (spacing == SP(1))   
     fprintf (outfile, "\\NOTEs"); 
@@ -1057,8 +1095,6 @@ void initialize_notes ()
     fprintf (outfile, "\\nnnotes"); 
   else if (spacing == APPOGG_SPACING)
     fprintf (outfile, "%s", APPOGG_NOTES); 
-  else if (spacing == BARREST_SPACING)
-    fprintf (outfile, "\\znotes");
   else 
   { fprintf (stderr, "Error on line %d: spacing %s not recognized.\n", lineno, ps(spacing));
     exit (EXIT_FAILURE);
@@ -1200,7 +1236,7 @@ void restore_state (int i)
 PRIVATE
 void process_xtuplet (void)
 { 
-  int i;
+  int i, xi=0;
   int xspacing = MAX_SPACING;         /* xtuplet total spacing              */
   int normalized_xspacing;        /* (xspacing / xtuplet) * (xtuplet - 1);  */
   int xsp;
@@ -1208,9 +1244,8 @@ void process_xtuplet (void)
 
   if (debug)
   { fprintf (logfile, "\nEntering process_xtuplet:\n");
-    fprintf (logfile, "xtuplet=%d\n", xtuplet);
-    fprintf (logfile, "xi=%d\n\n", xi);
-    status (xi);
+    for (i=1; i <= nstaffs; i++)
+      fprintf (logfile, "i=%d xtuplet[i]=%d\n", i, xtuplet[i]);
   }
 
   if (old_spacing < MAX_SPACING) 
@@ -1234,29 +1269,37 @@ void process_xtuplet (void)
   }
 
   if (debug) fprintf (logfile, "\nDetermine xtuplet duration:\n");
-  {
-    save_state (xi);
-    pseudo_output_notes (xi);
-    xspacing = spacings[xi];
-    do
-    { 
-      xspacing +=  spacing_note (xi);
+  for (i=1; i <= nstaffs; i++)
+    if (xtuplet[i] > 1)
+    {
+      xi = i;
+      save_state (xi);
       pseudo_output_notes (xi);
-      if (xspacing >= MAX_SPACING) 
-        error ("Can't determine xtuplet duration.");
+      xspacing = spacings[xi];
+      do
+      { 
+        xspacing +=  spacing_note (xi);
+        pseudo_output_notes (xi);
+        if (xspacing >= MAX_SPACING) 
+          error ("Can't determine xtuplet duration.");
+      }
+      while (xspacing % xtuplet[xi] != 0);
+      restore_state (xi);
+      break;
     }
-    while (xspacing % xtuplet != 0);
-    restore_state (xi);
-  }
   if (debug) fprintf (logfile, "\nxspacing=%s\n", ps(xspacing));
-  normalized_xspacing = (xspacing / xtuplet) * (xtuplet - 1); 
+  if (debug) fprintf (logfile, "xi=%d  xtuplet[xi]=%d\n", xi, xtuplet[xi]);
+  normalized_xspacing = (xspacing / xtuplet[xi]) * (xtuplet[xi] - 1); 
   if (debug) 
   { fprintf (logfile, "normalized_xspacing=%s\n", ps(normalized_xspacing));
+  }
+  spacing = xspacing / xtuplet[xi];
+  if (debug) 
+  { 
     fprintf (logfile, "\nDetermine minimal spacing over all active staffs:\n");
   }
-  spacing = xspacing / xtuplet;
   for (i=1; i <= nstaffs; i++)
-    if (active[i] && i != xi)
+    if (active[i] && xtuplet[i] == 1)
     { save_state (i);
       pseudo_output_notes (i);
       xsp = spacings[i]; 
@@ -1277,12 +1320,6 @@ void process_xtuplet (void)
 
   if (debug) fprintf (logfile, "\nCreate a new notes command for the xtuplet:\n");
   initialize_notes ();
-  multnoteskip = (double)  (xtuplet - 1) / xtuplet;
-  n_outstrings[xi] += sprintf (n_outstrings[xi], "\\multnoteskip{%5.3f}", multnoteskip); 
-  if (debug) 
-  { fprintf (logfile, "\noutstrings[%d]=", xi);
-    note_segment (outstrings[xi]); 
-  }
 
   if (debug) fprintf (logfile, "\nProcess non-xtuplet staffs:\n");
   for (i=1; i <= nstaffs; i++)
@@ -1291,41 +1328,69 @@ void process_xtuplet (void)
   while (true)
   {
     for (i=1; i <= nstaffs; i++)
-      if (active[i] && i != xi)
+      if (active[i] && xtuplet[i] == 1)
         output_notes (i);
     xsp += spacing;
     for (i=1; i <= nstaffs; i++)
     {
       /* virtual notes needed?  */
-      if (active[i] && i != xi && spacings[i] != 0 && spacings[i] != spacing && vspacing[i] == 0)
+      if (active[i] && xtuplet[i] == 1 && spacings[i] != 0 && spacings[i] != spacing && vspacing[i] == 0)
       {
         vspacing[i] = spacings[i] - spacing;
       } 
     }
     if (xsp >= normalized_xspacing) break;
     for (i=1; i <= nstaffs; i++)
-      if (active[i] && i != xi) 
+      if (active[i] && xtuplet[i] == 1) 
         spacings[i] = spacing_note(i);
   }
   if (debug)
   { fprintf (logfile, "\nAfter processing non-xtuplet staffs:\n");
     status_all ();
   }
-  if (debug) fprintf (logfile, "\nRe-process xtuplet staff:\n");
-  xsp = 0;
-  while (true)
-  { output_notes (xi);
-    xsp += spacing;
-    if (spacings[xi] != spacing && vspacing[xi] == 0)
-      vspacing[xi] = spacings[xi] - spacing;
-    if (xsp >= xspacing) break;
-    spacings[xi] = spacing_note (xi);
+  if (debug)
+  {
+    fprintf (logfile, "Generate \\multnoteskip factors.\n");
+    fprintf (logfile, "xi=%d xtuplet[xi]=%d\n", xi, xtuplet[xi]);
   }
+  multnoteskip = (double)  (xtuplet[xi] - 1) / xtuplet[xi]; 
+  for (i=1; i <= nstaffs; i++)
+    if (xtuplet[i] > 1)
+    {
+      n_outstrings[i] += sprintf (n_outstrings[i], "\\multnoteskip{%5.3f}", multnoteskip); 
+      if (debug) 
+      { fprintf (logfile, "\noutstrings[%d]=", i);
+        note_segment (outstrings[i]); 
+      }
+    }
+  if (debug) fprintf (logfile, "\nRe-process xtuplet staffs:\n");
+  for (i=1; i <= nstaffs; i++)
+    if (xtuplet[i] > 1)
+    {
+      xsp = 0;
+      while (true)
+      { output_notes (i);
+        xsp += spacing;
+        if (spacings[i] != spacing && vspacing[i] == 0)
+          vspacing[i] = spacings[i] - spacing;
+        if (xsp >= xspacing) break;
+        spacings[i] = spacing_note (i);
+      }
+    }
 
-  /* Restore normal \noteskip in the xtuplet staff. */
-  multnoteskip = (double)  (xtuplet) / (xtuplet-1);
-  n_outstrings[xi] += sprintf (n_outstrings[xi], "\\multnoteskip{%5.3f}", multnoteskip); 
-  xtuplet = 1;
+  /* Restore normal \noteskip in the xtuplet staffs. */
+  if (debug)
+  {
+    fprintf (logfile, "Restore \\multnoteskip factors.\n");
+    fprintf (logfile, "xi=%d xtuplet[xi]=%d\n", xi, xtuplet[xi]);
+  }
+  multnoteskip = (double)  xtuplet[xi] / (xtuplet[xi]-1);
+  for (i=1; i <= nstaffs; i++)
+    if (xtuplet[i] > 1)
+    {
+      n_outstrings[i] += sprintf (n_outstrings[i], "\\multnoteskip{%5.3f}", multnoteskip); 
+      xtuplet[i] = 1;
+    }
   nonvirtual_notes = true;
   if (debug)
   { fprintf (logfile, "\nAfter process_xtuplet:\n");
@@ -1342,9 +1407,11 @@ void generate_notes ()
  * and initialize a new one.
  */
 { int i;
+  bool xtuplet_flag;
   while (true)
   { old_spacing = spacing;
     spacing = MAX_SPACING;
+    global_skip = 0;
     nonvirtual_notes = false;
     if (debug)
     { fprintf (logfile, "\nIn generate_notes:\n");
@@ -1361,7 +1428,10 @@ void generate_notes ()
     {
       process_appogg ();
     }
-    if (xtuplet > 1)
+    xtuplet_flag = false;
+    for (i=1; i <= nstaffs; i++)
+      if (xtuplet[i] > 1) xtuplet_flag = true;
+    if (xtuplet_flag)
     {
       process_xtuplet ();
       continue;
@@ -1378,12 +1448,28 @@ void generate_notes ()
         return;
       }
       if (old_spacing < MAX_SPACING) putc ('\n', outfile);
-      if ( nastaffs == 1 && spacing != BARREST_SPACING && restbars > 0) 
+      if ( nastaffs == 1 && spacing != MAX_SPACING && restbars > 0) 
         output_rests ();
       initialize_notes ();
     }
+
+    /*  generate global_skip_str:  */
+    global_skip_str[0] = '\0';
+    n_global_skip_str = global_skip_str;
+    switch (global_skip) 
+    {
+      case 0: break;
+      case 1: append (global_skip_str, &(n_global_skip_str), "\\qqsk", 8); break;  
+      case 2: append (global_skip_str, &(n_global_skip_str), "\\hqsk", 8); break;  
+      case 4: append (global_skip_str, &(n_global_skip_str), "\\qsk", 8); break;  
+    }
+
     for (i=1; i <= nstaffs; i++)  /* append current notes to outstrings */
-      if (active[i]) output_notes (i);
+      if (active[i]) 
+      {
+        append (outstrings[i], &(n_outstrings[i]), global_skip_str, LINE_LEN);
+        output_notes (i);
+      }
     for (i=1; i <= nstaffs; i++)
     {
       /* virtual notes needed?  */
@@ -1827,7 +1913,7 @@ int main (int argc, char *argv[])
   time (&mytime);
   strftime (today, 11, "%Y-%m-%d", localtime (&mytime) );
   fprintf (stdout, "This is autosp, version %s.\n", version);
-  fprintf (stdout, "Copyright (C) 2014-16  R. D. Tennent\n" );
+  fprintf (stdout, "Copyright (C) 2014-17  R. D. Tennent\n" );
   fprintf (stdout, "School of Computing, Queen's University, rdt@cs.queensu.ca\n" );
   fprintf (stdout, "License GNU GPL version 2 or later <http://gnu.org/licences/gpl.html>.\n" );
   fprintf (stdout, "There is NO WARRANTY, to the extent permitted by law.\n\n" );

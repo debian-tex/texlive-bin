@@ -109,8 +109,6 @@ void print_math_style(void);
 #  define script_size 1
 #  define script_script_size 2
 
-#  define math_direction int_par(math_direction_code)
-
 #  define dir_math_save cur_list.math_field
 #  define m_style cur_list.math_style_field
 #  define init_math_fields() do {               \
@@ -157,6 +155,8 @@ typedef enum {
     math_param_limit_below_vgap,
     math_param_limit_below_bgap,
     math_param_limit_below_kern,
+    math_param_nolimit_sub_factor, /* bonus */
+    math_param_nolimit_sup_factor, /* bonus */
     math_param_under_delimiter_vgap,
     math_param_under_delimiter_bgap,
     math_param_over_delimiter_vgap,
@@ -309,6 +309,8 @@ typedef enum {
     SubscriptShiftDownWithSuperscript,
     FractionDelimiterSize,
     FractionDelimiterDisplayStyleSize,
+    NoLimitSubFactor,
+    NoLimitSupFactor,
     MATH_param_last,
 } MATH_param_codes;
 

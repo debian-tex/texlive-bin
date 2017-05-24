@@ -99,6 +99,10 @@ depending on the object type; however it may be used as a counter as well.
 #  define inf_pk_dpi   72 /* min PK pixel density value from \.{texmf.cnf} */
 #  define sup_pk_dpi 8000 /* max PK pixel density value from \.{texmf.cnf} */
 
+#  define pdf2double(a) ((double) (a).m / ten_pow[(a).e])
+
+#  define by_one_bp ((double) 65536 * (double) 72.27 / 72)  /* number of sp per 1bp */
+
 extern int find_obj(PDF pdf, int t, int i, boolean byname);
 extern void check_obj_exists(PDF pdf, int objnum);
 extern void check_obj_type(PDF pdf, int t, int objnum);
@@ -133,6 +137,7 @@ typedef enum {
     c_pdf_gen_tounicode,
     c_pdf_pk_fixed_dpi,
     c_pdf_suppress_optional_info,
+    c_pdf_omit_cidset,
 } pdf_backend_counters ;
 
 typedef enum {
@@ -178,6 +183,7 @@ extern int pdf_retval;
 #  define pdf_gen_tounicode             get_tex_extension_count_register(c_pdf_gen_tounicode)
 #  define pdf_pk_fixed_dpi              get_tex_extension_count_register(c_pdf_pk_fixed_dpi)
 #  define pdf_suppress_optional_info    get_tex_extension_count_register(c_pdf_suppress_optional_info)
+#  define pdf_omit_cidset               get_tex_extension_count_register(c_pdf_omit_cidset)
 
 #  define pdf_h_origin                  get_tex_extension_dimen_register(d_pdf_h_origin)
 #  define pdf_v_origin                  get_tex_extension_dimen_register(d_pdf_v_origin)
@@ -197,6 +203,8 @@ extern int pdf_retval;
 #  define set_pdf_minor_version(i)      set_tex_extension_count_register(c_pdf_minor_version,i)
 #  define set_pdf_compress_level(i)     set_tex_extension_count_register(c_pdf_compress_level,i)
 #  define set_pdf_obj_compress_level(i) set_tex_extension_count_register(c_pdf_obj_compress_level,i)
+#  define set_pdf_omit_cidset(i)        set_tex_extension_count_register(c_pdf_omit_cidset,i)
+#  define set_pdf_gen_tounicode(i)      set_tex_extension_count_register(c_pdf_gen_tounicode,i)
 
 #  define set_pdf_decimal_digits(i)     set_tex_extension_count_register(c_pdf_decimal_digits,i)
 #  define set_pdf_pk_resolution(i)      set_tex_extension_count_register(c_pdf_pk_resolution,i)

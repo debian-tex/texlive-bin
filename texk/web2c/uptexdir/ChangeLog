@@ -1,3 +1,37 @@
+2017-04-24  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* uptex-m.ch: Adapt to changes in ptexdir/ptex-base.ch (p\TeX -> \pTeX).
+
+2017-04-09  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* uptex-m.ch: Fix a bug on a UTF-8 sequence at end of a line
+	when \endlinechar=-1.
+
+2017-01-15  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+
+	* uptex-m.ch, kanji.c:
+	Update reference of Unicode blocks to
+	"Blocks-9.0.0.txt Date: 2016-02-05, 23:48:00 GMT [KW]".
+	* uptex-m.ch, upbibtex.ch, updvitype.ch, uppltotf.ch, uptftopl.ch,
+	uptex_version.h: upTeX version u1.22.
+	* COPYRIGHT, COPYRIGHT.ja:
+	Update copyright name and year.
+	Rename from COPYRIGHT.utf8 to COPYRIGHT.ja.
+
+2017-01-14  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+
+	* upbibtex.ch, kanji.h: Fix bug on "substring$".
+	Thanks to Takeda Shiro san.
+
+2016-12-16  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* upbibtex.ch, updvitype.ch, uppltotf.ch, uptftopl.ch:
+	Use "issue@texjp.org" as bug_email in usagehelp().
+
+2016-12-15  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* uptexextra.h: Use "issue@texjp.org" as BUG_ADDRESS.
+
 2016-02-20  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
 
 	* uptex-m.ch, kanji.c:
@@ -121,7 +155,7 @@
 
 	* kanji.c (init_default_kanji): Set defaults before testing
 	PTEX_KANJI_ENC from the environment.
-	* kanji.c: All programs use init_default_kanji("utf8","uptex"). 
+	* kanji.c: All programs use init_default_kanji("utf8","uptex").
 
 2012-08-13  TANAKA Takuji  <KXD02663@nifty.ne.jp>
 

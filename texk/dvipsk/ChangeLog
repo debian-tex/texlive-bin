@@ -1,3 +1,77 @@
+2017-05-19  Karl Berry  <karl@tug.org>
+
+	* Version 5.997 for TeX Live 2017 release.
+
+2017-03-27  Karl Berry  <karl@freefriends.org>
+
+	* Makefile.am (AM_TESTS_ENVIRONMENT): use instead of TESTS_ENVIRONMENT.
+
+2017-03-22  Karl Berry  <karl@tug.org>
+
+	* dvips.texi: don't claim -q quiets standard error.
+	Report from Igor Liferenko.
+
+2017-03-21  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* dvips.c: Show information and exit if dvips finds options
+	--help or --version. Report from Igor Liferenko:
+	http://tug.org/pipermail/tex-k/2017-March/002748.html
+
+2017-03-18  Karl Berry  <karl@tug.org>
+
+	* configure.ac,
+	* NEWS
+	* dvips.c,
+	* dvips.h,
+	* afm2tfm.c,
+	* dvips.texi: version 5.997 for TL17.
+
+2017-02-28  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* dvips.c: In the case of -T option, reverse the default in the change
+	made on 2016-11-01. Thanks Ulrike Fischer:
+	http://tug.org/pipermail/tex-live/2017-February/039743.html.
+
+2016-12-13  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* emspecial.c: Fix a bug in emspecial(), reported by Norbert Klingen:
+	http://tug.org/pipermail/tex-live/2016-December/039483.html.
+
+2016-11-08  Karl Berry  <karl@freefriends.org>
+
+	* dvips.texi,
+	* NEWS: document new papersize special behavior and options.
+	Original report at http://tex.stackexchange.com/questions/336545.
+
+2016-11-01  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* dospecial.c, dvips.c, dvips.help, protos.h, resident.c:
+	Add a new option -L*  Last special papersize wins.
+	dvips -L0 ... gives the old behavior.
+
+2016-10-30  Karl Berry  <karl@tug.org>
+
+	* output.c (INVALID_EPOCH_VALUE): define as (time_t) -1,
+	to avoid warning with huge unsigned value on 32-bit systems.
+	(open_output): don't duplicate writing of %%CreationDate.
+
+	* dvips.texi (Invoking Dvips): TEXCONFIG does not include
+	. by default.
+
+2016-07-15  Karl Berry  <karl@tug.org>
+
+	* config.ps (ieeecs): new paper size for IEEE Computer Society
+	Journals, requested by Michael Shell for his IEEEtran,
+	13 Jul 2016 20:04:25.
+
+2016-06-29  Karl Berry  <karl@tug.org>
+
+	* dvips.texi: remove idvi reference, long gone.
+
+2016-05-20  Karl Berry  <karl@tug.org>
+
+	* Version 5.996 for TeX Live 2016.
+
 2016-05-06  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
 
 	* output.c: Avoid to crash for too large a value of SOURCE_DATE_EPOCH

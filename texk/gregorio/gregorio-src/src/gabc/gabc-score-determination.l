@@ -4,22 +4,22 @@
  * This file implements the score lexer.
  *
  * Gregorio score determination in gabc input.
- * Copyright (C) 2006-2015 The Gregorio Project (see CONTRIBUTORS.md)
+ * Copyright (C) 2006-2017 The Gregorio Project (see CONTRIBUTORS.md)
  *
  * This file is part of Gregorio.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
  * Software Foundation, either version 3 of the License, or (at your option)
  * any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
  * more details.
- * 
- * You should have received a copy of the GNU General Public License along with 
- * this program.  If not, see <http://www.gnu.org/licenses/>. 
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include "config.h"
@@ -35,15 +35,41 @@
 #include "gabc-score-determination.h"
 #include "gabc-score-determination-y.h"
 
-static unsigned char style_stack = 0;
 static bool eof_found = false;
+
+#define START_STYLE(STYLE) \
+    if (*styles & SB_ ## STYLE) { \
+        gregorio_messagef("gabc_score_determination_lex", VERBOSITY_ERROR, 0, \
+                _("style already started: %s"), gabc_score_determination_text); \
+    } else { \
+        *styles ^= SB_ ## STYLE; \
+        return STYLE ## _BEGIN; \
+    }
+
+#define END_STYLE(STYLE) \
+    if (*styles & SB_ ## STYLE) { \
+        *styles ^= SB_ ## STYLE; \
+        return STYLE ## _END; \
+    } else { \
+        gregorio_messagef("gabc_score_determination_lex", VERBOSITY_ERROR, 0, \
+                _("style not started: %s"), gabc_score_determination_text); \
+    }
+
+#define RETURN_CHARACTERS \
+    gabc_score_determination_lval.text = \
+            gregorio_strdup(gabc_score_determination_text); \
+    return CHARACTERS
+
+#define RETURN_SPACE \
+    gabc_score_determination_lval.text = gregorio_strdup(" "); \
+    return CHARACTERS
 
 #define YY_NO_INPUT
 
 #define YY_INPUT(buf,result,max_size) \
     if ( YY_CURRENT_BUFFER_LVALUE->yy_is_interactive ) { \
         int c = '*'; \
-        size_t n; \
+        int n; \
         for (n = 0; n < max_size \
                 && (c = getc(gabc_score_determination_in)) != EOF \
                 && c != '\n'; ++n ) { \
@@ -78,11 +104,13 @@ static bool eof_found = false;
 %x attribute
 %x score
 %x notes
-%x style
+%x sp
 %x verb
 %x comments
 %x inicomments
 %x alt
+%x protrusion_value
+%x protrusion_end
 
 %option stack
 %option pointer
@@ -106,7 +134,7 @@ double semicolon, (b) multi-line values, which end at a double
 semicolon. */
 
 %%
-<INITIAL>^(\xBB|\xEF|\xBF)* {
+<INITIAL>^(\xBB|\xEF|\xBF)+ {
         /* BOM written by a lot of windows softwares when they write UTF-8 */
     }
 <INITIAL>^[\n\r]+ {
@@ -118,22 +146,27 @@ semicolon. */
 <inicomments>(\n|\r)+ {
         BEGIN(INITIAL);
     }
-<inicomments>[^\n\r]* {
+<inicomments>[^\n\r]+ {
         /* ignored */
     }
 <INITIAL>:(\ )? {
         BEGIN(attribute);
         return COLON;
     }
-<attribute>[^;\n\r]*(;[^;\n\r]+)*([\n\r]+[^;]*(;[^;]+)*)? {
+<attribute>;;?[\n\r \t]*[\n\r] {
+         BEGIN(INITIAL);
+         return SEMICOLON;
+    }
+<attribute>[^;]+ {
         gabc_score_determination_lval.text =
                 gregorio_strdup(gabc_score_determination_text);
         return ATTRIBUTE;
     }
-<attribute>;;?[\n\r]+ {
-         BEGIN(INITIAL);
-         return SEMICOLON;
-    }
+<attribute>; {
+        gabc_score_determination_lval.text =
+                gregorio_strdup(gabc_score_determination_text);
+        return ATTRIBUTE;
+}
 <INITIAL>def-m[0-9] {
          gabc_score_determination_lval.character = gabc_score_determination_text[5];
          return DEF_MACRO;
@@ -152,10 +185,6 @@ semicolon. */
         gabc_score_determination_lval.text =
                 gregorio_strdup(gabc_score_determination_text);
         return GABC_COPYRIGHT;
-    }
-<INITIAL>initial-style {
-        /* DEPRECATED by 4.1 */
-        return INITIAL_STYLE;
     }
 <INITIAL>mode {
         gabc_score_determination_lval.text =
@@ -216,120 +245,81 @@ semicolon. */
                 _("unrecognized character: \"%c\" in definition part"),
                 gabc_score_determination_text[0]);
     }
-<score>[^-\{\}\(\[\]<%]+ {
-        gabc_score_determination_lval.text =
-                gregorio_strdup(gabc_score_determination_text);
-        return CHARACTERS;
+<score>[\n\r][\n\r \t]* {
+        RETURN_SPACE;
+    }
+<score>[^-,;:.\{\}\(\[\]<%\n\r]+ {
+        RETURN_CHARACTERS;
     }
 <score>- {
         return HYPHEN;
     }
-<score,style><nlba> {
-        return NLBA_B;
-    }
-<score,style><\/nlba> {
-        return NLBA_E;
-    }
-<score,style><i> {
-        BEGIN(style);
-        style_stack ++;
-        return I_BEGIN;
-    }
-<style><\/i> {
-        style_stack --;
-        if (style_stack == 0) {
-            BEGIN(score);
-        }
-        return I_END;
-    }
-<score,style><tt> {
-        BEGIN(style);
-        style_stack ++;
-        return TT_BEGIN;
-    }
-<style><\/tt> {
-        style_stack --;
-        if (style_stack == 0) {
-            BEGIN(score);
-        }
-        return TT_END;
-    }
-<score,style><ul> {
-        BEGIN(style);
-        style_stack ++;
-        return UL_BEGIN;
-    }
-<style><\/ul> {
-        style_stack --;
-        if (style_stack == 0) {
-            BEGIN(score);
-        }
-        return UL_END;
-    }
-<score,style><c> {
-        BEGIN(style);
-        style_stack ++;
-        return C_BEGIN;
-    }
-<style><\/c> {
-        style_stack --;
-        if (style_stack == 0) {
-            BEGIN(score);
-        }
-        return C_END;
-    }
-<score,style><b> {
-        BEGIN(style);
-        style_stack ++;
-        return B_BEGIN;
-    }
-<style><\/b> {
-        style_stack --;
-        if (style_stack == 0) {
-            BEGIN(score);
-        }
-        return B_END;
-    }
-<score,style><sc> {
-        BEGIN(style);
-        style_stack ++;
-        return SC_BEGIN;
-    }
-<style><\/sc> {
-        style_stack --;
-        if (style_stack == 0) {
-            BEGIN(score);
-        }
-        return SC_END;
-    }
-<score,style><e> {
-        BEGIN(style);
-        style_stack ++;
-        return ELISION_BEGIN;
-    }
-<style><\/e> {
-        style_stack --;
-        if (style_stack == 0) {
-            BEGIN(score);
-        }
-        return ELISION_END;
-    }
-<score,style><sp> {
-        BEGIN(style);
-        style_stack ++;
-        return SP_BEGIN;
-    }
-<style><\/sp> {
-        style_stack --;
-        if (style_stack == 0) {
-            BEGIN(score);
-        }
-        return SP_END;
-    }
-<style>[^<\{\}]* {
+<score>[,;:.] {
         gabc_score_determination_lval.text =
                 gregorio_strdup(gabc_score_determination_text);
-        return CHARACTERS;
+        return PROTRUDING_PUNCTUATION;
+    }
+<score><nlba> {
+        return NLBA_B;
+    }
+<score><\/nlba> {
+        return NLBA_E;
+    }
+<score><i> {
+        START_STYLE(I);
+    }
+<score><\/i> {
+        END_STYLE(I);
+    }
+<score><tt> {
+        START_STYLE(TT);
+    }
+<score><\/tt> {
+        END_STYLE(TT);
+    }
+<score><ul> {
+        START_STYLE(UL);
+    }
+<score><\/ul> {
+        END_STYLE(UL);
+    }
+<score><c> {
+        START_STYLE(C);
+    }
+<score><\/c> {
+        END_STYLE(C);
+    }
+<score><b> {
+        START_STYLE(B);
+    }
+<score><\/b> {
+        END_STYLE(B);
+    }
+<score><sc> {
+        START_STYLE(SC);
+    }
+<score><\/sc> {
+        END_STYLE(SC);
+    }
+<score><e> {
+        START_STYLE(ELISION);
+    }
+<score><\/e> {
+        END_STYLE(ELISION);
+    }
+<score><sp> {
+        BEGIN(sp);
+        return SP_BEGIN;
+    }
+<sp><\/sp> {
+        BEGIN(score);
+        return SP_END;
+    }
+<sp>[\n\r][\n\r \t]* {
+        RETURN_SPACE;
+    }
+<sp>[^<\{\}\n\r]+ {
+        RETURN_CHARACTERS;
     }
 <score>\% {
         BEGIN(comments);
@@ -337,45 +327,32 @@ semicolon. */
 <comments>(\n|\r)+ {
         BEGIN(score);
     }
-<comments>[^\n\r]* {
+<comments>[^\n\r]+ {
         /* ignored */
     }
-<style,score><v> {
+<score><v> {
         BEGIN(verb);
         return VERB_BEGIN;
     }
 <verb><\/v> {
-        if (style_stack == 0) {
-            BEGIN(score);
-        } else {
-            BEGIN(style);
-        }
+        BEGIN(score);
         return VERB_END;
     }
-<verb>[^<]* {
-        gabc_score_determination_lval.text =
-                gregorio_strdup(gabc_score_determination_text);
-        return CHARACTERS;
+<verb,alt>[^<]+ {
+        RETURN_CHARACTERS;
     }
-<verb,style,score,alt>< {
-        gabc_score_determination_lval.text =
-                gregorio_strdup(gabc_score_determination_text);
-        return CHARACTERS;
+<verb,score,alt>< {
+        RETURN_CHARACTERS;
     }
-<score,style>\{ {
+<score>\{ {
         return CENTER_BEGIN;
     }
-<score,style>\} {
+<score>\} {
         return CENTER_END;
     }
 <score><alt> {
         BEGIN(alt);
         return ALT_BEGIN;
-    }
-<alt>[^<]* {
-        gabc_score_determination_lval.text =
-                gregorio_strdup(gabc_score_determination_text);
-        return CHARACTERS;
     }
 <alt><\/alt> {
         BEGIN(score);
@@ -396,11 +373,31 @@ semicolon. */
 <score>\] {
         return TRANSLATION_END;
     }
+<score><[\n\r \t]*clear[\n\r \t]*\/?[\n\r \t]*> {
+        return CLEAR;
+    }
+<score><[\n\r \t]*pr[\n\r \t]*\/?[\n\r \t]*> {
+        return PROTRUSION;
+    }
+<score><[\n\r \t]*pr[\n\r \t]*:[\n\r \t]* {
+        BEGIN(protrusion_value);
+        return PROTRUSION;
+    }
+<protrusion_value>([0-9]*\.?[0-9]+|[0-9]+\.) {
+        BEGIN(protrusion_end);
+        gabc_score_determination_lval.text =
+                gregorio_strdup(gabc_score_determination_text);
+        return PROTRUSION_VALUE;
+    }
+<protrusion_end>[\n\r \t]*\/?[\n\r \t]*> {
+        BEGIN(score);
+        return PROTRUSION_END;
+    }
 <score>\( {
         BEGIN(notes);
         return OPENING_BRACKET;
     }
-<notes>[^|\)]* {
+<notes>[^|\)]+ {
         gabc_score_determination_lval.text =
                 gregorio_strdup(gabc_score_determination_text);
         return NOTES;

@@ -1,3 +1,117 @@
+2017-05-03  Karl Berry  <karl@tug.org>
+
+	* texmf.cnf (TEXMFAUXTREES): new variable (default value empty
+	string via empty braces), for tlmgr conf auxtrees.
+	(TEXMF): include $TEXMFAUXTREES, but don't assume it is nonempty.
+
+2017-04-22  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* win32lib.c, mingw32.c: Update texlive_gs_init() (w32 only). 
+
+2017-04-21  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* win32lib.c, mingw32.c: Update texlive_gs_init() (w32 only). 
+
+2017-04-14  Karl Berry  <karl@tug.org>
+
+	* texmf.cnf (shell_escape_commands): add texosquery-jre8.
+
+2017-04-13  Karl Berry  <karl@tug.org>
+
+	* texmf.cnf (TEXMF, TEXMFDBS): move TEXMFLOCAL to before TEXMFSYS*,
+	so, e.g., config.ps in TEXMFLOCAL overrides TEXMFSYSCONFIG.
+	Report from Michael Shell:
+	http://tug.org/pipermail/tex-live/2016-July/039062.html
+
+2017-04-05  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* texmf.cnf: mendex requires the variable INDEXDICTIONARY.
+
+2017-03-27  Karl Berry  <karl@freefriends.org>
+
+	* Makefile.am (AM_TESTS_ENVIRONMENT): use instead of TESTS_ENVIRONMENT.
+
+2017-03-18  Karl Berry  <karl@tug.org>
+
+	* version.ac,
+	* NEWS,
+	* kpsewhich.c,
+	* texmf.cnf,
+	* doc/kpathsea.texi: version 6.2.3 for TL17.
+
+	* Makefile.am (nodist_kpseinclude_HEADERS): include c-auto.h here.
+	(kpseinclude_HEADERS): not here.
+	(nodist_kpselib_HEADERS): and not here; variable no longer needed.
+	Ken Brown on tldistro, 18 Mar 2017 16:50:41.
+
+2017-03-14  Karl Berry  <karl@tug.org>
+
+	* Makefile.am (kpseinclude_HEADERS): add c-auto.h. Report from
+	Ken Brown on tldistro, 14 Mar 2017 12:16:56.
+
+2017-03-02  Karl Berry  <karl@tug.org>
+
+	* texmf.cnf (TEXINPUTS.luajitlatex): add, same as lualatex.
+	Report from Ulrike Fischer, 2 Mar 2017 17:46:50.
+
+2016-12-28  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* xgetcwd.c: Typo. Thanks Luigi.
+
+2016-12-15  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* kpsestat.c: Change tex-k@mail.tug.org to tex-k@tug.org.
+
+2016-11-30  Karl Berry  <karl@ks.tug.org>
+
+	* texmf.cnf (shell_escape_commands): remove mpost, due to
+	the -tex option. Oops! Report from Bruno Le Floch.
+
+2016-11-08  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* tex-file.c: Add ".OTF" as a suffix of OpenType fonts.
+
+2016-11-02  Karl Berry  <karl@tug.org>
+
+	* mktexdir: try a silent mkdir before a non-silent mkdir,
+	to try to work around the inevitable race condition.
+	https://bugs.debian.org/794228.
+
+2016-08-04  Karl Berry  <karl@tug.org>
+
+	* texmf.cnf (max_strings.bibtex, et al.): increase to 100,000
+	per report from Michael Perryman,
+	http://tug.org/pipermail/tex-live/2016-July/039109.html.
+
+2016-07-01  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* knj.c, knj.h: Avoid compiler warnings.
+
+2016-06-30  Karl Berry  <karl@tug.org>
+
+	* version.ac (kpse_version): 6.2.2 => 6.2.3dev.
+
+2016-06-29  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* kpsewhich.c: Remove unnecessary w32 changes,
+
+2016-06-28  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* config.h, db.c, elt-dirs.c, expand.c, find-suffix.c, hash.c, knj.c,
+	knj.h, kpsewhich.c, make-suffix.c, path-elt.c, progname.c, readable.c,
+	tilde.c, types.h, variable.c, win32lib.c, win32lib.h, xbasename.c,
+	xdirname.c, xdirtest.c, xgetcwd.c: Eliminate global and static
+	variables (w32 only).
+
+2016-05-28  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* tex-file.c: Fix a bug that TEXMFOUTPUT does not work (w32 only).
+	See http://tug.org/pipermail/tex-k/2016-May/002719.html.
+
+2016-05-20  Karl Berry  <karl@tug.org>
+
+	* Version 6.2.2 for TeX Live 2016.
+
 2016-05-13  Karl Berry  <karl@tug.org>
 
 	* texmf.cnf (RISINPUTS, BLTXMLINPUTS): $TEXMF/biber

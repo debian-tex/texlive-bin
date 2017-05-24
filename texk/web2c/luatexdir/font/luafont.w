@@ -29,6 +29,14 @@ const char *font_type_strings[] = {
     "unknown", "virtual", "real", NULL
 };
 
+const char *font_writingmode_strings[] = {
+    "unknown", "horizontal", "vertical", NULL
+};
+
+const char *font_identity_strings[] = {
+    "unknown", "horizontal", "vertical", NULL
+};
+
 const char *font_format_strings[] = {
     "unknown", "type1", "type3", "truetype", "opentype", NULL
 };
@@ -103,6 +111,8 @@ const char *MATH_param_names[] = {
     "SubscriptShiftDownWithSuperscript",
     "FractionDelimiterSize",
     "FractionDelimiterDisplayStyleSize",
+    "NoLimitSubFactor",
+    "NoLimitSupFactor",
     NULL,
 };
 
@@ -425,7 +435,10 @@ int font_to_lua(lua_State * L, int f)
     dump_booleanfield(L,used,(font_used(f) ? true : false));
     dump_stringfield(L,type,font_type_strings[font_type(f)]);
     dump_stringfield(L,format,font_format_strings[font_format(f)]);
+    dump_stringfield(L,writingmode,font_writingmode_strings[font_writingmode(f)]);
+    dump_stringfield(L,identity,font_identity_strings[font_identity(f)]);
     dump_stringfield(L,embedding,font_embedding_strings[font_embedding(f)]);
+    dump_intfield(L,streamprovider,font_streamprovider(f));
 
     dump_intfield(L,units_per_em,font_units_per_em(f));
     dump_intfield(L,size,font_size(f));
@@ -845,7 +858,7 @@ static void read_char_packets(lua_State * L, int *l_fonts, charinfo * co, intern
             }
             lua_pop(L, 1);      /* command code */
         } else {
-            normal_error("vf command","commands has to be a tbale");
+            normal_error("vf command","commands has to be a table");
             /* fprintf(stdout, "Found a `commands' item that is not a table\n"); */
         }
         lua_pop(L, 1);          /* command table */
@@ -964,7 +977,7 @@ static void read_lua_math_parameters(lua_State * L, int f)
             } else if (t == LUA_TSTRING) {
                 i = ff_checkoption(L, -2, NULL, MATH_param_names);
             }
-            n = (int) lua_tointeger(L, -1);
+            n = (int) lua_roundnumber(L, -1);
             if (i > 0) {
                 set_font_math_param(f, i, n);
             }
@@ -1371,6 +1384,8 @@ int font_from_lua(lua_State * L, int f)
     set_font_natural_dir(f, i);
     i = lua_numeric_field_by_index(L,lua_key_index(encodingbytes), 0);
     set_font_encodingbytes(f, (char) i);
+    i = lua_numeric_field_by_index(L,lua_key_index(streamprovider), 0);
+    set_font_streamprovider(f, (char) i);
     i = n_boolean_field(L,lua_key_index(oldmath), 0);
     set_font_oldmath(f, i);
     i = lua_numeric_field_by_index(L,lua_key_index(tounicode), 0);
@@ -1389,9 +1404,9 @@ int font_from_lua(lua_State * L, int f)
         i = FONT_SLANT_MAX;
     set_font_slant(f, i);
 
-    i = lua_numeric_field_by_index(L,lua_key_index(hyphenchar), int_par(default_hyphen_char_code));
+    i = lua_numeric_field_by_index(L,lua_key_index(hyphenchar), default_hyphen_char_par);
     set_hyphen_char(f, i);
-    i = lua_numeric_field_by_index(L,lua_key_index(skewchar), int_par(default_skew_char_code));
+    i = lua_numeric_field_by_index(L,lua_key_index(skewchar), default_skew_char_par);
     set_skew_char(f, i);
     i = n_boolean_field(L, lua_key_index(used), 0);
     set_font_used(f, (char) i);
@@ -1407,6 +1422,10 @@ int font_from_lua(lua_State * L, int f)
     set_font_type(f, i);
     i = n_enum_field(L, lua_key_index(format), unknown_format, font_format_strings);
     set_font_format(f, i);
+    i = n_enum_field(L, lua_key_index(writingmode), unknown_writingmode, font_writingmode_strings);
+    set_font_writingmode(f, i);
+    i = n_enum_field(L, lua_key_index(identity), unknown_identity, font_identity_strings);
+    set_font_identity(f, i);
     i = n_enum_field(L, lua_key_index(embedding), unknown_embedding, font_embedding_strings);
     set_font_embedding(f, i);
     if (font_encodingbytes(f) == 0 && (font_format(f) == opentype_format || font_format(f) == truetype_format)) {
@@ -1966,13 +1985,15 @@ static halfword handle_lig_word(halfword cur)
 @c
 halfword handle_ligaturing(halfword head, halfword tail)
 {
-    halfword save_tail1; /* trick to allow explicit |node==null| tests */
+    halfword save_tail1 = null; /* trick to allow explicit |node==null| tests */
     halfword cur, prev;
 
     if (vlink(head) == null)
         return tail;
-    save_tail1 = vlink(tail);
-    vlink(tail) = null;
+    if (tail != null) {
+        save_tail1 = vlink(tail);
+        vlink(tail) = null;
+    }
 
     /* |if (fix_node_lists)| */
     fix_node_list(head);
@@ -1987,10 +2008,12 @@ halfword handle_ligaturing(halfword head, halfword tail)
         prev = cur;
         cur = vlink(cur);
     }
-    if (prev == null)
+    if (prev == null) {
+        /* hh: looks bad to me */
         prev = tail;
+    }
 
-    if (valid_node(save_tail1)) {
+    if (tail != null) {
         try_couple_nodes(prev, save_tail1);
     }
     return prev;
@@ -2069,6 +2092,8 @@ static void do_handle_kerning(halfword root, halfword init_left, halfword init_r
             if (type(cur) == disc_node) {
                 halfword right = type(vlink(cur)) == glyph_node ? vlink(cur) : null;
                 do_handle_kerning(pre_break(cur), left, null);
+                if (vlink_pre_break(cur) != null)
+                    tlink_pre_break(cur) = tail_of_list(vlink_pre_break(cur));
                 do_handle_kerning(post_break(cur), null, right);
                 if (vlink_post_break(cur) != null)
                     tlink_post_break(cur) = tail_of_list(vlink_post_break(cur));
@@ -2107,6 +2132,7 @@ static void do_handle_kerning(halfword root, halfword init_left, halfword init_r
     }
 }
 
+/*
 halfword handle_kerning(halfword head, halfword tail)
 {
     halfword save_link;
@@ -2120,27 +2146,46 @@ halfword handle_kerning(halfword head, halfword tail)
     }
     return tail;
 }
+*/
+
+halfword handle_kerning(halfword head, halfword tail)
+{
+    halfword save_link = null;
+    if (tail == null) {
+        tlink(head) = null;
+        do_handle_kerning(head, null, null);
+    } else {
+        save_link = vlink(tail);
+        vlink(tail) = null;
+        tlink(head) = tail;
+        do_handle_kerning(head, null, null);
+        tail = tlink(head);
+        if (valid_node(save_link)) {
+            try_couple_nodes(tail, save_link);
+        }
+    }
+    return tail;
+}
 
 @* ligaturing and kerning : lua-interface.
 
 @c
 static halfword run_lua_ligkern_callback(halfword head, halfword tail, int callback_id)
 {
-    lua_State *L = Luas;
     int i;
-    int top = lua_gettop(L);
-    if (!get_callback(L, callback_id)) {
-        lua_pop(L, 2);
+    int top = lua_gettop(Luas);
+    if (!get_callback(Luas, callback_id)) {
+        lua_pop(Luas, 2);
         return tail;
     }
-    nodelist_to_lua(L, head);
-    nodelist_to_lua(L, tail);
-    if ((i=lua_pcall(L, 2, 0, 0)) != 0) {
-        luatex_error(L, (i == LUA_ERRRUN ? 0 : 1));
+    nodelist_to_lua(Luas, head);
+    nodelist_to_lua(Luas, tail);
+    if ((i=lua_pcall(Luas, 2, 0, 0)) != 0) {
+        luatex_error(Luas, (i == LUA_ERRRUN ? 0 : 1));
         return tail;
     }
     fix_node_list(head);
-    lua_settop(L, top);
+    lua_settop(Luas, top);
     return tail;
 }
 

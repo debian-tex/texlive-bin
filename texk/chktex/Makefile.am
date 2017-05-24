@@ -1,6 +1,8 @@
+## $Id$
 ## Makefile.am for the TeX Live subdirectory texk/chktex/
 ##
-## Copyright (C) 2010-2015 Peter Breitenlohner <tex-live@tug.org>
+## Copyright 2017 Karl Berry <tex-live@tug.org>
+## Copyright 2010-2015 Peter Breitenlohner <tex-live@tug.org>
 ## You may freely use, modify and/or distribute this file.
 ##
 #************************************************************************
@@ -8,7 +10,7 @@
 #  Adapted for TeX Live from chktex/Makefile.in
 #
 #************************************************************************
-##
+
 ## We want to re-distribute the whole original chktex source tree.
 ##
 ## With current automake (1.10.2) 'make distcheck' fails when
@@ -17,8 +19,7 @@
 EXTRA_DIST = $(CHKTEX_TREE)
 
 ## Patches applied to the original source tree
-##
-EXTRA_DIST += chktex-PATCHES
+EXTRA_DIST += TLpatches
 
 # Files not to be distributed
 include $(srcdir)/../../am/dist_hook.am
@@ -117,11 +118,10 @@ CLEANFILES = $(nodist_bin_SCRIPTS) ChkTeX.aux ChkTeX.dvi ChkTeX.log ChkTeX.ps st
 @KPATHSEA_RULE@
 
 ## Tests
-##
 TESTS = chktex.test
 chktex.log: chktex$(EXEEXT)
 EXTRA_DIST += $(TESTS)
-TESTS_ENVIRONMENT = CHKTEX_TREE=$(CHKTEX_TREE) TEXMFCNF=$(abs_srcdir)/../kpathsea
+AM_TESTS_ENVIRONMENT  = CHKTEX_TREE=$(CHKTEX_TREE); export CHKTEX_TREE;
+AM_TESTS_ENVIRONMENT += TEXMFCNF=$(abs_srcdir)/../kpathsea; export TEXMFCNF;
 
 CLEANFILES += chktest
-

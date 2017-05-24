@@ -1,6 +1,8 @@
+## $Id$
 ## Makefile.am for the TeX Live top-level
 ##
-## Copyright (C) 2009-2015 Peter Breitenlohner <tex-live@tug.org>
+## Copyright 2016      Karl Berry <tex-live@tug.org>
+## Copyright 2009-2015 Peter Breitenlohner <tex-live@tug.org>
 ## You may freely use, modify and/or distribute this file.
 ##
 ## Ensure aclocal.m4 is up to date
@@ -59,6 +61,12 @@ world: all
 ##
 	@echo "top-level make $@ done."
 
+install-exec-hook:
+	@echo "WARNING: make install does not result in a usable TeX!"
+	@echo "  ! The binaries require the myriad support files."
+	@echo "  ! See http://tug.org/texlive/distro.html"
+	@echo "  ! and http://tug.org/texlive/build.html#deploy, for example."
+
 # Allow for skipping make check if needed.
 if cross
 check_target = skip
@@ -68,7 +76,7 @@ endif !cross
 skip:
 .PHONY: skip
 
-# Directly run texlinks.
+# Convenience targets to run texlinks and reautoconf.
 .PHONY: texlinks
 texlinks:
 	cd $(texlinks_dir) && $(MAKE) $(AM_MAKEFLAGS) run-texlinks

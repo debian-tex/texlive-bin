@@ -1,3 +1,19 @@
+2017-04-24  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* euptex.ch0: Adapt to changes in ptexdir/ptex-base.ch (p\TeX -> \pTeX).
+
+2016-12-15  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* euptexextra.h: Use "issue@texjp.org" as BUG_ADDRESS.
+
+2016-11-14  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* euptrip/texmf.cnf: Increase pool_size.
+
+2016-10-30  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* euptex.defines: Use initstarttime() to improve CreationDate.
+
 2016-02-01  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
 
 	* euptex.defines: Add a new function setinfileenc() for a new primitive

@@ -2,7 +2,7 @@
 ** TpicSpecialHandler.cpp                                               **
 **                                                                      **
 ** This file is part of dvisvgm -- a fast DVI to SVG converter          **
-** Copyright (C) 2005-2016 Martin Gieseking <martin.gieseking@uos.de>   **
+** Copyright (C) 2005-2017 Martin Gieseking <martin.gieseking@uos.de>   **
 **                                                                      **
 ** This program is free software; you can redistribute it and/or        **
 ** modify it under the terms of the GNU General Public License as       **
@@ -18,19 +18,17 @@
 ** along with this program; if not, see <http://www.gnu.org/licenses/>. **
 *************************************************************************/
 
-#define _USE_MATH_DEFINES
 #include <config.h>
-#include <cmath>
 #include <cstring>
 #include <sstream>
-#include "Color.h"
-#include "InputBuffer.h"
-#include "InputReader.h"
-#include "GraphicsPath.h"
-#include "SpecialActions.h"
-#include "SVGTree.h"
-#include "TpicSpecialHandler.h"
-
+#include "Color.hpp"
+#include "InputBuffer.hpp"
+#include "InputReader.hpp"
+#include "GraphicsPath.hpp"
+#include "SpecialActions.hpp"
+#include "SVGTree.hpp"
+#include "TpicSpecialHandler.hpp"
+#include "utility.hpp"
 
 using namespace std;
 
@@ -40,7 +38,7 @@ TpicSpecialHandler::TpicSpecialHandler () {
 }
 
 
-void TpicSpecialHandler::dviEndPage (unsigned pageno) {
+void TpicSpecialHandler::dviEndPage (unsigned pageno, SpecialActions&) {
 	reset();
 }
 
@@ -58,16 +56,16 @@ void TpicSpecialHandler::reset () {
  *  @param[in] ddist dash/dot distance of line in PS point units
  *                   (0:solid line, >0:dashed line, <0:dotted line)
  *  @param[in] actions object providing the actions that can be performed by the SpecialHandler */
-void TpicSpecialHandler::drawLines (bool stroke, bool fill, double ddist, SpecialActions *actions) {
-	if (actions && !_points.empty()) {
+void TpicSpecialHandler::drawLines (bool stroke, bool fill, double ddist, SpecialActions &actions) {
+	if (!_points.empty()) {
 		XMLElementNode *elem=0;
 		if (_points.size() == 1) {
 			const DPair &p = _points.back();
 			elem = new XMLElementNode("circle");
-			elem->addAttribute("cx", p.x()+actions->getX());
-			elem->addAttribute("cy", p.y()+actions->getY());
+			elem->addAttribute("cx", p.x()+actions.getX());
+			elem->addAttribute("cy", p.y()+actions.getY());
 			elem->addAttribute("r", _penwidth/2.0);
-			actions->embed(p, _penwidth/2.0);
+			actions.embed(p, _penwidth/2.0);
 		}
 		else {
 			if (_points.size() == 2 || (!fill && _points.front() != _points.back())) {
@@ -80,19 +78,19 @@ void TpicSpecialHandler::drawLines (bool stroke, bool fill, double ddist, Specia
 					_points.pop_back();
 				if (_fill < 0)
 					_fill = 1;
-				Color color = actions->getColor();
+				Color color = actions.getColor();
 				color *= _fill;
 				elem = new XMLElementNode("polygon");
 				elem->addAttribute("fill", fill ? color.svgColorString() : "none");
 			}
 			ostringstream oss;
-			FORALL(_points, vector<DPair>::iterator, it) {
+			for (auto it=_points.begin(); it != _points.end(); ++it) {
 				if (it != _points.begin())
 					oss << ' ';
-				double x = it->x()+actions->getX();
-				double y = it->y()+actions->getY();
+				double x = it->x()+actions.getX();
+				double y = it->y()+actions.getY();
 				oss << XMLString(x) << ',' << XMLString(y);
-				actions->embed(DPair(x, y));
+				actions.embed(DPair(x, y));
 			}
 			elem->addAttribute("points", oss.str());
 			if (stroke) {   // draw outline?
@@ -104,7 +102,7 @@ void TpicSpecialHandler::drawLines (bool stroke, bool fill, double ddist, Specia
 			elem->addAttribute("stroke-dasharray", XMLString(ddist));
 		else if (ddist < 0)
 			elem->addAttribute("stroke-dasharray", XMLString(_penwidth) + ' ' + XMLString(-ddist));
-		actions->appendToPage(elem);
+		actions.appendToPage(elem);
 	}
 	reset();
 }
@@ -118,36 +116,36 @@ void TpicSpecialHandler::drawLines (bool stroke, bool fill, double ddist, Specia
  *  of the dashes and the gaps inbetween.
  *  @param[in] ddist length of dashes and gaps
  *  @param[in] actions object providing the actions that can be performed by the SpecialHandler */
-void TpicSpecialHandler::drawSplines (double ddist, SpecialActions *actions) {
-	if (!actions || _points.empty())
+void TpicSpecialHandler::drawSplines (double ddist, SpecialActions &actions) {
+	if (_points.empty())
 		return;
 	const size_t size = _points.size();
 	if (size < 3)
 		drawLines(true, false, ddist, actions);
 	else {
-		DPair p(actions->getX(), actions->getY());
+		DPair p(actions.getX(), actions.getY());
 		GraphicsPath<double> path;
 		path.moveto(p+_points[0]);
 		DPair mid = p+_points[0]+(_points[1]-_points[0])/2.0;
 		path.lineto(mid);
-		actions->embed(p+_points[0]);
+		actions.embed(p+_points[0]);
 		for (size_t i=1; i < size-1; i++) {
 			const DPair p0 = p+_points[i-1];
 			const DPair p1 = p+_points[i];
 			const DPair p2 = p+_points[i+1];
 			mid = p1+(p2-p1)/2.0;
 			path.conicto(p1, mid);
-			actions->embed(mid);
-			actions->embed((p0+p1*6.0+p2)/8.0, _penwidth);
+			actions.embed(mid);
+			actions.embed((p0+p1*6.0+p2)/8.0, _penwidth);
 		}
 		if (_points[0] == _points[size-1])  // closed path?
 			path.closepath();
 		else {
 			path.lineto(p+_points[size-1]);
-			actions->embed(p+_points[size-1]);
+			actions.embed(p+_points[size-1]);
 		}
 
-		Color color = actions->getColor();
+		Color color = actions.getColor();
 		color *= _fill;
 		XMLElementNode *pathElem = new XMLElementNode("path");
 		if (_fill >= 0) {
@@ -161,13 +159,13 @@ void TpicSpecialHandler::drawSplines (double ddist, SpecialActions *actions) {
 		ostringstream oss;
 		path.writeSVG(oss, SVGTree::RELATIVE_PATH_CMDS);
 		pathElem->addAttribute("d", oss.str());
-		pathElem->addAttribute("stroke", actions->getColor().svgColorString());
+		pathElem->addAttribute("stroke", actions.getColor().svgColorString());
 		pathElem->addAttribute("stroke-width", XMLString(_penwidth));
 		if (ddist > 0)
 			pathElem->addAttribute("stroke-dasharray", XMLString(ddist));
 		else if (ddist < 0)
 			pathElem->addAttribute("stroke-dasharray", XMLString(_penwidth) + ' ' + XMLString(-ddist));
-		actions->appendToPage(pathElem);
+		actions.appendToPage(pathElem);
 	}
 	reset();
 }
@@ -181,79 +179,78 @@ void TpicSpecialHandler::drawSplines (double ddist, SpecialActions *actions) {
  *  @param[in] angle1 starting angle (clockwise) relative to x-axis
  *  @param[in] angle2 ending angle (clockwise) relative to x-axis
  *  @param[in] actions object providing the actions that can be performed by the SpecialHandler */
-void TpicSpecialHandler::drawArc (double cx, double cy, double rx, double ry, double angle1, double angle2, SpecialActions *actions) {
-	if (actions) {
-		const double PI2 = 2*M_PI;
-		angle1 *= -1;
-		angle2 *= -1;
-		if (fabs(angle1) > PI2) {
-			int n = (int)(angle1/PI2);
-			angle1 = angle1 - n*PI2;
-			angle2 = angle2 - n*PI2;
-		}
-
-		double x = cx + actions->getX();
-		double y = cy + actions->getY();
-		XMLElementNode *elem=0;
-		if (fabs(angle1-angle2) >= PI2) {  // closed ellipse?
-			elem = new XMLElementNode("ellipse");
-			elem->addAttribute("cx", XMLString(x));
-			elem->addAttribute("cy", XMLString(y));
-			elem->addAttribute("rx", XMLString(rx));
-			elem->addAttribute("ry", XMLString(ry));
-		}
-		else {
-			if (angle1 < 0)
-				angle1 = PI2+angle1;
-			if (angle2 < 0)
-				angle2 = PI2+angle2;
-			elem = new XMLElementNode("path");
-			int large_arg = fabs(angle1-angle2) > M_PI ? 0 : 1;
-			int sweep_flag = angle1 > angle2 ? 0 : 1;
-			if (angle1 > angle2) {
-				large_arg = 1-large_arg;
-				sweep_flag = 1-sweep_flag;
-			}
-			ostringstream oss;
-			oss << 'M' << XMLString(x+rx*cos(angle1)) << ',' << XMLString(y+ry*sin(-angle1))
-				 << 'A' << XMLString(rx) << ',' << XMLString(ry)
-				 << " 0 "
-				 << large_arg << ' ' << sweep_flag << ' '
-				 << XMLString(x+rx*cos(angle2)) << ',' << XMLString(y-ry*sin(angle2));
-			if (_fill >= 0)
-				oss << 'Z';
-			elem->addAttribute("d", oss.str());
-		}
-		elem->addAttribute("stroke-width", _penwidth);
-		elem->addAttribute("stroke", actions->getColor().svgColorString());
-		elem->addAttribute("stroke-linecap", "round");
-		elem->addAttribute("fill", "none");
-		if (_fill >= 0) {
-			Color color=actions->getColor();
-			color *= _fill;
-			elem->addAttribute("fill", color.svgColorString());
-		}
-		else
-			elem->addAttribute("fill", "none");
-		actions->appendToPage(elem);
-		actions->embed(BoundingBox(cx-rx, cy-ry, cx+rx, cy+ry));
+void TpicSpecialHandler::drawArc (double cx, double cy, double rx, double ry, double angle1, double angle2, SpecialActions &actions) {
+	angle1 *= -1;
+	angle2 *= -1;
+	if (fabs(angle1) > math::TWO_PI) {
+		int n = (int)(angle1/math::TWO_PI);
+		angle1 = angle1 - n*math::TWO_PI;
+		angle2 = angle2 - n*math::TWO_PI;
 	}
+
+	double x = cx + actions.getX();
+	double y = cy + actions.getY();
+	XMLElementNode *elem=0;
+	if (fabs(angle1-angle2) >= math::TWO_PI) {  // closed ellipse?
+		elem = new XMLElementNode("ellipse");
+		elem->addAttribute("cx", XMLString(x));
+		elem->addAttribute("cy", XMLString(y));
+		elem->addAttribute("rx", XMLString(rx));
+		elem->addAttribute("ry", XMLString(ry));
+	}
+	else {
+		if (angle1 < 0)
+			angle1 = math::TWO_PI+angle1;
+		if (angle2 < 0)
+			angle2 = math::TWO_PI+angle2;
+		elem = new XMLElementNode("path");
+		int large_arg = fabs(angle1-angle2) > math::PI ? 0 : 1;
+		int sweep_flag = angle1 > angle2 ? 0 : 1;
+		if (angle1 > angle2) {
+			large_arg = 1-large_arg;
+			sweep_flag = 1-sweep_flag;
+		}
+		ostringstream oss;
+		oss << 'M' << XMLString(x+rx*cos(angle1)) << ',' << XMLString(y+ry*sin(-angle1))
+			 << 'A' << XMLString(rx) << ',' << XMLString(ry)
+			 << " 0 "
+			 << large_arg << ' ' << sweep_flag << ' '
+			 << XMLString(x+rx*cos(angle2)) << ',' << XMLString(y-ry*sin(angle2));
+		if (_fill >= 0)
+			oss << 'Z';
+		elem->addAttribute("d", oss.str());
+	}
+	elem->addAttribute("stroke-width", _penwidth);
+	elem->addAttribute("stroke", actions.getColor().svgColorString());
+	elem->addAttribute("stroke-linecap", "round");
+	elem->addAttribute("fill", "none");
+	if (_fill >= 0) {
+		Color color=actions.getColor();
+		color *= _fill;
+		elem->addAttribute("fill", color.svgColorString());
+	}
+	else
+		elem->addAttribute("fill", "none");
+	actions.appendToPage(elem);
+	actions.embed(BoundingBox(cx-rx, cy-ry, cx+rx, cy+ry));
 	reset();
 }
 
 
-#define cmd_id(c1,c2) ((c1 << 8) | c2)
+static constexpr int cmd_id (int a, int b) {
+	return (a << 8) | b;
+};
 
-bool TpicSpecialHandler::process (const char *prefix, istream &is, SpecialActions *actions) {
+bool TpicSpecialHandler::process (const char *prefix, istream &is, SpecialActions &actions) {
 	if (!prefix || strlen(prefix) != 2)
 		return false;
 
 	const double mi2bp=0.072; // factor for milli-inch to PS points
 	StreamInputBuffer ib(is);
-	BufferInputReader in(ib);
+	BufferInputReader ir(ib);
 	switch (cmd_id(prefix[0], prefix[1])) {
 		case cmd_id('p','n'): // set pen width in milli-inches
-			_penwidth = in.getDouble()*mi2bp;
+			_penwidth = ir.getDouble()*mi2bp;
 			break;
 		case cmd_id('b','k'): // set fill color to black
 			_fill = 0;
@@ -262,15 +259,15 @@ bool TpicSpecialHandler::process (const char *prefix, istream &is, SpecialAction
 			_fill = 1;
 			break;
 		case cmd_id('s','h'): // set fill color to given gray level
-			in.skipSpace();
-			_fill = in.eof() ? 0.5 : max(0.0, min(1.0, in.getDouble()));
+			ir.skipSpace();
+			_fill = ir.eof() ? 0.5 : max(0.0, min(1.0, ir.getDouble()));
 			break;
 		case cmd_id('t','x'): // set fill pattern
 			break;
 		case cmd_id('p','a'): { // add point to path
-			double x = in.getDouble()*mi2bp;
-			double y = in.getDouble()*mi2bp;
-			_points.push_back(DPair(x,y));
+			double x = ir.getDouble()*mi2bp;
+			double y = ir.getDouble()*mi2bp;
+			_points.emplace_back(DPair(x,y));
 			break;
 		}
 		case cmd_id('f','p'): // draw solid lines through recorded points; close and fill path if fill color was defined
@@ -280,33 +277,33 @@ bool TpicSpecialHandler::process (const char *prefix, istream &is, SpecialAction
 			drawLines(false, true, 0, actions);
 			break;
 		case cmd_id('d','a'): // as fp but draw dashed lines
-			drawLines(true, _fill >= 0, in.getDouble()*72, actions);
+			drawLines(true, _fill >= 0, ir.getDouble()*72, actions);
 			break;
 		case cmd_id('d','t'): // as fp but draw dotted lines
-			drawLines(true, _fill >= 0, -in.getDouble()*72, actions);
+			drawLines(true, _fill >= 0, -ir.getDouble()*72, actions);
 			break;
 		case cmd_id('s','p'): { // draw quadratic splines through recorded points
-			double ddist = in.getDouble();
+			double ddist = ir.getDouble();
 			drawSplines(ddist, actions);
 			break;
 		}
 		case cmd_id('a','r'): { // draw elliptical arc
-			double cx = in.getDouble()*mi2bp;
-			double cy = in.getDouble()*mi2bp;
-			double rx = in.getDouble()*mi2bp;
-			double ry = in.getDouble()*mi2bp;
-			double a1 = in.getDouble();
-			double a2 = in.getDouble();
+			double cx = ir.getDouble()*mi2bp;
+			double cy = ir.getDouble()*mi2bp;
+			double rx = ir.getDouble()*mi2bp;
+			double ry = ir.getDouble()*mi2bp;
+			double a1 = ir.getDouble();
+			double a2 = ir.getDouble();
 			drawArc(cx, cy, rx, ry, a1, a2, actions);
 			break;
 		}
 		case cmd_id('i','a'): { // fill elliptical arc
-			double cx = in.getDouble()*mi2bp;
-			double cy = in.getDouble()*mi2bp;
-			double rx = in.getDouble()*mi2bp;
-			double ry = in.getDouble()*mi2bp;
-			double a1 = in.getDouble();
-			double a2 = in.getDouble();
+			double cx = ir.getDouble()*mi2bp;
+			double cy = ir.getDouble()*mi2bp;
+			double rx = ir.getDouble()*mi2bp;
+			double ry = ir.getDouble()*mi2bp;
+			double a1 = ir.getDouble();
+			double a2 = ir.getDouble();
 			if (_fill < 0)
 				_fill = 1;
 			drawArc(cx, cy, rx, ry, a1, a2, actions);

@@ -3,7 +3,7 @@
 @d banner=='This is pDVItype, Version 3.6-p0.4'
 @y
 @d my_name=='updvitype'
-@d banner=='This is upDVItype, Version 3.6-p0.4-u1.21'
+@d banner=='This is upDVItype, Version 3.6-p0.4-u1.22'
 @z
 
 @x procedure initialize
@@ -32,8 +32,8 @@
 @z
 
 @x
-      usage_help (PDVITYPE_HELP, nil);
+      usage_help (PDVITYPE_HELP, 'issue@@texjp.org');
 @y
-      usage_help (UPDVITYPE_HELP, nil);
+      usage_help (UPDVITYPE_HELP, 'issue@@texjp.org');
 @z
 

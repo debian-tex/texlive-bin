@@ -2218,7 +2218,7 @@ void init_start_time() {
         if (source_date_epoch) {
             errno = 0;
             epoch = strtoull(source_date_epoch, &endptr, 10);
-            if (epoch < 0 || *endptr != '\0' || errno != 0) {
+            if (*endptr != '\0' || errno != 0) {
 FATAL1 ("invalid epoch-seconds-timezone value for environment variable $SOURCE_DATE_EPOCH: %s",
                       source_date_epoch);
             }
@@ -2247,7 +2247,7 @@ get_date_and_time (integer *minutes,  integer *day,
 {
   struct tm *tmptr;
 #ifndef onlyTeX
-  string sde_texprim = getenv ("SOURCE_DATE_EPOCH_TEX_PRIMITIVES");
+  string sde_texprim = getenv ("FORCE_SOURCE_DATE");
   if (sde_texprim && STREQ (sde_texprim, "1")) {
     init_start_time ();
     tmptr = gmtime (&start_time);
@@ -2263,7 +2263,7 @@ get_date_and_time (integer *minutes,  integer *day,
     /* warn if they gave an invalid value, empty (null string) ok.  */
     if (sde_texprim && strlen (sde_texprim) > 0
         && !STREQ (sde_texprim, "0")) {
-WARNING1 ("invalid value (expected 0 or 1) for environment variable $SOURCE_DATE_EPOCH_TEX_PRIMITIVES: %s", 
+WARNING1 ("invalid value (expected 0 or 1) for environment variable $FORCE_SOURCE_DATE: %s", 
           sde_texprim);
     }
 #endif /* not onlyTeX */
@@ -2305,7 +2305,7 @@ WARNING1 ("invalid value (expected 0 or 1) for environment variable $SOURCE_DATE
   }
 }
 
-#if defined(pdfTeX)
+#if defined(pdfTeX) || defined(epTeX) || defined(eupTeX)
 /*
  Getting a high resolution time.
  */
@@ -2818,7 +2818,10 @@ gettexstring (strnumber s)
   unsigned bytesToWrite = 0;
   poolpointer len, i, j;
   string name;
-  len = strstart[s + 1 - 65536L] - strstart[s - 65536L];
+  if (s >= 65536L)
+    len = strstart[s + 1 - 65536L] - strstart[s - 65536L];
+  else
+    len = 0;
   name = xmalloc(len * 3 + 1); /* max UTF16->UTF8 expansion
                                   (code units, not bytes) */
   for (i = 0, j = 0; i < len; i++) {

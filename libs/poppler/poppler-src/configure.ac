@@ -1,5 +1,5 @@
 m4_define([poppler_version_major],[0])
-m4_define([poppler_version_minor],[42])
+m4_define([poppler_version_minor],[52])
 m4_define([poppler_version_micro],[0])
 m4_define([poppler_version],[poppler_version_major.poppler_version_minor.poppler_version_micro])
 
@@ -178,14 +178,10 @@ AC_LANG_CPLUSPLUS
 AC_CHECK_DECL(gettimeofday, [AC_CHECK_FUNC(gettimeofday, AC_DEFINE(HAVE_GETTIMEOFDAY, 1, [Defines if gettimeofday is available on your system]))],[],[#include <sys/time.h>])
 AC_CHECK_FUNC(localtime_r, AC_DEFINE(HAVE_LOCALTIME_R, 1, [Defines if localtime_r is available on your system]))
 AC_CHECK_FUNC(gmtime_r, AC_DEFINE(HAVE_GMTIME_R, 1, [Defines if gmtime_r is available on your system]))
+AC_CHECK_FUNC(timegm, AC_DEFINE(HAVE_TIMEGM, 1, [Defines if timegm is available on your system]))
 AC_CHECK_FUNC(rand_r, AC_DEFINE(HAVE_RAND_R, 1, [Defines if rand_r is available on your system]))
 
 dnl ##### Check for extra libraries needed by X.  (LynxOS needs this.)
-AC_CHECK_FUNC(gethostbyname)
-if test $ac_cv_func_gethostbyname = no; then
-  AC_CHECK_LIB(bsd, gethostbyname, X_EXTRA_LIBS="$X_EXTRA_LIBS -lbsd")
-fi
-
 AC_CHECK_FUNC(nanosleep,,)
 dnl try in librt if not found in current LIBS
 if test x$ac_cv_func_nanosleep = xno
@@ -211,24 +207,25 @@ AC_ARG_ENABLE(libopenjpeg,
 
 openjpeg_header=yes
 
-dnl test for libopenjpeg1
-if test x$enable_libopenjpeg = xopenjpeg1 || test x$enable_libopenjpeg = xauto; then
-  PKG_CHECK_MODULES(LIBOPENJPEG, libopenjpeg,
-    [openjpeg1="yes"],
-    [AC_CHECK_LIB([openjpeg], [opj_cio_open],
-      [openjpeg1="yes"
-       LIBOPENJPEG_LIBS="-lopenjpeg"],[openjpeg_header=no])
-     AC_CHECK_HEADERS([openjpeg.h],,
-		      [openjpeg_header="no"])])
+dnl test for libopenjpeg2
+if test x$enable_libopenjpeg = xopenjpeg2 || test x$enable_libopenjpeg = xauto; then
+  PKG_CHECK_MODULES(LIBOPENJPEG, libopenjp2,
+                    [openjpeg2=yes],[openjpeg2=no])
 fi
 
-dnl test for libopenjpeg2
-if test x$openjpeg1 = xno; then
-  if test x$enable_libopenjpeg = xopenjpeg2 || test x$enable_libopenjpeg = xauto; then
-    PKG_CHECK_MODULES(LIBOPENJPEG, libopenjp2,
-                      [openjpeg2=yes],[openjpeg2=no])
+dnl test for libopenjpeg1
+if test x$openjpeg2 = xno; then
+  if test x$enable_libopenjpeg = xopenjpeg1 || test x$enable_libopenjpeg = xauto; then
+    PKG_CHECK_MODULES(LIBOPENJPEG, libopenjpeg,
+      [openjpeg1="yes"],
+      [AC_CHECK_LIB([openjpeg], [opj_cio_open],
+        [openjpeg1="yes"
+         LIBOPENJPEG_LIBS="-lopenjpeg"],[openjpeg_header=no])
+       AC_CHECK_HEADERS([openjpeg.h],,
+		        [openjpeg_header="no"])])
   fi
 fi
+
 
 if test x$enable_libopenjpeg = xopenjpeg1 && test x$openjpeg1 = xno; then
   if test x$openjpeg_header = xno; then
@@ -266,7 +263,7 @@ fi
 
 dnl Test for NSS
 AC_ARG_ENABLE(libnss,
-        AC_HELP_STRING([--disable-nss],
+        AC_HELP_STRING([--disable-libnss],
                        [Do not build against libnss3.]),
               enable_libnss=$enableval,
               enable_libnss="try")
@@ -643,7 +640,7 @@ if test x$enable_cairo_output = xyes; then
   POPPLER_GLIB_DISABLE_DEPRECATED=""
   POPPLER_GLIB_DISABLE_SINGLE_INCLUDES=""
 
-  GLIB_REQUIRED=2.18
+  GLIB_REQUIRED=2.41
   AC_SUBST(GLIB_REQUIRED)
   AC_ARG_ENABLE(poppler-glib,
 	        AC_HELP_STRING([--disable-poppler-glib],
@@ -776,20 +773,20 @@ if test x$enable_poppler_qt5 = xyes; then
   AC_CHECK_TOOL(MOCQT5, moc)
   AC_MSG_CHECKING([for Qt5 moc])
   mocversion=`$MOCQT5 -v 2>&1`
-  mocversiongrep=`echo $mocversion | grep "Qt 5\|moc 5"`
+  mocversiongrep=`echo $mocversion | grep -E "Qt 5|moc 5"`
   if test x"$mocversiongrep" != x"$mocversion"; then
     AC_MSG_RESULT([no])
     # moc was not the qt5 one, try with moc-qt5
     AC_CHECK_TOOL(MOCQT52, moc-qt5)
     AC_MSG_CHECKING([for Qt5 moc-qt5])
     mocversion=`$MOCQT52 -v 2>&1`
-    mocversiongrep=`echo $mocversion | grep "Qt 5\|moc-qt5 5\|moc 5"`
+    mocversiongrep=`echo $mocversion | grep -E "Qt 5|moc-qt5 5|moc 5"`
     if test x"$mocversiongrep" != x"$mocversion"; then
       AC_CHECK_TOOL(QTCHOOSER, qtchooser)
       AC_MSG_CHECKING([for qtchooser])
       qt5tooldir=`QT_SELECT=qt5 qtchooser -print-env | grep QTTOOLDIR | cut -d '=' -f 2 | cut -d \" -f 2`
       mocversion=`$qt5tooldir/moc -v 2>&1`
-      mocversiongrep=`echo $mocversion | grep "Qt 5\|moc 5"`
+      mocversiongrep=`echo $mocversion | grep -E "Qt 5|moc 5"`
       if test x"$mocversiongrep" != x"$mocversion"; then
         # no valid moc found
         enable_poppler_qt5=no;
@@ -961,8 +958,8 @@ case "$enable_compile_warnings" in
 esac
 
 case "$host_os" in
-  mingw*)
-    # mingw prints "warning: -fPIC ignored for target (all code is position independent)"
+  mingw*|cygwin*)
+    # mingw and cygwin print "warning: -fPIC ignored for target (all code is position independent)"
     # for every file
     ;;
   *)
@@ -1089,5 +1086,5 @@ if test x$enable_zlib_uncompress != xno; then
 fi
 
 if test x$enable_libopenjpeg != xyes; then
-	echo "  Warning: Using libopenjpeg is recommended. The internal JPX decoder is unmaintained."
+	echo "  Warning: Using libopenjpeg2 is recommended. The internal JPX decoder is unmaintained."
 fi

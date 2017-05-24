@@ -1,15 +1,15 @@
+## $Id$
 ## Makefile.am for the TeX Live subdirectory texk/musixtnt/
 ##
-## Copyright (C) 2015 Peter Breitenlohner <tex-live@tug.org>
+## Copyright 2017 Karl Berry <tex-live@tug.org>
+## Copyright 2015 Peter Breitenlohner <tex-live@tug.org>
 ## You may freely use, modify and/or distribute this file.
-##
+
 ## We want to re-distribute the whole musixtnt source tree.
-##
 EXTRA_DIST = $(MUSIXTNT_TREE)
 
 ## Changes applied to the original source tree
-##
-EXTRA_DIST += musixtnt-PATCHES
+EXTRA_DIST += TLpatches
 
 # Files not to be distributed
 include $(srcdir)/../../am/dist_hook.am
@@ -35,10 +35,10 @@ dist_man_MANS = \
 @KPATHSEA_RULE@
 
 ## Tests
-##
-TESTS_ENVIRONMENT = testsrc="$(srcdir)/$(MUSIXTNT_TREE)/tests"
+AM_TESTS_ENVIRONMENT = testsrc="$(srcdir)/$(MUSIXTNT_TREE)/tests"; export testsrc;
+#
 TESTS = $(MUSIXTNT_TREE)/msxlint.test
 $(MUSIXTNT_TREE)/msxlint.log: msxlint$(EXEEXT)
+
 DISTCLEANFILES = linttest.*
 NEVER_DIST += $(TESTS:.test=.log) $(TESTS:.test=.trs)
-

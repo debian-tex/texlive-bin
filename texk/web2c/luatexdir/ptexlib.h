@@ -111,7 +111,7 @@ extern char **suffixlist;       /* in luainit.w */
         *p = 0;                                        \
 } while (0)
 
-#  define skip(p, c)   if (*p == c)  p++
+#  define skip_char(p, c)   if (*p == c)  p++
 
 #  define alloc_array(T, n, s) do {					\
 	if (T##_array == NULL) {					\
@@ -291,7 +291,7 @@ void vf_out_image(PDF pdf, unsigned i);
 /* lua/ltexiolib.c */
 void flush_loggable_info(void);
 
-/* lua/luastuff.w and lua/luajitstuff.w */
+/* lua/luastuff.w  */
 void luafunctioncall(int slot);
 
 /* lua/luastuff.c */
@@ -372,5 +372,8 @@ extern void set_charinfo_vert_variants(charinfo * ci, extinfo * ext);
 extern extinfo *copy_variants(extinfo * o);
 
 extern int program_name_set;    /* in lkpselib.c */
+
+extern int kpse_init; /* in luainit.w */
+extern int kpse_available(const char * m); /* in texfileio.w */
 
 #endif                          /* PTEXLIB_H */

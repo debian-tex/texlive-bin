@@ -1,3 +1,50 @@
+2017-04-24  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* ptex-base.ch: p\TeX -> \pTeX.
+
+2017-04-09  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* ptex-base.ch: Fix a bug in single-letter control sequence
+	when \endlinechar=-1.
+	* tests/endlinechar.tex: Added.
+
+2017-04-06  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* ptex-base.ch: Fix a bug that the postbreakpenalty sometimes reappears
+	even when it was removed by \unpenalty.
+	* tests/postpena.tex: Added.
+
+2017-03-12  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* ptex-base.ch: Fix a typo pointed out at
+	https://github.com/clerkma/ptex-ng/issues/19.
+
+2017-02-05  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+
+	* ppltotf.ch: Expand the limit of glue/kern and kern tables.
+
+2016-12-16  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* pbibtex.ch, pdvitype.ch, ppltotf.ch, ptftopl.ch:
+	Use "issue@texjp.org" as bug_email in usagehelp().
+
+2016-12-15  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* ptexextra.h: Use "issue@texjp.org" as BUG_ADDRESS.
+
+2016-09-12  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* ptex-base.ch: New primitive \ifmbox to realize better box in math mode.
+
+2016-09-06  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* ptex-base.ch: Allow only 8bit arguments for \catcode etc.
+
+2016-06-06  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* ptex-base.ch: Fix a bug in check_box().
+	ptex_version.h: pTeX version p3.7.1.
+
 2016-03-04  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
 
 	* ptex-base.ch: Add new primitives \textbaselineshiftfactor (=1000),

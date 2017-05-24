@@ -1,6 +1,6 @@
 /* This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
 
-    Copyright (C) 2002-2016 by Jin-Hwan Cho and Shunsaku Hirata,
+    Copyright (C) 2002-2017 by Jin-Hwan Cho and Shunsaku Hirata,
     the dvipdfmx project team.
 
     Copyright (C) 2012-2015 by Khaled Hosny <khaledhosny@eglug.org>
@@ -942,7 +942,11 @@ dvi_locate_font (const char *tfm_name, spt_t ptsize)
   return  cur_id;
 }
 
+#if defined(LIBDPX)
+int
+#else
 static int
+#endif /* LIBDPX */
 dvi_locate_native_font (const char *filename, uint32_t index,
                         spt_t ptsize, int layout_dir, int extend, int slant, int embolden)
 {
@@ -1302,10 +1306,10 @@ dvi_rule (int32_t width, int32_t height)
 }
 
 void
-dvi_dir (unsigned char dir)
+dvi_dirchg (unsigned char dir)
 {
   if (verbose)
-    fprintf(stderr, "  > dvi_dir %d\n", dir);
+    fprintf(stderr, "  > dvi_dirchg %d\n", dir);
   dvi_state.d = dir;
   pdf_dev_set_dirmode(dvi_state.d); /* 0: horizontal, 1,3: vertical */
 }
@@ -2153,7 +2157,11 @@ read_length (double *vp, double mag, const char **pp, const char *endptr)
 #define K_UNIT__CM  2
 #define K_UNIT__MM  3
 #define K_UNIT__BP  4
-    "pt", "in", "cm", "mm", "bp",
+#define K_UNIT__PC  5
+#define K_UNIT__DD  6
+#define K_UNIT__CC  7
+#define K_UNIT__SP  8
+    "pt", "in", "cm", "mm", "bp", "pc", "dd", "cc", "sp",
      NULL
   };
   int     k, error = 0;
@@ -2189,6 +2197,10 @@ read_length (double *vp, double mag, const char **pp, const char *endptr)
       case K_UNIT__CM: u *= 72.0 / 2.54 ; break;
       case K_UNIT__MM: u *= 72.0 / 25.4 ; break;
       case K_UNIT__BP: u *= 1.0 ; break;
+      case K_UNIT__PC: u *= 12.0 * 72.0 / 72.27 ; break;
+      case K_UNIT__DD: u *= 1238.0 / 1157.0 * 72.0 / 72.27 ; break;
+      case K_UNIT__CC: u *= 12.0 * 1238.0 / 1157.0 * 72.0 / 72.27 ; break;
+      case K_UNIT__SP: u *= 72.0 / (72.27 * 65536) ; break;
       default:
         WARN("Unknown unit of measure: %s", q);
         error = -1;
@@ -2306,10 +2318,11 @@ scan_special (double *wd, double *ht, double *xo, double *yo, int *lm,
           p++; skip_white(&p, endptr);
         }
         error = read_length(&tmp1, 1.0, &p, endptr);
-        if (!error)
+        if (!error) {
           *wd = tmp;
           *ht = tmp1;
-        skip_white(&p, endptr);
+          skip_white(&p, endptr);
+        }
       }
       if (!error && qchr) { /* Check if properly quoted */
         if (p >= endptr || *p != qchr)
@@ -2528,3 +2541,6 @@ dvi_scan_specials (int page_no,
 
   return;
 }
+#if defined(LIBDPX)
+#include "dvi_ng.c"
+#endif /* LIBDPX */

@@ -2,7 +2,7 @@
 ** ColorSpecialHandler.cpp                                              **
 **                                                                      **
 ** This file is part of dvisvgm -- a fast DVI to SVG converter          **
-** Copyright (C) 2005-2016 Martin Gieseking <martin.gieseking@uos.de>   **
+** Copyright (C) 2005-2017 Martin Gieseking <martin.gieseking@uos.de>   **
 **                                                                      **
 ** This program is free software; you can redistribute it and/or        **
 ** modify it under the terms of the GNU General Public License as       **
@@ -22,8 +22,8 @@
 #include <cstring>
 #include <sstream>
 #include <vector>
-#include "ColorSpecialHandler.h"
-#include "SpecialActions.h"
+#include "ColorSpecialHandler.hpp"
+#include "SpecialActions.hpp"
 
 using namespace std;
 
@@ -92,7 +92,7 @@ Color ColorSpecialHandler::readColor (istream &is) {
 }
 
 
-bool ColorSpecialHandler::process (const char*, istream &is, SpecialActions *actions) {
+bool ColorSpecialHandler::process (const char *, istream &is, SpecialActions &actions) {
 	string cmd;
 	is >> cmd;
 	if (cmd == "push")               // color push <model> <params>
@@ -106,12 +106,10 @@ bool ColorSpecialHandler::process (const char*, istream &is, SpecialActions *act
 			_colorStack.pop();
 		_colorStack.push(readColor(cmd, is));
 	}
-	if (actions) {
-		if (_colorStack.empty())
-			actions->setColor(Color::BLACK);
-		else
-			actions->setColor(_colorStack.top());
-	}
+	if (_colorStack.empty())
+		actions.setColor(Color::BLACK);
+	else
+		actions.setColor(_colorStack.top());
 	return true;
 }
 

@@ -27,8 +27,8 @@
 #  define PROCSET_IMAGE_C (1 << 3)
 #  define PROCSET_IMAGE_I (1 << 4)
 
-#  define inf_pdf_mem_size    10000 /* min size of the |mem| array */
-#  define sup_pdf_mem_size 10000000 /* max size of the |mem| array */
+#  define inf_pdf_mem_size     10000 /* min size of the |mem| array */
+#  define sup_pdf_mem_size 100000000 /* max size of the |mem| array */
 
 extern PDF static_pdf;
 
@@ -43,10 +43,10 @@ be the first written bytes.
 
 */
 
-#  define inf_pdfout_buf_size   16384  /* initial value of |pdf->buf| size */
-#  define sup_pdfout_buf_size   16384  /* arbitrary upper hard limit of |pdf->buf| size */
-#  define inf_objstm_buf_size       1  /* initial value of |os->buf[OBJSTM_BUF]| size */
-#  define sup_objstm_buf_size 5000000  /* arbitrary upper hard limit of |os->buf[OBJSTM_BUF]| size */
+#  define inf_pdfout_buf_size     16384 /* initial value of |pdf->buf| size */
+#  define sup_pdfout_buf_size   8*16384 /* arbitrary upper hard limit of |pdf->buf| size */
+#  define inf_objstm_buf_size         1 /* initial value of |os->buf[OBJSTM_BUF]| size */
+#  define sup_objstm_buf_size   5000000 /* arbitrary upper hard limit of |os->buf[OBJSTM_BUF]| size */
 
 #  define PDF_OS_MAX_OBJS         100  /* maximum number of objects in object stream */
 
@@ -188,7 +188,7 @@ extern scaled round_xn_over_d(scaled x, int n, unsigned int d);
 
 extern char *convertStringToPDFString(const char *in, int len);
 
-extern void init_start_time(PDF);
+extern void initialize_start_time(PDF);
 extern char *getcreationdate(PDF);
 
 extern void check_o_mode(PDF pdf, const char *s, int o_mode, boolean errorflag);

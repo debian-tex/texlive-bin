@@ -19,7 +19,7 @@ char *styfile,*idxfile[256],*indfile,*dicfile,*logfile;
 #endif
 KpathseaSupportInfo kp_ist,kp_dict;
 
-#define VERSION "version 0.50"
+#define VERSION "version 0.51"
 
 int main(int argc, char **argv)
 {
@@ -156,7 +156,7 @@ int main(int argc, char **argv)
 				u_getVersion(icuVersion);
 				u_versionToString(icuVersion, icu_version);
 				fprintf(stderr,"upmendex - index processor, %s (%s).\n",VERSION, TL_VERSION);
-				fprintf(stderr," Copyright 2009 ASCII MEDIA WORKS, 2015-2016 TANAKA Takuji\n");
+				fprintf(stderr," Copyright 2009 ASCII MEDIA WORKS, 2015-2017 TANAKA Takuji\n");
 				fprintf(stderr," using ICU version %s\n",icu_version);
 				fprintf(stderr,"usage:\n");
 				fprintf(stderr,"%% upmendex [-ilqrcgf] [-s sty] [-d dic] [-o ind] [-t log] [-p no] [--] [idx0 idx1 ...]\n");
@@ -199,13 +199,8 @@ int main(int argc, char **argv)
 		}
 	}
 
-/*   init hangul tumunja table   */
-	u_strcpy(tumunja,GANADA);
-
-	if (styfile!=NULL) styread(styfile);
-
 	if (!indfile &&(idxcount-fsti>0)) {
-		indfile=xmalloc(strlen(idxfile[0]+6));
+		indfile=xmalloc(strlen(idxfile[0])+6);
 		for (i=strlen(idxfile[0]);i>=0;i--) {
 			if (idxfile[0][i]=='.') {
 				strncpy(indfile,idxfile[0],i);
@@ -217,7 +212,7 @@ int main(int argc, char **argv)
 	}
 
 	if (!logfile && (idxcount-fsti > 0)) {
-		logfile=xmalloc(strlen(idxfile[0]+6));
+		logfile=xmalloc(strlen(idxfile[0])+6);
 		for (i=strlen(idxfile[0]);i>=0;i--) {
 			if (idxfile[0][i]=='.') {
 				strncpy(logfile,idxfile[0],i);
@@ -233,6 +228,11 @@ int main(int argc, char **argv)
 		efp=stderr;
 		logfile=xstrdup("stderr");
 	}
+
+/*   init hangul tumunja table   */
+	u_strcpy(tumunja,GANADA);
+	if (styfile!=NULL) styread(styfile);
+
 	set_icu_attributes();
 
 	if (strcmp(argv[0],"makeindex")==0) {

@@ -2,7 +2,7 @@
 ** PdfSpecialHandler.cpp                                                **
 **                                                                      **
 ** This file is part of dvisvgm -- a fast DVI to SVG converter          **
-** Copyright (C) 2005-2016 Martin Gieseking <martin.gieseking@uos.de>   **
+** Copyright (C) 2005-2017 Martin Gieseking <martin.gieseking@uos.de>   **
 **                                                                      **
 ** This program is free software; you can redistribute it and/or        **
 ** modify it under the terms of the GNU General Public License as       **
@@ -20,11 +20,11 @@
 
 #include <config.h>
 #include <cstring>
-#include "InputReader.h"
-#include "MapLine.h"
-#include "PdfSpecialHandler.h"
-#include "FontMap.h"
-#include "Message.h"
+#include "InputReader.hpp"
+#include "MapLine.hpp"
+#include "PdfSpecialHandler.hpp"
+#include "FontMap.hpp"
+#include "Message.hpp"
 
 using namespace std;
 
@@ -34,9 +34,7 @@ PdfSpecialHandler::PdfSpecialHandler () : _maplineProcessed(false)
 }
 
 
-bool PdfSpecialHandler::process (const char *prefix, istream &is, SpecialActions *actions) {
-	if (!actions)
-		return true;
+bool PdfSpecialHandler::process (const char *prefix, istream &is, SpecialActions &actions) {
 	StreamInputReader ir(is);
 	ir.skipSpace();
 	string cmd = ir.getWord();

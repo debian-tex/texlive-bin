@@ -1,6 +1,6 @@
 % luainit.w
 %
-% Copyright 2006-2016 Taco Hoekwater <taco@@luatex.org>
+% Copyright 2006-2017 Taco Hoekwater <taco@@luatex.org>
 %
 % This file is part of LuaTeX.
 %
@@ -24,6 +24,10 @@
 #include <kpathsea/c-stat.h>
 
 #include "lua/luatex-api.h"
+
+#include <locale.h>
+
+extern int load_luatex_core_lua (lua_State * L);
 
 /* internalized strings: see luatex-api.h */
 set_make_keys;
@@ -87,7 +91,8 @@ const_string LUATEX_IHELP[] = {
     "   --safer                       disable easily exploitable lua commands",
     "   --[no-]shell-escape           disable/enable system commands",
     "   --shell-restricted            restrict system commands to a list of commands given in texmf.cnf",
-    "   --synctex=NUMBER              enable synctex",
+    "   --synctex=NUMBER              enable synctex (see man synctex)",
+    "   --utc                         init time to UTC",
     "   --version                     display version and exit",
     "",
     "Alternate behaviour models can be obtained by special switches",
@@ -103,6 +108,13 @@ const_string LUATEX_IHELP[] = {
     "See the reference manual for more information about the startup process.",
     NULL
 };
+
+@ Later we will put on environment |LC_CTYPE|, |LC_COLLATE| and
+|LC_NUMERIC| set to |C|, so we need a place where to store the old values.
+@c
+const char *lc_ctype;
+const char *lc_collate;
+const char *lc_numeric;
 
 /*
     "   --8bit                        ignored, input is assumed to be in UTF-8 encoding",
@@ -140,7 +152,7 @@ static char *ex_selfdir(char *argv0)
         FATAL1("This path points to an invalid file : %s\n", short_path);
     }
 #endif /* __MINGW32__ */
-   return xdirname(path);
+    return xdirname(path);
 #else /* WIN32 */
     return kpse_selfdir(argv0);
 #endif
@@ -166,6 +178,10 @@ static void prepare_cmdline(lua_State * L, char **av, int ac, int zero_offset)
     return;
 }
 
+
+@ @c
+int kpse_init = -1;
+
 @ @c
 string input_name = NULL;
 
@@ -183,6 +199,7 @@ char *jithash_hashname = NULL;
 
 int safer_option = 0;
 int nosocket_option = 0;
+int utc_option = 0;
 
 @ Reading the options.
 
@@ -212,6 +229,7 @@ static struct option long_options[] = {
     {"jithash", 1, 0, 0},
 #endif
     {"safer", 0, &safer_option, 1},
+    {"utc", 0, &utc_option, 1},
     {"nosocket", 0, &nosocket_option, 1},
     {"help", 0, 0, 0},
     {"ini", 0, &ini_version, 1},
@@ -305,9 +323,9 @@ static void parse_options(int ac, char **av)
         lua_only = 1;
         luainit = 1;
     }
+
     for (;;) {
         g = getopt_long_only(ac, av, "+", long_options, &option_index);
-
         if (g == -1)            /* End of arguments, exit the loop.  */
             break;
         if (g == '?')  {         /* Unknown option.  */
@@ -410,7 +428,7 @@ static void parse_options(int ac, char **av)
                  "the terms of the GNU General Public License, version 2 or (at your option)\n"
                  "any later version. For more information about these matters, see the file\n"
                  "named COPYING and the LuaTeX source.\n\n"
-                 "LuaTeX is Copyright 2016 Taco Hoekwater and the LuaTeX Team.\n");
+                 "LuaTeX is Copyright 2017 Taco Hoekwater and the LuaTeX Team.\n");
             /* *INDENT-ON* */
             uexit(0);
         } else if (ARGUMENT_IS("credits")) {
@@ -468,26 +486,16 @@ static void parse_options(int ac, char **av)
             }
         }
 #ifdef WIN32
-    } else if (sargv[sargc-1] && sargv[sargc-1][0] != '-' &&
+    } else if (sargc > 1 && sargv[sargc-1] && sargv[sargc-1][0] != '-' &&
                sargv[sargc-1][0] != '\\') {
         if (sargv[sargc-1][0] == '&')
             dump_name = xstrdup(sargv[sargc-1] + 1);
         else  {
-            char *p;
             if (sargv[sargc-1][0] == '*')
                 input_name = xstrdup(sargv[sargc-1] + 1);
             else
                 input_name = xstrdup(sargv[sargc-1]);
             sargv[sargc-1] = normalize_quotes(input_name, "argument");
-            /* Same as
-                  input_name = (char *)xbasename(input_name);
-               but without cast const => non-const.  */
-            input_name += xbasename(input_name) - input_name;
-            p = strrchr(input_name, '.');
-            if (p != NULL && strcasecmp(p, ".tex") == 0)
-                *p = '\0';
-            if (!c_job_name)
-                c_job_name = normalize_quotes(input_name, "jobname");
         }
         if (safer_option)      /* --safer implies --nosocket */
             nosocket_option = 1;
@@ -573,6 +581,7 @@ static void init_kpse(void)
 
     kpse_set_program_name(argv[0], user_progname);
     init_shell_escape();        /* set up 'restrictedshell' */
+    init_start_time();
     program_name_set = 1 ;
     if (recorderoption) {
         recorder_enabled = 1;
@@ -592,8 +601,10 @@ static void fix_dumpname(void)
             TEX_format_default = concat(dump_name, DUMP_EXT);
     } else {
         /* For |dump_name| to be NULL is a bug.  */
-        if (!ini_version)
-            normal_error("luatex","no format given");
+        if (!ini_version) {
+          fprintf(stdout, "no format given, quitting\n");
+          exit(1);
+        }
     }
 }
 
@@ -854,12 +865,17 @@ void lua_initialize(int ac, char **av)
 {
     char *given_file = NULL;
     char *banner;
-    int kpse_init;
+    /*int kpse_init;*/
     size_t len;
+    int starttime;
+    int utc;
     static char LC_CTYPE_C[] = "LC_CTYPE=C";
     static char LC_COLLATE_C[] = "LC_COLLATE=C";
     static char LC_NUMERIC_C[] = "LC_NUMERIC=C";
     static char engine_luatex[] = "engine=" my_name;
+    char *old_locale = NULL;
+    char *env_locale = NULL;
+    char *tmp = NULL;
     /* Save to pass along to topenin.  */
     const char *fmt = "This is " MyName ", Version %s" WEB2CVERSION;
     argc = ac;
@@ -908,11 +924,53 @@ void lua_initialize(int ac, char **av)
 
     /* parse commandline */
     parse_options(ac, av);
-    if (lua_only)
+    if (lua_only) {
+        /* Shell has no restrictions. */
         shellenabledp = true;
+        restrictedshell = false;
+        safer_option = 0;
+    }
+    /* Get the current locale (it should be C )          */
+    /* and save LC_CTYPE, LC_COLLATE and LC_NUMERIC.     */
+    /* Later luainterpreter() will consciously use them. */
+    old_locale = xstrdup(setlocale (LC_ALL, NULL));
+    lc_ctype = NULL;
+    lc_collate = NULL;
+    lc_numeric = NULL;
+    if (old_locale) {
+        /* If setlocale fails here, then the state   */
+        /* could be compromised, and we exit.        */
+        env_locale = setlocale (LC_ALL, "");
+	if (!env_locale) {
+	  fprintf(stderr,"Unable to read environment locale:exit now.\n");
+	  exit(1);
+	}
+        tmp = setlocale (LC_CTYPE, NULL);
+	if (tmp) {
+	  lc_ctype = xstrdup(tmp);
+        }
+	tmp = setlocale (LC_COLLATE, NULL);
+	if (tmp){
+	  lc_collate = xstrdup(tmp);
+        }
+	tmp = setlocale (LC_NUMERIC, NULL);
+	if (tmp){
+	  lc_numeric = xstrdup(tmp);
+        }
+	/* Back to the previous locale if possible,   */
+	/* otherwise it's a serious error and we exit:*/
+	/* we can't ensure a 'sane' locale for lua.   */
+	env_locale = setlocale (LC_ALL, old_locale);
+	if (!env_locale) {
+	  fprintf(stderr,"Unable to restore original locale:exit now.\n");
+	  exit(1);
+	}
+        xfree(old_locale);
+    } else {
+       fprintf(stderr,"Unable to store environment locale.\n");
+    }
 
     /* make sure that the locale is 'sane' (for lua) */
-
     putenv(LC_CTYPE_C);
     putenv(LC_COLLATE_C);
     putenv(LC_NUMERIC_C);
@@ -965,6 +1023,10 @@ void lua_initialize(int ac, char **av)
         }
         /* */
         init_tex_table(Luas);
+        if (lua_only) {
+          if (load_luatex_core_lua(Luas))
+            fprintf(stderr, "Error in execution of luatex-core.lua .\n");
+        }
         if (lua_pcall(Luas, 0, 0, 0)) {
             fprintf(stdout, "%s\n", lua_tostring(Luas, -1));
         lua_traceback(Luas);
@@ -997,6 +1059,7 @@ void lua_initialize(int ac, char **av)
         if (kpse_init != 0) {
             luainit = 0;        /* re-enable loading of texmf.cnf values, see luatex.ch */
             init_kpse();
+            kpse_init = 1;
         }
         /* |prohibit_file_trace| (boolean) */
         tracefilenames = 1;
@@ -1032,6 +1095,25 @@ void lua_initialize(int ac, char **av)
             }
         }
 
+        starttime = -1 ;
+        get_lua_number("texconfig", "start_time", &starttime);
+        if (starttime < 0) {
+            /*
+                We provide this one for compatibility reasons and therefore also in
+                uppercase.
+            */
+            get_lua_number("texconfig", "SOURCE_DATE_EPOCH", &starttime);
+        }
+        if (starttime >= 0) {
+            set_start_time(starttime);
+        }
+
+        utc = -1 ;
+        get_lua_boolean("texconfig", "use_utc_time", &utc);
+        if (utc >= 0 && utc <= 1) {
+            utc_option = utc;
+        }
+
         fix_dumpname();
     } else {
         if (luainit) {
@@ -1045,9 +1127,15 @@ void lua_initialize(int ac, char **av)
         } else {
             /* init */
             init_kpse();
+            kpse_init = 1;
             fix_dumpname();
         }
     }
+
+    /* Here we load luatex-core.lua which takes care of some protection on demand. */
+    if (load_luatex_core_lua(Luas))
+      fprintf(stderr, "Error in execution of luatex-core.lua .\n");
+    /* Done. */
 }
 
 @ @c

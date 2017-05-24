@@ -629,11 +629,12 @@ am__DIST_COMMON = $(dist_man1_MANS) $(srcdir)/../../am/dist_hook.am \
 	$(top_srcdir)/../../build-aux/install-sh \
 	$(top_srcdir)/../../build-aux/missing \
 	$(top_srcdir)/../../build-aux/test-driver \
-	../../build-aux/compile ../../build-aux/config.guess \
-	../../build-aux/config.sub ../../build-aux/depcomp \
-	../../build-aux/install-sh ../../build-aux/ltmain.sh \
-	../../build-aux/missing ../../build-aux/texinfo.tex \
-	../../build-aux/ylwrap ChangeLog README
+	../../build-aux/ar-lib ../../build-aux/compile \
+	../../build-aux/config.guess ../../build-aux/config.sub \
+	../../build-aux/depcomp ../../build-aux/install-sh \
+	../../build-aux/ltmain.sh ../../build-aux/missing \
+	../../build-aux/texinfo.tex ../../build-aux/ylwrap ChangeLog \
+	README
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 distdir = $(PACKAGE)-$(VERSION)
 top_distdir = $(distdir)
@@ -744,7 +745,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-EXTRA_DIST = $(PMX_TREE) pmx-PATCHES
+EXTRA_DIST = $(PMX_TREE) TLpatches
 NEVER_DIST = `find . $(NEVER_NAMES)` $(PMX_TREE)/pmx.log \
 	$(PMX_TREE)/pmx.trs
 
@@ -844,8 +845,9 @@ EXTRA_libf2c_a_SOURCES = @PMX_TREE@/libf2c/uninit.c \
 	@PMX_TREE@/libf2c/qbitbits.c @PMX_TREE@/libf2c/qbitshft.c \
 	@PMX_TREE@/libf2c/signbit.c
 dist_man1_MANS = pmxab.1 scor2prt.1
+AM_TESTS_ENVIRONMENT = test_src=$(srcdir)/$(PMX_TREE)/tests; export test_src;
+#
 TESTS = $(PMX_TREE)/pmx.test
-TESTS_ENVIRONMENT = test_src=$(srcdir)/$(PMX_TREE)/tests
 DISTCLEANFILES = barsant* pmxaerr.dat
 all: all-am
 

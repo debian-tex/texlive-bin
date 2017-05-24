@@ -145,7 +145,7 @@
 /*  instead.  The extra precision is usually not needed, but the extra space  */
 /*  can be a problem with large (CJK, UNICODE) fonts.                         */
 /*									      */
-/* #define FONTFORGE_CONFIG_USE_DOUBLE					      */
+#define FONTFORGE_CONFIG_USE_DOUBLE					      
 /* #define FONTFORGE_CONFIG_USE_LONGDOUBLE				      */
 /*									      */
 
@@ -291,11 +291,11 @@
 
 
 
-#ifdef __MINGW32__
+#ifdef _WIN32
 #include <stdio.h>
-extern FILE *_cairo_win32_tmpfile( void );
-#define tmpfile() _cairo_win32_tmpfile()
-#endif /* __MINGW32__ */
+extern FILE *_cairo_win_tmpfile( void );
+#define tmpfile() _cairo_win_tmpfile()
+#endif /* _WIN32 */
 
 
 #endif

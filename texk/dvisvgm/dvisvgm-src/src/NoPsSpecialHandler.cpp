@@ -2,7 +2,7 @@
 ** NoPsSpecialHandler.cpp                                               **
 **                                                                      **
 ** This file is part of dvisvgm -- a fast DVI to SVG converter          **
-** Copyright (C) 2005-2016 Martin Gieseking <martin.gieseking@uos.de>   **
+** Copyright (C) 2005-2017 Martin Gieseking <martin.gieseking@uos.de>   **
 **                                                                      **
 ** This program is free software; you can redistribute it and/or        **
 ** modify it under the terms of the GNU General Public License as       **
@@ -19,19 +19,19 @@
 *************************************************************************/
 
 #include <config.h>
-#include "Message.h"
-#include "NoPsSpecialHandler.h"
+#include "Message.hpp"
+#include "NoPsSpecialHandler.hpp"
 
 using namespace std;
 
 
-bool NoPsSpecialHandler::process (const char *prefix, istream &is, SpecialActions *actions) {
+bool NoPsSpecialHandler::process (const char *prefix, istream &is, SpecialActions &actions) {
 	_count++;
 	return true;
 }
 
 
-void NoPsSpecialHandler::dviEndPage (unsigned pageno) {
+void NoPsSpecialHandler::dviEndPage (unsigned pageno, SpecialActions &actions) {
 	if (_count > 0) {
 		string suffix = (_count > 1 ? "s" : "");
 		Message::wstream(true) << _count << " PostScript special" << suffix << " ignored. The resulting SVG might look wrong.\n";

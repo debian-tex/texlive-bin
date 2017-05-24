@@ -455,6 +455,14 @@ dump_xref_stream (void)
   pdf_release_obj(xref_stream);
 }
 
+#if defined(LIBDPX)
+long
+pdf_output_stats (void)
+{
+  return pdf_output_file_position;
+}
+#endif /* LIBDPX */
+
 void
 pdf_out_flush (void)
 {
@@ -496,14 +504,18 @@ pdf_out_flush (void)
     pdf_out(pdf_output_file, format_buffer, length);
     pdf_out(pdf_output_file, "%%EOF\n", 6);
 
+#if !defined(LIBDPX)
     MESG("\n");
+#endif /* !LIBDPX */
     if (verbose) {
       if (compression_level > 0) {
 	MESG("Compression saved %ld bytes%s\n", compression_saved,
 	     pdf_version < 5 ? ". Try \"-V 5\" for better compression" : "");
       }
     }
+#if !defined(LIBDPX)
     MESG("%ld bytes written", pdf_output_file_position);
+#endif /* !LIBDPX */
 
     MFCLOSE(pdf_output_file);
   }
@@ -1937,10 +1949,14 @@ write_stream (pdf_stream *stream, FILE *file)
   memcpy(filtered, stream->stream, stream->stream_length);
   filtered_length = stream->stream_length;
 
-#if 0
-  if (stream->stream_length < 10)
-    stream->_flags &= ^STREAM_COMPRESS;
-#endif
+  /* PDF/A requires Metadata to be not filtered. */
+  {
+    pdf_obj *type;
+    type = pdf_lookup_dict(stream->dict, "Type");
+    if (type && !strcmp("Metadata", pdf_name_value(type))) {
+      stream->_flags &= ~STREAM_COMPRESS;
+    }
+  }
 
 #ifdef HAVE_ZLIB
   /* Apply compression filter if requested */

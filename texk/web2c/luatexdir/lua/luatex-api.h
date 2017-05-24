@@ -85,7 +85,10 @@ extern int luaopen_zip(lua_State * L);
 extern int luaopen_lfs(lua_State * L);
 extern int luaopen_lpeg(lua_State * L);
 extern int luaopen_md5(lua_State * L);
-extern int luatex_md5_lua_open(lua_State * L);
+
+#ifndef LuajitTeX
+ extern int luaopen_ffi(lua_State * L);
+#endif
 
 extern int luaopen_zlib(lua_State * L);
 extern int luaopen_gzip(lua_State * L);
@@ -101,9 +104,9 @@ extern int l_new_image(lua_State * L);
 extern int luaopen_epdf(lua_State * L);
 extern int luaopen_pdfscanner(lua_State * L);
 extern int luaopen_mplib(lua_State * L);
+extern int luaopen_fio(lua_State * L);
 
-extern void open_oslibext(lua_State * L, int safer_option);
-extern int open_iolibext(lua_State * L);
+extern void open_oslibext(lua_State * L);
 extern void open_strlibext(lua_State * L);
 extern void open_lfslibext(lua_State * L);
 
@@ -150,6 +153,12 @@ extern void dump_luac_registers(void);
 extern void undump_luac_registers(void);
 
 extern int lua_only;
+extern const char *lc_ctype;
+extern const char *lc_collate;
+extern const char *lc_numeric;
+
+
+
 #ifdef LuajitTeX
 extern int luajiton;
 extern char *jithash_hashname ;
@@ -185,6 +194,7 @@ extern int callback_count;
 extern int saved_callback_count;
 
 extern const char *luatex_banner;
+extern const char *engine_name;
 
 /* luastuff.h */
 
@@ -198,6 +208,7 @@ extern void preset_environment(lua_State * L, const parm_struct * p, const char 
 extern char *startup_filename;
 extern int safer_option;
 extern int nosocket_option;
+extern int utc_option;
 
 extern char *last_source_name;
 extern int last_lineno;
@@ -585,6 +596,7 @@ make_lua_key(finalhyphendemerits);\
 make_lua_key(font);\
 make_lua_key(fonts);\
 make_lua_key(format);\
+make_lua_key(fraction);\
 make_lua_key(fullname);\
 make_lua_key(global);\
 make_lua_key(glue);\
@@ -605,6 +617,7 @@ make_lua_key(horiz_variants);\
 make_lua_key(hsize);\
 make_lua_key(hyphenchar);\
 make_lua_key(id);\
+make_lua_key(identity);\
 make_lua_key(image);\
 make_lua_key(imagetype);\
 make_lua_key(immediate);\
@@ -656,6 +669,7 @@ make_lua_key(mathkern);\
 make_lua_key(mathstyle);\
 make_lua_key(media);\
 make_lua_key(mid);\
+make_lua_key(middle);\
 make_lua_key(mode);\
 make_lua_key(modeline);\
 make_lua_key(name);\
@@ -680,6 +694,8 @@ make_lua_key(objcompression);\
 make_lua_key(objnum);\
 make_lua_key(oldmath);\
 make_lua_key(ordering);\
+make_lua_key(options);\
+make_lua_key(orientation);\
 make_lua_key(origin);\
 make_lua_key(output);\
 make_lua_key(overlay_accent);\
@@ -765,6 +781,7 @@ make_lua_key(start);\
 make_lua_key(step);\
 make_lua_key(stream);\
 make_lua_key(streamfile);\
+make_lua_key(streamprovider);\
 make_lua_key(stretch);\
 make_lua_key(stretch_order);\
 make_lua_key(string);\
@@ -824,7 +841,9 @@ make_lua_key(xsize);\
 make_lua_key(xyz_zoom);\
 make_lua_key(yoffset); \
 make_lua_key(yres); \
-make_lua_key(ysize)
+make_lua_key(ysize); \
+make_lua_key(writingmode); \
+make_lua_key(__index)
 
 #define set_init_keys \
 init_lua_key(cmdname);init_lua_key(expandable);init_lua_key(protected);\
@@ -948,6 +967,7 @@ init_lua_key(finalhyphendemerits);\
 init_lua_key(font);\
 init_lua_key(fonts);\
 init_lua_key(format);\
+init_lua_key(fraction);\
 init_lua_key(fullname);\
 init_lua_key(global);\
 init_lua_key(glue);\
@@ -968,6 +988,7 @@ init_lua_key(horiz_variants);\
 init_lua_key(hsize);\
 init_lua_key(hyphenchar);\
 init_lua_key(id);\
+init_lua_key(identity);\
 init_lua_key(image);\
 init_lua_key(imagetype);\
 init_lua_key(immediate);\
@@ -1017,6 +1038,7 @@ init_lua_key(mathkern);\
 init_lua_key(mathstyle);\
 init_lua_key(media);\
 init_lua_key(mid);\
+init_lua_key(middle);\
 init_lua_key(mode);\
 init_lua_key(modeline);\
 init_lua_key(name);\
@@ -1038,6 +1060,8 @@ init_lua_key(number);\
 init_lua_key(objcompression);\
 init_lua_key(objnum);\
 init_lua_key(oldmath);\
+init_lua_key(options);\
+init_lua_key(orientation);\
 init_lua_key(origin);\
 init_lua_key(ordering);\
 init_lua_key(output);\
@@ -1119,6 +1143,7 @@ init_lua_key(start);\
 init_lua_key(step);\
 init_lua_key(stream);\
 init_lua_key(streamfile);\
+init_lua_key(streamprovider);\
 init_lua_key(stretch);\
 init_lua_key(stretch_order);\
 init_lua_key(string);\
@@ -1178,10 +1203,13 @@ init_lua_key(xyz_zoom);\
 init_lua_key(yoffset);\
 init_lua_key(yres);\
 init_lua_key(ysize);\
+init_lua_key(writingmode);\
+init_lua_key(__index);\
 init_lua_key_alias(empty_string,"");\
 init_lua_key_alias(lua_bytecodes_indirect,"lua.bytecodes.indirect");\
 init_lua_key_alias(lua_functions,"lua.functions");\
 init_lua_key_alias(luatex_node, "luatex.node");\
+init_lua_key_alias(luatex_token, "luatex.token");\
 init_lua_key_alias(mLTL,"-LTL");\
 init_lua_key_alias(mRTT,"-RTT");\
 init_lua_key_alias(mTLT,"-TLT");\
@@ -1225,10 +1253,10 @@ init_lua_key_alias(term_and_log,"term and log")
     } \
 } while(0)
 
-#ifdef __MINGW32__
-extern FILE *_cairo_win32_tmpfile( void );
-#define tmpfile() _cairo_win32_tmpfile()
-#endif /* __MINGW32__ */
+#ifdef _WIN32
+extern FILE *_cairo_win_tmpfile( void );
+#define tmpfile() _cairo_win_tmpfile()
+#endif /* _WIN32 */
 
 #endif                          /* LUATEX_API_H */
 
@@ -1359,6 +1387,7 @@ use_lua_key(finalhyphendemerits);
 use_lua_key(font);
 use_lua_key(fonts);
 use_lua_key(format);
+use_lua_key(fraction);
 use_lua_key(fullname);
 use_lua_key(global);
 use_lua_key(glue);
@@ -1379,6 +1408,7 @@ use_lua_key(horiz_variants);
 use_lua_key(hsize);
 use_lua_key(hyphenchar);
 use_lua_key(id);
+use_lua_key(identity);
 use_lua_key(image);
 use_lua_key(imagetype);
 use_lua_key(immediate);
@@ -1430,6 +1460,7 @@ use_lua_key(mathkern);
 use_lua_key(mathstyle);
 use_lua_key(media);
 use_lua_key(mid);
+use_lua_key(middle);
 use_lua_key(mode);
 use_lua_key(modeline);
 use_lua_key(name);
@@ -1453,6 +1484,8 @@ use_lua_key(number);
 use_lua_key(objcompression);
 use_lua_key(objnum);
 use_lua_key(oldmath);
+use_lua_key(options);
+use_lua_key(orientation);
 use_lua_key(origin);
 use_lua_key(ordering);
 use_lua_key(output);
@@ -1539,6 +1572,7 @@ use_lua_key(start);
 use_lua_key(step);
 use_lua_key(stream);
 use_lua_key(streamfile);
+use_lua_key(streamprovider);
 use_lua_key(stretch);
 use_lua_key(stretch_order);
 use_lua_key(string);
@@ -1599,3 +1633,5 @@ use_lua_key(xyz_zoom);
 use_lua_key(yoffset);
 use_lua_key(yres);
 use_lua_key(ysize);
+use_lua_key(writingmode);
+use_lua_key(__index);

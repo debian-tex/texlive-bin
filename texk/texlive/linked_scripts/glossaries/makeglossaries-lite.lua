@@ -26,10 +26,16 @@
    This work has the LPPL maintenance status `maintained'.
   
    History:
-   * 1.1 changed first line from lua to texlua
+   * 1.3
+     - added check for \glsxtr@makeglossaries
+   * 1.2 (2016-05-27)
+     - added check for \@gls@extramakeindexopts
+     - added check for nil codepage
+   * 1.1
+     - changed first line from lua to texlua
 --]]
 
-thisversion = "1.1 2015-07-17"
+thisversion = "1.3 2016-12-16"
 
 quiet = false
 dryrun = false
@@ -49,6 +55,7 @@ makeindex_g = false
 letterorder = false
 makeindex_r = false
 makeindex_p = nil
+makeindex_extra = nil
 makeindex_m = "makeindex"
 
 function version()
@@ -150,6 +157,8 @@ function domakeindex(name, glg, gls, glo)
   if makeindex_g then cmd = cmd .. " -g" end
 
   if letterorder then cmd = cmd .. " -l" end
+
+  if makeindex_extra then cmd = cmd .. " " .. makeindex_extra end
 
   if quiet then cmd = cmd .. " -q" end
 
@@ -348,6 +357,8 @@ then
   end
 end
 
+makeindex_extra = string.match(aux, "\\@gls@extramakeindexopts{([^}]*%.?%a*)}")
+
 if dryrun then print("Dry run mode. No commands will be executed.") end
 
 onlyname = nil
@@ -390,6 +401,22 @@ for name, glg, gls, glo in
 
 end
 
+onlytypes = string.match(aux, "\\glsxtr@makeglossaries{([^}]+)}")
+
+if onlytypes ~= nil
+then
+  if not quiet then
+    print(string.format("Only process subset: '%s'", onlytypes))
+  end
+
+  onlyglossaries = {}
+
+  for name in string.gmatch(onlytypes, '([^,]+)') do
+     onlyglossaries[name] = glossaries[name]
+  end
+
+  glossaries = onlyglossaries
+end
 
 if ext == nil
 then
@@ -465,6 +492,10 @@ else
       gls = outfile
     end
 
+  end
+
+  if codepage == nil then
+    codepage = 'utf8';
   end
 
   dorun(onlyname, glg, gls, glo, language, codepage)

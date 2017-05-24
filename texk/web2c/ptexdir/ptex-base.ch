@@ -54,16 +54,26 @@
 % (2015-09-10) AK  pTeX p3.7 Bug fix by Hironori Kitagawa in flushing choice node.
 % (2016-03-04) AK  Hironori Kitagawa added new primitives to improve typesetting
 %                  with non-vanishing \ybaselineshift.
+% (2016-06-06) AK  Hironori Kitagawa fixed a bug in check_box(box_p:pointer).
+%                  pTeX p3.7.1.
 %
+
+@x
+% Here is TeX material that gets inserted after \input webmac
+@y
+% Here is TeX material that gets inserted after \input webmac
+\def\pTeX{p\kern-.15em\TeX}
+@z
+
 @x [1.2] l.200 - pTeX:
 @d banner==TeX_banner
 @d banner_k==TeX_banner_k
 @y
-@d pTeX_version_string=='-p3.7' {current p\TeX\ version}
+@d pTeX_version_string=='-p3.7.1' {current \pTeX\ version}
 @#
 @d pTeX_banner=='This is pTeX, Version 3.14159265',pTeX_version_string
 @d pTeX_banner_k==pTeX_banner
-  {printed when p\TeX\ starts}
+  {printed when \pTeX\ starts}
 @#
 @d banner==pTeX_banner
 @d banner_k==pTeX_banner_k
@@ -318,7 +328,7 @@ else
 @x [8.112] l.2450 - pTeX: hi/ho
 sufficiently large.
 @y
-sufficiently large and this is required for p\TeX.
+sufficiently large and this is required for \pTeX.
 @z
 
 @x [8.112] l.2588 - pTeX:
@@ -334,7 +344,7 @@ sufficiently large and this is required for p\TeX.
 |fil|, |fill|, or |filll|). The |subtype| field is not used.
 @y
 |fil|, |fill|, or |filll|). The |subtype| field is not used in \TeX.
-In p\TeX\ the |subtype| field records the box direction |box_dir|.
+In \pTeX\ the |subtype| field records the box direction |box_dir|.
 @z
 
 @x [10.135] l.2897 - pTeX: box_dir, space_ptr, xspace_ptr
@@ -361,9 +371,10 @@ In p\TeX\ the |subtype| field records the box direction |box_dir|.
 @d hlist_node=0 {|type| of hlist nodes}
 @d box_node_size=8 {number of words to allocate for a box node}
 @#
-@d box_dir(#) == (qo(subtype(#))) {direction of a box}
+@d dir_max = 5 {the maximal absolute value of direction}
+@d box_dir(#) == (qo(subtype(#))-dir_max) {direction of a box}
 @d set_box_dir(#) == subtype(#):=set_box_dir_end
-@d set_box_dir_end(#) == qi(#)
+@d set_box_dir_end(#) == qi(#)+dir_max
 @#
 @d dir_default = 0 {direction of the box, default Left to Right}
 @d dir_dtou = 1 {direction of the box, Bottom to Top}
@@ -399,7 +410,7 @@ glue_sign(p):=normal; glue_order(p):=normal; set_glue_ratio_zero(glue_set(p));
 @y
 width(p):=0; depth(p):=0; height(p):=0; shift_amount(p):=0; list_ptr(p):=null;
 glue_sign(p):=normal; glue_order(p):=normal; set_glue_ratio_zero(glue_set(p));
-space_ptr(p):=zero_glue; xspace_ptr(p):=zero_glue;
+space_ptr(p):=zero_glue; xspace_ptr(p):=zero_glue; set_box_dir(p)(dir_default);
 add_glue_ref(zero_glue); add_glue_ref(zero_glue);
 @z
 
@@ -416,7 +427,7 @@ add_glue_ref(zero_glue); add_glue_ref(zero_glue);
 var p:pointer; {the new node}
 begin if type(b)>vlist_node then confusion("new_dir_node:not box");
 p:=new_null_box; type(p):=dir_node; set_box_dir(p)(dir);
-case box_dir(b) of
+case abs(box_dir(b)) of
   dir_yoko: @<Yoko to other direction@>;
   dir_tate: @<Tate to other direction@>;
   dir_dtou: @<DtoU to other direction@>;
@@ -466,7 +477,7 @@ end;
 @d rule_node=3 {|type| of rule nodes}
 @z
 
-@x [10.140] l.3083 - pTeX: renumber ins_node, add ins_dir field
+@x [10.140] l.3083 - pTeX: renumber ins_node, add ins_dirh field
 @d ins_node=3 {|type| of insertion nodes}
 @d ins_node_size=5 {number of words to allocate for an insertion}
 @d float_cost(#)==mem[#+1].int {the |floating_penalty| to be used}
@@ -478,7 +489,8 @@ end;
 @d float_cost(#)==mem[#+1].int {the |floating_penalty| to be used}
 @d ins_ptr(#)==info(#+4) {the vertical list to be inserted}
 @d split_top_ptr(#)==link(#+4) {the |split_top_skip| to be used}
-@d ins_dir(#)==subtype(#+5) {direction of |ins_node|}
+@d ins_dir(#)==(subtype(#+5)-dir_max) {direction of |ins_node|}
+@d set_ins_dir(#) == subtype(#+5):=set_box_dir_end
 @z
 
 @x [10.141] l.3089 - pTeX: disp_node
@@ -550,7 +562,7 @@ distance of the baselineshift between Latin characters and Kanji chatacters.
 @d penalty_node=12 {|type| of a penalty node}
 @y
 @d penalty_node=14 {|type| of a penalty node}
-@d widow_pena=1 {|subtype| of penalty nodes from \.{\\jchrwidowpenalty}}
+@d widow_pena=1 {|subtype| of penalty nodes from \.{\\jcharwidowpenalty}}
 @d kinsoku_pena=2 {|subtype| of penalty nodes from kinsoku}
 @z
 
@@ -657,7 +669,7 @@ print(", natural size "); print_scaled(height(p));
 @y
 @ @<Display insertion |p|@>=
 begin print_esc("insert"); print_int(qo(subtype(p)));
-print_dir(ins_dir(p));
+print_dir(abs(ins_dir(p)));
 print(", natural size "); print_scaled(height(p));
 @z
 
@@ -668,7 +680,7 @@ end
 @y
 @ @<Display penalty |p|@>=
 begin print_esc("penalty "); print_int(penalty(p));
-if subtype(p)=widow_pena then print("(for \jchrwidowpenalty)")
+if subtype(p)=widow_pena then print("(for \jcharwidowpenalty)")
 else if subtype(p)=kinsoku_pena then print("(for kinsoku)");
 end
 @z
@@ -1707,7 +1719,11 @@ start_cs:
     sequence is found, adjust |cur_cs| and |loc|, and
     |goto found|@>
   else @<If an expanded code is present, reduce it and |goto start_cs|@>;
-  cur_cs:=single_base+buffer[loc]; incr(loc);
+  {single-letter control sequence}
+  if (cat=kanji)or(cat=kana) then
+    begin cur_cs:=id_lookup(loc,k-loc); loc:=k; goto found;
+    end
+  else begin cur_cs:=single_base+buffer[loc]; incr(loc); end;
   end;
 found: cur_cmd:=eq_type(cur_cs); cur_chr:=equiv(cur_cs);
 if cur_cmd>=outer_call then check_outer_validity;
@@ -2006,22 +2022,24 @@ toks_register,assign_toks,def_family,set_font,def_font,def_jfont,def_tfont:
 @z
 
 @x [26.414] l.8373 - pTeX:
+begin scan_char_num;
 if m=math_code_base then scanned_result(ho(math_code(cur_val)))(int_val)
 else if m<math_code_base then scanned_result(equiv(m+cur_val))(int_val)
 else scanned_result(eqtb[m+cur_val].int)(int_val);
 @y
-if m=math_code_base then scanned_result(ho(math_code(cur_val)))(int_val)
-else if m=kcat_code_base then scanned_result(equiv(m+kcatcodekey(cur_val)))(int_val)
+begin
+if m=math_code_base then
+  begin scan_ascii_num;
+  scanned_result(ho(math_code(cur_val)))(int_val); end
+else if m=kcat_code_base then
+  begin scan_char_num;
+  scanned_result(equiv(m+kcatcodekey(cur_val)))(int_val); end
 else if m<math_code_base then { \.{\\lccode}, \.{\\uccode}, \.{\\sfcode}, \.{\\catcode} }
-  begin if not is_char_ascii(cur_val) then
-  scanned_result(equiv(m+Hi(cur_val)))(int_val)
-  else scanned_result(equiv(m+cur_val))(int_val)
-  end
+  begin scan_ascii_num;
+  scanned_result(equiv(m+cur_val))(int_val) end
 else { \.{\\delcode} }
-  begin if not is_char_ascii(cur_val) then
-  scanned_result(eqtb[m+Hi(cur_val)].int)(int_val)
-  else scanned_result(eqtb[m+cur_val].int)(int_val)
-  end;
+  begin scan_ascii_num;
+  scanned_result(eqtb[m+cur_val].int)(int_val) end;
 @z
 
 @x [26.420] l.8474 - pTeX: Fetch a box dimension: dir_node
@@ -2031,7 +2049,7 @@ if box(cur_val)=null then cur_val:=0 @+else cur_val:=mem[box(cur_val)+m].sc;
 begin scan_eight_bit_int; q:=box(cur_val);
 if q=null then cur_val:=0
 else  begin qx:=q;
-  while (q<>null)and(box_dir(q)<>abs(direction)) do q:=link(q);
+  while (q<>null)and(abs(box_dir(q))<>abs(direction)) do q:=link(q);
   if q=null then
     begin r:=link(qx); link(qx):=null;
     q:=new_dir_node(qx,abs(direction)); link(qx):=r;
@@ -2118,6 +2136,15 @@ if (cur_val<0)or(cur_val>255) then
   end;
 end;
 @y
+procedure scan_ascii_num;
+begin scan_int;
+if (cur_val<0)or(cur_val>255) then
+  begin print_err("Bad character code");
+@.Bad character code@>
+  help2("A character number must be between 0 and 255.")@/
+    ("I changed this one to zero."); int_error(cur_val); cur_val:=0;
+  end;
+end;
 procedure scan_char_num;
 begin scan_int;
 if not is_char_ascii(cur_val) and not is_char_kanji(cur_val) then
@@ -2333,6 +2360,7 @@ string_code:if cur_cs<>0 then sprint_cs(cur_cs)
 @d if_tbox_code=if_mdir_code+1 { `\.{\\iftbox}' }
 @d if_ybox_code=if_tbox_code+1 { `\.{\\ifybox}' }
 @d if_dbox_code=if_ybox_code+1 { `\.{\\ifdbox}' }
+@d if_mbox_code=if_dbox_code+1 { `\.{\\ifmbox}' }
 @z
 
 @x [28.487] l.9887 - pTeX: iftdir, ifydir, ifddir, iftbox, ifybox, ifdbox
@@ -2355,6 +2383,8 @@ primitive("ifybox",if_test,if_ybox_code);
 @!@:if_ybox_}{\.{\\ifybox} primitive@>
 primitive("ifdbox",if_test,if_dbox_code);
 @!@:if_dbox_}{\.{\\ifdbox} primitive@>
+primitive("ifmbox",if_test,if_mbox_code);
+@!@:if_mbox_}{\.{\\ifmbox} primitive@>
 @z
 
 @x [28.488] l.9907 - pTeX: iftdir, ifydir, ifddir, iftbox, ifybox, ifdbox
@@ -2368,6 +2398,7 @@ primitive("ifdbox",if_test,if_dbox_code);
   if_tbox_code:print_esc("iftbox");
   if_ybox_code:print_esc("ifybox");
   if_dbox_code:print_esc("ifdbox");
+  if_mbox_code:print_esc("ifmbox");
 @z
 
 @x [28.501] l.10073 - pTeX: iftdir, ifydir, ifddir, iftbox, ifybox, ifdbox
@@ -2377,7 +2408,7 @@ if_tdir_code: b:=(abs(direction)=dir_tate);
 if_ydir_code: b:=(abs(direction)=dir_yoko);
 if_ddir_code: b:=(abs(direction)=dir_dtou);
 if_mdir_code: b:=(direction<0);
-if_void_code, if_hbox_code, if_vbox_code, if_tbox_code, if_ybox_code, if_dbox_code:
+if_void_code, if_hbox_code, if_vbox_code, if_tbox_code, if_ybox_code, if_dbox_code, if_mbox_code:
   @<Test box register status@>;
 @z
 
@@ -2393,9 +2424,10 @@ else begin
   if type(p)=dir_node then p:=list_ptr(p);
   if this_if=if_hbox_code then b:=(type(p)=hlist_node)
   else if this_if=if_vbox_code then b:=(type(p)=vlist_node)
-  else if this_if=if_tbox_code then b:=(box_dir(p)=dir_tate)
-  else if this_if=if_ybox_code then b:=(box_dir(p)=dir_yoko)
-  else b:=(box_dir(p)=dir_dtou);
+  else if this_if=if_tbox_code then b:=(abs(box_dir(p))=dir_tate)
+  else if this_if=if_ybox_code then b:=(abs(box_dir(p))=dir_yoko)
+  else if this_if=if_dbox_code then b:=(abs(box_dir(p))=dir_dtou)
+  else b:=(box_dir(p)<0);
   end
 @z
 
@@ -2831,7 +2863,7 @@ comes next; this currently equals~2, as in the preamble.
 @ The last part of the postamble, following the |post_post| byte that
 signifies the end of the font definitions, contains |q|, a pointer to the
 |post| command that started the postamble.  An identification byte, |i|,
-comes next; this equals~2 or~3. If not used p\TeX primitives then the
+comes next; this equals~2 or~3. If not used \pTeX primitives then the
 identification byte equals~2, othercase this is set to~3.
 @z
 
@@ -3156,7 +3188,7 @@ if type(p)=dir_node then
   free_node(del_node,box_node_size);
   end;
 flush_node_list(link(p)); link(p):=null;
-if box_dir(p)<>dir_yoko then p:=new_dir_node(p,dir_yoko);
+if abs(box_dir(p))<>dir_yoko then p:=new_dir_node(p,dir_yoko);
 @<Ship box |p| out@>;
 @z
 
@@ -3217,6 +3249,7 @@ var r:pointer; {the box node that will be returned}
 q:=r+list_offset; link(q):=p;@/
 h:=0; @<Clear dimensions to zero@>;
 @y
+set_box_dir(r)(dir_default);
 space_ptr(r):=cur_kanji_skip; xspace_ptr(r):=cur_xkanji_skip;
 add_glue_ref(cur_kanji_skip); add_glue_ref(cur_xkanji_skip);
 k:=cur_kanji_skip;
@@ -3331,7 +3364,7 @@ begin last_badness:=0; r:=get_node(box_node_size); type(r):=vlist_node;
 subtype(r):=min_quarterword; shift_amount(r):=0;
 @y
 begin last_badness:=0; r:=get_node(box_node_size); type(r):=vlist_node;
-subtype(r):=min_quarterword; shift_amount(r):=0;
+subtype(r):=min_quarterword; shift_amount(r):=0; set_box_dir(r)(dir_default);
 space_ptr(r):=zero_glue; xspace_ptr(r):=zero_glue;
 add_glue_ref(zero_glue); add_glue_ref(zero_glue);
 @z
@@ -3513,15 +3546,19 @@ function shift_sub_exp_box(@!q:pointer):pointer;
   { We assume that |math_type(q)=sub_exp_box| }
   var d: halfword; {displacement}
   begin
-    if direction=dir_tate then d:=t_baseline_shift
-    else d:=y_baseline_shift;
-    if cur_style<script_style then 
-      d:=xn_over_d(d,text_baseline_shift_factor, 1000)
-    else if cur_style<script_script_style then 
-      d:=xn_over_d(d,script_baseline_shift_factor, 1000)
-    else
-      d:=xn_over_d(d,scriptscript_baseline_shift_factor, 1000);
-    shift_amount(info(q)):=shift_amount(info(q))-d;
+    if abs(direction)=abs(box_dir(info(q))) then begin
+      if abs(direction)=dir_tate then begin
+        if box_dir(info(q))=dir_tate then d:=t_baseline_shift
+        else d:=y_baseline_shift end
+      else d:=y_baseline_shift;
+      if cur_style<script_style then 
+        d:=xn_over_d(d,text_baseline_shift_factor, 1000)
+      else if cur_style<script_script_style then 
+        d:=xn_over_d(d,script_baseline_shift_factor, 1000)
+      else
+        d:=xn_over_d(d,scriptscript_baseline_shift_factor, 1000);
+      shift_amount(info(q)):=shift_amount(info(q))-d;
+    end;
     math_type(q):=sub_box;
     shift_sub_exp_box:=info(q);
   end;
@@ -3935,7 +3972,7 @@ glue_order(q):=glue_order(p); glue_sign(q):=glue_sign(p);
 glue_set(q):=glue_set(p); shift_amount(q):=o;
 r:=link(list_ptr(q)); s:=link(list_ptr(p));
 @y
-set_box_dir(q)(abs(direction));
+set_box_dir(q)(direction);
 glue_order(q):=glue_order(p); glue_sign(q):=glue_sign(p);
 glue_set(q):=glue_set(p); shift_amount(q):=o;
 r:=link(list_ptr(q)); s:=link(list_ptr(p));
@@ -3951,7 +3988,7 @@ s:=link(s); link(u):=new_null_box; u:=link(u); t:=t+width(s);
 if mode=-vmode then width(u):=width(s)@+else
   begin type(u):=vlist_node; height(u):=width(s);
   end;
-set_box_dir(u)(abs(direction))
+set_box_dir(u)(direction)
 @z
 
 @x [37.810] l.16564 - pTeX: unset box -> BOX
@@ -3959,7 +3996,7 @@ width(r):=w; type(r):=hlist_node;
 end
 @y
 width(r):=w; type(r):=hlist_node;
-set_box_dir(r)(abs(direction));
+set_box_dir(r)(direction);
 end
 @z
 
@@ -3967,7 +4004,7 @@ end
 height(r):=w; type(r):=vlist_node;
 @y
 height(r):=w; type(r):=vlist_node;
-set_box_dir(r)(abs(direction));
+set_box_dir(r)(direction);
 @z
 
 @x [38.816] l.16687 - pTeX: init chain, delete disp_node
@@ -4438,7 +4475,7 @@ else height(r):=height(box(n))+depth(box(n));
 @y
 if box(n)=null then height(r):=0
 else
-  begin if ins_dir(p)<>box_dir(box(n)) then
+  begin if abs(ins_dir(p))<>abs(box_dir(box(n))) then
     begin print_err("Insertions can only be added to a same direction vbox");
 @.Insertions can only...@>
     help3("Tut tut: You're trying to \insert into a")@/
@@ -4465,9 +4502,9 @@ else  begin wait:=false; s:=last_ins_ptr(r); link(s):=ins_ptr(p);
 if best_ins_ptr(r)=null then wait:=true
 else  begin wait:=false;
   n:=qo(subtype(p));
-  case box_dir(box(n)) of
+  case abs(box_dir(box(n))) of
     any_dir:
-      if ins_dir(p)<>box_dir(box(n)) then begin
+      if abs(ins_dir(p))<>abs(box_dir(box(n))) then begin
         print_err("Insertions can only be added to a same direction vbox");
 @.Insertions can only...@>
         help3("Tut tut: You're trying to \insert into a")@/
@@ -4477,7 +4514,7 @@ else  begin wait:=false;
         box(n):=new_null_box; last_ins_ptr(r):=box(n)+list_offset;
       end;
     othercases
-      set_box_dir(box(n))(ins_dir(p));
+      set_box_dir(box(n))(abs(ins_dir(p)));
   endcases;
   s:=last_ins_ptr(r); link(s):=ins_ptr(p);
 @z
@@ -4498,7 +4535,7 @@ delete_glue_ref(space_ptr(box(n)));
 delete_glue_ref(xspace_ptr(box(n)));
 flush_node_list(link(box(n)));
 free_node(box(n),box_node_size);
-box(n):=vpack(temp_ptr,natural); set_box_dir(box(n))(ins_dir(p));
+box(n):=vpack(temp_ptr,natural); set_box_dir(box(n))(abs(ins_dir(p)));
 @z
 
 @x [46.1030] l.20687 -  pTeX:main_control
@@ -4794,7 +4831,7 @@ q:pointer;
   begin p:=link(cur_box); link(cur_box):=null;
   while p<>null do begin
     q:=p; p:=link(p);
-    if box_dir(q)=abs(direction) then
+    if abs(box_dir(q))=abs(direction) then
       begin list_ptr(q):=cur_box; cur_box:=q; link(cur_box):=null;
       end
     else begin
@@ -4803,7 +4840,7 @@ q:pointer;
       free_node(q,box_node_size);
       end;
   end;
-  if box_dir(cur_box)<>abs(direction) then
+  if abs(box_dir(cur_box))<>abs(direction) then
     cur_box:=new_dir_node(cur_box,abs(direction));
   shift_amount(cur_box):=box_context;
 @z
@@ -4826,7 +4863,7 @@ q:pointer;
     begin p:=link(cur_box); link(cur_box):=null;
     while p<>null do
       begin q:=p; p:=link(p);
-      if box_dir(q)=abs(direction) then
+      if abs(box_dir(q))=abs(direction) then
         begin list_ptr(q):=cur_box; cur_box:=q; link(cur_box):=null;
         end
       else begin
@@ -4835,7 +4872,7 @@ q:pointer;
         free_node(q,box_node_size);
         end;
       end;
-    if box_dir(cur_box)<>abs(direction) then
+    if abs(box_dir(cur_box))<>abs(direction) then
       cur_box:=new_dir_node(cur_box,abs(direction));
     end;
   leader_ptr(tail):=cur_box;
@@ -4858,7 +4895,7 @@ q:pointer;
 since |head| is a one-word node.
 @y
 @ Note that in \TeX\ the condition |not is_char_node(tail)| implies that
-|head<>tail|, since |head| is a one-word node; this is not so for p\TeX.
+|head<>tail|, since |head| is a one-word node; this is not so for \pTeX.
 @z
 
 @x [47.1080] l.20940 - pTeX: disp_node
@@ -4934,7 +4971,7 @@ if type(cur_box)=dir_node then
   list_ptr(link(cur_box)):=null;
   end
 else
-  if box_dir(cur_box)=dir_default then set_box_dir(cur_box)(abs(direction));
+  if box_dir(cur_box)=dir_default then set_box_dir(cur_box)(direction);
 end
 @z
 
@@ -4996,10 +5033,10 @@ begin d:=box_max_depth;
   unsave; save_ptr:=save_ptr-3;
   if mode=-hmode then begin
     cur_box:=hpack(link(head),saved(2),saved(1));
-    set_box_dir(cur_box)(abs(direction)); pop_nest;
+    set_box_dir(cur_box)(direction); pop_nest;
   end else begin
     cur_box:=vpackage(link(head),saved(2),saved(1),d);
-    set_box_dir(cur_box)(abs(direction)); pop_nest;
+    set_box_dir(cur_box)(direction); pop_nest;
     if c=vtop_code then
       @<Readjust the height and depth of |cur_box|, for \.{\\vtop}@>;
   end;
@@ -5028,7 +5065,7 @@ vmode+letter,vmode+other_char,vmode+char_num,vmode+char_given,
 push_nest; mode:=hmode; space_factor:=1000; set_cur_lang; clang:=cur_lang;
 @y
 inhibit_glue_flag := false;
-push_nest; adjust_dir:=abs(direction);
+push_nest; adjust_dir:=direction;
 mode:=hmode; space_factor:=1000; set_cur_lang; clang:=cur_lang;
 @z
 
@@ -5072,19 +5109,19 @@ insert_group: begin end_graf; q:=split_top_skip; add_glue_ref(q);
 insert_group: begin end_graf; q:=split_top_skip; add_glue_ref(q);
   d:=split_max_depth; f:=floating_penalty; unsave; decr(save_ptr);
   {now |saved(0)| is the insertion number, or 255 for |vadjust|}
-  p:=vpack(link(head),natural); set_box_dir(p)(abs(direction)); pop_nest;
+  p:=vpack(link(head),natural); set_box_dir(p)(direction); pop_nest;
   if saved(0)<255 then
     begin r:=get_node(ins_node_size);
     type(r):=ins_node; subtype(r):=qi(saved(0));
     height(r):=height(p)+depth(p); ins_ptr(r):=list_ptr(p);
     split_top_ptr(r):=q; depth(r):=d; float_cost(r):=f;
-    ins_dir(r):=box_dir(p);
+    set_ins_dir(r)(box_dir(p));
     if not is_char_node(tail)and(type(tail)=disp_node) then
       prev_append(r)
     else tail_append(r);
     end
   else  begin
-    if box_dir(p)<>adjust_dir then
+    if abs(box_dir(p))<>abs(adjust_dir) then
       begin print_err("Direction Incompatible.");
       help1("\vadjust's argument and outer vlist must have same direction.");
       error; flush_node_list(list_ptr(p));
@@ -5190,9 +5227,9 @@ if (abs(mode)=mmode)or((abs(mode)=vmode)and(type(p)<>vlist_node))or@|
   ("And I can't open any boxes in math mode.");@/
   error; return;
 end;
-case box_dir(p) of
+case abs(box_dir(p)) of
   any_dir:
-    if abs(direction)<>box_dir(p) then begin
+    if abs(direction)<>abs(box_dir(p)) then begin
       print_err("Incompatible direction list can't be unboxed");
       help2("Sorry, Pandora. (You sneaky devil.)")@/
       ("I refuse to unbox a box in differrent direction.");@/
@@ -5589,8 +5626,8 @@ vcenter_group: begin end_graf; unsave; save_ptr:=save_ptr-2;
 @y
 vcenter_group: begin end_graf; unsave; save_ptr:=save_ptr-2;
   p:=vpack(link(head),saved(1),saved(0));
-  set_box_dir(p)(abs(direction)); pop_nest;
-  if box_dir(p)<>abs(direction) then p:=new_dir_node(p,abs(direction));
+  set_box_dir(p)(direction); pop_nest;
+  if abs(box_dir(p))<>abs(direction) then p:=new_dir_node(p,abs(direction));
   tail_append(new_noad); type(tail):=vcenter_noad;
   math_type(nucleus(tail)):=sub_box; info(nucleus(tail)):=p;
   end;
@@ -5679,7 +5716,7 @@ end
 @x [48.1200] l.23203 - pTeX: adjust direction
 push_nest; mode:=hmode; space_factor:=1000; set_cur_lang; clang:=cur_lang;
 @y
-push_nest; adjust_dir:=abs(direction);
+push_nest; adjust_dir:=direction;
 mode:=hmode; space_factor:=1000; set_cur_lang; clang:=cur_lang;
 @z
 
@@ -5817,11 +5854,10 @@ def_code: begin @<Let |n| be the largest legal code value, based on |cur_chr|@>;
 def_code: begin
   @<Let |m| be the minimal legal code value, based on |cur_chr|@>;
   @<Let |n| be the largest legal code value, based on |cur_chr|@>;
-  p:=cur_chr; scan_char_num;
-  if p=kcat_code_base then p:=p+kcatcodekey(cur_val) 
-  else if not is_char_ascii(cur_val) then p:=p+Hi(cur_val) 
-    { If |cur_val| is a KANJI code, we use its upper half, as the case of retrieving. }
-  else p:=p+cur_val;
+  p:=cur_chr;
+  if p=kcat_code_base then
+    begin scan_char_num; p:=p+kcatcodekey(cur_val) end
+  else begin scan_ascii_num; p:=p+cur_val; end;
   scan_optional_equals; scan_int;
   if ((cur_val<m)and(p<del_code_base))or(cur_val>n) then
   begin print_err("Invalid code ("); print_int(cur_val);
@@ -5876,10 +5912,10 @@ scan_normal_dimen;
 if box(b)<>null then
   begin q:=box(b); p:=link(q);
   while p<>null do
-    begin if abs(direction)=box_dir(p) then q:=p;
+    begin if abs(direction)=abs(box_dir(p)) then q:=p;
     p:=link(p);
     end;
-  if box_dir(q)<>abs(direction) then
+  if abs(box_dir(q))<>abs(direction) then
     begin p:=link(box(b)); link(box(b)):=null;
     q:=new_dir_node(q,abs(direction)); list_ptr(q):=null;
     link(q):=p; link(box(b)):=q;
@@ -6048,9 +6084,9 @@ undump_things(char_base[null_font], font_ptr+1-null_font);
 @x l.26984 - pTeX
 @* \[54] System-dependent changes.
 @y
-@* \[55/p\TeX] System-dependent changes for p\TeX.
+@* \[55/\pTeX] System-dependent changes for \pTeX.
 This section described extended variables, procesures, functions and so on
-for pTeX.
+for \pTeX.
 
 @<Declare procedures that scan font-related stuff@>=
 function get_jfm_pos(@!kcode:KANJI_code;@!f:internal_font_number):eight_bits;
@@ -6502,6 +6538,23 @@ while p<>null do
         last_char:=p; flag:=true;
       end
     else do_nothing; {\.{\\beginR} etc.}
+  kern_node:
+    if subtype(p)=acc_kern then
+      begin p:=link(p);
+        if is_char_node(p) then
+	  if font_dir[font(p)]<>dir_default then p:=link(p);
+        p:=link(link(p));
+        if find_first_char then
+          begin find_first_char:=false; first_char:=p;
+          end;
+        last_char:=p; flag:=true;
+        if font_dir[font(p)]<>dir_default then p:=link(p);
+        end
+    else
+      begin flag:=true;
+        if find_first_char then find_first_char:=false
+        else last_char:=null;
+        end;
   othercases begin flag:=true;
     if find_first_char then find_first_char:=false
     else last_char:=null;
@@ -6809,16 +6862,16 @@ begin this_box:=temp_ptr;
   temp_ptr:=list_ptr(this_box);
   if (type(temp_ptr)<>hlist_node)and(type(temp_ptr)<>vlist_node) then
     confusion("dir_out");
-  case box_dir(this_box) of
+  case abs(box_dir(this_box)) of
   dir_yoko:
-    case box_dir(temp_ptr) of
+    case abs(box_dir(temp_ptr)) of
     dir_tate: {Tate in Yoko}
       begin cur_v:=cur_v-height(this_box); cur_h:=cur_h+depth(temp_ptr) end;
     dir_dtou: {DtoU in Yoko}
       begin cur_v:=cur_v+depth(this_box); cur_h:=cur_h+height(temp_ptr) end;
     endcases;
   dir_tate:
-    case box_dir(temp_ptr) of
+    case abs(box_dir(temp_ptr)) of
     dir_yoko: {Yoko in Tate}
       begin cur_v:=cur_v+depth(this_box); cur_h:=cur_h+height(temp_ptr) end;
     dir_dtou: {DtoU in Tate}
@@ -6828,7 +6881,7 @@ begin this_box:=temp_ptr;
       end;
     endcases;
   dir_dtou:
-    case box_dir(temp_ptr) of
+    case abs(box_dir(temp_ptr)) of
     dir_yoko: {Yoko in DtoU}
       begin cur_v:=cur_v-height(this_box); cur_h:=cur_h+depth(temp_ptr) end;
     dir_tate: {Tate in DtoU}
@@ -6838,7 +6891,7 @@ begin this_box:=temp_ptr;
       end;
     endcases;
   endcases;
-  cur_dir_hv:=box_dir(temp_ptr);
+  cur_dir_hv:=abs(box_dir(temp_ptr));
   if type(temp_ptr)=vlist_node then vlist_out@+else hlist_out;
 end;
 
@@ -6884,7 +6937,9 @@ end;
 
 @<Append KANJI-character |cur_chr| ...@>=
 if is_char_node(tail) then
-  begin cx:=qo(character(tail)); @<Insert |post_break_penalty|@>;
+  begin if not( (last_jchr<>null) and (link(last_jchr)=tail) ) then
+    begin cx:=qo(character(tail)); @<Insert |post_break_penalty|@>;
+    end;
   end
 else if type(tail)=ligature_node then
   begin cx:=qo(character(lig_char(tail))); @<Insert |post_break_penalty|@>;

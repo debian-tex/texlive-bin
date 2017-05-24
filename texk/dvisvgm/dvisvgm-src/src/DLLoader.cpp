@@ -2,7 +2,7 @@
 ** DLLoader.cpp                                                         **
 **                                                                      **
 ** This file is part of dvisvgm -- a fast DVI to SVG converter          **
-** Copyright (C) 2005-2016 Martin Gieseking <martin.gieseking@uos.de>   **
+** Copyright (C) 2005-2017 Martin Gieseking <martin.gieseking@uos.de>   **
 **                                                                      **
 ** This program is free software; you can redistribute it and/or        **
 ** modify it under the terms of the GNU General Public License as       **
@@ -19,13 +19,13 @@
 *************************************************************************/
 
 #include <config.h>
-#include "DLLoader.h"
+#include "DLLoader.hpp"
 
 
 DLLoader::DLLoader (const char *dlname) : _handle(0)
 {
 	if (dlname && *dlname) {
-#ifdef __WIN32__
+#ifdef _WIN32
 		_handle = LoadLibrary(dlname);
 #else
 		_handle = dlopen(dlname, RTLD_LAZY);
@@ -36,7 +36,7 @@ DLLoader::DLLoader (const char *dlname) : _handle(0)
 
 DLLoader::~DLLoader () {
 	if (_handle) {
-#ifdef __WIN32__
+#ifdef _WIN32
 		FreeLibrary(_handle);
 #else
 		dlclose(_handle);
@@ -50,7 +50,7 @@ DLLoader::~DLLoader () {
  *  @return pointer to loaded symbol, or 0 if the symbol could not be loaded */
 void* DLLoader::loadSymbol (const char *name) {
 	if (_handle) {
-#ifdef __WIN32__
+#ifdef _WIN32
 		return (void*)GetProcAddress(_handle, name);
 #else
 		return dlsym(_handle, name);

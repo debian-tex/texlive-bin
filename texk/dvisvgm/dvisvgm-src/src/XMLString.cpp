@@ -2,7 +2,7 @@
 ** XMLString.cpp                                                        **
 **                                                                      **
 ** This file is part of dvisvgm -- a fast DVI to SVG converter          **
-** Copyright (C) 2005-2016 Martin Gieseking <martin.gieseking@uos.de>   **
+** Copyright (C) 2005-2017 Martin Gieseking <martin.gieseking@uos.de>   **
 **                                                                      **
 ** This program is free software; you can redistribute it and/or        **
 ** modify it under the terms of the GNU General Public License as       **
@@ -23,17 +23,15 @@
 #include <cstdlib>
 #include <iomanip>
 #include <sstream>
-#include "macros.h"
-#include "types.h"
-#include "Unicode.h"
-#include "XMLString.h"
+#include "Unicode.hpp"
+#include "XMLString.hpp"
 
 using namespace std;
 
 int XMLString::DECIMAL_PLACES = 0;
 
 
-static string translate (UInt32 c) {
+static string translate (uint32_t c) {
 	switch (c) {
 		case '<' : return "&lt;";
 		case '&' : return "&amp;";
@@ -48,8 +46,8 @@ XMLString::XMLString (const string &str, bool plain) {
 	if (plain)
 		assign(str);
 	else {
-		FORALL(str, string::const_iterator, i)
-			*this += translate(*i);
+		for (char c : str)
+			*this += translate(c);
 	}
 }
 
@@ -93,12 +91,13 @@ static inline double round (double x, int n) {
 
 XMLString::XMLString (double x) {
 	stringstream ss;
-	if (fabs(x) < 1e-8)
-		x = 0;
-	if (DECIMAL_PLACES > 0)
+	if (DECIMAL_PLACES > 0) {
+		// don't use fixed and setprecision() manipulators here to avoid
+		// banker's rounding applied in some STL implementations
 		x = round(x, DECIMAL_PLACES);
-	// don't use fixed and setprecision() manipulators here to avoid
-	// banker's rounding applied in some STL implementations
+	}
+	if (std::abs(x) < 1e-7)
+		x = 0;
 	ss << x;
 	ss >> *this;
 }

@@ -1,3 +1,4 @@
+dnl $Id$
 dnl Process this file with autoconf to produce a configure script.
 dnl
 dnl   Copyright 2016 Karl Berry <tex-live@tug.org>
@@ -9,9 +10,6 @@ dnl   with or without modifications, as long as this notice is preserved.
 dnl
 m4_include([version.ac])[] dnl define gregorio_version
 AC_INIT([Gregorio (TeX Live)], gregorio_version, [tex-k@tug.org], [gregorio--tex-live-], [http://gregorio-project.github.io/])
-FILENAME_VERSION="4_1_1"
-AC_SUBST(FILENAME_VERSION)
-AC_DEFINE_UNQUOTED(FILENAME_VERSION, "$FILENAME_VERSION", [version suitable for file names])
 AC_PREREQ([2.65])
 AC_CONFIG_SRCDIR([gregorio-src/src/gregorio-utils.c])
 AC_CONFIG_AUX_DIR([../../build-aux])
@@ -96,6 +94,8 @@ gl_FUNC_REALPATH_WORKS
 dnl Checks for header files.
 AC_CHECK_HEADERS([stdint.h])
 AC_CHECK_HEADERS([stdalign.h])
+
+AC_CHECK_ALIGNOF(uint32_t)
 
 AC_C_BIGENDIAN
 

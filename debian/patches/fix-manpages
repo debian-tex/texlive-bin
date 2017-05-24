@@ -1,14 +1,9 @@
 ---
- texk/detex/detex-src/detex.man       |    2 
  texk/mendexk/mendex.1                |    2 
  texk/web2c/man/mf.man                |   26 +++++-----
- texk/web2c/man/ofm2opl.man           |    2 
- texk/web2c/man/opl2ofm.man           |    2 
- texk/web2c/man/ovf2ovp.man           |    2 
- texk/web2c/man/ovp2ovf.man           |    2 
  texk/web2c/synctexdir/man5/synctex.5 |    6 +-
  texk/xdvik/xdvi.1.in                 |   88 +++++++++++++++++------------------
- 9 files changed, 66 insertions(+), 66 deletions(-)
+ 4 files changed, 61 insertions(+), 61 deletions(-)
 
 --- texlive-bin.orig/texk/web2c/man/mf.man
 +++ texlive-bin/texk/web2c/man/mf.man
@@ -481,16 +476,16 @@
  .SH FILES
 --- texlive-bin.orig/texk/web2c/synctexdir/man5/synctex.5
 +++ texlive-bin/texk/web2c/synctexdir/man5/synctex.5
-@@ -102,7 +102,7 @@
+@@ -103,7 +103,7 @@
  .It
- .Li <Input Line>*
+ .Li (<Form(k)>|<Input Line>)*
  .It
 -.Li ...
 +.Li \&...\&
  .It
  .Li <sheet(N)>
  .It
-@@ -276,7 +276,7 @@
+@@ -316,7 +316,7 @@
  Typically, one applies a dvi to pdf filter with offset options and magnification,
  then he appends the same options to the synctex file, for example
  .Bd -literal -offset indent
@@ -499,8 +494,8 @@
  .Ed
  .Bl -item -offset indent
  .\"
-@@ -311,7 +311,7 @@
- The byte offset is an implicit anchor to navigate the synctex file from sheet to sheet.
+@@ -366,7 +366,7 @@
+ This document has been updated on Sat Apr 22 09:57:20 UTC 2017 to include \\pdfxform support.
  .\" nroff -man synctex.5 | less
  .\"groff -man -Tascii synctex.5 | less
 -.\"To convert a man page to plain pre-formatted text (e.g for spell checking) use:
@@ -511,50 +506,10 @@
 --- texlive-bin.orig/texk/mendexk/mendex.1
 +++ texlive-bin/texk/mendexk/mendex.1
 @@ -1,6 +1,6 @@
- .if t .ds TX "T\h'-.15m'\v'.2v'E\v'-.2v'\h'-.12m'X
- .if t .ds LX L\v'-.22m'a\v'.22m'T\h'-.1667m'\v'.22m'E\h'-.125m'\v'-.22m'X
+ .if t .ds TX T\\h'-0.1667m'\\v'0.20v'E\\v'-0.20v'\\h'-0.125m'X
+ .if t .ds LX L\\h'-0.36m'\\v'-0.15v'\\s-2A\\s+2\\h'-0.15m'\\v'0.15v'T\\h'-0.1667m'\\v'0.20v'E\\v'-0.20v'\\h'-0.125m'X
 -.TH MENDEX L
 +.TH MENDEX 1
- .SH 名称
- mendex \- 索引整形ツール
- .SH 使用法
---- texlive-bin.orig/texk/detex/detex-src/detex.man
-+++ texlive-bin/texk/detex/detex-src/detex.man
-@@ -1,4 +1,4 @@
--.TH DETEX 1L "12 August 1993" "Purdue University"
-+.TH DETEX 1 "12 August 1993" "Purdue University"
  .SH NAME
- detex \- a filter to strip \fITeX\fP commands from a .tex file.
+ mendex \- Japanese index processor
  .SH SYNOPSIS
---- texlive-bin.orig/texk/web2c/man/ofm2opl.man
-+++ texlive-bin/texk/web2c/man/ofm2opl.man
-@@ -1,4 +1,4 @@
--.TH OFM2OPL "14 April 2016" "Web2C @VERSION@"
-+.TH OFM2OPL 1 "14 April 2016" "Web2C @VERSION@"
- .PP 
- .SH "NAME" 
- ofm2opl \- convert Omega and TeX font-metric files to property-list files
---- texlive-bin.orig/texk/web2c/man/opl2ofm.man
-+++ texlive-bin/texk/web2c/man/opl2ofm.man
-@@ -1,4 +1,4 @@
--.TH OPL2OFM "16 June 2015" "Web2C @VERSION@"
-+.TH OPL2OFM 1 "16 June 2015" "Web2C @VERSION@"
- .PP 
- .SH "NAME" 
- opl2ofm \- convert Omega and TeX property-list files to font-metric files
---- texlive-bin.orig/texk/web2c/man/ovf2ovp.man
-+++ texlive-bin/texk/web2c/man/ovf2ovp.man
-@@ -1,4 +1,4 @@
--.TH OVF2OVP "14 April 2016" "Web2C @VERSION@"
-+.TH OVF2OVP 1 "14 April 2016" "Web2C @VERSION@"
- .PP 
- .SH "NAME" 
- ovf2ovp \- convert virtual font file and associated font metrics to property-list format
---- texlive-bin.orig/texk/web2c/man/ovp2ovf.man
-+++ texlive-bin/texk/web2c/man/ovp2ovf.man
-@@ -1,4 +1,4 @@
--.TH OVP2OVF "16 June 2015" "Web2C @VERSION@"
-+.TH OVP2OVF 1 "16 June 2015" "Web2C @VERSION@"
- .PP 
- .SH "NAME" 
- ovp2ovf \- convert a virtual property-list file into a virtual font file and its associated font metric file

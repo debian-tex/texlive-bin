@@ -23,7 +23,7 @@
  }
 --- texlive-bin.orig/utils/devnag/src/devnag.c
 +++ texlive-bin/utils/devnag/src/devnag.c
-@@ -2408,7 +2408,7 @@
+@@ -2417,7 +2417,7 @@
  void err_ill(const char *str) {
     fprintf(stderr, "Error: illegal character(s) \"%s\" detected at line %d:\n",
  	  str, linenumber);
@@ -56,7 +56,7 @@
  }
 --- texlive-bin.orig/texk/web2c/cwebdir/cweave.w
 +++ texlive-bin/texk/web2c/cwebdir/cweave.w
-@@ -1784,7 +1784,7 @@
+@@ -1785,7 +1785,7 @@
  print_cat(c) /* symbolic printout of a category */
  eight_bits c;
  {

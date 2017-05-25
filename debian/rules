@@ -158,10 +158,9 @@ override_dh_install:
 	# can work with --fail-missing
 	rm -f debian/tmp/usr/lib/*.la debian/tmp/usr/lib/*/*.la
 	# mv c-auto.h into arch-dependent include path
-	# mkdir -p debian/tmp/usr/include/$(DEB_HOST_MULTIARCH)/kpathsea
-	# mv debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/kpathsea/c-auto.h \
-	# 	debian/tmp/usr/include/$(DEB_HOST_MULTIARCH)/kpathsea/
-	# rmdir debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/kpathsea
+	mkdir -p debian/tmp/usr/include/$(DEB_HOST_MULTIARCH)/kpathsea
+	mv debian/tmp/usr/include/kpathsea/c-auto.h \
+	 	debian/tmp/usr/include/$(DEB_HOST_MULTIARCH)/kpathsea/
 	dh_install --fail-missing --sourcedir=$(CURDIR)/debian/tmp
 	# replace xdvi wrapper shell script with perl variant to
 	# allow for opening of gz etc files
@@ -199,6 +198,9 @@ override_dh_install:
 	  rm debian/texlive-binaries/usr/bin/$$i ; \
 	  rm debian/texlive-binaries/usr/share/man/man1/$$i.1* ; \
 	done
+	# install dvisvgm man page
+	install -m 0644 texk/dvisvgm/dvisvgm-src/doc/dvisvgm.1 \
+		debian/texlive-binaries/usr/share/man/man1/dvisvgm.1
 	# for alternatives treatment we rename usr/bin/bibtex to
 	# usr/bin/bibtex.original
 	mv debian/texlive-binaries/usr/bin/bibtex \

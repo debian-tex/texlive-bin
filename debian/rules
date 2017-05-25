@@ -158,10 +158,10 @@ override_dh_install:
 	# can work with --fail-missing
 	rm -f debian/tmp/usr/lib/*.la debian/tmp/usr/lib/*/*.la
 	# mv c-auto.h into arch-dependent include path
-	mkdir -p debian/tmp/usr/include/$(DEB_HOST_MULTIARCH)/kpathsea
-	mv debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/kpathsea/c-auto.h \
-		debian/tmp/usr/include/$(DEB_HOST_MULTIARCH)/kpathsea/
-	rmdir debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/kpathsea
+	# mkdir -p debian/tmp/usr/include/$(DEB_HOST_MULTIARCH)/kpathsea
+	# mv debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/kpathsea/c-auto.h \
+	# 	debian/tmp/usr/include/$(DEB_HOST_MULTIARCH)/kpathsea/
+	# rmdir debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/kpathsea
 	dh_install --fail-missing --sourcedir=$(CURDIR)/debian/tmp
 	# replace xdvi wrapper shell script with perl variant to
 	# allow for opening of gz etc files

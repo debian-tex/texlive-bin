@@ -191,7 +191,7 @@ override_dh_install:
 	# remove files/links installed by texk/texlive/tl_scripts/
 	# which cannot be overridden
 	# these will be installed in the non-arch packages
-	for i in allec mktexfmt kpsexpand kpsepath allcm allneeded dvi2fax dvired \
+	for i in e2pall allec mktexfmt kpsexpand kpsepath allcm allneeded dvi2fax dvired \
 	         fontinst kpsetool kpsewhere ps2frag pslatex rubibtex rumakeindex \
 		 texconfig-dialog texconfig-sys texconfig texlinks ; do \
 	  rm debian/texlive-binaries/usr/bin/$$i ; \
@@ -238,10 +238,10 @@ override_dh_installchangelogs:
 	dh_installchangelogs -plibsynctex1 -plibsynctex-dev \
 		texk/web2c/synctexdir/ChangeLog
 	dh_installchangelogs -plibtexlua52 -plibtexlua52-dev \
-		libs/lua52/lua52-PATCHES/ChangeLog
+		libs/lua52/TLpatches/ChangeLog
 ifeq ($(WITHLUAJIT), yes)
 	dh_installchangelogs -plibtexluajit2 -plibtexluajit-dev \
-		libs/luajit/LuaJIT-PATCHES/ChangeLog
+		libs/luajit/TLpatches/ChangeLog
 endif
 
 override_dh_compress:

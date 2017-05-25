@@ -2,4 +2,3 @@ usr/lib/*/libkpathsea.a
 usr/lib/*/libkpathsea.so
 usr/lib/*/pkgconfig/kpathsea.pc
 usr/include/kpathsea/*
-usr/include/*/kpathsea/*

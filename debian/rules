@@ -177,13 +177,23 @@ override_dh_install:
 	rm -f debian/texlive-binaries/usr/share/info/dir*
 	# remove tlbuild info document, not needed
 	rm debian/texlive-binaries/usr/share/info/tlbuild.info*
-	rm debian/texlive-binaries/usr/share/man/man1/latex.1*
-	rm debian/texlive-binaries/usr/share/man/man1/pdflatex.1*
-	rm debian/texlive-binaries/usr/share/man/man1/lamed.1*
-	rm debian/texlive-binaries/usr/share/man/man1/amstex.1*
+	# remove various man pages
+	for i in latex pdflatex lamed amstex fmtutil-sys kpsexpand kpsepath \
+	         mktexfmt texconfig-sys updmap-sys ; do \
+	  rm debian/texlive-binaries/usr/share/man/man1/$$i.1* ; \
+	done
 	#
 	# remove tex4ht links, they are shipped with tl-htmlxml
-	for i in ht htcontext htlatex htmex httex httexi htxelatex htxetex mk4ht ; do \
+	for i in ht htcontext htlatex htmex httex httexi htxelatex htxetex mk4ht xhlatex ; do \
+	  rm debian/texlive-binaries/usr/bin/$$i ; \
+	done
+	#
+	# remove files/links installed by texk/texlive/tl_scripts/
+	# which cannot be overridden
+	# these will be installed in the non-arch packages
+	for i in allec mktexfmt kpsexpand kpsepath allcm allneeded dvi2fax dvired \
+	         fontinst kpsetool kpsewhere ps2frag pslatex rubibtex rumakeindex \
+		 texconfig-dialog texconfig-sys texconfig texlinks ; do \
 	  rm debian/texlive-binaries/usr/bin/$$i ; \
 	done
 	# for alternatives treatment we rename usr/bin/bibtex to

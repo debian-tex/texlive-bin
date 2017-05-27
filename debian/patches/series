@@ -12,3 +12,4 @@ fix-format-gcc-errors
 fix-mktexlsr-bashims
 disable-seetex-stdin-tests
 upupstream-xdvi-desktop-file
+mf-xt-fix-expose-events

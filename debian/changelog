@@ -1,3 +1,10 @@
+texlive-bin (2017.20170613.44572-1) experimental; urgency=medium
+
+  * New upstream version 2017.20170613.44572
+    - three fixes for luatex
+
+ -- Norbert Preining <preining@debian.org>  Tue, 13 Jun 2017 09:13:12 +0900
+
 texlive-bin (2017.20170524.44437-1) experimental; urgency=medium
 
   * make-orig-tar: we are in 2017 now ;-)

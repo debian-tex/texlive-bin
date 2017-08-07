@@ -1,8 +1,8 @@
-texlive-bin (2017.20170613.44572-4) UNRELEASED; urgency=medium
+texlive-bin (2017.20170613.44572-4) unstable; urgency=medium
 
   * fix typo in breaks (Closes: #867675)
 
- -- Norbert Preining <preining@debian.org>  Sun, 09 Jul 2017 22:54:57 +0900
+ -- Norbert Preining <preining@debian.org>  Mon, 07 Aug 2017 23:45:49 +0900
 
 texlive-bin (2017.20170613.44572-3) unstable; urgency=medium
 

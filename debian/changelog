@@ -1,17 +1,25 @@
+texlive-bin (2017.20170613.44572-5) UNRELEASED; urgency=medium
+
+  * fix changelog mess-up.
+
+ -- Norbert Preining <preining@debian.org>  Tue, 08 Aug 2017 07:55:10 +0900
+
 texlive-bin (2017.20170613.44572-4) unstable; urgency=medium
-
-  * fix typo in breaks (Closes: #867675)
-
- -- Norbert Preining <preining@debian.org>  Mon, 07 Aug 2017 23:45:49 +0900
-
-texlive-bin (2017.20170613.44572-3) unstable; urgency=medium
 
   * fix FTBFS with gcc7 (Closes: #870796)
     Thanks Werner Fink for the patch and Hironobu Yamashita for pointing
     me at it.
   * bump standards version, no changes necessary
 
- -- Norbert Preining <preining@debian.org>  Mon, 07 Aug 2017 23:23:43 +0900
+
+ -- Norbert Preining <preining@debian.org>  Tue, 08 Aug 2017 07:54:46 +0900
+
+texlive-bin (2017.20170613.44572-3) unstable; urgency=medium
+
+  * fix typo in breaks (Closes: #867675)
+  * bump standards version, no changes necessary
+
+ -- Norbert Preining <preining@debian.org>  Sun, 09 Jul 2017 22:54:57 +0900
 
 texlive-bin (2017.20170613.44572-2) unstable; urgency=medium
 

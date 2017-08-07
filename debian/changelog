@@ -3,8 +3,9 @@ texlive-bin (2017.20170613.44572-3) unstable; urgency=medium
   * fix FTBFS with gcc7 (Closes: #870796)
     Thanks Werner Fink for the patch and Hironobu Yamashita for pointing
     me at it.
+  * bump standards version, no changes necessary
 
- -- Norbert Preining <preining@debian.org>  Mon, 07 Aug 2017 23:21:17 +0900
+ -- Norbert Preining <preining@debian.org>  Mon, 07 Aug 2017 23:23:43 +0900
 
 texlive-bin (2017.20170613.44572-2) unstable; urgency=medium
 

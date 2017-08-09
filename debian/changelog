@@ -1,8 +1,10 @@
 texlive-bin (2017.20170613.44572-5) UNRELEASED; urgency=medium
 
   * fix changelog mess-up.
+  * move tex4ht.jar building to src:texlive-extra to allow for
+    bootstrapping (Closes: #870786)
 
- -- Norbert Preining <preining@debian.org>  Tue, 08 Aug 2017 07:55:10 +0900
+ -- Norbert Preining <preining@debian.org>  Wed, 09 Aug 2017 14:31:31 +0900
 
 texlive-bin (2017.20170613.44572-4) unstable; urgency=medium
 

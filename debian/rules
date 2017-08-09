@@ -143,13 +143,6 @@ override_dh_auto_configure:
 	--enable-ttf2pk2			\
 	--enable-ipc				
 
-override_dh_auto_build:
-	dh_auto_build
-	# build the java classes for tex4ht
-	mkdir -p Work/tex4ht-java
-	cd texk/tex4htk/java ; javac *.java */*.java */*/*.java -d ../../../Work/tex4ht-java
-	cd Work/tex4ht-java ; jar cvf ../tex4ht.jar .
-
 override_dh_auto_install:
 	dh_auto_install -- DESTDIR=$(CURDIR)/debian/tmp
 
@@ -168,10 +161,6 @@ override_dh_install:
 	install -m 0755 debian/xdvi-pl debian/texlive-binaries/usr/bin/xdvi
 	# remove texlive directories, they should not be shipped here
 	rm -rf debian/texlive-binaries/usr/share/texlive
-	# but we ship the tex4ht.jar file here ...
-	# install tex4ht.jar
-	mkdir -p $(CURDIR)/debian/texlive-binaries/usr/share/texlive/texmf-dist/tex4ht/bin/
-	cp Work/tex4ht.jar $(CURDIR)/debian/texlive-binaries/usr/share/texlive/texmf-dist/tex4ht/bin/tex4ht.jar
 	# remove wrongly added info/dir.gz
 	rm -f debian/texlive-binaries/usr/share/info/dir*
 	# remove tlbuild info document, not needed

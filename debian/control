@@ -34,8 +34,7 @@ Build-Depends:
   sharutils,
   texinfo,
   time,
-  zlib1g-dev | libz-dev,
-  default-jdk
+  zlib1g-dev | libz-dev
 Standards-Version: 4.0.1
 Homepage: http://www.tug.org/texlive/
 Vcs-Git: git://anonscm.debian.org/debian-tex/texlive-bin.git
@@ -62,7 +61,8 @@ Replaces: texlive-metapost (<< 2010), texlive-base (<< 2010), ptex-bin, mendexk,
 Conflicts: mendexk, makejvf, jmpost
 Breaks: texlive-base (<< 2016), jtex-bin, multex-bin, luatex (<< 2014), tex-common (<< 6), musixtex (<< 1:1.20.ctan20151216-3), pmx (<< 2.7.0.ctan20150301-3), m-tx (<< 0.61.ctan20151217-2), gregorio (<= 2.3-1), context (<< 2016), tex4ht (<< 20160814),
   texlive-htmlxml (<< 2016.20160829),
-  texlive-lang-japanese (<< 2017)
+  texlive-lang-japanese (<< 2017),
+  texlive-plain-generic (<< 2017.20170809)
 Provides: texlive-base-bin, makejvf, mendexk, jmpost, luatex
 Description: Binaries for TeX Live
  This package contains all the binaries of TeX Live packages.

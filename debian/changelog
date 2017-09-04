@@ -1,8 +1,9 @@
 texlive-bin (2017.20170613.44572-6) unstable; urgency=medium
 
   * do not include cwd in PDF ID (Closes: #874102)
+  * bump standards version, no changes necessary
 
- -- Norbert Preining <preining@debian.org>  Mon, 04 Sep 2017 09:20:58 +0900
+ -- Norbert Preining <preining@debian.org>  Mon, 04 Sep 2017 09:23:06 +0900
 
 texlive-bin (2017.20170613.44572-5) unstable; urgency=medium
 

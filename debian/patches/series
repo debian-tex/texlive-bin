@@ -14,3 +14,4 @@ disable-seetex-stdin-tests
 upupstream-xdvi-desktop-file
 mf-xt-fix-expose-events
 fix-gcc7-errors
+upstream-reproducible-pdf-ids

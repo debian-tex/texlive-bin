@@ -15,3 +15,5 @@ upupstream-xdvi-desktop-file
 mf-xt-fix-expose-events
 fix-gcc7-errors
 upstream-reproducible-pdf-ids
+# for now disabled ...
+#poppler-0.59-api-change

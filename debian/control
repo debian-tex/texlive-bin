@@ -24,7 +24,7 @@ Build-Depends:
   libpaper-dev,
   libpixman-1-dev (>= 0.32.4),
   libpng-dev,
-  libpoppler-private-dev (>= 0.38),
+  libpoppler-private-dev (>= 0.59),
   libpotrace-dev (>= 1.11),
   libtool (>= 2.4.2),
   libxaw7-dev,

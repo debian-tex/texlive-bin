@@ -1,11 +1,11 @@
 texlive-bin (2017.20170613.44572-7) UNRELEASED; urgency=medium
 
-  * make TL compatible to Poppler >= 0.59
+  * make TL compatible to Poppler >= 0.59 (Closes: #883521)
     - patches from upupstream Han The Thanh and adaptions by ArchLinux
       Thanks to Hilmar Preuße for preparing and testing
     - bump build-dep on libpoppler-private-dev to >= 0.59
 
- -- Norbert Preining <preining@debian.org>  Wed, 06 Dec 2017 10:22:43 +0900
+ -- Norbert Preining <preining@debian.org>  Wed, 06 Dec 2017 10:24:34 +0900
 
 texlive-bin (2017.20170613.44572-6) unstable; urgency=medium
 

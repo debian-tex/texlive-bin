@@ -5,8 +5,9 @@ texlive-bin (2017.20170613.44572-7) unstable; urgency=medium
       Thanks to Hilmar Preuße for preparing and testing
     - bump build-dep on libpoppler-private-dev to >= 0.59
   * remove outdated deps on ruby, wish, python (Closes: #883051)
+  * bump standards version, no changes necessary
 
- -- Norbert Preining <preining@debian.org>  Wed, 06 Dec 2017 20:18:32 +0900
+ -- Norbert Preining <preining@debian.org>  Wed, 06 Dec 2017 20:42:18 +0900
 
 texlive-bin (2017.20170613.44572-6) unstable; urgency=medium
 

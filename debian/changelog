@@ -1,4 +1,4 @@
-texlive-bin (2017.20170613.44572-7) UNRELEASED; urgency=medium
+texlive-bin (2017.20170613.44572-7) unstable; urgency=medium
 
   * make TL compatible to Poppler >= 0.59 (Closes: #883521)
     - patches from upupstream Han The Thanh and adaptions by ArchLinux
@@ -6,7 +6,7 @@ texlive-bin (2017.20170613.44572-7) UNRELEASED; urgency=medium
     - bump build-dep on libpoppler-private-dev to >= 0.59
   * remove outdated deps on ruby, wish, python (Closes: #883051)
 
- -- Norbert Preining <preining@debian.org>  Wed, 06 Dec 2017 20:15:42 +0900
+ -- Norbert Preining <preining@debian.org>  Wed, 06 Dec 2017 20:18:32 +0900
 
 texlive-bin (2017.20170613.44572-6) unstable; urgency=medium
 

@@ -1,3 +1,9 @@
+texlive-bin (2017.20170613.44572-8) UNRELEASED; urgency=medium
+
+  * support building without icu-config available (Closes: #879801)
+
+ -- Norbert Preining <preining@debian.org>  Fri, 08 Dec 2017 00:39:48 +0900
+
 texlive-bin (2017.20170613.44572-7) unstable; urgency=medium
 
   * make TL compatible to Poppler >= 0.59 (Closes: #883521)

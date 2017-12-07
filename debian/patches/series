@@ -20,3 +20,4 @@ upstream-reproducible-pdf-ids
 #poppler-0.59-api-change
 # this patch is from HT and arch linux and tested in Debian
 poppler-0.59.patch
+icu-pkg-config

@@ -169,23 +169,12 @@ override_dh_install:
 	for i in latex pdflatex lamed amstex ; do \
 	  rm debian/texlive-binaries/usr/share/man/man1/$$i.1* ; \
 	done
-	rm debian/texlive-binaries/usr/share/man/man5/fmtutil.cnf.5*
-	rm debian/texlive-binaries/usr/share/man/man5/updmap.cfg.5*
 	#
 	# remove tex4ht links, they are shipped with tl-htmlxml
 	for i in ht htcontext htlatex htmex httex httexi htxelatex htxetex mk4ht xhlatex ; do \
 	  rm debian/texlive-binaries/usr/bin/$$i ; \
 	done
 	#
-	# remove files/links installed by texk/texlive/tl_scripts/
-	# which cannot be overridden
-	# these will be installed in the non-arch packages
-	for i in e2pall allec mktexfmt kpsexpand kpsepath allcm allneeded dvi2fax dvired \
-	         fontinst kpsetool kpsewhere ps2frag pslatex rubibtex rumakeindex \
-		 texconfig-dialog texconfig-sys texconfig texlinks ; do \
-	  rm debian/texlive-binaries/usr/bin/$$i ; \
-	  rm debian/texlive-binaries/usr/share/man/man1/$$i.1* ; \
-	done
 	# install dvisvgm man page
 	install -m 0644 texk/dvisvgm/dvisvgm-src/doc/dvisvgm.1 \
 		debian/texlive-binaries/usr/share/man/man1/dvisvgm.1

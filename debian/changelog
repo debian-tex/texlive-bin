@@ -1,8 +1,11 @@
-texlive-bin (2017.20170613.44572-8) UNRELEASED; urgency=medium
+texlive-bin (2017.20170613.44572-8) unstable; urgency=medium
 
   * support building without icu-config available (Closes: #879801)
+  * work around limitation so of (dh_)autoreconf by reimplementing parts
+    of the upstream provided reautoconf script logic
+  * clean up debian/rules (thanks Hilmar Preuße) after complete reautoconf
 
- -- Norbert Preining <preining@debian.org>  Fri, 08 Dec 2017 00:39:48 +0900
+ -- Norbert Preining <preining@debian.org>  Mon, 11 Dec 2017 11:14:24 +0900
 
 texlive-bin (2017.20170613.44572-7) unstable; urgency=medium
 

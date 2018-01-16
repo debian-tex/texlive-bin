@@ -5,8 +5,8 @@
 
 --- texlive-bin.orig/texk/xdvik/Makefile.am
 +++ texlive-bin/texk/xdvik/Makefile.am
-@@ -206,6 +206,9 @@
- dvipsconfdir = $(datarootdir)/texmf-dist/dvips/config
+@@ -207,6 +207,9 @@
+ dvipsconfdir = $(datarootdir)/texmf-dist/dvips/xdvi
  dist_noinst_DATA = texmf/config.xdvi
  
 +desktopdir = $(datarootdir)/applications

@@ -10,14 +10,6 @@ remove-libdir-from-kpathsea-pkgconfig
 # from here on upstream patches
 fix-format-gcc-errors
 fix-mktexlsr-bashims
-disable-seetex-stdin-tests
+#disable-seetex-stdin-tests
 upupstream-xdvi-desktop-file
 mf-xt-fix-expose-events
-fix-gcc7-errors
-upstream-reproducible-pdf-ids
-# fixes for poppler >= 0.59
-# this patch is from TL
-#poppler-0.59-api-change
-# this patch is from HT and arch linux and tested in Debian
-poppler-0.59.patch
-icu-pkg-config

@@ -1,3 +1,10 @@
+texlive-bin (2018.20180116.46329-1) UNRELEASED; urgency=medium
+
+  * New upstream version 2018.20180116.46329
+  * update patches to 2018
+
+ -- Norbert Preining <preining@debian.org>  Tue, 16 Jan 2018 14:36:27 +0900
+
 texlive-bin (2017.20170613.44572-8) unstable; urgency=medium
 
   * support building without icu-config available (Closes: #879801)

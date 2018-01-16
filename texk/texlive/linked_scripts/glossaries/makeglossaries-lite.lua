@@ -26,6 +26,12 @@
    This work has the LPPL maintenance status `maintained'.
   
    History:
+   * 4.35:
+     - no change.
+   * 4.34:
+     - added check for \glsxtr@resource
+   * 4.33:
+     - version number synchronized with glossaries.sty
    * 1.3
      - added check for \glsxtr@makeglossaries
    * 1.2 (2016-05-27)
@@ -35,7 +41,7 @@
      - changed first line from lua to texlua
 --]]
 
-thisversion = "1.3 2016-12-16"
+thisversion = "4.35 2017-11-14"
 
 quiet = false
 dryrun = false
@@ -46,6 +52,8 @@ styfile = nil
 logfile = nil
 
 isxindy = false
+
+isbib2gls = false
 
 xindylang = nil
 xindyexec = "xindy"
@@ -327,18 +335,31 @@ assert(io.input(auxfile),
 
 aux = io.read("*a")
 
+if string.find(aux, "\\glsxtr@resource") ~= nil
+then
+  isbib2gls = true
+end
+
 if styfile == nil
 then
   styfile = string.match(aux, "\\@istfilename{\"?([^}]*%.?%a*)\"?}")
 
   if styfile == nil
   then
-    error([[
+    if isbib2gls
+    then
+       error([[
+No \@istfilename found but found \glsxtr@resource.
+You need to run bib2gls not makeglossaries-lite.
+  ]])
+    else
+       error([[
 No \@istfilename found.
 Did your LaTeX run fail?
 Did your LaTeX run produce any output?
 Did you remember to use \makeglossaries?
   ]])
+    end
   end
 end
 

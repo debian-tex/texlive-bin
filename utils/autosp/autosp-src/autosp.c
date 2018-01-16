@@ -1,4 +1,4 @@
-char version[12] = "2017-04-06";
+char version[12] = "2017-12-22";
 
 /*  Copyright (C) 2014-17 R. D. Tennent School of Computing,
  *  Queen's University, rdt@cs.queensu.ca
@@ -24,7 +24,7 @@ char version[12] = "2017-04-06";
 /*  autosp - preprocessor to generate note-spacing commands for MusiXTeX scores */
 
 /*  Usage: autosp [-v | --version | -h | --help]
- *         autosp [-d | --dotted] [-l | --log] infile[.aspc] [outfile[.tex]]
+ *         autosp [-d | --dotted] [-l | --log] infile[.aspc | .tex] [outfile[.tex]]
  *
  *  Options 
  *    --dotted (-d) suppresses extra spacing for dotted beam notes.
@@ -50,18 +50,28 @@ char version[12] = "2017-04-06";
  *      characters terminator[i] for each staff; '$' is used
  *      as the terminator for the last staff.
  *
- *    generate_notes, which repeatedly uses spacing_note to
+ *    generate_notes, which repeatedly uses spacing_note (i) to
  *      determine spacings[i] of the next spacing note in 
  *      each staff; the current spacing is then the smallest
  *      of these.  If necessary, the current notes command
- *      is terminated and a new notes command initiated.
- *      Then one note (or skip) is generated for each staff.
- *      When necessary, vspacing[i] is set to generate subsequent
- *      skips.  Appoggiaturas and xtuplets are treated separately.
+ *      is terminated by terminate_notes() and a new notes 
+ *      command initiated by initialize_notes(). The current global 
+ *      skip and note commands for each staff are then copied to 
+ *      outstrings[i] using output_notes (i).  When necessary, 
+ *      vspacing[i] is set to generate subsequent skips.
+ *      Appoggiaturas and xtuplets are treated separately.
  *
  *    spacing_note (i), which searches for the next spacing note
  *      in the i'th staff, unless a "virtual note" (skip) is
  *      needed.
+ *  
+ *    output_notes (i), which copies a global_skip string and 
+ *    outstrings[i] to output, using filter_output (i) to discard
+ *    commas and global and large skips, and insert collective-coding 
+ *    prefixes and closing braces.  
+ *
+ *    terminate_notes, which copies outstrings[i] to output,
+ *    in the order determined by TransformNotes2.
  *
  *  Spacing values are expressed as sums of binary multiples of 
  *    SMALL_NOTE (by default, 1/256th); for example, half-note
@@ -95,7 +105,6 @@ char version[12] = "2017-04-06";
 
 # define PRIVATE static
 
-# define LINE_LEN 1024
 # define SHORT_LEN 256
 # define MAX_STAFFS 9
 
@@ -111,7 +120,7 @@ char version[12] = "2017-04-06";
 # define NOTEsp  "\\vnotes9.52\\elemskip"
 # define APPOGG_NOTES "\\vnotes1.45\\elemskip"
 
-PRIVATE bool debug = true;
+PRIVATE bool debug = false;
 PRIVATE char infilename[SHORT_LEN];
 PRIVATE char *infilename_n = infilename;
 PRIVATE char outfilename[SHORT_LEN];
@@ -127,8 +136,7 @@ PRIVATE char line[LINE_LEN];            /* line of input                      */
 PRIVATE int ninstr = 1;                 /* number of instruments              */
 PRIVATE int staffs[MAX_STAFFS] = {0,1}; /* number of staffs for ith instrument*/
 PRIVATE int nstaffs = 1;                /* number of staffs                   */
-PRIVATE int nastaffs = 0;               /* number of active staffs; 
-                                           0 means all are active             */
+PRIVATE int nastaffs = 1;               /* number of active staffs;           */
 PRIVATE char terminator[MAX_STAFFS];    /* one of '&' "|', '$'                */
 PRIVATE bool active[MAX_STAFFS];        /* is staff i active?                 */
 
@@ -140,12 +148,15 @@ PRIVATE int spacing = MAX_SPACING;      /* spacing for current notes          */
 PRIVATE int old_spacing = MAX_SPACING;
 
 PRIVATE int vspacing[MAX_STAFFS];       /* virtual-note (skip) spacing        */
+PRIVATE bool vspacing_active[MAX_STAFFS]; /* virtual-note spacing active?       */
+                      /* used to preclude unnecessary pre-accidental skips    */
+
 PRIVATE bool nonvirtual_notes;          
-  /* used to preclude output of *only* virtual notes */
+                           /* used to preclude output of *only* virtual notes */
 
 PRIVATE int cspacing[MAX_STAFFS];       /* nominal collective-note spacing    */
 PRIVATE char collective[MAX_STAFFS][SHORT_LEN];
-                            /* prefixes for collective note sequences */
+                                    /* prefixes for collective note sequences */
 PRIVATE bool first_collective[MAX_STAFFS];
 
 PRIVATE int restbars = 0;
@@ -167,25 +178,33 @@ PRIVATE bool first_collectivei;
 PRIVATE int xtuplet[MAX_STAFFS];        /* x for xtuplet in staff i          */
 
 PRIVATE bool appoggiatura;
-PRIVATE bool fixnotes = false;          /* process \Notes etc. like \anotes?  */
-PRIVATE bool dottedbeamnotes = false;   /* dotted beam notes ignored?         */
+PRIVATE bool fixnotes = false;          /* process \Notes etc. like \anotes? */
+PRIVATE bool dottedbeamnotes = false;   /* dotted beam notes ignored?        */
 
 PRIVATE bool bar_rest[MAX_STAFFS];
 
 PRIVATE char outstrings[MAX_STAFFS][LINE_LEN];  
-                               /* accumulate commands to be output    */
+                                     /* accumulate commands to be output    */
 PRIVATE char *n_outstrings[MAX_STAFFS];
 
 PRIVATE int global_skip;  
-   /* = 1, 2 or 4, for (non-standard) commands \QQsk \HQsk \Qsk */
-PRIVATE char global_skip_str[8];
-PRIVATE char *n_global_skip_str = global_skip_str;
+   /* = 1, 2, 3, or 4 for (non-standard) commands \QQsk \HQsk \TQsk \Qsk    */
+   /* = 5 for five commas and double-flat accidental spacing                */
+   /* = 6 for six commas                                                    */
+PRIVATE char global_skip_str[7][16]   
+= { "","\\qqsk","\\hqsk","\\tqsk","\\qsk","\\qsk\\qqsk","\\qsk\\hqsk" }; 
+                                   /* all based on \elemskip, not \noteskip */
+
+PRIVATE char TransformNotes2[SHORT_LEN] = {'\0'};      
+                                      /* 2nd argument of \TransformNotes    */
+PRIVATE bool TransformNotesDefined = false;
 
 PRIVATE void
-usage (FILE *f)
+usage ()
 {
-  fprintf (f, "Usage: autosp [-v | --version | -h | --help]\n");
-  fprintf (f, "       autosp [-d | --dotted] [-l | --log] infile[.aspc] [outfile[.tex]]\n");
+  printf ("Usage: autosp [-v | --version | -h | --help]\n");
+  printf ("       autosp [-d | --dotted] [-l | --log] infile[.aspc] [outfile[.tex]]\n");
+  printf ("       autosp [-d | --dotted] [-l | --log] infile.tex outfile[.tex]\n");
 }
 
 
@@ -256,6 +275,8 @@ status_all (void)
     if (active[i]) status (i);
   status_spacing ();
   fprintf (logfile, "nastaffs=%d\n", nastaffs);
+  if (dottedbeamnotes) 
+    fprintf (logfile, "dottedbeamnotes == true\n");
 }
 
 PRIVATE void
@@ -275,7 +296,6 @@ status_beam (int i)
   { fprintf (logfile, "beaming[%d]=%s\n", i, ps(beaming[i])); }
 }
 
-
 PRIVATE
 void analyze_notes (char **ln) 
 /* divide material from *ln to \en into notes[i] segments
@@ -283,11 +303,8 @@ void analyze_notes (char **ln)
 {
   int i; char *s; char *t;  
   int newlines = 0;
-  s = strpbrk (*ln+1, "|&\\\n"); /* skip initial command      */
-  if (s == NULL) 
-  {
-    error ("Can''t find end of command");
-  }
+  s = *ln+1;  /* skip "/"  */
+  while (isalpha(*s)) {s++;}  /* skip rest of the initial command  */
   while (true)
   { /* look for \en */
     t = strstr(s, "\\en");
@@ -327,23 +344,25 @@ void analyze_notes (char **ln)
     if (*s != '$') s++;
   }
   lineno = lineno + newlines;
+
+  /* initialize: */
+  spacing = MAX_SPACING;
+  old_spacing = MAX_SPACING;
+  appoggiatura = false;
+  global_skip = 0;
   for (i=1; i <= nstaffs; i++)
   {
     if (active[i])
     { n_outstrings[i] = outstrings[i];
       *n_outstrings[i] = '\0';
       vspacing[i] = 0;  
+      vspacing_active[i] = false;  
       collective[i][0] = '\0'; 
       cspacing[i] = MAX_SPACING; 
       first_collective[i] = false;
+      xtuplet[i] = 1;
     }
   }
-  spacing = MAX_SPACING;
-  old_spacing = MAX_SPACING;
-  for (i=1; i <= nstaffs; i++)
-    xtuplet[i] = 1;
-  appoggiatura = false;
-  global_skip = 0;
   if (debug) 
   { fprintf (logfile, "\nAfter analyze_notes:\n");
     status_all ();
@@ -354,7 +373,7 @@ PRIVATE
 void checkc (char *s, char c)
 { if (*s != c) 
   {
-    fprintf (stderr, "Error on line %d: Expected %c but found %d:\n%s\n", lineno, c, *s, line);
+    printf ("Error on line %d: Expected %c but found %d:\n%s\n", lineno, c, *s, line);
     exit (EXIT_FAILURE);
   }
 }
@@ -363,27 +382,32 @@ PRIVATE
 void checkn (char *s)
 { if (strpbrk (s, "0123456789") != s) 
   {
-    fprintf (stderr, "Error on line %d: Expected digit but found %c:\n%s\n", lineno, *s, line);
+    printf ("Error on line %d: Expected digit but found %c:\n%s\n", lineno, *s, line);
     exit (EXIT_FAILURE);
   }
 }
 
 PRIVATE
-void output_filtered (int i)
-{ /* discard \sk \hsk \Qsk \HQsk \QQsk and \Cpause */
+void filter_output (int i)
+{ /* discard \sk \bsk \Qsk \TQsk \HQsk \QQsk and \Cpause */
   char *s = notes[i];
   while (s < current[i])
-  { char *t = strpbrk (s+1, "\\&|$");
+  { char *t;
+    t = strpbrk (s+1, "\\&|$");
     if (t == NULL || t > current[i]) t = current[i];
     if (!prefix ("\\sk", s)
-     && !prefix ("\\hsk", s)
+     && !prefix ("\\bsk", s)
      && !prefix ("\\Cpause", s) 
      && !prefix ("\\Qsk", s) 
      && !prefix ("\\HQsk", s) 
-     && !prefix ("\\QQsk", s) )
+     && !prefix ("\\TQsk", s) 
+     && !prefix ("\\QQsk", s) 
+     && !prefix ("\\Triolet", s)
+     && !prefix ("\\Xtuplet", s) )
     {
       while (s < t) 
-      { *n_outstrings[i] = *s; 
+      { while (*s == ',') s++; /* global skips */
+        *n_outstrings[i] = *s; 
         n_outstrings[i]++; s++; 
       }
       *(n_outstrings[i]) = '\0';
@@ -400,6 +424,11 @@ void output_notes (int i)
   { fprintf (logfile, "\nEntering output_notes:\n");
     status (i);
   }
+  if (debug)
+  {
+    fprintf (logfile, "\nAppending %s for global_skip=%i\n", global_skip_str[global_skip], global_skip);
+  }
+  append (outstrings[i], &(n_outstrings[i]), global_skip_str[global_skip], LINE_LEN);
   if (vspacing[i] > 0)
   { 
     if (nonvirtual_notes) 
@@ -416,10 +445,11 @@ void output_notes (int i)
     if (!first_collective[i])
       append (outstrings[i], &(n_outstrings[i]), collective[i], LINE_LEN);
     first_collective[i] = false;
-    output_filtered (i);
+    filter_output (i);
     append (outstrings[i], &(n_outstrings[i]), "}", LINE_LEN);
     if (*notes[i] == '}')
     { collective[i][0] = '\0';
+      cspacing[i] = 0;
       notes[i]++;
     }
     if (*notes[i] == '}')  /* close of {\tinynotesize..{}}? */
@@ -433,7 +463,7 @@ void output_notes (int i)
     }
   }
   else
-    output_filtered (i);
+    filter_output (i);
   if (debug)
   { fprintf (logfile, "\nAfter output_notes:\n");
     status (i);
@@ -457,6 +487,15 @@ void pseudo_output_notes (int i)
 }
 
 PRIVATE
+void update_global_skip (int n)
+/* global skips may be used in more than one staff */
+{  
+  if (n>6) 
+  { warning ("Too many commas."); n = 6; }
+  if (global_skip < n) global_skip = n; 
+}
+
+PRIVATE
 int collective_note (int i)
 { char *s = current[i];
   int spacing = cspacing[i];
@@ -466,13 +505,41 @@ int collective_note (int i)
     status_collective (i);
   }
   while (true) /* search for alphabetic or numeric note (or asterisk) */
-  {
+  { int n = 0;
+    while (*s == ',') 
+    { n++; s++; } /* global skips */
+    update_global_skip (n);
+      /* commas will be discarded by filter_output (i) */
     if (*s == '.' && new_beaming == 0 && !dottedbeamnotes) 
-      spacing = spacing * 1.50; 
+      spacing = (int)(spacing * 1.50); 
+    else if ( (*s == '^' || *s == '_' || *s == '=' || *s == '>') 
+              && !vspacing_active[i]  /* is additional spacing needed? */
+            )
+    /* leave space for normal accidentals */
+    { update_global_skip (3) ;
+      if (debug)
+      { fprintf (logfile, "\nLeave space for accidental\n");
+        status (i);
+        status_beam (i);
+        status_collective (i);
+      }
+    }
+    else if ( (*s == '<') /* double-flat */ 
+              && !vspacing_active[i]  /* is additional spacing needed? */
+            )
+    { update_global_skip (5);
+      if (debug)
+      { fprintf (logfile, "\nLeave space for double-flat\n");
+        status (i);
+        status_beam (i);
+        status_collective (i);
+      }
+    }
     else if (isalnum (*s) || *s == '*')
     {  
       s++; 
-      while (*s == '\'' || *s == '`' || *s == '!') /* transposition character */
+      while (*s == '\'' || *s == '`' || *s == '!') 
+      /* transposition characters */
         s++;
       current[i] = s;
       if (debug)
@@ -480,6 +547,7 @@ int collective_note (int i)
         status (i);
         status_collective (i);
       }
+      vspacing_active[i] = false;
       return spacing; 
     }
     s++;
@@ -711,19 +779,8 @@ int spacing_note (int i)
       break;
     }
 
-    if ( prefix("\\tq", s) 
-      && !prefix("\\tqq", s))
-    { spacing = beaming[i];
-      new_beaming = 0;
-      if (debug)
-      { fprintf (logfile, "\nAfter beam completion:\n");
-        status (i); 
-        status_beam (i);
-      }
-      break; 
-    }
-
-    if (prefix("\\tqqq", s) )
+    if (prefix("\\tqqq", s) ||
+        prefix("\\nqqq", s) )
     { if (beaming[i] > SP(32)) 
         beaming[i] = SP(32);
       spacing = beaming[i];
@@ -737,7 +794,8 @@ int spacing_note (int i)
       break;
     }
 
-    if (prefix("\\tqq", s) )
+    if (prefix("\\tqq", s) ||
+        prefix("\\nqq", s) )
     { if (beaming[i] > SP(16)) 
         beaming[i] = SP(16);
       spacing = beaming[i];
@@ -750,6 +808,18 @@ int spacing_note (int i)
       }
       break;
     }
+    if ( prefix("\\tq", s) 
+      && !prefix("\\tqsk", s) )
+    { spacing = beaming[i];
+      new_beaming = 0;
+      if (debug)
+      { fprintf (logfile, "\nAfter beam completion:\n");
+        status (i); 
+        status_beam (i);
+      }
+      break; 
+    }
+
 
 /*  non-spacing commands:  */
 
@@ -765,13 +835,16 @@ int spacing_note (int i)
     /* non-spacing beam termination */
       new_beaming = 0; 
 
-    else if ( prefix("\\xtuplet", s))
+    else if ( prefix("\\xtuplet", s) ||
+              prefix("\\xxtuplet", s)||
+              prefix("\\Xtuplet", s) )
     { char *t = s+1;
       while (!isdigit(*t)) t++;
       xtuplet[i] = atoi(t);
     }
     else 
     if ( prefix("\\triolet", s)
+      || prefix("\\Triolet", s)
       || prefix("\\uptrio", s)
       || prefix("\\downtrio", s)
       || prefix("\\uptuplet", s)
@@ -802,11 +875,13 @@ int spacing_note (int i)
 
     else if (prefix("\\ppt", s) 
        || prefix("\\pppt", s) )
+    { 
       doubledotted = true;  /* triple-dotted spaced as double-dotted */
-
+    }
     else if (prefix("\\pt", s) && !prefix("\\ptr", s)) 
+    {
       dotted = true;
-
+    }
     else if ( prefix ("\\Dqbb", s) )
     { semiauto_beam_notes[i] = 1;
       beaming[i] = SP(16);
@@ -861,13 +936,16 @@ int spacing_note (int i)
       else 
         s = skip_arg(t); 
     }
+    else if (prefix ("\\Hsk", s) )
+      update_global_skip (5); 
     else if (prefix ("\\Qsk", s) )
-    /* may have global skips in more than one staff */
-    {  if (global_skip < 4) global_skip = 4; }
+      update_global_skip (4); 
+    else if (prefix ("\\TQsk", s) )
+      update_global_skip (3); 
     else if (prefix ("\\HQsk", s) )
-    {  if (global_skip < 2) global_skip = 2; }
+      update_global_skip (2); 
     else if (prefix ("\\QQsk", s) )
-    {  if (global_skip < 1) global_skip = 1; }
+      update_global_skip (1);
 
     /* Command is non-spacing.         */
     /* Skip ahead to the next command. */
@@ -888,11 +966,13 @@ int spacing_note (int i)
   if (prefix ("\\whpp", s)
    || prefix ("\\hupp", s)
    || prefix ("\\hlpp", s)
+   || prefix ("\\happ", s)
    || prefix ("\\hspp", s)
    || prefix ("\\hppp", s)
    || prefix ("\\hpausepp", s)
    || prefix ("\\qupp", s)
    || prefix ("\\qlpp", s)
+   || prefix ("\\qapp", s)
    || prefix ("\\qspp", s)
    || prefix ("\\qppp", s)
    || prefix ("\\qqspp", s)
@@ -905,16 +985,18 @@ int spacing_note (int i)
    || prefix ("\\qbpp", s) 
    || prefix ("\\dspp", s) 
    || doubledotted  )
-  { spacing *= 1.75; doubledotted = false;}
+  { spacing = (int)(spacing * 1.75); doubledotted = false;}
   else 
   if (prefix ("\\whp", s)
    || prefix ("\\hup", s)
    || prefix ("\\hlp", s)
+   || prefix ("\\hap", s)
    || prefix ("\\hsp", s)
    || prefix ("\\hpp", s)
    || prefix ("\\hpausep", s)
    || prefix ("\\qup", s)
    || prefix ("\\qlp", s)
+   || prefix ("\\qap", s)
    || prefix ("\\qsp", s)
    || prefix ("\\qqsp", s)
    || prefix ("\\qpp", s)
@@ -926,8 +1008,8 @@ int spacing_note (int i)
    || prefix ("\\ccclp", s)
    || prefix ("\\qbp", s) 
    || prefix ("\\dsp", s) 
-    || dotted  )
-  { spacing *= 1.5; dotted = false; }
+    || dotted  ) 
+  { spacing = (int)(spacing * 1.5); dotted = false; }
 
   t = strpbrk (s+1, "{\\&|$"); /* collective coding?  */
   if (*t == '{')  /*  {...}  */
@@ -950,6 +1032,7 @@ int spacing_note (int i)
   { fprintf (logfile, "\nAfter spacing_note:\n");
     status (i);
   }
+  vspacing_active[i] = false;
   return spacing;
 }
 
@@ -957,88 +1040,12 @@ PRIVATE void
 output_rests (void)
 { /* outputs a multi-bar rest and the deferred_bar command */
   int i;
-  for (i=1; i <= nstaffs; i++)
-  { if (active[i])
-      switch (restbars)
-      { case 0: return; 
-        case 1: case 7: case 9:
-          fprintf ( outfile, "\\NOTEs");
-          break;
-        case 2: 
-          fprintf ( outfile, "\\NOTesp");
-          break;
-        case 3: case 5: case 6: case 8:
-          fprintf ( outfile, "\\NOTes" );
-          break;
-        case 4:
-          fprintf ( outfile, "\\NOtesp" );
-          break;
-        default:  
-          fprintf ( outfile, "\\NOTEs" );
-      }
-  }
-  for (i=1; i <= nstaffs; i++)
-  {
-    if (active[i])
-      switch (restbars)
-      { case 1: 
-          fprintf ( outfile, "\\sk" );
-          break;
-/*
-        case 2: case 4: case 3: case 5: case 6: case 7: case 8: case 9:
-          fprintf ( outfile, "\\hqsk\\sk" );
-          break;
-*/
-        default:  
-          fprintf ( outfile, "\\sk" );
-      }
-    if (terminator[i] == '&' || terminator[i] == '|') 
-     putc (terminator[i], outfile);
-  }
-  fprintf (outfile, "\\en%%\n");
+  fprintf ( outfile, "\\NOTes\\sk\\en%%\n" );
   fprintf (outfile, "\\def\\atnextbar{\\znotes");
-  for (i=1; i <= nstaffs; i++)
-  {
-    if (active[i])
-    {
-      switch (restbars)
-      { case 1: 
-          fprintf ( outfile, "\\centerpause" );
-          break;
-
-/*  These styles of multi-bar rests now considered obsolete:
- 
-        case 2: 
-          fprintf ( outfile, "\\centerbar{\\ccn{9}{\\meterfont2}}\\centerPAuse");
-          break;
-        case 3:
-          fprintf ( outfile, "\\centerbar{\\ccn{9}{\\meterfont3}}\\centerbar{\\cPAuse\\off{2.0\\elemskip}\\cpause}");
-          break;
-        case 4:
-          fprintf ( outfile, "\\centerbar{\\ccn{9}{\\meterfont4}}\\centerPAUSe");
-          break;
-        case 5:
-          fprintf ( outfile, "\\centerbar{\\ccn{9}{\\meterfont5}}\\centerbar{\\cPAUSe\\off{2.0\\elemskip}\\cpause}");
-          break;
-        case 6:
-          fprintf ( outfile, "\\centerbar{\\ccn{9}{\\meterfont6}}\\centerbar{\\cPAUSe\\off{2.0\\elemskip}\\cPAuse}");
-          break;
-        case 7:
-          fprintf ( outfile, "\\centerbar{\\ccn{9}{\\meterfont7}}\\centerbar{\\cPAUSe\\off{2.0\\elemskip}\\cPAuse\\off{2.0\\elemskip}\\cpause}");
-          break;
-        case 8:
-          fprintf ( outfile, "\\centerbar{\\ccn{9}{\\meterfont8}}\\centerbar{\\cPAUSe\\off{2.0\\elemskip}\\cPAUSe}");
-          break;
-        case 9:
-          fprintf ( outfile, "\\centerbar{\\ccn{9}{\\meterfont9}}\\centerbar{\\cPAUSe\\off{2.0\\elemskip}\\cPAUSe\\off{2.0\\elemskip}\\cpause}");
-          break;
-*/
-        default:  
-          fprintf ( outfile, "\\centerHpause{%d}", restbars );
-      }
-    }
-    if (terminator[i] != '$') putc (terminator[i], outfile);
-  }
+  if (restbars == 1)
+     fprintf ( outfile, "\\centerpause" );
+  else  
+     fprintf ( outfile, "\\centerHpause{%d}", restbars );
   fprintf (outfile, "\\en}%%\n");
   if (Changeclefs) /* \Changeclefs has to be output after \def\atnextbar...  */
   {
@@ -1059,6 +1066,9 @@ void initialize_notes ()
   { fprintf (logfile, "\nEntering initialize_notes\n");
     status_all ();
   }
+  if ( nastaffs == 1 && spacing != MAX_SPACING && restbars > 0) 
+    output_rests ();
+
   if (spacing == MAX_SPACING)
     fprintf (outfile, "\\znotes");
   else if (spacing == SP(1)+SP(2) || spacing == SP(1)+SP(2)+SP(4))
@@ -1096,14 +1106,17 @@ void initialize_notes ()
   else if (spacing == APPOGG_SPACING)
     fprintf (outfile, "%s", APPOGG_NOTES); 
   else 
-  { fprintf (stderr, "Error on line %d: spacing %s not recognized.\n", lineno, ps(spacing));
+  { printf ("Error on line %d: spacing %s not recognized.\n", lineno, ps(spacing));
     exit (EXIT_FAILURE);
   }
-  if (debug) fprintf (logfile, "\noutputting \\Notes command for spacing=%s.\n", ps(spacing));
+  if (debug) 
+  {  fprintf (logfile, "\noutputting \\Notes command for spacing=%s.\n", ps(spacing));
+     status_all();
+  }
   for (i=1; i <= nstaffs; i++) 
   { if (active[i])
     { n_outstrings[i] = outstrings[i];
-      *n_outstrings[i] = '\0';
+    *n_outstrings[i] = '\0';
     }
   }
 }
@@ -1111,36 +1124,40 @@ void initialize_notes ()
 PRIVATE
 void terminate_notes ()
 { int i;
+  char *s, *t;
   if (debug)
   { fprintf (logfile, "\nEntering terminate_notes:\n");
     status_all ();
   }
-  for (i=1; i <= nstaffs; i++)
-  { if (active[i])
-    { if (spacing == MAX_SPACING)
-      { /* output any commands left in notes[i] */
-        output_filtered (i);
-      }
-      fprintf (outfile, "%s", outstrings[i]);
-      if (debug) fprintf (logfile, "\noutputting %s from outstrings[%d].\n", outstrings[i], i);
-      outstrings[i][0] = '\0';
-      n_outstrings[i] = outstrings[i];
-      if (spacing < MAX_SPACING && spacing > 2 * old_spacing)
-      { /* add extra space *before* much longer notes */
-        fprintf (outfile, "\\hqsk");
-        if (debug) fprintf (logfile, "\nExtra half-notehead space before longer notes.\n");
-      }
-      else if (spacing == MAX_SPACING && old_spacing < SP(8))
-      { /* add extra space before \en */
-        fprintf (outfile, "\\hqsk");
-        if (debug) fprintf (logfile, "\nExtra half-notehead space before \\en.\n");
-      }
-    }   
-    if ( (terminator[i] == '&') || (terminator[i] == '|') ) 
-    {
-      putc (terminator[i], outfile); if (debug) putc (terminator[i], logfile);
+  t = TransformNotes2;
+  while (true)
+  { s = strchr (t, '#');
+    if (s == NULL) 
+      break;
+    while (t < s)  /* output any initial \transpose etc. */
+    { putc (*t, outfile); t++; }
+    t++; /* skip # */
+    i = atoi (t) -1; t++;
+    if (spacing == MAX_SPACING)
+    { /* output any commands left in notes[i] */
+      filter_output (i);
     }
-    if (debug) fprintf (logfile, "\n");
+    fprintf (outfile, "%s", outstrings[i]);
+    if (debug) fprintf (logfile, "\noutputting %s from outstrings[%d].\n", outstrings[i], i);
+    outstrings[i][0] = '\0';
+    n_outstrings[i] = outstrings[i];
+    if (spacing < MAX_SPACING && spacing > 2 * old_spacing)
+    { /* add extra space *before* much longer notes */
+      fprintf (outfile, "\\hqsk");
+      if (debug) fprintf (logfile, "\nExtra half-notehead space before longer notes.\n");
+    }
+    if (*t != '\0') 
+    { putc (*t, outfile); t++; }  /* terminator */
+  }
+  if (spacing == MAX_SPACING && old_spacing < SP(8) )
+  { /* add extra space before \en */
+    fprintf (outfile, "\\hqsk");
+    if (debug) fprintf (logfile, "\nExtra half-notehead space before \\en.\n");
   }
   fprintf (outfile, "\\en"); 
   if (debug)
@@ -1159,19 +1176,22 @@ void process_appogg (void)
   }
 
   if (old_spacing < MAX_SPACING) 
-  {
+  { char *s, *t;
     if (debug) fprintf (logfile, "Terminate current notes command:\n");
-    for (i=1; i <= nstaffs; i++)
-    { if (active[i])
-      {
-        fprintf (outfile, "%s", outstrings[i]); 
-        if (debug) fprintf (logfile, "%s", outstrings[i]);
-      }
-      if ( (terminator[i] == '&') || (terminator[i] == '|') ) 
-      {
-        putc (terminator[i], outfile);
-        if (debug) putc (terminator[i], logfile);
-      }
+    t = TransformNotes2;
+    while (true)
+    { s = strchr (t, '#');
+      if (s == NULL) break;
+      while (t < s)  /* output any initial \transpose etc. */
+      { putc (*t, outfile); t++; }
+      t++; /* skip # */
+      i = atoi (t) - 1; t++;
+      fprintf (outfile, "%s", outstrings[i]);
+      if (debug) fprintf (logfile, "\noutputting %s from outstrings[%d].\n", outstrings[i], i);
+      outstrings[i][0] = '\0';
+      n_outstrings[i] = outstrings[i];
+      if (*t != '\0') 
+      { putc (*t, outfile); t++; }  /* terminator */
     }
     fprintf (outfile, "\\en");
     if (debug)
@@ -1249,16 +1269,22 @@ void process_xtuplet (void)
   }
 
   if (old_spacing < MAX_SPACING) 
-  {
+  { char *s, *t;
     if (debug) fprintf (logfile, "Terminate current notes command:\n");
-    for (i=1; i <= nstaffs; i++)
-    { if (active[i])
-      {
-        fprintf (outfile, "%s", outstrings[i]); 
-        if (debug) fprintf (logfile, "%s", outstrings[i]);
-      }
-      if ( (terminator[i] == '&') || (terminator[i] == '|') ) 
-        putc (terminator[i], outfile); 
+    t = TransformNotes2;
+    while (true)
+    { s = strchr (t, '#');
+      if (s == NULL) break;
+      while (t < s)  /* output any initial \transpose etc. */
+      { putc (*t, outfile); t++; }
+      t++; /* skip # */
+      i = atoi (t) - 1; t++;
+      fprintf (outfile, "%s", outstrings[i]);
+      if (debug) fprintf (logfile, "\noutputting %s from outstrings[%d].\n", outstrings[i], i);
+      outstrings[i][0] = '\0';
+      n_outstrings[i] = outstrings[i];
+      if (*t != '\0') 
+      { putc (*t, outfile); t++; }  /* terminator */
     }
     fprintf (outfile, "\\en");
     if (debug)
@@ -1268,7 +1294,10 @@ void process_xtuplet (void)
     }
   }
 
-  if (debug) fprintf (logfile, "\nDetermine xtuplet duration:\n");
+  if (debug) 
+  { fprintf (logfile, "\nDetermine xtuplet duration:\n");
+    fflush (logfile);
+  }
   for (i=1; i <= nstaffs; i++)
     if (xtuplet[i] > 1)
     {
@@ -1276,14 +1305,13 @@ void process_xtuplet (void)
       save_state (xi);
       pseudo_output_notes (xi);
       xspacing = spacings[xi];
-      do
+      while (xspacing % xtuplet[xi] != 0)
       { 
         xspacing +=  spacing_note (xi);
         pseudo_output_notes (xi);
         if (xspacing >= MAX_SPACING) 
           error ("Can't determine xtuplet duration.");
       }
-      while (xspacing % xtuplet[xi] != 0);
       restore_state (xi);
       break;
     }
@@ -1321,6 +1349,7 @@ void process_xtuplet (void)
   if (debug) fprintf (logfile, "\nCreate a new notes command for the xtuplet:\n");
   initialize_notes ();
 
+
   if (debug) fprintf (logfile, "\nProcess non-xtuplet staffs:\n");
   for (i=1; i <= nstaffs; i++)
     vspacing[i] = 0;
@@ -1340,6 +1369,7 @@ void process_xtuplet (void)
       } 
     }
     if (xsp >= normalized_xspacing) break;
+    global_skip = 0;
     for (i=1; i <= nstaffs; i++)
       if (active[i] && xtuplet[i] == 1) 
         spacings[i] = spacing_note(i);
@@ -1374,6 +1404,7 @@ void process_xtuplet (void)
         if (spacings[i] != spacing && vspacing[i] == 0)
           vspacing[i] = spacings[i] - spacing;
         if (xsp >= xspacing) break;
+        global_skip = 0;
         spacings[i] = spacing_note (i);
       }
     }
@@ -1401,11 +1432,6 @@ void process_xtuplet (void)
 
 PRIVATE
 void generate_notes ()
-/* Repeatedly output one note for each (active) staff 
- * and, if necessary, set up for subsequent "virtual" notes (skips).
- * If spacing has changed, terminate an existing notes command
- * and initialize a new one.
- */
 { int i;
   bool xtuplet_flag;
   while (true)
@@ -1448,34 +1474,20 @@ void generate_notes ()
         return;
       }
       if (old_spacing < MAX_SPACING) putc ('\n', outfile);
-      if ( nastaffs == 1 && spacing != MAX_SPACING && restbars > 0) 
-        output_rests ();
-      initialize_notes ();
-    }
 
-    /*  generate global_skip_str:  */
-    global_skip_str[0] = '\0';
-    n_global_skip_str = global_skip_str;
-    switch (global_skip) 
-    {
-      case 0: break;
-      case 1: append (global_skip_str, &(n_global_skip_str), "\\qqsk", 8); break;  
-      case 2: append (global_skip_str, &(n_global_skip_str), "\\hqsk", 8); break;  
-      case 4: append (global_skip_str, &(n_global_skip_str), "\\qsk", 8); break;  
+      initialize_notes ();
     }
 
     for (i=1; i <= nstaffs; i++)  /* append current notes to outstrings */
       if (active[i]) 
-      {
-        append (outstrings[i], &(n_outstrings[i]), global_skip_str, LINE_LEN);
         output_notes (i);
-      }
     for (i=1; i <= nstaffs; i++)
     {
       /* virtual notes needed?  */
       if (active[i] && spacings[i] != MAX_SPACING && spacings[i] != spacing && vspacing[i] == 0 )
       {
         vspacing[i] = spacings[i];
+        vspacing_active[i] = true;
         vspacing[i] = vspacing[i] - spacing;
         if (debug)
         { fprintf (logfile, "\nAfter vspacing initialization:\n");
@@ -1524,28 +1536,61 @@ void process_command (char **ln)
   }
 
   else if ( prefix("\\startpiece", *ln) )
-  { int i, j;
-    nstaffs = 0; 
-    for (i=1; i <= ninstr; i++)
-    { for (j=1; j <= staffs[i]; j++) 
-      { nstaffs++; 
-        if (nastaffs == 0) active[nstaffs] = true;  
+  { 
+    if (!TransformNotesDefined) /* create default TransformNotes2:  */
+    { int i, j;
+      t = TransformNotes2;
+      nstaffs = 1;
+      sprintf (t, "#%1i", nstaffs+1); t = t+2; 
+      for (j=2; j <= staffs[1]; j++)
+      {  nstaffs++; sprintf (t, "|#%1i", nstaffs+1); t = t+3; 
+         active[nstaffs] = true;
       }
+      for (i=2; i <= ninstr; i++) 
+      { nstaffs++; sprintf (t, "&#%1i", nstaffs+1); t = t+3; 
+        for (j=2; j <= staffs[i]; j++)
+        {  nstaffs++; sprintf (t, "|#%1i", nstaffs+1); t = t+3; 
+           active[nstaffs] = true;
+        }
+      }   
+      nastaffs = nstaffs;
+      if (debug)
+        fprintf (logfile, "default TransformNotes2=%s\n", TransformNotes2);
     }
     if (nstaffs == 1) fprintf (outfile, "\\nostartrule\n");
+    if (debug)
+    {
+      int j;
+      fprintf (logfile, "ninstr=%d nstaffs=%d nastaffs=%d\n", ninstr, nstaffs, nastaffs);
+      for (j=1; j <= nstaffs; j++)
+        fprintf (logfile, "active[%d]=%d\n", j, active[j]);
+    }
     fprintf (outfile, "\\startpiece");
     t = strpbrk (*ln+1, "\\%\n");
     *ln = t;
   }
 
   else if ( prefix("\\startextract", *ln) )
-  { int i, j;
-    nstaffs = 0; 
-    for (i=1; i <= ninstr; i++)
-    { for (j=1; j <= staffs[i]; j++) 
-      { nstaffs++; 
-        if (nastaffs == 0) active[nstaffs] = true;  
+  { 
+    if (!TransformNotesDefined) /* create default TransformNotes2:  */
+    { int i, j;
+      t = TransformNotes2;
+      nstaffs = 1;
+      sprintf (t, "#%1i", nstaffs+1); t = t+2; 
+      for (j=2; j <= staffs[1]; j++)
+      {  nstaffs++; sprintf (t, "|#%1i", nstaffs+1); t = t+3; 
+         active[nstaffs] = true;
       }
+      for (i=2; i <= ninstr; i++) 
+      { nstaffs++; sprintf (t, "&#%1i", nstaffs+1); t = t+3; 
+        for (j=2; j <= staffs[i]; j++)
+        {  nstaffs++; sprintf (t, "|#%1i", nstaffs+1); t = t+3; 
+           active[nstaffs] = true;
+        }
+      }   
+      nastaffs = nstaffs;
+      if (debug)
+        fprintf (logfile, "default TransformNotes2=%s\n", TransformNotes2);
     }
     if (nstaffs == 1) fprintf (outfile, "\\nostartrule\n");
     fprintf (outfile, "\\startextract");
@@ -1562,7 +1607,6 @@ void process_command (char **ln)
     while (true)
     { ninstr++; nstaffs++;
       staffs[ninstr] = 1;
-      active[ninstr] = false;
       checkc (s, '#'); s++;
       checkn (s); s++;
       while (*s == '|')
@@ -1575,64 +1619,50 @@ void process_command (char **ln)
       s++;
     }
     checkc (s, '}'); s++;
+    s = strchr (s, '{');
+    if (s == NULL) error ("Can't parse \\TransformNotes");
+    s++;
+    /*  determine TransformNotes2:  */
+    t = TransformNotes2;
+    do { *t = *s; t++; s++; }
+    while (*s != '}');
+    *t = '\0';  /* terminate TransformNotes2 */
+    TransformNotesDefined = true;
+    if (debug)
+      fprintf (logfile, "defined TransformNotes2=%s\n", TransformNotes2);
+    
+    /* determine active staffs:  */
     for (i=1; i <= nstaffs; i++) active[i] = false;
     nastaffs = 0;
-    t = strchr (s,'{');
-    if (t == NULL) error ("Can't parse \\TransformNotes.");
-    s = strpbrk (t, "#}"); /* may have \transpose etc. before # */
-    while (*s == '#')
-    { if (sscanf (s, "#%d", &i) != 1) 
+    t = strpbrk (TransformNotes2, "#}"); /* may have \transpose etc. before # */
+    if (t == NULL) error ("Can't parse second argument of \\TransformNotes");
+    while (*t == '#')
+    { if (sscanf (t, "#%d", &i) != 1) 
         error ("sscanf for argument number fails");
       active[i-1] = true;  /* parameters start at 2 */
       nastaffs++;
-      s = strpbrk (s+1, "#}"); 
+      t = strpbrk (t+1, "#}"); 
+      if (t == NULL) break;
     }
+    if (debug)
+    {
+      int j;
+      fprintf (logfile, "ninstr=%d nstaffs=%d nastaffs=%d\n", ninstr, nstaffs, nastaffs);
+      for (j=1; j <= nstaffs; j++)
+        fprintf (logfile, "active[%d]=%d\n", j, active[j]);
+    }
+
+    /* output \TransformNotes...  as a comment:  */
+    putc ('%', outfile);  
     while (*ln <= s) 
-    { putc (**ln, outfile); (*ln)++;}
+    { putc (**ln, outfile); (*ln)++; }
   }
 
-  else if ( prefix("\\def\\vnotes#1\\elemskip", *ln) ) 
-  { /* determine ninstr, nstaffs, nastaffs, staffs[i], and active[i] */
-    int i;
-    ninstr = 0;
-    nstaffs = 0;
-    s = *ln + 22; /* first parameter */
-    while (true)
-    { ninstr++; nstaffs++;
-      staffs[ninstr] = 1;
-      active[ninstr] = false;
-      checkc (s, '#'); s++;
-      checkn (s); s++;
-      while (*s == '|')
-      { staffs[ninstr]++; nstaffs++;
-        s++;
-        checkc (s, '#'); s++;
-        checkn (s); s++; 
-      }
-      if (*s != '&') break;
-      s++;
-    }
-    for (i=1; i <= nstaffs; i++) active[i] = false;
-    nastaffs = 0;
-    t = strstr (s, "@vnotes") + 7;
-    if (t == NULL) error ("Can't parse \\def\\vnotes.");
-    s = strpbrk(t, "#}"); /* may have \transpose etc. before # */
-    while (*s == '#')
-    { if (sscanf (s, "#%d", &i) != 1) 
-        error("sscanf for argument number fails");
-      active[i-1] = true;  /* parameters start at 2 */
-      nastaffs++;
-      s = strpbrk (s+1, "#}"); 
-    }
-    while (*ln <= s) 
-    { putc (**ln, outfile); (*ln)++;}
-  }
-
-  else if (prefix("\\def\\atnextbar{\\znotes", *ln) && nastaffs == 1 )
+  else if (prefix("\\def\\atnextbar{\\znotes", *ln))
   { /*  whole-bar or multi-bar rest? */
     int i;
-    char *saveln = *ln; /* in case there's no centerpause  */
     bool centerpause = false;
+    *ln = *ln + 15;  /*  skip "\def\atnextbar{"  */
     analyze_notes(ln);
     for (i=1; i <= nstaffs; i++)
     { 
@@ -1642,7 +1672,7 @@ void process_command (char **ln)
         t = strpbrk (notes[i], "&|$");
         if (t == NULL) t = notes[i] + strlen (notes[i]);
         s = strstr (notes[i], "\\centerpause");
-        if (s != NULL && s < t)
+        if (s != NULL && s < t && nastaffs == 1)
         {
           bar_rest[i] = true;
           centerpause = true;
@@ -1650,29 +1680,37 @@ void process_command (char **ln)
         break;
       }
     }
-    if (centerpause)
-    {
-      t = strchr (*ln, '}');
-      if (t == NULL) error ("Can't find }.");
-      *ln = t+1;
-      t = strpbrk (*ln, "%\\");
-      if (t == NULL ) t = *ln + strlen(*ln);
-      *ln = t;
-    }
-    else
-    { /* treat like other \def commands */
-      *ln = saveln;
-      t = strchr (*ln, '$');
-      *t = '\\';  /* restore "\en[otes]  */
-      t = *ln + strlen(*ln);
-      while (*ln < t)
-      { fputc (**ln, outfile); 
-        (*ln)++;
+    if (!centerpause) /* generate transformed \znotes ... \en */
+    { 
+      fprintf ( outfile, "\\def\\atnextbar{\\znotes");
+      t = TransformNotes2;
+      while (true)
+      {
+        /*  output TransformNotes2 prefix (\transpose etc.):  */
+        s = strchr (t, '#');
+        if (s == NULL) break;
+        while (t < s)  
+        { putc (*t, outfile); t++; }
+        t++;  /* skip '#' */
+        /* output notes: */
+        i = atoi (t) - 1; t++;  
+        s = notes[i];
+        while (*s != '&' && *s != '|' && *s != '$')
+        { putc (*s, outfile); s++; }
+        if (*t != '\0') 
+        { putc (*t, outfile); t++; } /* output terminator */
       }
+      fprintf (outfile, "\\en}%%\n");
     }
+    t = strchr (*ln, '}');
+    if (t == NULL) error ("Can't find }.");
+    *ln = t+1;
+    t = strpbrk (*ln, "%\\");
+    if (t == NULL ) t = *ln + strlen(*ln);
+    *ln = t;
   }
 
-  else if ( prefix("\\def", *ln) )
+  else if ( prefix("\\def", *ln) )  /* copy to output */
   { t = *ln + strlen(*ln);
     while (*ln < t)
     { fputc (**ln, outfile); 
@@ -1709,9 +1747,105 @@ void process_command (char **ln)
     if (*t == '\n') putc ('%', outfile);
     *ln = t;
   }
+  else if ( prefix("\\nnnotes", *ln) ||
+            prefix("\\nnnotes", *ln) ||
+            prefix("\\nnotes", *ln)  ||
+            prefix("\\notes", *ln)   || 
+            prefix("\\Notes", *ln)   ||
+            prefix("\\NOtes", *ln)   ||
+            prefix("\\NOTes", *ln)   ||
+            prefix("\\NOTEs", *ln)   || 
+            prefix("\\znotes", *ln)  )
+  { 
+    char *s, *t;
+    int nstaff;
+    if (debug)
+    { fprintf (logfile, "\nProcessing %s", *ln);
+      fprintf (logfile, "lineno=%d\n",  lineno);
+      fflush (logfile);
+    }
+    t = *ln+1;
+    while ( isalpha (*t) ) t++;
+    s = *ln;
+    while (s < t) { putc (*s, outfile); s++; }
+
+    analyze_notes (ln);
+
+    t = TransformNotes2;
+    while (true)
+    {
+      /*  output TransformNotes2 prefix (\transpose etc.):  */
+      s = strchr (t, '#');
+      if (s == NULL) break;
+      while (t < s)  
+      { putc (*t, outfile); t++; }
+
+      t++;  /* skip '#' */
+
+      /* output notes: */
+      nstaff = atoi (t) - 1; t++;  
+      s = notes[nstaff];
+      while (*s != '&' && *s != '|' && *s != '$')
+      { putc (*s, outfile); s++; }
+      if (*t != '\0') 
+      { putc (*t, outfile); t++; } /* output terminator */
+    }
+    fprintf (outfile, "\\en\n");
+
+    t = strpbrk (*ln, "%\\\n");
+    if (t == NULL) t = *ln + strlen (*ln);
+    if (*t == '\n') putc ('%', outfile);
+    *ln = t;
+  }
+
+  else if (prefix("\\vnotes", *ln) )
+  {
+    char *s, *t;
+    int nstaff;
+    if (debug)
+    { fprintf (logfile, "\nProcessing %s", *ln);
+      fprintf (logfile, "lineno=%d\n",  lineno);
+      fflush (logfile);
+    }
+    s = *ln;
+    t = strchr (*ln+1, '\\');  /* find \elemskip  */
+    *ln = t;
+    t = t + 9;
+    while (s < t) { putc (*s, outfile); s++; }
+
+    
+    analyze_notes (ln);
+
+    t = TransformNotes2;
+    while (true)
+    {
+      /*  output TransformNotes2 prefix (\transpose etc.):  */
+      s = strchr (t, '#');
+      if (s == NULL) break;
+      while (t < s)  
+      { putc (*t, outfile); t++; }
+
+      t++;  /* skip '#' */
+
+      /* output notes: */
+      nstaff = atoi (t) - 1; t++;  
+      s = notes[nstaff];
+      while (*s != '&' && *s != '|' && *s != '$')
+      { putc (*s, outfile); s++; }
+      if (*t != '\0') 
+      { putc (*t, outfile); t++; } /* output terminator */
+    }
+    fprintf (outfile, "\\en\n");
+
+    t = strpbrk (*ln, "%\\\n");
+    if (t == NULL) t = *ln + strlen (*ln);
+    if (*t == '\n') putc ('%', outfile);
+    *ln = t;
+  }
 
   else if ( prefix ("\\bar", *ln) && !prefix ("\\barno", *ln))
   { int i;
+    char *s, *t;
     bool atnextbar = false; 
     for (i=1; i <= nstaffs; i++)
       if (active[i] && bar_rest[i]) 
@@ -1731,16 +1865,24 @@ void process_command (char **ln)
     else
     { if (atnextbar)
       { fprintf (outfile, "\\def\\atnextbar{\\znotes");
-        for (i=1; i <= nstaffs; i++)
+        t = TransformNotes2;
+        while (true)
         {
+          s = strchr (t, '#');
+          if (s == NULL) 
+            break;
+          while (t < s)  /* output any initial \transpose etc. */
+          { putc (*t, outfile); t++; }
+          t++; /* skip # */
+          i = atoi (t) -1; t++;
           if (active[i])
           {
             if (bar_rest[i])
               fprintf (outfile, "\\centerpause");
             bar_rest[i] = false;
           }
-          if ( (terminator[i] == '&') || (terminator[i] == '|') ) 
-            putc (terminator[i], outfile);
+          if (*t != '\0') 
+          { putc (*t, outfile); t++; }  /* terminator */
         }
         fprintf (outfile, "\\en}%%\n");
       }
@@ -1847,6 +1989,34 @@ void process_command (char **ln)
     *ln = *ln + strlen(*ln);
   }
 
+  else if ( prefix ("\\documentclass", *ln) )
+  {
+    
+    if ( suffix( ".tex", outfilename) )
+    { char newoutfilename[SHORT_LEN];
+      char *newoutfilename_n = newoutfilename;
+      append (newoutfilename, &newoutfilename_n, infilename, sizeof (newoutfilename));
+      newoutfilename_n -= 4;
+      *newoutfilename_n = '\0';
+      append (newoutfilename, &newoutfilename_n, "ltx", sizeof (newoutfilename));
+      if (rename ( outfilename, newoutfilename) > 0)
+      { printf ("Can't rename %s as %s\n", outfilename, newoutfilename);
+        exit (EXIT_FAILURE);
+      }
+      printf ("\\documentclass detected; now writing to %s.", newoutfilename);
+      printf ("\n\n");
+
+    }
+    fputs (*ln, outfile);
+    *ln = *ln + strlen(*ln);
+  }
+
+  else if ( prefix ("\\end", *ln))
+  {
+    fprintf (outfile, "\\end\n");
+    exit(0);
+  }
+
 
   else  /* everything else */
   { 
@@ -1885,6 +2055,7 @@ void process_score ()
   }
   spacing = MAX_SPACING;
   restbars = 0;
+
   c = getc (infile);
   while ( c != EOF )
   {
@@ -1912,11 +2083,11 @@ int main (int argc, char *argv[])
   
   time (&mytime);
   strftime (today, 11, "%Y-%m-%d", localtime (&mytime) );
-  fprintf (stdout, "This is autosp, version %s.\n", version);
-  fprintf (stdout, "Copyright (C) 2014-17  R. D. Tennent\n" );
-  fprintf (stdout, "School of Computing, Queen's University, rdt@cs.queensu.ca\n" );
-  fprintf (stdout, "License GNU GPL version 2 or later <http://gnu.org/licences/gpl.html>.\n" );
-  fprintf (stdout, "There is NO WARRANTY, to the extent permitted by law.\n\n" );
+  printf ("This is autosp, version %s.\n", version);
+  printf ("Copyright (C) 2014-17  R. D. Tennent\n" );
+  printf ("School of Computing, Queen's University, rdt@cs.queensu.ca\n" );
+  printf ("License GNU GPL version 2 or later <http://gnu.org/licences/gpl.html>.\n" );
+  printf ("There is NO WARRANTY, to the extent permitted by law.\n\n" );
 
   c = getopt_long (argc, argv, "hvdl", longopts, NULL);
   while (c != -1)
@@ -1924,11 +2095,10 @@ int main (int argc, char *argv[])
       switch (c)
         {
         case 'h':
-          usage (stdout);
-          fprintf (stdout, "Please report bugs to rdt@cs.queensu.ca.\n" );
+          usage ();
+          printf ("Please report bugs to rdt@cs.queensu.ca.\n" );
           exit (0);
         case 'v':
-          fprintf (stdout, "This is autosp, version %s.\n", version);
           exit (0);
         case 'd':
           dottedbeamnotes = true;
@@ -1939,7 +2109,7 @@ int main (int argc, char *argv[])
         case '?':
           exit (EXIT_FAILURE);
         default:
-          fprintf (stderr, "Function getopt returned character code 0%o.\n",
+          printf ("Function getopt returned character code 0%o.\n",
                   (unsigned int) c);
           exit (EXIT_FAILURE);
         }
@@ -1954,12 +2124,12 @@ int main (int argc, char *argv[])
       append (infilename, &infilename_n, ".aspc", sizeof (infilename));
   }
   else 
-  {  usage(stderr);
+  {  usage();
      exit (EXIT_FAILURE);
   }
   infile = fopen (infilename, "r");
   if (infile == NULL && suffix (".tex", infilename) )
-  { fprintf (stderr, "Can't open %s\n", infilename);
+  { printf ("Can't open %s\n", infilename);
     exit (EXIT_FAILURE);
   }
   else if (infile == NULL && suffix (".aspc", infilename) )
@@ -1969,7 +2139,7 @@ int main (int argc, char *argv[])
     append (infilename, &infilename_n, "tex", sizeof (infilename));
     infile = fopen (infilename, "r");
     if (infile == NULL && suffix (".tex", infilename) )
-    { fprintf (stderr, "Can't open %s\n", infilename);
+    { printf ("Can't open %s\n", infilename);
       exit (EXIT_FAILURE);
     }
   }
@@ -1995,8 +2165,9 @@ int main (int argc, char *argv[])
   }
 
   if (*outfilename == '\0')
-  { outfile = stdout;
-    printf (" Writing to stdout.");
+  { 
+    printf ("\nPlease provide a filename for the output.\n\n");
+    exit (EXIT_FAILURE);
   }
   else
   {
@@ -2005,9 +2176,9 @@ int main (int argc, char *argv[])
       printf ("\n");
       error ("outfile same as infile.");
     }
-    outfile = fopen (outfilename, "w");
+    outfile = fopen (outfilename, "wb");
     if (outfile == NULL)
-    { fprintf (stderr,"Can't open %s\n", outfilename);
+    { printf ("Can't open %s\n", outfilename);
       exit (EXIT_FAILURE);
     }
     printf (" Writing to %s.", outfilename);
@@ -2023,9 +2194,9 @@ int main (int argc, char *argv[])
   *logfilename_n = '\0';
   append (logfilename, &logfilename_n, "alog", sizeof (logfilename));
   if (debug)  
-  { logfile = fopen (logfilename, "w");
+  { logfile = fopen (logfilename, "wb");
     if (logfile == NULL)
-    { fprintf (stderr, "Can't open %s\n", logfilename);
+    { printf ("Can't open %s\n", logfilename);
       exit (EXIT_FAILURE);
     }
     printf (" Log file %s.", logfilename);
@@ -2034,6 +2205,6 @@ int main (int argc, char *argv[])
 
   fprintf (outfile, "%%  Generated by autosp (%s).\n", version);
   process_score ();
-
+  
   return 0;
 }

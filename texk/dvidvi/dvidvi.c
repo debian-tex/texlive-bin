@@ -73,6 +73,14 @@ void error(const char *);
 #endif
 #include <kpathsea/c-pathch.h>
 #define PATHSEP         ENV_SEP
+#ifdef WIN32
+#include <kpathsea/config.h>
+#include <kpathsea/variable.h>
+#undef fopen
+#undef fprintf
+#define fopen    fsyscp_fopen
+#define fprintf  win32_fprintf
+#endif
 #else  /* not KPATHSEA */
 #if defined(__TOS__)
 #define READBIN         "rb"    /* TOS must use binary mode */
@@ -164,6 +172,20 @@ short includeseq ;       /* number of ranges to include (option -i) */
 integer *pageloc ;
 integer *pagenumbers ;
 int prettycolumn ;       /* the column we are at when running pretty */
+
+#ifdef ASCIIPTEX
+int ptexdvi ;            /* true if dvi file is extended (TATEKUMI) */
+#endif
+
+#ifdef WIN32
+void win32_fprintf(FILE *fp, const char *fmt, ...) {
+  va_list argp;
+
+  va_start(argp, fmt);
+  win32_vfprintf(fp, fmt, argp);
+  va_end(argp);
+}
+#endif
 
 /*
  *   This array holds values that indicate the length of a command, if
@@ -873,6 +895,11 @@ static void readdvifile(void) {
       if (c == 2 && d == 0xdf /* dave fuchs */ &&
                             e == 0xdf)
          break ;
+#ifdef	ASCIIPTEX
+      if (c == 3 && d == 0xdf /* dave fuchs */ &&
+                            e == 0xdf)
+         break ;
+#endif
       fseek(infile,-4L,SEEK_CUR);
       }
    if (p < 10)
@@ -1024,6 +1051,11 @@ static void writepostamble(void) {
          putfontdef(i) ;
    outdvibyte(249) ;
    outdviquad(p) ;
+#ifdef ASCIIPTEX
+   if (ptexdvi)
+      outdvibyte(3) ;
+   else
+#endif
    outdvibyte(2) ;
    outdviquad(0xdfdfdfdfL) ;
    while (dviloc & 3)
@@ -1129,6 +1161,12 @@ case 243: case 244: case 245: case 246:
                p += dvibyte() + 2 ;
                fseek(infile,p,SEEK_SET);
                break ;
+#ifdef ASCIIPTEX
+case 255:
+               ptexdvi = 1 ;
+               outdvibyte(len);
+               break ;
+#endif
 default:       fprintf(stderr, "Bad dvi command was %d at %ld\n", len, p) ;
                error("! lost sync dvi in file lost dvi sync file in") ;
             }
@@ -1159,6 +1197,10 @@ static void writedvifile(void) {
    integer actualpageno, lastpageno ;
    struct pagespec *ps ;
    Boolean beginp ;
+
+#ifdef ASCIIPTEX
+   ptexdvi = 0 ;
+#endif
 
    writepreamble() ;
    if ( !pagemodulo )
@@ -1217,6 +1259,16 @@ static void writedvifile(void) {
 }
 int main(int argc, char *argv[])
 {
+#if defined(WIN32) && defined(KPATHSEA)
+   int ac;
+   char **av, *enc;
+   kpse_set_program_name(argv[0], "dvidvi");
+   enc = kpse_var_value("command_line_encoding");
+   if (get_command_line_args_utf8(enc, &ac, &av)) {
+      argc = ac;
+      argv = av;
+   }
+#endif
    processargs(argc, argv) ;
    readdvifile() ;
    writedvifile() ;

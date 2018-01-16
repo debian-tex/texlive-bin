@@ -29,12 +29,15 @@ texosquery/texosquery.sh
 texosquery/texosquery-jre5.sh
 texosquery/texosquery-jre8.sh
 typeoutfileinfo/typeoutfileinfo.sh
+wordcount/wordcount.sh
 a2ping/a2ping.pl
 accfonts/mkt1font
 accfonts/vpl2ovp
 accfonts/vpl2vpl
 arara/arara.sh
 authorindex/authorindex
+bib2gls/bib2gls.sh
+bib2gls/convertgls2bib.sh
 bundledoc/arlatex
 bundledoc/bundledoc
 cachepic/cachepic.tlu
@@ -45,8 +48,10 @@ convbkmk/convbkmk.rb
 crossrefware/bbl2bib.pl
 crossrefware/bibdoiadd.pl
 crossrefware/bibmradd.pl
+crossrefware/biburl2doi.pl
 crossrefware/bibzbladd.pl
 crossrefware/ltx2crossrefxml.pl
+ctan-o-mat/ctan-o-mat.pl
 ctanify/ctanify
 ctanupload/ctanupload.pl
 de-macro/de-macro
@@ -68,6 +73,7 @@ fragmaster/fragmaster.pl
 getmap/getmapdl.lua
 glossaries/makeglossaries
 glossaries/makeglossaries-lite.lua
+jfmutil/jfmutil.pl
 kotex-utils/jamo-normalize.pl
 kotex-utils/komkindex.pl
 kotex-utils/ttf2kotexfont.pl

@@ -1,3 +1,38 @@
+2017-12-22  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* image/jpegimage.c: If j_info->xdpi and j_info->ydpi are not
+	determined in some JPEG format, they are assumed to be 72.0
+	in order to avoid division by zero.
+
+2017-11-07  Jonathan Kew  <jfkthame@gmail.com>
+
+	* XeTeX_ext.c: Guard against out-of-range result from UTF-8
+	decoding, and return U+FFFD Replacement Character instead
+	to avoid a crash for invalid inputs (from A. Kakuto).
+
+2017-09-24  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* xetex.web: Avoid overwriting prim_* entries by primitive().
+
+2017-09-05  Karl Berry  <karl@tug.org>
+        and Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* xetexdir/XeTeX_ext.c (IS_SPC_OR_EOL): new macro.
+	(input_line): use it, instead of ISBLANK.
+	See also analogous change in lib/texmfmp.c.
+	Original bug report from Evan Aad,
+	http://tug.org/pipermail/tex-k/2017-August/002801.html
+
+2017-08-06  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* pdfimage.cpp: Support /Rotate in PDF image inclusion with
+	the new xdvipdfmx-20170806.
+
+2017-07-17  Jonathan Kew  <jfkthame@gmail.com>
+
+	* xetex.ch: Set a non-zero exit code if the pipe
+	to the output driver closes with a non-zero code.
+
 2017-04-27  Karl Berry  <karl@tug.org>
 
 	* am/xetex.am (xetex_ldadd): add $(ICU_LIBS_EXTRA).

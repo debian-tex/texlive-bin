@@ -102,7 +102,7 @@ process_command (char **ln)
   }
   else if ( prefix ("\\advance\\barno", *ln) )
   { 
-    int barno_increment;
+    int barno_increment = 0;
     t = strpbrk (*ln, "-0123456789");
     if ( (*ln == NULL) || (sscanf (t, "%d", &barno_increment) != 1 ) )
       error ("Expected barno increment/decrement");
@@ -262,7 +262,7 @@ main (int argc, char *argv[])
       else
         append (outfilename, &outfilename_n, ".aspc", sizeof (outfilename));
     }
-    outfile = fopen (outfilename, "w");
+    outfile = fopen (outfilename, "wb");
     if (outfile == NULL)
     { fprintf (stderr,"Can't open %s\n", outfilename);
       exit (EXIT_FAILURE);

@@ -4,7 +4,7 @@
 
 -- Print the usage of the lwarpmk command:
 
-printversion = "v0.32"
+printversion = "v0.44"
 
 function printhelp ()
 print ("lwarpmk: Use lwarpmk -h or lwarpmk --help for help.") ;
@@ -13,10 +13,12 @@ end
 function printusage ()
 print ( [[
 
-lwarpmk print [project]: Compile a print version.
+lwarpmk print [project]: Compile the print version if necessary.
+lwarpmk print1 [project]: Forced single compile of the print version.
 lwarpmk printindex [project]: Process the index for the print version.
 lwarpmk printglossary [project]: Process the glossary for the print version.
-lwarpmk html [project]: Compile an HTML version.
+lwarpmk html [project]: Compile the HTML version if necessary.
+lwarpmk html1 [project]: Forced single compile of the HTML version.
 lwarpmk htmlindex [project]: Process the index for the html version.
 lwarpmk htmlglossary [project]: Process the glossary for the html version.
 lwarpmk again [project]: Touch the source code to trigger recompiles.
@@ -25,7 +27,7 @@ lwarpmk pdftohtml [project]:
     For use with latexmk or a Makefile:
     Convert project_html.pdf to project_html.html and
     individual HTML files.
-lwarpmk clean [project]: Remove project.aux, .toc, .lof/t, .idx, .ind, .log, .gl*
+lwarpmk clean [project]: Remove project.aux, .toc, .lof/t, .idx, .ind, .log, *_html_inc.*, .gl*
 lwarpmk cleanall [project]: Remove auxiliary files and also project.pdf, *.html
 lwarpmk -h: Print this help message.
 lwarpmk --help: Print this help message.
@@ -190,8 +192,8 @@ function reruntoget (filesource)
 local fsource = io.open(filesource)
 for line in fsource:lines() do
 if ( string.find(line,"Rerun to get") ~= nil ) then
-io.close(fsource)
-return true
+    io.close(fsource)
+    return true
 end
 end
 io.close(fsource)
@@ -254,7 +256,8 @@ function removeaux ()
         sourcename ..".idx " .. sourcename .. "_html.idx " ..
         sourcename ..".ind " .. sourcename .. "_html.ind " ..
         sourcename ..".log " .. sourcename .. "_html.log " ..
-        sourcename ..".gl* " .. sourcename .. "_html.gl* "
+        sourcename ..".gl* " .. sourcename .. "_html.gl* " ..
+        "*_html_inc.*"
         )
 end
 
@@ -304,7 +307,7 @@ function compilelatexmk ( fsuffix )
     err=os.execute ( "latexmk -pdf -dvi- -ps- -recorder "
         .. "-e "
         .. opquote
-        .. "$makeindex = q/"
+        .. "$makeindex = q/" -- $
         .. xindycmd
         .. "  -M " .. xdyfile
         .. "  -L " .. language .. " /"
@@ -319,7 +322,7 @@ end
 if (arg[1] == "--version") then
 print ( "lwarpmk: " .. printversion )
 
-else -- not -- version
+else -- not --version
 
 -- print intro:
 
@@ -349,6 +352,12 @@ else -- not latexmk
         print ("lwarpmk: " .. sourcename .. ".pdf is up to date.") ;
     end
 end -- not latexmk
+
+elseif arg[1] == "print1" then
+    loadconf ()
+    verifyfileexists (sourcename .. ".tex") ;
+    onetime("")
+    print ("lwarpmk: Done.") ;
 
 -- lwarp printindex:
 -- Compile the index then touch the source
@@ -409,6 +418,13 @@ else -- not latexmk
         print ("lwarpmk: " .. homehtmlfilename .. ".html is up to date.")
     end
 end -- not latexmk
+
+elseif arg[1] == "html1" then
+    loadconf ()
+    verifyfileexists ( sourcename .. ".tex" ) ;
+    onetime("_html")
+    pdftohtml ()
+    print ("lwarpmk: Done.")
 
 elseif arg[1] == "pdftohtml" then
     loadconf ()
@@ -473,7 +489,7 @@ print ("lwarpmk: " .. sourcename ..".tex is ready to be recompiled.")
 print ("lwarpmk: Done.")
 
 -- lwarpmk clean:
--- Remove project.aux, .toc, .lof, .lot, .idx, .ind, .log, .gl*
+-- Remove project.aux, .toc, .lof, .lot, .idx, .ind, .log, *_html_inc.*, .gl*
 
 elseif arg[1] == "clean" then
 loadconf ()
@@ -481,7 +497,7 @@ removeaux ()
 print ("lwarpmk: Done.")
 
 -- lwarpmk cleanall
--- Remove project.aux, .toc, .lof, .lot, .idx, .ind, .log, .gl*
+-- Remove project.aux, .toc, .lof, .lot, .idx, .ind, .log, *_html_inc.*, .gl*
 --    and also project.pdf, *.html
 
 elseif arg[1] == "cleanall" then

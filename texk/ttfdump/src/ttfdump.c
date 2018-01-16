@@ -160,9 +160,13 @@ main(int argc, char *argv[])
     exit(EXIT_FAILURE);
   }
 
-  if (strstr (ttfname, "ttc") != NULL)
+  if (strstr (ttfname, "ttc") != NULL || strstr (ttfname, "TTC") != NULL)
   {
     ttc = ttfLoadTTCHeader(ttfname);
+
+    if (ttc == NULL)
+      exit(EXIT_FAILURE);
+
     if (collection < ttc->DirCount)
       font = ttc->font + collection;
     else
@@ -176,7 +180,7 @@ main(int argc, char *argv[])
     exit(EXIT_FAILURE);
 
   print_prologue(dp_file);
-  if (strstr(ttfname, "ttc") != NULL)
+  if (strstr(ttfname, "ttc") != NULL || strstr(ttfname, "TTC") != NULL)
   {
     print_ttc(ttc, dp_file);
   }
@@ -212,7 +216,7 @@ main(int argc, char *argv[])
     }
   }
 
-  if (strstr(ttfname, "ttc") != NULL)
+  if (strstr(ttfname, "ttc") != NULL || strstr(ttfname, "TTC") != NULL)
   {
     ttfFreeTTCFont(ttc);
   }

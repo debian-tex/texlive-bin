@@ -1,9 +1,9 @@
-23_use_xdvi.bin
+debian-use-xdvi-bin
 debian-builtin-searchpath
 debian-no-tl-scripts
-60_unneeded_linking
-fix-manpages
+debian-remove-unneeded-x-libs-linking
+debian-fix-quote-in-quote
 # from here on upstream patches
+fix-manpages
 fix-format-gcc-errors
-fix-mktexlsr-bashims
 #disable-seetex-stdin-tests

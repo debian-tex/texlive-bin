@@ -1,3 +1,4 @@
+fix some gcc7 errors concerning fprintf calls
 ---
  texk/ps2pk/objects.h                   |    2 +-
  texk/web2c/cwebboot.cin                |    2 +-
@@ -10,8 +11,8 @@
  utils/devnag/src/devnag.c              |    2 +-
  9 files changed, 13 insertions(+), 13 deletions(-)
 
---- texlive-bin.orig/texk/web2c/cwebdir/common.w
-+++ texlive-bin/texk/web2c/cwebdir/common.w
+--- source.orig/texk/web2c/cwebdir/common.w
++++ source/texk/web2c/cwebdir/common.w
 @@ -1180,7 +1180,7 @@
  fatal(s,t)
    char *s,*t;
@@ -21,8 +22,8 @@
    err_print(t);
    history=fatal_message; exit(wrap_up());
  }
---- texlive-bin.orig/utils/devnag/src/devnag.c
-+++ texlive-bin/utils/devnag/src/devnag.c
+--- source.orig/utils/devnag/src/devnag.c
++++ source/utils/devnag/src/devnag.c
 @@ -2417,7 +2417,7 @@
  void err_ill(const char *str) {
     fprintf(stderr, "Error: illegal character(s) \"%s\" detected at line %d:\n",
@@ -32,8 +33,8 @@
     exit(1);
  }
  
---- texlive-bin.orig/texk/web2c/cwebdir/common.c
-+++ texlive-bin/texk/web2c/cwebdir/common.c
+--- source.orig/texk/web2c/cwebdir/common.c
++++ source/texk/web2c/cwebdir/common.c
 @@ -1063,7 +1063,7 @@
  fatal(s,t)
  char*s,*t;
@@ -43,8 +44,8 @@
  err_print(t);
  history= fatal_message;exit(wrap_up());
  }
---- texlive-bin.orig/texk/web2c/cwebboot.cin
-+++ texlive-bin/texk/web2c/cwebboot.cin
+--- source.orig/texk/web2c/cwebboot.cin
++++ source/texk/web2c/cwebboot.cin
 @@ -1098,7 +1098,7 @@
   fatal(const char*s,const char*t)
  #line 1182 "cwebdir/common.w"
@@ -54,8 +55,8 @@
  err_print(t);
  history= fatal_message;exit(wrap_up());
  }
---- texlive-bin.orig/texk/web2c/cwebdir/cweave.w
-+++ texlive-bin/texk/web2c/cwebdir/cweave.w
+--- source.orig/texk/web2c/cwebdir/cweave.w
++++ source/texk/web2c/cwebdir/cweave.w
 @@ -1785,7 +1785,7 @@
  print_cat(c) /* symbolic printout of a category */
  eight_bits c;
@@ -65,8 +66,8 @@
  }
  
  @ The token lists for translated \TEX/ output contain some special control
---- texlive-bin.orig/texk/web2c/tiedir/tie.w
-+++ texlive-bin/texk/web2c/tiedir/tie.w
+--- source.orig/texk/web2c/tiedir/tie.w
++++ source/texk/web2c/tiedir/tie.w
 @@ -458,14 +458,14 @@
  
  @^system dependencies@>
@@ -84,8 +85,8 @@
  	/* `|print|' and then start new line */
  @d print2_ln(a,b)  {print2(a,b);term_new_line;} /* same with two arguments */
  @d print3_ln(a,b,c)  {print3(a,b,c);term_new_line;}
---- texlive-bin.orig/texk/ps2pk/objects.h
-+++ texlive-bin/texk/ps2pk/objects.h
+--- source.orig/texk/ps2pk/objects.h
++++ source/texk/ps2pk/objects.h
 @@ -231,7 +231,7 @@
  /*SHARED*/
  /* NDW: personally, I want to see status and error messages! */
@@ -95,8 +96,8 @@
  #define IfTrace1(condition,model,arg0)                            \
          {if (condition) printf(model,arg0);}
  #define IfTrace2(condition,model,arg0,arg1)                       \
---- texlive-bin.orig/texk/web2c/omegafonts/error_routines.c
-+++ texlive-bin/texk/web2c/omegafonts/error_routines.c
+--- source.orig/texk/web2c/omegafonts/error_routines.c
++++ source/texk/web2c/omegafonts/error_routines.c
 @@ -62,7 +62,7 @@
  yyerror(const_string fmt)
  {
@@ -133,8 +134,8 @@
      fprintf(stderr, "\n");
      exit(2);
  }
---- texlive-bin.orig/texk/web2c/omegafonts/out_routines.c
-+++ texlive-bin/texk/web2c/omegafonts/out_routines.c
+--- source.orig/texk/web2c/omegafonts/out_routines.c
++++ source/texk/web2c/omegafonts/out_routines.c
 @@ -368,5 +368,5 @@
  void
  out(const_string sval)

@@ -1,3 +1,4 @@
+some man page fixes, will be partly included in upstream
 ---
  texk/web2c/man/mf.man                |   26 +++++-----
  texk/web2c/synctexdir/man5/synctex.5 |    6 +-

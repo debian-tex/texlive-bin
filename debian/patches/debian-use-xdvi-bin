@@ -1,0 +1,15 @@
+use xdvi.bin as xdvi binary, which is handled via alternatives
+and not xdvi-xaw.real. The alternatives setting updates xdvi.bin
+to xdvi-xaw.real
+---
+ texk/xdvik/xdvi-sh.in |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+--- source.orig/texk/xdvik/xdvi-sh.in
++++ source/texk/xdvik/xdvi-sh.in
+@@ -50,4 +50,4 @@
+   XFILESEARCHPATH="$xdviapppath:${XFILESEARCHPATH-%D}"; export XFILESEARCHPATH
+ fi
+ 
+-exec @final_exec_name@ $NAMEOPT ${1+"$@"}
++exec xdvi.bin $NAMEOPT ${1+"$@"}

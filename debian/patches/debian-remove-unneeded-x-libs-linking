@@ -1,9 +1,10 @@
+remove some unneeded libraries at link time - Karl want's to keep them though in upstream
 ---
  texk/web2c/am/texmf.am |    2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
---- texlive-bin.orig/texk/web2c/am/texmf.am
-+++ texlive-bin/texk/web2c/am/texmf.am
+--- source.orig/texk/web2c/am/texmf.am
++++ source/texk/web2c/am/texmf.am
 @@ -157,7 +157,7 @@
  # All the x_... and X_... variables will be empty if we aren't supporting X.
  # Follow the library order used in X11R6 itself:

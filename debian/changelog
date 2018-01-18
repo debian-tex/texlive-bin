@@ -1,6 +1,6 @@
-texlive-bin (2018.20180116.46329-1) UNRELEASED; urgency=medium
+texlive-bin (2018.20180118.46355-1) UNRELEASED; urgency=medium
 
-  * New upstream version 2018.20180116.46329
+  * New upstream version 2018.20180118.46355
   * update patches to 2018
 
  -- Norbert Preining <preining@debian.org>  Tue, 16 Jan 2018 14:36:27 +0900

@@ -66,8 +66,13 @@ endif
 %:
 	dh $@ --with autoreconf --builddirectory Work
 
+#
+# we use TL provided reautoconf script as it has some built-in magic
 override_dh_autoreconf:
-	dh_autoreconf --as-needed
+	dh_autoreconf ./reautoconf
+
+# this was used before, but I am not sure whether the -as-needed is necessary
+#	dh_autoreconf --as-needed
 
 #
 # poppler is used two times in TeX Live:
@@ -75,20 +80,11 @@ override_dh_autoreconf:
 # once for luatex
 # - the pdftex/xetex version is controlled via --with-system-xpdf
 # - the luatex version is controlled via --with-system-poppler
-# As poppler in Debian is too old for luatex, we need to use
-#	--without-system-poppler
-# but keep build-dep on poppler and use
-#	--with-system-xpdf
-# so that as much as possible is built from system libs.
 #
-# 20160222: retry with current poppler (Debian 0.38)
-# 20160409: - libpng16 has entered unstable, try to build everything
-#	      with system libraries
-#           - do not use system teckit as there is no response from
-#             the maintainer about schedule for upload to unstable
-#             --with-system-teckit		\
+# Status as of 20180118
+# poppler in Debian is new enough for current, so we use the system
+# libraries for both.
 #
-
 # disable-largefile seems to break omegafonts, as they core dump
 # leave it as is for now and see what else pops up
 #	--disable-largefile			\

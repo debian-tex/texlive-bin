@@ -82,8 +82,10 @@ override_dh_autoreconf:
 # - the luatex version is controlled via --with-system-poppler
 #
 # Status as of 20180118
-# poppler in Debian is new enough for current, so we use the system
+# poppler in Debian is NOT enough for current, so we use the shipped
 # libraries for both.
+#	--with-system-poppler			\
+#	--with-system-xpdf			\
 #
 # disable-largefile seems to break omegafonts, as they core dump
 # leave it as is for now and see what else pops up
@@ -113,8 +115,6 @@ override_dh_auto_configure:
 	--with-system-icu			\
 	--with-system-gmp			\
 	--with-system-mpfr			\
-	--with-system-poppler			\
-	--with-system-xpdf			\
 	--with-system-freetype2			\
 	--with-freetype2-include=/usr/include/freetype2 \
 	--with-system-libpng			\

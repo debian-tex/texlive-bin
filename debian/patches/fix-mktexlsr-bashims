@@ -3,9 +3,9 @@ fix mktexlsr bashism (thanks Thorsten Glaser) (Closes: #811092)
  texk/kpathsea/mktexlsr |    4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
---- texlive-bin.orig/texk/kpathsea/mktexlsr
-+++ texlive-bin/texk/kpathsea/mktexlsr
-@@ -177,8 +177,8 @@
+--- source.orig/texk/kpathsea/mktexlsr
++++ source/texk/kpathsea/mktexlsr
+@@ -188,8 +188,8 @@
      # Use same permissions as parent directory, minus x,s, or t bits.
      chmod `kpsestat -xst "$db_dir"` "$db_file"
    elif test -s "$db_file" \

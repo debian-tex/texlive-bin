@@ -1,12 +1,11 @@
 ---
- texk/mendexk/mendex.1                |    2 
  texk/web2c/man/mf.man                |   26 +++++-----
  texk/web2c/synctexdir/man5/synctex.5 |    6 +-
  texk/xdvik/xdvi.1.in                 |   88 +++++++++++++++++------------------
- 4 files changed, 61 insertions(+), 61 deletions(-)
+ 3 files changed, 60 insertions(+), 60 deletions(-)
 
---- texlive-bin.orig/texk/web2c/man/mf.man
-+++ texlive-bin/texk/web2c/man/mf.man
+--- source.orig/texk/web2c/man/mf.man
++++ source/texk/web2c/man/mf.man
 @@ -2,7 +2,7 @@
  .\"=====================================================================
  .if n .ds MF Metafont
@@ -116,8 +115,8 @@
  using his \*(WB system for Pascal programs.  It was originally
  ported to Unix by Paul Richards at the University of Illinois at
  Urbana-Champaign.  This page was mostly written by Pierre MacKay.
---- texlive-bin.orig/texk/xdvik/xdvi.1.in
-+++ texlive-bin/texk/xdvik/xdvi.1.in
+--- source.orig/texk/xdvik/xdvi.1.in
++++ source/texk/xdvik/xdvi.1.in
 @@ -124,7 +124,7 @@
  [\fB\-mgs\fP[\fIn\fP] \fIsize\fP]
  [\fB\-mousemode\fP \fI0|1|2\fP]
@@ -474,8 +473,8 @@
  cells may overdraw the text.
  #endif
  .SH FILES
---- texlive-bin.orig/texk/web2c/synctexdir/man5/synctex.5
-+++ texlive-bin/texk/web2c/synctexdir/man5/synctex.5
+--- source.orig/texk/web2c/synctexdir/man5/synctex.5
++++ source/texk/web2c/synctexdir/man5/synctex.5
 @@ -103,7 +103,7 @@
  .It
  .Li (<Form(k)>|<Input Line>)*
@@ -503,13 +502,3 @@
  .\"nroff -man synctex.5 | col -b > synctex.5.txt
  .\"To convert it to Postscript (for printing or further conversion to pdf) use:
  .\"groff -man -Tps synctex.5 > synctex.5.ps
---- texlive-bin.orig/texk/mendexk/mendex.1
-+++ texlive-bin/texk/mendexk/mendex.1
-@@ -1,6 +1,6 @@
- .if t .ds TX T\\h'-0.1667m'\\v'0.20v'E\\v'-0.20v'\\h'-0.125m'X
- .if t .ds LX L\\h'-0.36m'\\v'-0.15v'\\s-2A\\s+2\\h'-0.15m'\\v'0.15v'T\\h'-0.1667m'\\v'0.20v'E\\v'-0.20v'\\h'-0.125m'X
--.TH MENDEX L
-+.TH MENDEX 1
- .SH NAME
- mendex \- Japanese index processor
- .SH SYNOPSIS

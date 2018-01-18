@@ -2,7 +2,7 @@
 # debian/rules file for texlive-bin
 
 export SHELL=/bin/bash
-export CONFIG_SHELL=/bin/sh
+export CONFIG_SHELL=/bin/bash
 
 #
 # the configure code already checks a lot, but it does not catch

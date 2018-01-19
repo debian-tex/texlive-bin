@@ -1,11 +1,12 @@
-texlive-bin (2018.20180119.46378-1) UNRELEASED; urgency=medium
+texlive-bin (2018.20180119.46378-1) experimental; urgency=medium
 
   * New upstream version 2018.20180119.46378
   * update patches to 2018
   * switch to included poppler, Debian's is too old
   * build both libtexlua52 and libtexlua53
+  * update copyright for new embedded libs and packages
 
- -- Norbert Preining <preining@debian.org>  Fri, 19 Jan 2018 12:42:45 +0900
+ -- Norbert Preining <preining@debian.org>  Fri, 19 Jan 2018 13:08:35 +0900
 
 texlive-bin (2017.20170613.44572-8) unstable; urgency=medium
 

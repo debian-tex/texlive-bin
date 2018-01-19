@@ -139,52 +139,14 @@ LPPL rationale: texmf-dist/doc/latex/base/modguide.pdf
 
 3. Licenses for included libraries
 
-libs/cairo
-	licensed under LGPL-2.1
-	cairo/cairo-*/COPYING
-	cairo/cairo-*/COPYING-LGPL-2.1
-
-libs/freetyp
-	licensed under GPLv2 (or FreeType License)
-	freetype2/freetype-*/docs/LICENSE.TXT
-
-libs/gd
-	licensed under its own license, see
-	gd/libgd-*/COPYING
-	~~~~~~~
-	Permission has been granted to copy, distribute and modify gd in
-	any context without fee, including a commercial application,
-	provided that this notice is present in user-accessible supporting
-	documentation.
-	~~~~~~~
-
-libs/libpng
-	licensed under the libpng license, see
-	libpng/libpng-*/LICENSE
-	~~~~~~
-	Permission is hereby granted to use, copy, modify, and distribute this
-	source code, or portions hereof, for any purpose, without fee, subject
-	to the following restrictions:
-
-	1. The origin of this source code must not be misrepresented.
-
-	2. Altered versions must be plainly marked as such and must not
-	   be misrepresented as being the original source.
-
-	3. This Copyright notice may not be removed or altered from any
-	   source or altered source distribution.
-
-	The Contributing Authors and Group 42, Inc. specifically permit, without
-	fee, and encourage the use of this source code as a component to
-	supporting the PNG file format in commercial products.  If you use this
-	source code in a product, acknowledgment is not required but would be
-	appreciated.
-	~~~~~~
-
 libs/lua52
 	licensed under MIT license
 	lua52/lua-*/doc/readme.html
 
+libs/lua53
+	licensed under MIT license
+	lua53/lua-*/doc/readme.html
+  
 libs/luajit
 	licensed under MIT license
 	luajit/LuaJIT-*/COPYRIGHT
@@ -196,6 +158,10 @@ libs/poppler
 libs/teckit
 	licensed under GLPL 2.1 (or Common Public License)
 	teckit/TECkit-*/license/LICENSING.txt
+
+libs/xpdf
+	licensed under GPLv2
+	xpdf/xpdf-src/COPYING
 
 -------------
 

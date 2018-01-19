@@ -150,7 +150,8 @@ override_dh_install:
 	mkdir -p debian/tmp/usr/include/$(DEB_HOST_MULTIARCH)/kpathsea
 	mv debian/tmp/usr/include/kpathsea/c-auto.h \
 	 	debian/tmp/usr/include/$(DEB_HOST_MULTIARCH)/kpathsea/
-	dh_install --fail-missing --sourcedir=$(CURDIR)/debian/tmp
+	dh_install --sourcedir=$(CURDIR)/debian/tmp
+	dh_missing --sourcedir=$(CURDIR)/debian/tmp --fail-missing
 	# replace xdvi wrapper shell script with perl variant to
 	# allow for opening of gz etc files
 	rm debian/texlive-binaries/usr/bin/xdvi

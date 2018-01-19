@@ -4,6 +4,4 @@ debian-no-tl-scripts
 debian-remove-unneeded-x-libs-linking
 debian-fix-quote-in-quote
 # from here on upstream patches
-fix-manpages
-fix-format-gcc-errors
 #disable-seetex-stdin-tests

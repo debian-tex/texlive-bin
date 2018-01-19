@@ -53,8 +53,10 @@ rm -rf $verstr/utils/t1utils
 #
 # remove system libraries, keep only teckit and lua52 and libpng
 # teckit: for now only in experimental
-# poppler is currently too old in Debian, keep it
-#	poppler
+# poppler and xpdf are required until poppler is up to 62
+#	poppler		\
+#	xpdf		\
+#
 
 for i in \
 	graphite2	\
@@ -65,7 +67,6 @@ for i in \
 	mpfr		\
 	pixman		\
 	potrace		\
-	xpdf		\
 	zlib		\
 	zziplib		\
 	cairo		\

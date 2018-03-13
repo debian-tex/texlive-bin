@@ -1665,7 +1665,7 @@ static int m_Object_initCmd(lua_State * L)
     if (uin->pd != NULL && uin->pd->pc != uin->pc)
         pdfdoc_changed_error(L);
     s = luaL_checkstring(L, 2);
-    *((Object *) uin->d) = Object(objCmd, CHARP_CAST s);
+    *((Object *) uin->d) = Object(objCmd, s);
     return 0;
 }
 
@@ -1794,7 +1794,11 @@ static int m_Object_getNum(lua_State * L)
     uin = (udstruct *) luaL_checkudata(L, 1, M_Object);
     if (uin->pd != NULL && uin->pd->pc != uin->pc)
         pdfdoc_changed_error(L);
-    if (((Object *) uin->d)->isNum())
+    if (((Object *) uin->d)->isInt())
+        lua_pushinteger(L, ((Object *) uin->d)->getInt());
+    else if (((Object *) uin->d)->isReal())
+        lua_pushinteger(L, ((Object *) uin->d)->getReal());
+    else if (((Object *) uin->d)->isNum()) /* redundant */
         lua_pushnumber(L, ((Object *) uin->d)->getNum()); /* integer or float */
     else
         lua_pushnil(L);

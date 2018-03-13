@@ -1,11 +1,12 @@
+# $Id: TLUtils.pm 46834 2018-03-05 15:34:41Z preining $
 # TeXLive::TLUtils.pm - the inevitable utilities for TeX Live.
-# Copyright 2007-2017 Norbert Preining, Reinhard Kotucha
+# Copyright 2007-2018 Norbert Preining, Reinhard Kotucha
 # This file is licensed under the GNU General Public License version 2
 # or any later version.
 
 package TeXLive::TLUtils;
 
-my $svnrev = '$Revision: 46045 $';
+my $svnrev = '$Revision: 46834 $';
 my $_modulerevision = ($svnrev =~ m/: ([0-9]+) /) ? $1 : "unknown";
 sub module_revision { return $_modulerevision; }
 
@@ -297,6 +298,14 @@ sub platform_name {
     #   solaris2 is matched.
     $OS = $os if $guessed_platform =~ /\b$os/;
   }
+
+  if ($OS eq "linux") {
+    # deal with the special case of musl based distributions
+    # config.guess returns
+    #   x86_64-pc-linux-musl
+    #   i386-pc-linux-musl
+    $OS = "linuxmusl" if $guessed_platform =~ /\blinux-musl/;
+  }
   
   if ($OS eq "darwin") {
     # We have a variety of Mac binary sets.
@@ -361,6 +370,7 @@ sub platform_desc {
   my ($platform) = @_;
 
   my %platform_name = (
+    'aarch64-linux'    => 'GNU/Linux on ARM64',
     'alpha-linux'      => 'GNU/Linux on DEC Alpha',
     'amd64-freebsd'    => 'FreeBSD on x86_64',
     'amd64-kfreebsd'   => 'GNU/kFreeBSD on x86_64',
@@ -373,6 +383,7 @@ sub platform_desc {
     'i386-freebsd'     => 'FreeBSD on Intel x86',
     'i386-kfreebsd'    => 'GNU/kFreeBSD on Intel x86',
     'i386-linux'       => 'GNU/Linux on Intel x86',
+    'i386-linuxmusl'   => 'GNU/Linux on Intel x86 with musl',
     'i386-netbsd'      => 'NetBSD on Intel x86',
     'i386-openbsd'     => 'OpenBSD on Intel x86',
     'i386-solaris'     => 'Solaris on Intel x86',
@@ -389,6 +400,7 @@ sub platform_desc {
     'x86_64-darwin'    => 'MacOSX current on x86_64',
     'x86_64-darwinlegacy' => 'MacOSX legacy (10.6-10.9) on x86_64',
     'x86_64-linux'     => 'GNU/Linux on x86_64',
+    'x86_64-linuxmusl' => 'GNU/Linux on x86_64 with musl',
     'x86_64-solaris'   => 'Solaris on x86_64',
   );
 
@@ -2062,6 +2074,11 @@ not agree. If a check argument is not given, that check is not performed.
 
 sub check_file {
   my ($xzfile, $checksum, $checksize) = @_;
+  debug("check_file $xzfile, $checksum, $checksize\n");
+  if (!$checksum && !$checksize) {
+    tlwarn("TLUtils::check_file: neither checksum nor checksize available for $xzfile, cannot check integrity!\n");
+    return;
+  }
   # only run checksum tests if we can actually compute the checksum
   if ($checksum && $::checksum_method) {
     my $tlchecksum = TeXLive::TLCrypto::tlchecksum($xzfile);
@@ -2069,6 +2086,10 @@ sub check_file {
       tlwarn("TLUtils::check_file: removing $xzfile, checksums differ:\n");
       tlwarn("TLUtils::check_file:   TL=$tlchecksum, arg=$checksum\n");
       unlink($xzfile);
+      return;
+    } else {
+      debug("TLUtils::check_file: checksums for $xzfile agree\n");
+      # if we have checked the checksum, we don't need to check the size, too
       return;
     }
   }

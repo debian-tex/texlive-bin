@@ -1,3 +1,31 @@
+2018-03-03  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* xbb.c: Remove unused lines.
+
+2018-03-02  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* epdf.c, pdfobj.c, pdfobj.h: Remove multiple warnings.
+
+2018-03-01  Hironobu Yamashita  <h.y.acetaminophen@gmail.com>
+
+	* pdfobj.c: Fix typo and improve a warning (incomplete fix).
+
+2018-02-17  Shunsaku Hirata  <shunsaku.hirata74@gmail.com>
+
+	* cid.c, dpxfile.[ch], dvipdfmx.c, epdf.c, jp2image.c,
+	jpegimage.c, pdfcolor.c, pdfencoding.c, pdfencrypt.c,
+	pdflimits.h, pdfobj.[ch], pdfximage.c, pngimage.c,
+	spc_dvips.c, spc_pdfm.c, spc_tpic.c, type0.c, xbb.c:
+	Accept PDF version tag 2.0.
+	* numbers.[ch], tfm.c: Remove format specific number
+	representation from numbers.[ch].
+	* configure.ac: Version 20180217.
+
+2018-01-27  Hironobu Yamashita  <h.y.acetaminophen@gmail.com>
+
+	* tfm.c, number.[ch]: Support new JFM spec (3-byte characters
+	in TYPE > 0).
+
 2017-12-21  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
 
 	* jpegimage.c: If j_info->xdpi and j_info->ydpi are not

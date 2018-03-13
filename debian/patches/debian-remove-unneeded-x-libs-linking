@@ -1,4 +1,4 @@
-remove some unneeded libraries at link time - Karl want's to keep them though in upstream
+remove some unneeded libraries at link time - Karl wants to keep them though in upstream
 ---
  texk/web2c/am/texmf.am |    2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)

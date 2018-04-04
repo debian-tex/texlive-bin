@@ -16,13 +16,14 @@
 // under GPL version 2 or later
 //
 // Copyright (C) 2006 Kristian Høgsberg <krh@redhat.com>
-// Copyright (C) 2009, 2011, 2012 Albert Astals Cid <aacid@kde.org>
+// Copyright (C) 2009, 2011, 2012, 2017, 2018 Albert Astals Cid <aacid@kde.org>
 // Copyright (C) 2009 Kovid Goyal <kovid@kovidgoyal.net>
 // Copyright (C) 2013 Adam Reichold <adamreichold@myopera.com>
 // Copyright (C) 2013, 2017 Adrian Johnson <ajohnson@redneon.com>
 // Copyright (C) 2014 Bogdan Cristea <cristeab@gmail.com>
 // Copyright (C) 2014 Peter Breitenlohner <peb@mppmu.mpg.de>
 // Copyright (C) 2017 Christoph Cullmann <cullmann@kde.org>
+// Copyright (C) 2017 Thomas Freitag <Thomas.Freitag@alfa.de>
 //
 // To see a description of the changes please see the Changelog file that
 // came with your tarball or type make ChangeLog if you are building from git
@@ -36,6 +37,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
+#include <time.h>
 extern "C" {
 #if defined(_WIN32)
 #  include <sys/stat.h>
@@ -48,8 +50,6 @@ extern "C" {
 #    include <windows.h>
 #  endif
 #elif defined(ACORN)
-#elif defined(MACOS)
-#  include <ctime.h>
 #else
 #  include <unistd.h>
 #  include <sys/types.h>
@@ -136,6 +136,9 @@ extern Goffset GoffsetMax();
 class GooFile
 {
 public:
+  GooFile(const GooFile &) = delete;
+  GooFile& operator=(const GooFile &other) = delete;
+
   int read(char *buf, int n, Goffset offset) const;
   Goffset size() const;
   
@@ -145,16 +148,23 @@ public:
   static GooFile *open(const wchar_t *fileName);
   
   ~GooFile() { CloseHandle(handle); }
+
+  // Asuming than on windows you can't change files that are already open
+  bool modificationTimeChangedSinceOpen() const;
   
 private:
-  GooFile(HANDLE handleA): handle(handleA) {}
+  GooFile(HANDLE handleA);
   HANDLE handle;
+  struct _FILETIME modifiedTimeOnOpen;
 #else
   ~GooFile() { close(fd); }
+
+  bool modificationTimeChangedSinceOpen() const;
     
 private:
-  GooFile(int fdA) : fd(fdA) {}
+  GooFile(int fdA);
   int fd;
+  struct timespec modifiedTimeOnOpen;
 #endif // _WIN32
 };
 

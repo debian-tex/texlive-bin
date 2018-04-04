@@ -69,21 +69,27 @@ AC_ARG_ENABLE([fixedpoint],
 fi
 ])
 
-AC_ARG_ENABLE([dctdecoder],
-              AS_HELP_STRING([--enable-dctdecoder],
-                             [use dctdecoder]),
-              [if test "x$enableval" = xlibjpeg; then
-  AC_DEFINE([HAVE_DCT_DECODER], 1, [Do we have any DCT decoder?.])
-fi
-])
 
-AC_ARG_ENABLE([libopenjpeg],
-              AS_HELP_STRING([--enable-libopenjpeg],
-                             [use openjpeg decoder]),
-              [if test "x$enableval" = xopenjpeg2; then
-  AC_DEFINE([HAVE_JPX_DECODER], 1, [Do we have any JPX decoder?.])
-fi
-])
+# For TL, we just hardware DCT/JPX_DECODER to on.
+AC_DEFINE([HAVE_DCT_DECODER], 1, [Do we have any DCT decoder?])
+dnl
+dnl AC_ARG_ENABLE([dctdecoder],
+dnl               AS_HELP_STRING([--enable-dctdecoder],
+dnl                             [use dctdecoder]),
+dnl              [if test "x$enableval" = xlibjpeg; then
+dnl  AC_DEFINE([HAVE_DCT_DECODER], 1, [Do we have any DCT decoder?])
+dnl fi
+dnl ])
+
+AC_DEFINE([HAVE_JPX_DECODER], 1, [Do we have any JPX decoder?])
+dnl
+dnl AC_ARG_ENABLE([libopenjpeg],
+dnl              AS_HELP_STRING([--enable-libopenjpeg],
+dnl                              [use openjpeg decoder]),
+dnl               [if test "x$enableval" = xopenjpeg2; then
+dnl   AC_DEFINE([HAVE_JPX_DECODER], 1, [Do we have any JPX decoder?])
+dnl fi
+dnl ])
 
 dnl **** Checks for header files ****
 
@@ -93,6 +99,10 @@ AC_HEADER_DIRENT
 dnl Checks for library functions (from goo/glibc.h and more).
 AC_CHECK_FUNCS([gettimeofday gmtime_r localtime_r mkstemp popen rand_r \
                 timegm strtok_r])
+
+dnl Check for struct stat needed by goo/gfile.c
+AC_CHECK_MEMBERS([struct stat.st_mtim])
+
 AC_SYS_LARGEFILE
 AC_FUNC_FSEEKO
 AC_CHECK_FUNC([ftell64], [AC_CHECK_FUNCS([fseek64])])

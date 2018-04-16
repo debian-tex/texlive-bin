@@ -1,3 +1,10 @@
+texlive-bin (2018.20180416.47457-1) unstable; urgency=medium
+
+  * New upstream version: Sources of TeX Live 2018: 2018.20180416.47457
+  * Upload to unstable
+
+ -- Norbert Preining <preining@debian.org>  Mon, 16 Apr 2018 13:00:49 +0900
+
 texlive-bin (2018.20180404.47274-1) experimental; urgency=medium
 
   * New upstream version 2018.20180404.47274

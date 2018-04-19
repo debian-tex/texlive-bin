@@ -1,3 +1,11 @@
+texlive-bin (2018.20180416.47457-2) unstable; urgency=medium
+
+  * synctex fixes
+    - install synctex_version.h
+  * include upstream bug fix for m-tx (Closes: #896077)
+
+ -- Norbert Preining <preining@debian.org>  Thu, 19 Apr 2018 23:48:24 +0900
+
 texlive-bin (2018.20180416.47457-1) unstable; urgency=medium
 
   * New upstream version: Sources of TeX Live 2018: 2018.20180416.47457

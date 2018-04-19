@@ -5,3 +5,5 @@ debian-remove-unneeded-x-libs-linking
 debian-fix-quote-in-quote
 # from here on upstream patches
 #disable-seetex-stdin-tests
+fix-synctex-missing-header-install
+m-tx-0.63a-buffer-overflow.patch

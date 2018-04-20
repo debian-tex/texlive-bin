@@ -7,3 +7,4 @@ debian-fix-quote-in-quote
 #disable-seetex-stdin-tests
 fix-synctex-missing-header-install
 m-tx-0.63a-buffer-overflow.patch
+synctex-bump-soname

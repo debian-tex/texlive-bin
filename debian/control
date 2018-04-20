@@ -46,8 +46,8 @@ Depends: libptexenc1 (>= ${source:Version}),
   libptexenc1 (<< ${source:Version}.1~), 
   libkpathsea6 (>= ${source:Version}), 
   libkpathsea6 (<< ${source:Version}.1~), 
-  libsynctex1 (>= ${source:Version}), 
-  libsynctex1 (<< ${source:Version}.1~), 
+  libsynctex2 (>= ${source:Version}),
+  libsynctex2 (<< ${source:Version}.1~),
   libtexlua52 (>= ${source:Version}), 
   libtexlua52 (<< ${source:Version}.1~), 
   libtexlua53 (>= ${source:Version}), 
@@ -114,7 +114,7 @@ Description: TeX Live: ptex encoding library (development part)
  ptexenc library, a library for encoding support in pTeX, a Japanese
  TeX engine.
 
-Package: libsynctex1
+Package: libsynctex2
 Section: libs
 Architecture: any
 Multi-Arch: same
@@ -127,7 +127,7 @@ Package: libsynctex-dev
 Section: libdevel
 Architecture: any
 Multi-Arch: same
-Depends: ${misc:Depends}, libsynctex1 (= ${binary:Version})
+Depends: ${misc:Depends}, libsynctex2 (= ${binary:Version})
 Description: Tex Live: SyncTeX parser library (development part)
  This package contains the static library and header files for the SyncTex
  parser library.

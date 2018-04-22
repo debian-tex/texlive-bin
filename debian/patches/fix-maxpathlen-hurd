@@ -1,0 +1,26 @@
+From Bug #896518
+> texlive-bin currently FTBFS on hurd-i386:
+> ../../../texk/web2c/luatexdir/luafilesystem/src/lfs.c:63:26: error:
+> 'MAXPATHLEN' undeclared (first use in this function);
+> 
+> The attached patch fixes this: the file already has a dynamic
+> allocation, it just needs a reasonable initial value.
+---
+ texk/web2c/luatexdir/luafilesystem/src/lfs.c |    6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+--- texlive-bin.orig/texk/web2c/luatexdir/luafilesystem/src/lfs.c
++++ texlive-bin/texk/web2c/luatexdir/luafilesystem/src/lfs.c
+@@ -60,7 +60,11 @@
+   #include <sys/types.h>
+   #include <utime.h>
+   #include <sys/param.h> /* for MAXPATHLEN */
+-  #define LFS_MAXPATHLEN MAXPATHLEN
++  #ifdef MAXPATHLEN
++    #define LFS_MAXPATHLEN MAXPATHLEN
++  #else
++    #define LFS_MAXPATHLEN 128
++  #endif
+ #endif
+ 
+ #include <lua.h>

@@ -8,3 +8,4 @@ debian-fix-quote-in-quote
 fix-synctex-missing-header-install
 m-tx-0.63a-buffer-overflow.patch
 synctex-bump-soname
+fix-maxpathlen-hurd

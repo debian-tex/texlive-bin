@@ -1,3 +1,9 @@
+texlive-bin (2018.20180416.47457-3) UNRELEASED; urgency=medium
+
+  * fix ftbfs on hurd (Closes: #896518), thanks Samuel Thibault
+
+ -- Norbert Preining <preining@debian.org>  Sun, 22 Apr 2018 11:27:42 +0900
+
 texlive-bin (2018.20180416.47457-2) unstable; urgency=medium
 
   * synctex fixes

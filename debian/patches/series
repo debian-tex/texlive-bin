@@ -9,3 +9,5 @@ fix-synctex-missing-header-install
 m-tx-0.63a-buffer-overflow.patch
 synctex-bump-soname
 fix-maxpathlen-hurd
+# disabled for now
+#poppler-0.64

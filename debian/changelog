@@ -1,6 +1,5 @@
 texlive-bin (2018.20180416.47457-3) unstable; urgency=medium
 
-  * fix ftbfs on hurd (Closes: #896518), thanks Samuel Thibault
   * cherry-picking fixes from upstream svn:
     - upstream-svn47469-dvipdfm-x-Fix-a-bug-which-causes-a-segfault-with-1-2
       xetex segfaults with uncommon png formats 
@@ -16,8 +15,9 @@ texlive-bin (2018.20180416.47457-3) unstable; urgency=medium
       https://tex.stackexchange.com/questions/430054/failing-search-for-words-with-ligatures-after-update
     - upstream-svn47626-ptexdir-More-strict-check-kanji-token
       inconsisten behavior of p-engines
+  * add information about SDE in tex.man and etex.man (Closes: #897627)
 
- -- Norbert Preining <preining@debian.org>  Mon, 07 May 2018 10:19:05 +0900
+ -- Norbert Preining <preining@debian.org>  Mon, 07 May 2018 10:41:52 +0900
 
 texlive-bin (2018.20180416.47457-2) unstable; urgency=medium
 

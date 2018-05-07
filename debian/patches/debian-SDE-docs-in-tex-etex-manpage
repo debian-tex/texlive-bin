@@ -1,0 +1,45 @@
+---
+ texk/web2c/man/etex.man |   14 ++++++++++++++
+ texk/web2c/man/tex.man  |    8 ++++++++
+ 2 files changed, 22 insertions(+)
+
+--- texlive-bin.orig/texk/web2c/man/etex.man
++++ texlive-bin/texk/web2c/man/etex.man
+@@ -319,6 +319,20 @@
+ Search path for font metric
+ .RI ( .tfm )
+ files.
++.TP
++.B SOURCE_DATE_EPOCH
++If set, its value, taken to be in epoch-seconds, will be used for the
++timestamps in the PDF output, such as the CreationDate and ModDate keys.
++This is useful for making reproducible builds.
++.TP
++.B FORCE_SOURCE_DATE
++If set to the value "1", the time-related \*(TX primitives
++.RI ( \eyear ,
++.IR \emonth ,
++.IR \eday ,
++.IR \etime )
++are also initialized from the value of SOURCE_DATE_EPOCH.  This is not
++recommended if there is any viable alternative.
+ .\"=====================================================================
+ .SH FILES
+ The location of the files mentioned below varies from system to
+--- texlive-bin.orig/texk/web2c/man/tex.man
++++ texlive-bin/texk/web2c/man/tex.man
+@@ -427,6 +427,14 @@
+ Search path for font metric
+ .RI ( .tfm )
+ files.
++.P
++Notes for Debian developers: please keep in mind, that this version of
++the \*(TX interpreter ignores the
++.B SOURCE_DATE_EPOCH
++variable. Instead the current timestamp is written into the
++.I DVI
++file. If you need a reproducible time stamp, please use any engine based
++on pdf\*(TX, e.g., etex, pdftex, latex, pdflatex.
+ .\"=====================================================================
+ .SH FILES
+ The location of the files mentioned below varies from system to

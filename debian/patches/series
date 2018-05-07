@@ -5,6 +5,7 @@ debian-remove-unneeded-x-libs-linking
 debian-fix-quote-in-quote
 # from here on upstream patches
 #disable-seetex-stdin-tests
+debian-SDE-docs-in-tex-etex-manpage
 fix-synctex-missing-header-install
 synctex-bump-soname
 fix-maxpathlen-hurd

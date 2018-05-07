@@ -17,3 +17,4 @@ upstream-svn47477-ptexdir-fix-a-regression-for-discontinuous-kinsoku-t
 upstream-svn47506-typo
 upstream-svn47625-recover-to-give-tounicode-entries-for-ligatures
 upstream-svn47626-ptexdir-More-strict-check-kanji-token
+freetype-use-pkg-config

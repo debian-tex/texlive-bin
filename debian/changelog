@@ -16,8 +16,9 @@ texlive-bin (2018.20180416.47457-3) unstable; urgency=medium
     - upstream-svn47626-ptexdir-More-strict-check-kanji-token
       inconsisten behavior of p-engines
   * add information about SDE in tex.man and etex.man (Closes: #897627)
+  * use pkg-config as fallback for freetype configuration (Closes: #892446)
 
- -- Norbert Preining <preining@debian.org>  Mon, 07 May 2018 10:41:52 +0900
+ -- Norbert Preining <preining@debian.org>  Mon, 07 May 2018 10:53:51 +0900
 
 texlive-bin (2018.20180416.47457-2) unstable; urgency=medium
 

@@ -1,0 +1,274 @@
+From d5922eff3f0008ee2f8279d971fb637d9febcf78 Mon Sep 17 00:00:00 2001
+From: Hironobu Yamashita <h.y.acetaminophen@gmail.com>
+Date: Sat, 28 Apr 2018 23:58:22 +0000
+Subject: [PATCH 3/7] ptexdir: fix a regression for discontinuous kinsoku table
+ introduced on 2017-09-11
+
+git-svn-id: svn://tug.org/texlive/trunk/Build/source@47477 c570f23f-e606-0410-a88d-b1316a301751
+---
+ texk/web2c/ptexdir/ChangeLog           |  9 +++++
+ texk/web2c/ptexdir/ptex-base.ch        | 35 ++++++++++-------
+ texk/web2c/ptexdir/ptex_version.h      |  2 +-
+ texk/web2c/ptexdir/tests/free_ixsp.tex | 53 ++++++++++++++++++++++++++
+ texk/web2c/ptexdir/tests/free_pena.tex | 52 +++++++++++++++++++++++++
+ 5 files changed, 136 insertions(+), 15 deletions(-)
+ create mode 100644 texk/web2c/ptexdir/tests/free_ixsp.tex
+ create mode 100644 texk/web2c/ptexdir/tests/free_pena.tex
+
+diff --git a/texk/web2c/ptexdir/ChangeLog b/texk/web2c/ptexdir/ChangeLog
+index d5a7d46f6..cc07b4c33 100644
+--- a/texk/web2c/ptexdir/ChangeLog
++++ b/texk/web2c/ptexdir/ChangeLog
+@@ -1,3 +1,12 @@
++2018-04-14  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
++
++	* ptex-base.ch: Fix issue GitHub:texjporg/tex-jp-build#57
++	  that discontinuous KINSOKU/INHIBIT table cannot be
++	  searched properly.
++	  (regression caused by a commmit of 2017-09-11)
++	* tests/free_pena.tex, tests/free_ixsp.tex: Added.
++	* ptex_version.h: pTeX version p3.8.1.
++
+ 2018-02-05  Hironobu Yamashita  <h.y.acetaminophen@gmail.com>
+ 
+ 	* ptex-base.ch: Set subtype for JFM glue in math list.
+diff --git a/texk/web2c/ptexdir/ptex-base.ch b/texk/web2c/ptexdir/ptex-base.ch
+index 1763077ba..10b657db8 100644
+--- a/texk/web2c/ptexdir/ptex-base.ch
++++ b/texk/web2c/ptexdir/ptex-base.ch
+@@ -58,6 +58,7 @@
+ %                  pTeX p3.7.1.
+ % (2017-09-07) HK  pTeX p3.7.2 More restrictions on direction change commands.
+ % (2018-01-21) HK  Added \ptexversion primitive and co. pTeX p3.8.
++% (2018-04-14) HK  pTeX p3.8.1 Bug fix for discontinuous KINSOKU table.
+ %
+ 
+ @x
+@@ -73,8 +74,8 @@
+ @y
+ @d pTeX_version=3
+ @d pTeX_minor_version=8
+-@d pTeX_revision==".0"
+-@d pTeX_version_string=='-p3.8.0' {current \pTeX\ version}
++@d pTeX_revision==".1"
++@d pTeX_version_string=='-p3.8.1' {current \pTeX\ version}
+ @#
+ @d pTeX_banner=='This is pTeX, Version 3.14159265',pTeX_version_string
+ @d pTeX_banner_k==pTeX_banner
+@@ -6397,6 +6398,8 @@ inserting a space between 2byte-char and 1byte-char.
+ @d inhibit_both=0     {disable to insert space before 2byte-char and after it}
+ @d inhibit_previous=1 {disable to insert space before 2byte-char}
+ @d inhibit_after=2    {disable to insert space after 2byte-char}
++@d inhibit_none=3     {enable to insert space before/after 2byte-char}
++@d inhibit_unused=4   {unused entry}
+ @d no_entry=1000
+ @d new_pos=0
+ @d cur_pos=1
+@@ -6427,14 +6430,15 @@ var p,s:pointer;
+ begin s:=calc_pos(c); p:=s;
+ if n=new_pos then
+   begin repeat
+-  if (inhibit_xsp_code(p)=0)or(inhibit_xsp_code(p)=c) then goto done;
++  if (inhibit_xsp_type(p)=inhibit_unused)or(inhibit_xsp_code(p)=0)
++    or(inhibit_xsp_code(p)=c) then goto done;
+   incr(p); if p>255 then p:=0;
+   until s=p; p:=no_entry;
+   end
+ else
+   begin repeat
+-  if inhibit_xsp_code(p)=0 then goto done1;
+-  if inhibit_xsp_code(p)=c then goto done;
++  if inhibit_xsp_code(p)=0 then goto done1
++  else if (inhibit_xsp_type(p)<>inhibit_unused)and(inhibit_xsp_code(p)=c) then goto done;
+   incr(p); if p>255 then p:=0;
+   until s=p;
+ done1: p:=no_entry;
+@@ -6447,9 +6451,10 @@ assign_inhibit_xsp_code:
+ begin p:=cur_chr; scan_int; n:=cur_val; scan_optional_equals; scan_int;
+ if is_char_kanji(n) then
+   begin j:=get_inhibit_pos(tokanji(n),new_pos);
+-  if (j<>no_entry)and(cur_val>inhibit_after)and(global or cur_level=level_one) then
+-    begin n:=0; cur_val:=0 end
+-    { remove the entry from inhibit table }
++  if (j<>no_entry)and(cur_val>inhibit_after) then
++    begin if global or(cur_level=level_one) then cur_val:=inhibit_unused
++      { remove the entry from inhibit table }
++	else cur_val:=inhibit_none; end
+   else if j=no_entry then
+     begin print_err("Inhibit table is full!!");
+     help1("I'm skipping this control sequences.");@/
+@@ -6466,7 +6471,7 @@ end;
+ 
+ @ @<Fetch inhibit type from some table@>=
+ begin scan_int; q:=get_inhibit_pos(tokanji(cur_val),cur_pos);
+-cur_val_level:=int_val; cur_val:=3;
++cur_val_level:=int_val; cur_val:=inhibit_none;
+ if q<>no_entry then cur_val:=inhibit_xsp_type(q);
+ end
+ 
+@@ -6476,6 +6481,7 @@ The \.{\\postbreakpenalty} is inserted after the 2byte-char.
+ 
+ @d pre_break_penalty_code=1
+ @d post_break_penalty_code=2
++@d kinsoku_unused_code=3
+ 
+ @<Put each...@>=
+ primitive("prebreakpenalty",assign_kinsoku,pre_break_penalty_code);
+@@ -6502,15 +6508,16 @@ if p+kinsoku_base<0 then
+ gubed
+ if n=new_pos then
+   begin repeat
+-  if (kinsoku_type(p)=0)or(kinsoku_code(p)=c) then goto done;
++  if (kinsoku_type(p)=0)or(kinsoku_type(p)=kinsoku_unused_code)
++    or(kinsoku_code(p)=c) then goto done;
+   incr(p); if p>255 then p:=0;
+   until s=p;
+   p:=no_entry;
+   end
+ else
+   begin repeat
+-  if kinsoku_type(p)=0 then goto done1;
+-  if kinsoku_code(p)=c then goto done;
++  if kinsoku_type(p)=0 then goto done1
++  else if (kinsoku_type(p)<>kinsoku_unused_code)and(kinsoku_code(p)=c) then goto done;
+   incr(p); if p>255 then p:=0;
+   until s=p;
+ done1: p:=no_entry;
+@@ -6523,8 +6530,8 @@ assign_kinsoku:
+ begin p:=cur_chr; scan_int; n:=cur_val; scan_optional_equals; scan_int;
+ if is_char_ascii(n) or is_char_kanji(n) then
+   begin j:=get_kinsoku_pos(tokanji(n),new_pos);
+-  if (j<>no_entry)and(cur_val=0)and(global or cur_level=level_one) then
+-    define(kinsoku_base+j,0,0) { remove the entry from KINSOKU table }
++  if (j<>no_entry)and(cur_val=0)and(global or(cur_level=level_one)) then
++    define(kinsoku_base+j,kinsoku_unused_code,0) { remove the entry from KINSOKU table }
+   else begin
+     if j=no_entry then begin
+       print_err("KINSOKU table is full!!");
+diff --git a/texk/web2c/ptexdir/ptex_version.h b/texk/web2c/ptexdir/ptex_version.h
+index ef39b9ff0..0cb61179f 100644
+--- a/texk/web2c/ptexdir/ptex_version.h
++++ b/texk/web2c/ptexdir/ptex_version.h
+@@ -1 +1 @@
+-#define PTEX_VERSION "p3.8.0"
++#define PTEX_VERSION "p3.8.1"
+diff --git a/texk/web2c/ptexdir/tests/free_ixsp.tex b/texk/web2c/ptexdir/tests/free_ixsp.tex
+new file mode 100644
+index 000000000..9a3b27664
+--- /dev/null
++++ b/texk/web2c/ptexdir/tests/free_ixsp.tex
+@@ -0,0 +1,53 @@
++%#!eptex -ini -etex
++\let\dump\relax
++\batchmode
++\input plain
++
++\errorstopmode
++\catcode`@=11
++\newcount\@tempcnta
++\newcount\@tempcntb
++\newcount\@tempcntc
++\mathchardef\LIM=256
++
++\def\MYCHAR#1{%
++  \@tempcntc=\numexpr7*#1+"101\relax
++  \@tempcnta=\@tempcntc\divide\@tempcnta 94
++  \@tempcntb=\numexpr\@tempcntc-94*\@tempcnta+1\relax
++  \ifnum\@tempcntb<0\advance\@tempcntb94 \advance\@tempcnta-1\fi
++  \advance\@tempcnta18 % 18区以降
++  \CNTA=\kuten\numexpr"100*\@tempcnta+\@tempcntb\relax
++}
++
++\newcount\CNT\newcount\CNTA
++\CNT=0
++\loop
++  \MYCHAR\CNT
++  \message{\the\CNT.}
++  \inhibitxspcode\CNTA=1\relax
++  \advance\CNT1\relax
++  \ifnum\CNT<\LIM
++\repeat
++
++\newcount\CNTB
++
++\loop
++  \MYCHAR\CNTB
++  \global\inhibitxspcode\CNTA=3
++{%
++\CNT=0
++\loop
++  \MYCHAR\CNT
++  \count@=\numexpr 1-\inhibitxspcode\CNTA\relax
++  \ifnum\count@=0\else\ifnum\CNTB=\CNT\else
++    \errmessage{<\the\CNTB, \the\CNT, \the\inhibitxspcode\CNTA>}\fi\fi
++  \advance\CNT1\relax
++  \ifnum\CNT<\LIM
++\repeat
++}
++  \MYCHAR\CNTB
++  \global\inhibitxspcode\CNTA=1\relax
++  \advance\CNTB1\relax
++  \ifnum\CNTB<\LIM
++\repeat
++\bye
+diff --git a/texk/web2c/ptexdir/tests/free_pena.tex b/texk/web2c/ptexdir/tests/free_pena.tex
+new file mode 100644
+index 000000000..184720a80
+--- /dev/null
++++ b/texk/web2c/ptexdir/tests/free_pena.tex
+@@ -0,0 +1,52 @@
++%#!eptex -ini -etex
++\let\dump\relax
++\batchmode
++\input plain
++
++\errorstopmode
++\catcode`@=11
++\newcount\@tempcnta
++\newcount\@tempcntb
++\newcount\@tempcntc
++\mathchardef\LIM=256
++
++\def\MYCHAR#1{%
++  \@tempcntc=\numexpr7*#1+"101\relax
++  \@tempcnta=\@tempcntc\divide\@tempcnta 94
++  \@tempcntb=\numexpr\@tempcntc-94*\@tempcnta+1\relax
++  \ifnum\@tempcntb<0\advance\@tempcntb94 \advance\@tempcnta-1\fi
++  \advance\@tempcnta18 % 18区以降
++  \CNTA=\kuten\numexpr"100*\@tempcnta+\@tempcntb\relax
++}
++
++\newcount\CNT\newcount\CNTA
++\CNT=0
++\loop
++  \MYCHAR\CNT
++  \message{\the\CNT.}
++  \prebreakpenalty\CNTA=\numexpr\CNT+1\relax
++  \advance\CNT1\relax
++  \ifnum\CNT<\LIM
++\repeat
++
++\newcount\CNTB
++
++\loop
++  \MYCHAR\CNTB
++  \global\prebreakpenalty\CNTA=0
++{%
++\CNT=0
++\loop
++  \MYCHAR\CNT
++  \count@=\numexpr -\CNT-1+\prebreakpenalty\CNTA\relax
++  \ifnum\count@=0\else\ifnum\CNTB=\CNT\else\errmessage{<\the\CNTB, \the\CNT>}\fi\fi
++  \advance\CNT1\relax
++  \ifnum\CNT<\LIM
++\repeat
++}
++  \MYCHAR\CNTB
++  \global\prebreakpenalty\CNTA=\numexpr\CNTB+1\relax
++  \advance\CNTB1\relax
++  \ifnum\CNTB<\LIM
++\repeat
++\bye
+-- 
+2.17.0
+

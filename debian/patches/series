@@ -6,8 +6,13 @@ debian-fix-quote-in-quote
 # from here on upstream patches
 #disable-seetex-stdin-tests
 fix-synctex-missing-header-install
-m-tx-0.63a-buffer-overflow.patch
 synctex-bump-soname
 fix-maxpathlen-hurd
 # disabled for now
 #poppler-0.64
+upstream-svn47469-dvipdfm-x-Fix-a-bug-which-causes-a-segfault-with-1-2
+upstream-svn47476-m-tx-0.63a
+upstream-svn47477-ptexdir-fix-a-regression-for-discontinuous-kinsoku-t
+upstream-svn47506-typo
+upstream-svn47625-recover-to-give-tounicode-entries-for-ligatures
+upstream-svn47626-ptexdir-More-strict-check-kanji-token

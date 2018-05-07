@@ -1,8 +1,23 @@
-texlive-bin (2018.20180416.47457-3) UNRELEASED; urgency=medium
+texlive-bin (2018.20180416.47457-3) unstable; urgency=medium
 
   * fix ftbfs on hurd (Closes: #896518), thanks Samuel Thibault
+  * cherry-picking fixes from upstream svn:
+    - upstream-svn47469-dvipdfm-x-Fix-a-bug-which-causes-a-segfault-with-1-2
+      xetex segfaults with uncommon png formats 
+      https://sourceforge.net/p/xetex/bugs/151/
+    - upstream-svn47476-m-tx-0.63a
+      update m-tx to 0.63a which fixes FTBFS on hurd (Closes: #896518)
+    - upstream-svn47477-ptexdir-fix-a-regression-for-discontinuous-kinsoku-t
+      ptex regression fix
+    - upstream-svn47506-typo
+      typo in the changelog name
+    -	upstream-svn47625-recover-to-give-tounicode-entries-for-ligatures
+      search didn't work for ligatures
+      https://tex.stackexchange.com/questions/430054/failing-search-for-words-with-ligatures-after-update
+    - upstream-svn47626-ptexdir-More-strict-check-kanji-token
+      inconsisten behavior of p-engines
 
- -- Norbert Preining <preining@debian.org>  Sun, 22 Apr 2018 11:27:42 +0900
+ -- Norbert Preining <preining@debian.org>  Mon, 07 May 2018 10:19:05 +0900
 
 texlive-bin (2018.20180416.47457-2) unstable; urgency=medium
 

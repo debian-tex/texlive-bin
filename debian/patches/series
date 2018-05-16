@@ -18,3 +18,7 @@ upstream-svn47506-typo
 upstream-svn47625-recover-to-give-tounicode-entries-for-ligatures
 upstream-svn47626-ptexdir-More-strict-check-kanji-token
 freetype-use-pkg-config
+upstream-svn47712-dvidvi-error-reporting
+upstream-svn47721-mendex30
+upstream-svn47722-mendex-rename-readme
+upstream-svn47723-dvidvi-cmd-line-error-reporting

@@ -1,3 +1,15 @@
+texlive-bin (2018.20180416.47457-4) UNRELEASED; urgency=medium
+
+  * cherry-picking fixed from upstream svn
+    - upstream-svn47712-dvidvi-error-reporting
+    - upstream-svn47723-dvidvi-cmd-line-error-reporting
+      better error reporting for dvidvi as well as gcc warning fixes
+    - upstream-svn47721-mendex30
+    - upstream-svn47722-mendex-rename-readme
+      mendex update to 3.0, switch default encoding to utf8
+
+ -- Norbert Preining <preining@debian.org>  Wed, 16 May 2018 09:00:19 +0900
+
 texlive-bin (2018.20180416.47457-3) unstable; urgency=medium
 
   * cherry-picking fixes from upstream svn:

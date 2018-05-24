@@ -1,0 +1,23 @@
+Index: texlive-bin/texk/dvi2tty/dvi2tty-src/disdvi.1
+===================================================================
+--- texlive-bin.orig/texk/dvi2tty/dvi2tty-src/disdvi.1	2018-05-24 22:52:15.093561336 +0200
++++ texlive-bin/texk/dvi2tty/dvi2tty-src/disdvi.1	2018-05-24 23:33:32.831627750 +0200
+@@ -13,15 +13,14 @@
+ .SH DESCRIPTION
+ .I disdvi
+ interprets the contents of
+-.IR dvi_file
++.I dvi_file
+ or
+-.IR xdv_file
++.I xdv_file
+ printing the DVI commands and text in a human-readable ASCII format on
+ the standard output.
+ .SH "SEE ALSO"
+ .BR dvi2tty (1)
+ .SH AUTHOR
+-Marcel J.E. Mol, Delft University of Technology, The Netherlands
++Marcel J.E.\& Mol, Delft University of Technology, The Netherlands
+ .br
+ marcel@mesa.nl, MESA Consulting
+-

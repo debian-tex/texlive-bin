@@ -8,8 +8,8 @@ texlive-bin (2018.20180416.47457-4) UNRELEASED; urgency=medium
     - upstream-svn47722-mendex-rename-readme
       mendex update to 3.0, switch default encoding to utf8
 
-  * Minor fixes for disdvi.1 (Closes: #899341). Thanks to Bjarni Ingi
-    Gislason.
+  * Minor fixes for disdvi.1 (Closes: #899341) and dt2dv.1 (Closes: #900043).
+    Thanks to Bjarni Ingi Gislason.
 
  -- Norbert Preining <preining@debian.org>  Wed, 16 May 2018 09:00:19 +0900
 

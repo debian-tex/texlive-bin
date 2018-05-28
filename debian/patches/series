@@ -24,3 +24,4 @@ upstream-svn47722-mendex-rename-readme
 upstream-svn47723-dvidvi-cmd-line-error-reporting
 disdvi_man.patch
 dv2dt_man.patch
+gftodvi_man.patch

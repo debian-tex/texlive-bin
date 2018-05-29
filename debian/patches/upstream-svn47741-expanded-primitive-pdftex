@@ -1,0 +1,323 @@
+From d69acc78c3676bbd382c7feb8ae7b1b95e36cc38 Mon Sep 17 00:00:00 2001
+From: Karl Berry <karl@freefriends.org>
+Date: Thu, 17 May 2018 21:37:18 +0000
+Subject: [PATCH 01/20] new primitive \expanded, pdftex r801,
+ https://mailman.ntg.nl/pipermail/ntg-pdftex/2018-May/004233.html
+
+git-svn-id: svn://tug.org/texlive/trunk/Build/source@47741 c570f23f-e606-0410-a88d-b1316a301751
+---
+ texk/web2c/Makefile.in                  |   28 ++++++++------
+ texk/web2c/pdftexdir/ChangeLog          |    8 ++++
+ texk/web2c/pdftexdir/NEWS               |    3 +
+ texk/web2c/pdftexdir/am/pdftex.am       |   14 +++++--
+ texk/web2c/pdftexdir/expanded.test      |   19 +++++++++
+ texk/web2c/pdftexdir/pdftex.web         |   21 ++++++++++-
+ texk/web2c/pdftexdir/tests/expanded.tex |   46 ++++++++++++++++++++++++
+ texk/web2c/pdftexdir/tests/expanded.txt |   61 ++++++++++++++++++++++++++++++++
+ 8 files changed, 183 insertions(+), 17 deletions(-)
+ create mode 100755 texk/web2c/pdftexdir/expanded.test
+ create mode 100644 texk/web2c/pdftexdir/tests/expanded.tex
+ create mode 100644 texk/web2c/pdftexdir/tests/expanded.txt
+
+--- texlive-bin.orig/texk/web2c/Makefile.in
++++ texlive-bin/texk/web2c/Makefile.in
+@@ -2421,13 +2421,13 @@
+ 	pdftexdir/NEWS pdftexdir/README pdftexdir/change-files.txt \
+ 	$(pdftex_tests) tests/wprob.tex pdftexdir/tests/pdfimage.tex \
+ 	tests/1-4.jpg tests/B.pdf tests/basic.tex \
+-	tests/lily-ledger-broken.png $(ttf2afm_tests) \
+-	pdftexdir/tests/postV3.afm pdftexdir/tests/postV3.ttf \
+-	pdftexdir/tests/postV7.afm pdftexdir/tests/postV7.ttf \
+-	$(pdftosrc_tests) pdftexdir/tests/test-13.pdf \
+-	pdftexdir/tests/test-13.xref pdftexdir/tests/test-15.pdf \
+-	pdftexdir/tests/test-15.xref $(libluasocket_sources) \
+-	luatexdir/luasocket/src/ftp_lua.c \
++	tests/lily-ledger-broken.png tests/expanded.tex \
++	$(ttf2afm_tests) pdftexdir/tests/postV3.afm \
++	pdftexdir/tests/postV3.ttf pdftexdir/tests/postV7.afm \
++	pdftexdir/tests/postV7.ttf $(pdftosrc_tests) \
++	pdftexdir/tests/test-13.pdf pdftexdir/tests/test-13.xref \
++	pdftexdir/tests/test-15.pdf pdftexdir/tests/test-15.xref \
++	$(libluasocket_sources) luatexdir/luasocket/src/ftp_lua.c \
+ 	luatexdir/luasocket/src/headers_lua.c \
+ 	luatexdir/luasocket/src/http_lua.c \
+ 	luatexdir/luasocket/src/ltn12_lua.c \
+@@ -2703,8 +2703,8 @@
+ 	euptex-tangle euptrip.diffs pdfprimitive-euptex.* \
+ 	$(nodist_pdftex_SOURCES) pdftex.ch pdftex-web2c pdftex.p \
+ 	pdftex.pool pdftex-tangle pwprob.log pwprob.tex pdfimage.fmt \
+-	pdfimage.log pdfimage.pdf postV3.afm postV7.afm test-13.pdf \
+-	test-13.xref test-15.pdf test-15.xref \
++	pdfimage.log pdfimage.pdf expanded.log postV3.afm postV7.afm \
++	test-13.pdf test-13.xref test-15.pdf test-15.xref \
+ 	$(nodist_libluatex_sources) luaimage.* luajitimage.* \
+ 	$(nodist_xetex_SOURCES) xetex.web xetex.ch xetex-web2c xetex.p \
+ 	xetex.pool xetex-tangle bug73.fmt bug73.log bug73.out \
+@@ -3357,9 +3357,11 @@
+ 	tex-binpool.ch
+ 
+ 
+-# pdfTeX Tests
++# pdfTeX tests
+ #
+-pdftex_tests = pdftexdir/wprob.test pdftexdir/pdftex.test pdftexdir/pdfimage.test
++pdftex_tests = pdftexdir/wprob.test pdftexdir/pdftex.test \
++  pdftexdir/pdfimage.test pdftexdir/expanded.test
++
+ ttf2afm_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/pdftexdir
+ ttf2afm_SOURCES = pdftexdir/ttf2afm.c
+ ttf2afm_DEPENDENCIES = $(default_dependencies)
+@@ -17634,7 +17636,9 @@
+ 	env MKTEXFMT=0 pdftex '\nonstopmode\input pdftex.tex'
+ pdftex.tex: $(srcdir)/pdftexdir/pdftex.web
+ 	weave $(srcdir)/pdftexdir/pdftex.web
+-pdftexdir/wprob.log pdftexdir/pdftex.log pdftexdir/pdfimage.log: pdftex$(EXEEXT)
++
++pdftexdir/wprob.log pdftexdir/pdftex.log \
++  pdftexdir/pdfimage.log pdftexdir/expanded.log: pdftex$(EXEEXT)
+ pdftexdir/ttf2afm.log: ttf2afm$(EXEEXT)
+ 
+ $(pdftosrc_OBJECTS): $(ZLIB_DEPEND) $(LIBPNG_DEPEND) $(XPDF_DEPEND)
+--- texlive-bin.orig/texk/web2c/pdftexdir/ChangeLog
++++ texlive-bin/texk/web2c/pdftexdir/ChangeLog
+@@ -1,3 +1,11 @@
++2018-05-13  Joseph Wright  <joseph.wright@morningstar2.co.uk>
++
++	* pdftex.web: New primitive \expanded based on original
++	  suggestion by Heiko Oberdiek, and with work by
++	  Bruno Le Floch and David Carlisle (on behalf of The LaTeX Project).
++        (expanded_code): new @d, new cases.
++        https://mailman.ntg.nl/pipermail/ntg-pdftex/2018-May/004233.html
++
+ 2018-04-14  Karl Berry  <karl@tug.org>
+ 
+ 	* TeX Live 2018 release, pdftex 1.40.19.
+--- texlive-bin.orig/texk/web2c/pdftexdir/NEWS
++++ texlive-bin/texk/web2c/pdftexdir/NEWS
+@@ -1,3 +1,6 @@
++- changes:
++  - new primitive \expanded (from unreleased pdftex 1.50 branch + luatex).
++
+ pdfTeX 3.14159265-2.6-1.40.19 (TeX Live 2018)  (April 14, 2018)
+ - changes:
+   - do not hash current directory into PDF ID, for more reproducible builds
+--- texlive-bin.orig/texk/web2c/pdftexdir/am/pdftex.am
++++ texlive-bin/texk/web2c/pdftexdir/am/pdftex.am
+@@ -1,6 +1,6 @@
+ ## texk/web2c/pdftexdir/am/pdftex.am: Makefile fragment for pdfTeX.
+ ##
+-## Copyright 2016-2017 Karl Berry <tex-live@tug.org>
++## Copyright 2016-2018 Karl Berry <tex-live@tug.org>
+ ## Copyright 2009-2015 Peter Breitenlohner <tex-live@tug.org>
+ ## You may freely use, modify and/or distribute this file.
+ 
+@@ -92,10 +92,13 @@
+ 	pdftexdir/README \
+ 	pdftexdir/change-files.txt
+ 
+-# pdfTeX Tests
++# pdfTeX tests
+ #
+-pdftex_tests = pdftexdir/wprob.test pdftexdir/pdftex.test pdftexdir/pdfimage.test
+-pdftexdir/wprob.log pdftexdir/pdftex.log pdftexdir/pdfimage.log: pdftex$(EXEEXT)
++pdftex_tests = pdftexdir/wprob.test pdftexdir/pdftex.test \
++  pdftexdir/pdfimage.test pdftexdir/expanded.test
++
++pdftexdir/wprob.log pdftexdir/pdftex.log \
++  pdftexdir/pdfimage.log pdftexdir/expanded.log: pdftex$(EXEEXT)
+ 
+ EXTRA_DIST += $(pdftex_tests)
+ 
+@@ -112,3 +115,6 @@
+ 	tests/1-4.jpg tests/B.pdf tests/basic.tex tests/lily-ledger-broken.png
+ DISTCLEANFILES += pdfimage.fmt pdfimage.log pdfimage.pdf
+ 
++## expanded.test
++EXTRA_DIST += tests/expanded.tex
++DISTCLEANFILES += expanded.log
+--- /dev/null
++++ texlive-bin/texk/web2c/pdftexdir/expanded.test
+@@ -0,0 +1,19 @@
++#! /bin/sh -vx
++# $Id$
++# Public domain
++# David Carlisle: version for \expanded based on existing test scripts
++# by Peter Breitenlohner and Karl Berry.
++
++TEXMFCNF=$srcdir/../kpathsea
++export TEXMFCNF
++TEXINPUTS=$srcdir/pdftexdir/tests:.
++export TEXINPUTS
++
++./pdftex -ini -etex --interaction batchmode expanded.tex 
++sed -n -e 's/[\\]pdf/\\/g' -e '/START/,/END/p' expanded.log \
++  >expanded_pdftex.log || exit 1
++
++diff "$srcdir/pdftexdir/tests/expanded.txt" expanded_pdftex.log || exit 1
++
++exit 0
++
+--- texlive-bin.orig/texk/web2c/pdftexdir/pdftex.web
++++ texlive-bin/texk/web2c/pdftexdir/pdftex.web
+@@ -10748,7 +10748,8 @@
+ @d etex_convert_base=5 {base for \eTeX's command codes}
+ @d eTeX_revision_code=etex_convert_base {command code for \.{\\eTeXrevision}}
+ @d etex_convert_codes=etex_convert_base+1 {end of \eTeX's command codes}
+-@d pdftex_first_expand_code = etex_convert_codes {base for \pdfTeX's command codes}
++@d expanded_code = etex_convert_codes {command code for \.{\\expanded}}
++@d pdftex_first_expand_code = expanded_code + 1 {base for \pdfTeX's command codes}
+ @d pdftex_revision_code     = pdftex_first_expand_code + 0 {command code for \.{\\pdftexrevision}}
+ @d pdftex_banner_code       = pdftex_first_expand_code + 1 {command code for \.{\\pdftexbanner}}
+ @d pdf_font_name_code       = pdftex_first_expand_code + 2 {command code for \.{\\pdffontname}}
+@@ -10790,6 +10791,9 @@
+ primitive("fontname",convert,font_name_code);@/
+ @!@:font_name_}{\.{\\fontname} primitive@>
+ @#
++primitive("expanded",convert,expanded_code);@/
++@!@:expanded_}{\.{\\expanded} primitive@>
++@#
+ primitive("pdftexrevision",convert,pdftex_revision_code);@/
+ @!@:pdftex_revision_}{\.{\\pdftexrevision} primitive@>
+ primitive("pdftexbanner",convert,pdftex_banner_code);@/
+@@ -10854,6 +10858,7 @@
+   meaning_code: print_esc("meaning");
+   font_name_code: print_esc("fontname");
+   eTeX_revision_code: print_esc("eTeXrevision");
++  expanded_code: print_esc("expanded");
+   pdftex_revision_code: print_esc("pdftexrevision");
+   pdftex_banner_code:   print_esc("pdftexbanner");
+   pdf_font_name_code:   print_esc("pdffontname");
+@@ -10926,6 +10931,20 @@
+   end;
+ font_name_code: scan_font_ident;
+ eTeX_revision_code: do_nothing;
++expanded_code:
++  begin
++    save_scanner_status := scanner_status;
++    save_warning_index := warning_index;
++    save_def_ref := def_ref;
++    save_cur_string;
++    scan_pdf_ext_toks;
++    warning_index := save_warning_index;
++    scanner_status := save_scanner_status;
++    ins_list(link(def_ref));
++    def_ref := save_def_ref;
++    restore_cur_string;
++    return;
++  end;
+ pdftex_revision_code: do_nothing;
+ pdftex_banner_code: do_nothing;
+ pdf_font_name_code, pdf_font_objnum_code, pdf_font_size_code: begin
+--- /dev/null
++++ texlive-bin/texk/web2c/pdftexdir/tests/expanded.tex
+@@ -0,0 +1,46 @@
++% $Id$
++% Public domain.
++% Originally written 2018 by David Carlisle, Bruno Le Floch.
++
++\catcode`\{=1 \catcode`\}=2 \catcode`\#=6
++\def\typ#1{\immediate\write-1 {#1}}
++\def\space{ }
++\let\bgroup{ \let\egroup}
++
++\typ{START}
++\typ{EXPANDED TEST 1}
++% Check the primitive exists
++\show\expanded
++
++\typ{EXPANDED TEST 2}
++% Simple expansion test
++\def\aaa{x}
++\def\bbb{\aaa\aaa}
++\expandafter\def\expandafter\ccc\expandafter{\expanded{\bbb,\aaa}}
++\show\ccc
++
++\typ{EXPANDED TEST 3: the}
++% Expanding \the
++\typ{\expanded{\bbb,\the\numexpr100+20+3\relax}}
++
++\typ{EXPANDED TEST 4: macro param}
++% Constructed #1 is still #1
++\expandafter\def\expandafter\ddd\expandafter#\expanded{1{#\number--1}}
++\show\ddd
++
++\typ{EXPANDED TEST 5: torture}
++% Torture test from Bruno Le Floch testing various tricky interactions
++\expanded\relax\space\ifincsname \BOOM\fi{\ifincsname \BOOM\fi}
++\showtokens\expandafter{\expanded{#,\noexpand\aaa,\unexpanded{\aaa}}}
++\showtokens\expandafter{\expanded{#,\unexpanded{#}}}
++\showtokens\expandafter{\expanded\expandafter{\noexpand\aaa}}
++\showtokens\expandafter{\expanded\expandafter{\unexpanded{\aaa}}}
++\showtokens\expanded{{\expanded{\aaa\noexpand\aaa\noexpand\noexpand\noexpand\aaa}}}
++\toks0{\aaa}
++\showtokens\expanded{{\the\toks0}}
++\expanded\bgroup\show\egroup}
++\edef\foo{\expanded{##}}
++\show\foo
++
++\typ{END}
++\end
+--- /dev/null
++++ texlive-bin/texk/web2c/pdftexdir/tests/expanded.txt
+@@ -0,0 +1,61 @@
++START
++EXPANDED TEST 1
++> \expanded=\expanded.
++l.13 \show\expanded
++                   
++
++EXPANDED TEST 2
++> \ccc=macro:
++->xx,x.
++l.20 \show\ccc
++              
++
++EXPANDED TEST 3: the
++xx,123
++EXPANDED TEST 4: macro param
++> \ddd=macro:
++#1->#1.
++l.29 \show\ddd
++              
++
++EXPANDED TEST 5: torture
++> ##,\aaa ,\aaa .
++l.34 ...panded{#,\noexpand\aaa,\unexpanded{\aaa}}}
++                                                  
++
++> ##,##.
++l.35 ...s\expandafter{\expanded{#,\unexpanded{#}}}
++                                                  
++
++> \aaa .
++l.36 ...fter{\expanded\expandafter{\noexpand\aaa}}
++                                                  
++
++> x.
++l.37 ...{\expanded\expandafter{\unexpanded{\aaa}}}
++                                                  
++
++> xx\aaa .
++<inserted text> {xx\aaa }
++                         
++l.38 ...pand\aaa\noexpand\noexpand\noexpand\aaa}}}
++                                                  
++
++> \aaa .
++<inserted text> {\aaa }
++                       
++l.40 \showtokens\expanded{{\the\toks0}}
++                                       
++
++> \egroup=end-group character }.
++<inserted text> \show \egroup 
++                              
++l.41 \expanded\bgroup\show\egroup}
++                                  
++
++> \foo=macro:
++->##.
++l.43 \show\foo
++              
++
++END

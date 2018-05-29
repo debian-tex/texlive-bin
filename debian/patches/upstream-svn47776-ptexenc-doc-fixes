@@ -1,0 +1,26 @@
+From f169762e35d5fe33c3063cd27ba68fcd9f342a74 Mon Sep 17 00:00:00 2001
+From: Takuji Tanaka <KXD02663@nifty.ne.jp>
+Date: Sun, 20 May 2018 00:31:49 +0000
+Subject: [PATCH 04/20] ptexenc: Update reference
+
+git-svn-id: svn://tug.org/texlive/trunk/Build/source@47776 c570f23f-e606-0410-a88d-b1316a301751
+---
+ texk/ptexenc/unicode-jp.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/texk/ptexenc/unicode-jp.c b/texk/ptexenc/unicode-jp.c
+index ab91b6e58..1cad4a1a3 100644
+--- a/texk/ptexenc/unicode-jp.c
++++ b/texk/ptexenc/unicode-jp.c
+@@ -125,7 +125,7 @@ static int UCS2toJISnative(int ucs2)
+ 
+ 
+ /*
+-  http://homepage3.nifty.com/ttk/comp/tex/jis_uni_variation_uptex.html
++  http://www.t-lab.opal.ne.jp/tex/jis_uni_variation_uptex.html
+   http://hp.vector.co.jp/authors/VA010341/unicode/
+   http://www.jca.apc.org/~earthian/aozora/0213/jisx0213code.zip
+ */
+-- 
+2.17.0
+

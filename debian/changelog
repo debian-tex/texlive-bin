@@ -7,12 +7,20 @@ texlive-bin (2018.20180416.47457-4) UNRELEASED; urgency=medium
     - upstream-svn47721-mendex30
     - upstream-svn47722-mendex-rename-readme
       mendex update to 3.0, switch default encoding to utf8
+    -	introduce the \expanded primitive:
+      upstream-svn47741-expanded-primitive-pdftex
+      upstream-svn47742-pdftex-expanded-test-fixes
+      upstream-svn47745-eptex-expanded
+    - upstream-svn47776-ptexenc-doc-fixes
+      fix links to upstream projects
+    - upstream-svn47799-dvipdfmx-try-suffix
+      let xdvipdfmx check .dvi and .xdv extensions like other progs
 
   * Minor fixes for disdvi.1 (Closes: #899341), dt2dv.1 (Closes: #900043)
     and gftodvi.1 (Closes: #900245)
     Thanks to Bjarni Ingi Gislason.
 
- -- Norbert Preining <preining@debian.org>  Wed, 16 May 2018 09:00:19 +0900
+ -- Norbert Preining <preining@debian.org>  Tue, 29 May 2018 22:02:34 +0900
 
 texlive-bin (2018.20180416.47457-3) unstable; urgency=medium
 

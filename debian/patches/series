@@ -11,17 +11,24 @@ synctex-bump-soname
 fix-maxpathlen-hurd
 # disabled for now
 #poppler-0.64
+# to be sent upstream at some point
+freetype-use-pkg-config
+disdvi_man.patch
+dv2dt_man.patch
+gftodvi_man.patch
+# patches from upstream
 upstream-svn47469-dvipdfm-x-Fix-a-bug-which-causes-a-segfault-with-1-2
 upstream-svn47476-m-tx-0.63a
 upstream-svn47477-ptexdir-fix-a-regression-for-discontinuous-kinsoku-t
 upstream-svn47506-typo
 upstream-svn47625-recover-to-give-tounicode-entries-for-ligatures
 upstream-svn47626-ptexdir-More-strict-check-kanji-token
-freetype-use-pkg-config
 upstream-svn47712-dvidvi-error-reporting
 upstream-svn47721-mendex30
 upstream-svn47722-mendex-rename-readme
 upstream-svn47723-dvidvi-cmd-line-error-reporting
-disdvi_man.patch
-dv2dt_man.patch
-gftodvi_man.patch
+upstream-svn47741-expanded-primitive-pdftex
+upstream-svn47742-pdftex-expanded-test-fixes
+upstream-svn47745-eptex-expanded
+upstream-svn47776-ptexenc-doc-fixes
+upstream-svn47799-dvipdfmx-try-suffix

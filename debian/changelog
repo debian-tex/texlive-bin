@@ -1,4 +1,4 @@
-texlive-bin (2018.20180416.47457-4) UNRELEASED; urgency=medium
+texlive-bin (2018.20180416.47457-4) unstable; urgency=medium
 
   [ Norbert Preining ]
   * cherry-picking fixed from upstream svn
@@ -22,7 +22,7 @@ texlive-bin (2018.20180416.47457-4) UNRELEASED; urgency=medium
     and gftodvi.1 (Closes: #900245)
     Thanks to Bjarni Ingi Gislason.
 
- -- Norbert Preining <preining@debian.org>  Tue, 29 May 2018 22:05:37 +0900
+ -- Norbert Preining <preining@debian.org>  Tue, 29 May 2018 22:06:27 +0900
 
 texlive-bin (2018.20180416.47457-3) unstable; urgency=medium
 

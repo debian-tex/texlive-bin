@@ -93,8 +93,9 @@ override_dh_autoreconf:
 
 override_dh_auto_configure:
 	# we have to make sure that the mendex test case that is added
-	# by a patch is executable
+	# by a patch is executable, same for pdftexdir - stupid dpkg-source
 	chmod 0755 texk/mendexk/tests/mendex.test
+	chmod 0755 texk/web2c/pdftexdir/expanded.test
 	# run out configure script
 	dh_auto_configure -- -C --prefix=/usr 	\
 	--datarootdir=/usr/share/texlive	\

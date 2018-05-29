@@ -1,5 +1,6 @@
 texlive-bin (2018.20180416.47457-4) UNRELEASED; urgency=medium
 
+  [ Norbert Preining ]
   * cherry-picking fixed from upstream svn
     - upstream-svn47712-dvidvi-error-reporting
     - upstream-svn47723-dvidvi-cmd-line-error-reporting
@@ -16,11 +17,12 @@ texlive-bin (2018.20180416.47457-4) UNRELEASED; urgency=medium
     - upstream-svn47799-dvipdfmx-try-suffix
       let xdvipdfmx check .dvi and .xdv extensions like other progs
 
+  [ Hilmar Preusse ]
   * Minor fixes for disdvi.1 (Closes: #899341), dt2dv.1 (Closes: #900043)
     and gftodvi.1 (Closes: #900245)
     Thanks to Bjarni Ingi Gislason.
 
- -- Norbert Preining <preining@debian.org>  Tue, 29 May 2018 22:02:34 +0900
+ -- Norbert Preining <preining@debian.org>  Tue, 29 May 2018 22:05:37 +0900
 
 texlive-bin (2018.20180416.47457-3) unstable; urgency=medium
 

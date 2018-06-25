@@ -32,3 +32,4 @@ upstream-svn47742-pdftex-expanded-test-fixes
 upstream-svn47745-eptex-expanded
 upstream-svn47776-ptexenc-doc-fixes
 upstream-svn47799-dvipdfmx-try-suffix
+t4ht-correct-expansion

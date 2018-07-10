@@ -38,6 +38,8 @@
 // Copyright (C) 2015 Kenji Uno <ku@digitaldolphins.jp>
 // Copyright (C) 2016 Takahiro Hashimoto <kenya888.en@gmail.com>
 // Copyright (C) 2017 Even Rouault <even.rouault@spatialys.com>
+// Copyright (C) 2018 Klarälvdalens Datakonsult AB, a KDAB Group company, <info@kdab.com>. Work sponsored by the LiMux project of the city of Munich
+// Copyright (C) 2018 Stefan Brüns <stefan.bruens@rwth-aachen.de>
 //
 // To see a description of the changes please see the Changelog file that
 // came with your tarball or type make ChangeLog if you are building from git
@@ -314,7 +316,11 @@ GBool SplashUnivariatePattern::getColor(int x, int y, SplashColorPtr c) {
   if (! getParameter (xc, yc, &t))
       return gFalse;
 
-  shading->getColor(t, &gfxColor);
+  const int filled = shading->getColor(t, &gfxColor);
+  if (unlikely(filled < shading->getColorSpace()->getNComps())) {
+    for (int i = filled; i < shading->getColorSpace()->getNComps(); ++i)
+      gfxColor.c[i] = 0;
+  }
   convertGfxColor(c, colorMode, shading->getColorSpace(), &gfxColor);
   return gTrue;
 }
@@ -452,7 +458,12 @@ SplashAxialPattern::SplashAxialPattern(SplashColorMode colorModeA, GfxState *sta
   shadingA->getCoords(&x0, &y0, &x1, &y1);
   dx = x1 - x0;
   dy = y1 - y0;
-  mul = 1 / (dx * dx + dy * dy);
+  const double mul_denominator = (dx * dx + dy * dy);
+  if (unlikely(mul_denominator == 0)) {
+    mul = 0;
+  } else {
+    mul = 1 / mul_denominator;
+  }
   shadingA->getColorSpace()->getDefaultColor(&srcColor);
   convertGfxColor(defaultColor, colorModeA, shadingA->getColorSpace(), &srcColor);
 }
@@ -1196,7 +1207,7 @@ static const SplashBlendFunc splashOutBlendFuncs[] = {
 class SplashOutFontFileID: public SplashFontFileID {
 public:
 
-  SplashOutFontFileID(Ref *rA) { r = *rA; }
+  SplashOutFontFileID(const Ref *rA) { r = *rA; }
 
   ~SplashOutFontFileID() {}
 
@@ -1222,14 +1233,14 @@ struct T3FontCacheTag {
 class T3FontCache {
 public:
 
-  T3FontCache(Ref *fontID, double m11A, double m12A,
+  T3FontCache(const Ref *fontID, double m11A, double m12A,
 	      double m21A, double m22A,
 	      int glyphXA, int glyphYA, int glyphWA, int glyphHA,
 	      GBool aa, GBool validBBoxA);
   ~T3FontCache();
   T3FontCache(const T3FontCache &) = delete;
   T3FontCache& operator=(const T3FontCache &) = delete;
-  GBool matches(Ref *idA, double m11A, double m12A,
+  GBool matches(const Ref *idA, double m11A, double m12A,
 		double m21A, double m22A)
     { return fontID.num == idA->num && fontID.gen == idA->gen &&
 	     m11 == m11A && m12 == m12A && m21 == m21A && m22 == m22A; }
@@ -1246,11 +1257,10 @@ public:
   T3FontCacheTag *cacheTags;	// cache tags, i.e., char codes
 };
 
-T3FontCache::T3FontCache(Ref *fontIDA, double m11A, double m12A,
+T3FontCache::T3FontCache(const Ref *fontIDA, double m11A, double m12A,
 			 double m21A, double m22A,
 			 int glyphXA, int glyphYA, int glyphWA, int glyphHA,
 			 GBool validBBoxA, GBool aa) {
-  int i;
 
   fontID = *fontIDA;
   m11 = m11A;
@@ -1264,8 +1274,7 @@ T3FontCache::T3FontCache(Ref *fontIDA, double m11A, double m12A,
   validBBox = validBBoxA;
   // sanity check for excessively large glyphs (which most likely
   // indicate an incorrect BBox)
-  i = glyphW * glyphH;
-  if (i > 100000 || glyphW > INT_MAX / glyphH || glyphW <= 0 || glyphH <= 0) {
+  if (glyphW > INT_MAX / glyphH || glyphW <= 0 || glyphH <= 0 || glyphW * glyphH > 100000) {
     glyphW = glyphH = 100;
     validBBox = gFalse;
   }
@@ -1292,7 +1301,7 @@ T3FontCache::T3FontCache(Ref *fontIDA, double m11A, double m12A,
   {
     cacheTags = (T3FontCacheTag *)gmallocn(cacheSets * cacheAssoc,
 					 sizeof(T3FontCacheTag));
-    for (i = 0; i < cacheSets * cacheAssoc; ++i) {
+    for (int i = 0; i < cacheSets * cacheAssoc; ++i) {
       cacheTags[i].mru = i & (cacheAssoc - 1);
     }
   }
@@ -1444,6 +1453,7 @@ SplashOutputDev::~SplashOutputDev() {
   if (bitmap) {
     delete bitmap;
   }
+  delete textClipPath;
 }
 
 void SplashOutputDev::startDoc(PDFDoc *docA) {
@@ -2359,6 +2369,7 @@ SplashPath *SplashOutputDev::convertPath(GfxState *state, GfxPath *path,
   for (i = 0; i < path->getNumSubpaths(); ++i) {
     subpath = path->getSubpath(i);
     if (subpath->getNumPoints() > n) {
+      sPath->reserve(subpath->getNumPoints() + 1);
       sPath->moveTo((SplashCoord)subpath->getX(0),
 		    (SplashCoord)subpath->getY(0));
       j = 1;
@@ -2501,7 +2512,7 @@ GBool SplashOutputDev::beginType3Char(GfxState *state, double x, double y,
 				      double dx, double dy,
 				      CharCode code, Unicode *u, int uLen) {
   GfxFont *gfxFont;
-  Ref *fontID;
+  const Ref *fontID;
   double *ctm, *bbox;
   T3FontCache *t3Font;
   T3GlyphStack *t3gs;
@@ -2510,6 +2521,13 @@ GBool SplashOutputDev::beginType3Char(GfxState *state, double x, double y,
   GBool horiz;
   double x1, y1, xMin, yMin, xMax, yMax, xt, yt;
   int i, j;
+
+  // check for invisible text -- this is used by Acrobat Capture
+  if (state->getRender() == 3) {
+    // this is a bit of cheating, we say yes, font is already on cache
+    // so we actually skip the rendering of it
+    return gTrue;
+  }
 
   if (skipHorizText || skipRotatedText) {
     state->getFontTransMat(&m[0], &m[1], &m[2], &m[3]);
@@ -3974,12 +3992,15 @@ void SplashOutputDev::drawSoftMaskedImage(GfxState *state, Object *ref,
   //----- set up the soft mask
 
   if (maskColorMap->getMatteColor() != nullptr) {
-    Guchar *data = (Guchar *) gmalloc(maskWidth * maskHeight);
+    const int maskChars = maskWidth * maskHeight;
+    Guchar *data = (Guchar *) gmalloc(maskChars);
     maskStr->reset();
-    maskStr->doGetChars(maskWidth * maskHeight, data);
+    const int readChars = maskStr->doGetChars(maskChars, data);
+    if (unlikely(readChars < maskChars)) {
+      memset(&data[readChars], 0, maskChars - readChars);
+    }
     maskStr->close();
-    maskStr = new MemStream((char *)data, 0, maskWidth * maskHeight, maskStr->getDictObject()->copy());
-    ((MemStream *) maskStr)->setNeedFree(gTrue);
+    maskStr = new AutoFreeMemStream((char *)data, 0, maskChars, maskStr->getDictObject()->copy());
   }
   imgMaskData.imgStr = new ImageStream(maskStr, maskWidth,
 				       maskColorMap->getNumPixelComps(),

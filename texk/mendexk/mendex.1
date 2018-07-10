@@ -87,8 +87,7 @@ Set input/output kanji encoding to UTF-8.
 \fB-I\fI enc\fR
 Set internal encoding to \fIenc\fR. The argument \fIenc\fR
 may be \fIeuc\fR (EUC-JP) or \fIutf8\fR (UTF-8).
-The normal default is set to \fIeuc\fR, but the default is changed to \fIutf8\fR
-when the option \fB-U\fR is specified explicitly.
+The default is set to \fIutf8\fR.
 .TP 10
 \fB--help\fR
 Show summary of options.
@@ -241,14 +240,14 @@ Suffix of heading for newly appeared heading letter.
 Same as \fBlethead_suffix\fR.
 .RE
 .TP 30
-\fBlethead_flag\fR  <string>
+\fBlethead_flag\fR  <number>
 0
 .RS
 Flag to control output of heading letters.
 \'0\', \'1\' and \'-1\' respectively denotes no output, uppercase and lowercase.
 .RE
 .TP 30
-\fBheading_flag\fR  <string>
+\fBheading_flag\fR  <number>
 0
 .RS
 Same as \fBlethead_flag\fR.

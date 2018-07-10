@@ -13,12 +13,13 @@
 // All changes made under the Poppler project to this file are licensed
 // under GPL version 2 or later
 //
-// Copyright (C) 2006, 2009, 201, 2010, 2013, 2014, 2017 Albert Astals Cid <aacid@kde.org>
+// Copyright (C) 2006, 2009, 201, 2010, 2013, 2014, 2017, 2018 Albert Astals Cid <aacid@kde.org>
 // Copyright (C) 2006 Krzysztof Kowalczyk <kkowalczyk@gmail.com>
 // Copyright (C) 2009 Ilya Gorenbein <igorenbein@finjan.com>
 // Copyright (C) 2012 Hib Eris <hib@hiberis.nl>
 // Copyright (C) 2013 Adrian Johnson <ajohnson@redneon.com>
 // Copyright (C) 2013 Thomas Freitag <Thomas.Freitag@alfa.de>
+// Copyright (C) 2018 Klarälvdalens Datakonsult AB, a KDAB Group company, <info@kdab.com>. Work sponsored by the LiMux project of the city of Munich
 //
 // To see a description of the changes please see the Changelog file that
 // came with your tarball or type make ChangeLog if you are building from git
@@ -71,7 +72,8 @@ Object Parser::getObj(GBool simpleOnly,
   Object obj;
   Stream *str;
   DecryptStream *decrypt;
-  GooString *s, *s2;
+  const GooString *s;
+  GooString *s2;
   int c;
 
   // refill buffer after inline image data
@@ -233,6 +235,12 @@ Stream *Parser::makeStream(Object &&dict, Guchar *fileKey,
       pos = pos - 1;
       lexer->lookCharLastValueCached = Lexer::LOOK_VALUE_NOT_CACHED;
   }
+  if (unlikely(length < 0)) {
+      return nullptr;
+  }
+  if (unlikely(pos > LLONG_MAX - length)) {
+      return nullptr;
+  }
   lexer->setPos(pos + length);
 
   // refill token buffers and check for 'endstream'
@@ -253,7 +261,8 @@ Stream *Parser::makeStream(Object &&dict, Guchar *fileKey,
       // When building the xref we can't use it so use this
       // kludge for broken PDF files: just add 5k to the length, and
       // hope its enough
-      length += 5000;
+      if (length < LLONG_MAX - 5000)
+        length += 5000;
     }
   }
 

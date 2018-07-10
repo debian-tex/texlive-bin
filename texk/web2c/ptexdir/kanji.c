@@ -4,15 +4,13 @@
  */
 
 #include "kanji.h"
-
-#if !defined(WIN32)
-int sjisterminal;
-#endif
+#define CS_TOKEN_FLAG   0xFFFF
 
 /* TOKEN */
 boolean check_kanji(integer c)
 {
-    return is_char_kanji(c);
+    if (c >= CS_TOKEN_FLAG) return false;
+    else return is_char_kanji(c);
 }
 
 boolean is_char_ascii(integer c)

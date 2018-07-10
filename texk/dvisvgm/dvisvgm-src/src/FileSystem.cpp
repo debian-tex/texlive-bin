@@ -98,8 +98,8 @@ bool FileSystem::remove (const string &fname) {
  *  @param[in] remove_src remove file 'src' if true
  *  @return true on success */
 bool FileSystem::copy (const string &src, const string &dest, bool remove_src) {
-	ifstream ifs(src.c_str(), ios::in|ios::binary);
-	ofstream ofs(dest.c_str(), ios::out|ios::binary);
+	ifstream ifs(src, ios::in|ios::binary);
+	ofstream ofs(dest, ios::out|ios::binary);
 	if (ifs && ofs) {
 		ofs << ifs.rdbuf();
 		if (!ifs.fail() && !ofs.fail() && remove_src) {
@@ -310,7 +310,8 @@ bool FileSystem::exists (const string &fname) {
 bool FileSystem::isDirectory (const string &fname) {
 	if (const char *cfname = fname.c_str()) {
 #ifdef _WIN32
-		return GetFileAttributes(cfname) & FILE_ATTRIBUTE_DIRECTORY;
+		auto attr = GetFileAttributes(cfname);
+		return attr != INVALID_FILE_ATTRIBUTES && (attr & FILE_ATTRIBUTE_DIRECTORY);
 #else
 		struct stat attr;
 		return stat(cfname, &attr) == 0 && S_ISDIR(attr.st_mode);

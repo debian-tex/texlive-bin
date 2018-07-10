@@ -1,3 +1,65 @@
+Release 0.66.0
+        core:
+         * Fix lots of security/leak issues found by oss-fuzz
+         * Splash: Optimize some files, making them 20% faster
+         * Splash: Correctly manipulate spot colors if SPOT_NCOMPS != 4
+         * Fix compilation with some strict compilers
+
+Release 0.65.0
+        core:
+         * SplashOutputDev: Add the invisible character check beginType3Char. Bug #106244
+         * XRef: Fix runtime undefined behaviour. Bug #105970
+         * Fix issues with malformed documents. Bug #104942, #103238
+         * Remove GooHash after replacing it by std::unordered_map
+         * Add conversion methods between GooString and std::string.
+
+        cpp:
+         * Add newline after error message
+         * Expose more image modes, add option to select mode in renderer. Bug #105558
+
+        build system:
+         * Fix compilation with libc++
+         * Small improvement to FindLIBOPENJPEG2.cmake
+
+        qt5:
+         * Add widget annot actions to FormFields
+
+        utils:
+         * pdffonts: Minor formatting changes in the man page. Bug #105194
+
+Release 0.64.0
+        core:
+         * Workaround form field text not being drawn on broken files. Bug #103245
+         * Add read only setter for form fields
+         * Add support for Link Hide action
+         * Add support for Next actions in Links
+         * Fix parsing of Annot focus out actions
+         * Fix PDFDoc::checkHeader() for PDFs smaller than 1 KiB. Bug #105674
+         * Add const to several classes and members
+         * gfile: Fix build on some platforms
+         * Fix issues with on malformed documents. Bug #105972, #105969, #106059, #106061
+         * Several small code improvements
+
+        qt5:
+         * Allow setting of Form visibility status
+         * Allow setting of Form read only status
+         * Add support for Link Hide action
+         * Add support for Next actions in Links
+         * ArthurOutputDev: Implement axialShadedFill
+         * ArthurOutputDev: Implement drawImageMask. Bug #105531
+         * ArthurOutputDev: Implement Type3 font support
+
+        utils:
+         * pdfsig: Add -dump which writes signatures to disk. Bug #104881
+
+        glib:
+         * less deprecated calls
+
+        build system:
+         * bring back the option to disable GObject introspection
+         * Add iconv include dir when compiling
+         * Make it possible to build poppler without fontconfig. Default for Android
+
 Release 0.63.0
         core:
          * CairoOutputDev: support embedding CCITT image data. Bug #103399

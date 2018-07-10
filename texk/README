@@ -34,8 +34,9 @@ chktex 1.7.6 - checked 15sep16
 cjkutils 4.8.4 - checked 18apr15
   http://cjk.ffii.org/cjk-4.8.4.tar.gz
 
-detex 2.8 - checked 10may12
-  http://www.cs.purdue.edu/homes/trinkle/detex/
+detex 2.8.3 - checked 20jun18
+  https://github.com/pkubowicz/opendetex
+    old info: http://www.cs.purdue.edu/homes/trinkle/detex/
 
 dtl - ?
 
@@ -59,7 +60,7 @@ dvipos - maintained here, by us
 
 dvipsk - maintained here, by us
 
-dvisvgm 2.3.5 - checked 24mar18
+dvisvgm 2.4.1 - checked 08jul18
   http://dvisvgm.bplaced.net/Downloads
 
 gregorio 5.1.1 - checked 25mar18

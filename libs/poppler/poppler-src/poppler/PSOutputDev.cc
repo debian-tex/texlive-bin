@@ -31,6 +31,8 @@
 // Copyright (C) 2014 Till Kamppeter <till.kamppeter@gmail.com>
 // Copyright (C) 2015 Marek Kasik <mkasik@redhat.com>
 // Copyright (C) 2016 Caolán McNamara <caolanm@redhat.com>
+// Copyright (C) 2018 Klarälvdalens Datakonsult AB, a KDAB Group company, <info@kdab.com>. Work sponsored by the LiMux project of the city of Munich
+// Copyright (C) 2018 Adam Reichold <adam.reichold@t-online.de>
 //
 // To see a description of the changes please see the Changelog file that
 // came with your tarball or type make ChangeLog if you are building from git
@@ -52,7 +54,6 @@
 #include <algorithm>
 #include "goo/GooString.h"
 #include "goo/GooList.h"
-#include "goo/GooHash.h"
 #include "poppler-config.h"
 #include "GlobalParams.h"
 #include "Object.h"
@@ -1107,8 +1108,6 @@ PSOutputDev::PSOutputDev(const char *fileName, PDFDoc *doc,
   customCodeCbkData = customCodeCbkDataA;
 
   fontIDs = nullptr;
-  fontNames = new GooHash(gTrue);
-  fontMaxValidGlyph = new GooHash(gTrue);
   t1FontNames = nullptr;
   font8Info = nullptr;
   font16Enc = nullptr;
@@ -1176,8 +1175,6 @@ PSOutputDev::PSOutputDev(PSOutputFunc outputFuncA, void *outputStreamA,
   customCodeCbkData = customCodeCbkDataA;
 
   fontIDs = nullptr;
-  fontNames = new GooHash(gTrue);
-  fontMaxValidGlyph = new GooHash(gTrue);
   t1FontNames = nullptr;
   font8Info = nullptr;
   font16Enc = nullptr;
@@ -1408,7 +1405,7 @@ void PSOutputDev::postInit()
   fontIDLen = 0;
   fontIDs = (Ref *)gmallocn(fontIDSize, sizeof(Ref));
   for (i = 0; i < 14; ++i) {
-    fontNames->add(new GooString(psBase14SubstFonts[i].psName), 1);
+    fontNames.emplace(psBase14SubstFonts[i].psName);
   }
   t1FontNameSize = 64;
   t1FontNameLen = 0;
@@ -1498,8 +1495,6 @@ PSOutputDev::~PSOutputDev() {
   if (fontIDs) {
     gfree(fontIDs);
   }
-  delete fontNames;
-  delete fontMaxValidGlyph;
   if (t1FontNames) {
     for (i = 0; i < t1FontNameLen; ++i) {
       delete t1FontNames[i].psName;
@@ -1535,7 +1530,6 @@ void PSOutputDev::writeHeader(const std::vector<int> &pages,
 			      int pageRotate, char *psTitle) {
   PSOutPaperSize *size;
   double x1, y1, x2, y2;
-  int i;
 
   switch (mode) {
   case psModePS:
@@ -1581,7 +1575,7 @@ void PSOutputDev::writeHeader(const std::vector<int> &pages,
 
   switch (mode) {
   case psModePS:
-    for (i = 0; i < paperSizes->getLength(); ++i) {
+    for (int i = 0; i < paperSizes->getLength(); ++i) {
       size = (PSOutPaperSize *)paperSizes->get(i);
       writePSFmt("%%{0:s} {1:t} {2:d} {3:d} 0 () ()\n",
                  i==0 ? "DocumentMedia:" : "+", size->name, size->w, size->h);
@@ -2128,10 +2122,9 @@ void PSOutputDev::setupEmbeddedType1Font(Ref *id, GooString *psName) {
   GBool writePadding = gTrue;
 
   // check if font is already embedded
-  if (fontNames->lookupInt(psName)) {
+  if (!fontNames.emplace(psName->toStr()).second) {
     return;
   }
-  fontNames->add(psName->copy(), 1);
 
   // get the font stream and info
   Object obj1, obj2, obj3;
@@ -2307,10 +2300,9 @@ void PSOutputDev::setupExternalType1Font(GooString *fileName, GooString *psName)
   FILE *fontFile;
   int c;
 
-  if (fontNames->lookupInt(psName)) {
+  if (!fontNames.emplace(psName->toStr()).second) {
     return;
   }
-  fontNames->add(psName->copy(), 1);
 
   // beginning comment
   writePSFmt("%%BeginResource: font {0:t}\n", psName);
@@ -2546,8 +2538,9 @@ void PSOutputDev::setupExternalTrueTypeFont(GfxFont *font, GooString *fileName,
 
 void PSOutputDev::updateFontMaxValidGlyph(GfxFont *font, int maxValidGlyph) {
   if (maxValidGlyph >= 0 && font->getName()) {
-    if (maxValidGlyph > fontMaxValidGlyph->lookupInt(font->getName())) {
-      fontMaxValidGlyph->replace(font->getName()->copy(), maxValidGlyph);
+    auto& fontMaxValidGlyph = this->fontMaxValidGlyph[font->getName()->toStr()];
+    if (fontMaxValidGlyph < maxValidGlyph) {
+      fontMaxValidGlyph = maxValidGlyph;
     }
   }
 }
@@ -2866,21 +2859,20 @@ void PSOutputDev::setupType3Font(GfxFont *font, GooString *psName,
 
 // Make a unique PS font name, based on the names given in the PDF
 // font object, and an object ID (font file object for 
-GooString *PSOutputDev::makePSFontName(GfxFont *font, Ref *id) {
-  GooString *psName, *s;
+GooString *PSOutputDev::makePSFontName(GfxFont *font, const Ref *id) {
+  GooString *psName;
+  const GooString *s;
 
   if ((s = font->getEmbeddedFontName())) {
     psName = filterPSName(s);
-    if (!fontNames->lookupInt(psName)) {
-      fontNames->add(psName->copy(), 1);
+    if (fontNames.emplace(psName->toStr()).second) {
       return psName;
     }
     delete psName;
   }
   if ((s = font->getName())) {
     psName = filterPSName(s);
-    if (!fontNames->lookupInt(psName)) {
-      fontNames->add(psName->copy(), 1);
+    if (fontNames.emplace(psName->toStr()).second) {
       return psName;
     }
     delete psName;
@@ -2895,7 +2887,7 @@ GooString *PSOutputDev::makePSFontName(GfxFont *font, Ref *id) {
     psName->append('_')->append(s);
     delete s;
   }
-  fontNames->add(psName->copy(), 1);
+  fontNames.emplace(psName->toStr());
   return psName;
 }
 
@@ -5007,13 +4999,13 @@ void PSOutputDev::doPath(GfxPath *path) {
   }
 }
 
-void PSOutputDev::drawString(GfxState *state, GooString *s) {
+void PSOutputDev::drawString(GfxState *state, const GooString *s) {
   GfxFont *font;
   int wMode;
   int *codeToGID;
   GooString *s2;
   double dx, dy, originX, originY;
-  char *p;
+  const char *p;
   UnicodeMap *uMap;
   CharCode code;
   Unicode *u;
@@ -5041,7 +5033,7 @@ void PSOutputDev::drawString(GfxState *state, GooString *s) {
   if (!(font = state->getFont())) {
     return;
   }
-  maxGlyphInt = (font->getName()? fontMaxValidGlyph->lookupInt(font->getName()): 0);
+  maxGlyphInt = (font->getName() ? fontMaxValidGlyph[font->getName()->toStr()] : 0);
   if (maxGlyphInt < 0) maxGlyphInt = 0;
   maxGlyph = (CharCode) maxGlyphInt;
   wMode = font->getWMode();
@@ -7433,7 +7425,7 @@ void PSOutputDev::writePSFmt(const char *fmt, ...) {
   va_end(args);
 }
 
-void PSOutputDev::writePSString(GooString *s) {
+void PSOutputDev::writePSString(const GooString *s) {
   Guchar *p;
   int n, line;
   char buf[8];
@@ -7479,7 +7471,7 @@ void PSOutputDev::writePSName(const char *s) {
   }
 }
 
-GooString *PSOutputDev::filterPSName(GooString *name) {
+GooString *PSOutputDev::filterPSName(const GooString *name) {
   GooString *name2;
   char buf[8];
   int i;
@@ -7578,7 +7570,7 @@ GooString* PSOutputDev::filterPSLabel(GooString *label, GBool *needParens) {
 }
 
 // Write a DSC-compliant <textline>.
-void PSOutputDev::writePSTextLine(GooString *s) {
+void PSOutputDev::writePSTextLine(const GooString *s) {
   int i, j, step;
   int c;
 

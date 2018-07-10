@@ -38,7 +38,8 @@
 // Copyright (C) 2012, 2013 Fabio D'Urso <fabiodurso@hotmail.it>
 // Copyright (C) 2012 Lu Wang <coolwanglu@gmail.com>
 // Copyright (C) 2014 Jason Crain <jason@aquaticape.us>
-// Copyright (C) 2017 Klarälvdalens Datakonsult AB, a KDAB Group company, <info@kdab.com>. Work sponsored by the LiMux project of the city of Munich
+// Copyright (C) 2017, 2018 Klarälvdalens Datakonsult AB, a KDAB Group company, <info@kdab.com>. Work sponsored by the LiMux project of the city of Munich
+// Copyright (C) 2018 Adam Reichold <adam.reichold@t-online.de>
 //
 // To see a description of the changes please see the Changelog file that
 // came with your tarball or type make ChangeLog if you are building from git
@@ -59,7 +60,6 @@
 #include <memory>
 #include "goo/gmem.h"
 #include "goo/GooTimer.h"
-#include "goo/GooHash.h"
 #include "GlobalParams.h"
 #include "CharTypes.h"
 #include "Object.h"
@@ -375,9 +375,10 @@ GfxResources::~GfxResources() {
   delete fonts;
 }
 
-GfxFont *GfxResources::lookupFont(char *name) {
+GfxFont *GfxResources::doLookupFont(const char *name) const
+{
   GfxFont *font;
-  GfxResources *resPtr;
+  const GfxResources *resPtr;
 
   for (resPtr = this; resPtr; resPtr = resPtr->next) {
     if (resPtr->fonts) {
@@ -389,7 +390,15 @@ GfxFont *GfxResources::lookupFont(char *name) {
   return nullptr;
 }
 
-Object GfxResources::lookupXObject(char *name) {
+GfxFont *GfxResources::lookupFont(const char *name) {
+  return doLookupFont(name);
+}
+
+const GfxFont *GfxResources::lookupFont(const char *name) const {
+  return doLookupFont(name);
+}
+
+Object GfxResources::lookupXObject(const char *name) {
   GfxResources *resPtr;
 
   for (resPtr = this; resPtr; resPtr = resPtr->next) {
@@ -403,7 +412,7 @@ Object GfxResources::lookupXObject(char *name) {
   return Object(objNull);
 }
 
-Object GfxResources::lookupXObjectNF(char *name) {
+Object GfxResources::lookupXObjectNF(const char *name) {
   GfxResources *resPtr;
 
   for (resPtr = this; resPtr; resPtr = resPtr->next) {
@@ -417,7 +426,7 @@ Object GfxResources::lookupXObjectNF(char *name) {
   return Object(objNull);
 }
 
-Object GfxResources::lookupMarkedContentNF(char *name) {
+Object GfxResources::lookupMarkedContentNF(const char *name) {
   GfxResources *resPtr;
 
   for (resPtr = this; resPtr; resPtr = resPtr->next) {
@@ -445,7 +454,7 @@ Object GfxResources::lookupColorSpace(const char *name) {
   return Object(objNull);
 }
 
-GfxPattern *GfxResources::lookupPattern(char *name, OutputDev *out, GfxState *state) {
+GfxPattern *GfxResources::lookupPattern(const char *name, OutputDev *out, GfxState *state) {
   GfxResources *resPtr;
   GfxPattern *pattern;
 
@@ -468,7 +477,7 @@ GfxPattern *GfxResources::lookupPattern(char *name, OutputDev *out, GfxState *st
   return nullptr;
 }
 
-GfxShading *GfxResources::lookupShading(char *name, OutputDev *out, GfxState *state) {
+GfxShading *GfxResources::lookupShading(const char *name, OutputDev *out, GfxState *state) {
   GfxResources *resPtr;
   GfxShading *shading;
 
@@ -485,7 +494,7 @@ GfxShading *GfxResources::lookupShading(char *name, OutputDev *out, GfxState *st
   return nullptr;
 }
 
-Object GfxResources::lookupGState(char *name) {
+Object GfxResources::lookupGState(const char *name) {
   Object obj = lookupGStateNF(name);
   if (obj.isNull())
     return Object(objNull);
@@ -502,7 +511,7 @@ Object GfxResources::lookupGState(char *name) {
   return obj;
 }
 
-Object GfxResources::lookupGStateNF(char *name) {
+Object GfxResources::lookupGStateNF(const char *name) {
   GfxResources *resPtr;
 
   for (resPtr = this; resPtr; resPtr = resPtr->next) {
@@ -739,21 +748,9 @@ void Gfx::go(GBool topLevel) {
 
       // Update the profile information
       if (unlikely(profileCommands)) {
-	GooHash *hash;
-
-	hash = out->getProfileHash ();
-	if (hash) {
-	  GooString *cmd_g;
-	  ProfileData *data_p;
-
-	  cmd_g = new GooString (obj.getCmd());
-	  data_p = (ProfileData *)hash->lookup (cmd_g);
-	  if (data_p == nullptr) {
-	    data_p = new ProfileData();
-	    hash->add (cmd_g, data_p);
-	  }
-	  
-	  data_p->addElement(timer->getElapsed ());
+	if (auto* const hash = out->getProfileHash()) {
+	  auto& data = (*hash)[obj.getCmd()];
+	  data.addElement(timer->getElapsed());
 	}
 	delete timer;
       }
@@ -950,11 +947,10 @@ void Gfx::opSetDash(Object args[], int numArgs) {
     dash = nullptr;
   } else {
     dash = (double *)gmallocn(length, sizeof(double));
+    bool dummyOk;
     for (i = 0; i < length; ++i) {
-      Object obj = a->get(i);
-      if (obj.isNum()) {
-	dash[i] = obj.getNum();
-      }
+      const Object obj = a->get(i);
+      dash[i] = obj.getNum(&dummyOk);
     }
   }
   state->setLineDash(dash, length, args[1].getNum());
@@ -993,7 +989,6 @@ void Gfx::opSetExtGState(Object args[], int numArgs) {
   Function *funcs[4];
   GfxColor backdropColor;
   GBool haveBackdropColor;
-  GfxColorSpace *blendingColorSpace;
   GBool alpha, isolated, knockout;
   double opac;
   int i;
@@ -1200,7 +1195,7 @@ void Gfx::opSetExtGState(Object args[], int numArgs) {
       if (obj3.isStream()) {
 	Object obj4 = obj3.streamGetDict()->lookup("Group");
 	if (obj4.isDict()) {
-	  blendingColorSpace = nullptr;
+	  GfxColorSpace *blendingColorSpace = nullptr;
 	  isolated = knockout = gFalse;
 	  Object obj5 = obj4.dictLookup("CS");
 	  if (!obj5.isNull()) {
@@ -1226,15 +1221,14 @@ void Gfx::opSetExtGState(Object args[], int numArgs) {
 	  }
 	  doSoftMask(&obj3, alpha, blendingColorSpace,
 		     isolated, knockout, funcs[0], &backdropColor);
-	  if (funcs[0]) {
-	    delete funcs[0];
-	  }
+	  delete blendingColorSpace;
 	} else {
 	  error(errSyntaxError, getPos(), "Invalid soft mask in ExtGState - missing group");
 	}
       } else {
 	error(errSyntaxError, getPos(), "Invalid soft mask in ExtGState - missing group");
       }
+      delete funcs[0];
     } else if (!obj2.isNull()) {
       error(errSyntaxError, getPos(), "Invalid soft mask in ExtGState");
     }
@@ -1360,10 +1354,6 @@ void Gfx::doSoftMask(Object *str, GBool alpha,
 	  blendingColorSpace, isolated, knockout,
 	  alpha, transferFunc, backdropColor);
   --formDepth;
-
-  if (blendingColorSpace) {
-    delete blendingColorSpace;
-  }
 }
 
 void Gfx::opSetRenderingIntent(Object args[], int numArgs) {
@@ -2613,7 +2603,7 @@ void Gfx::doAxialShFill(GfxAxialShading *shading) {
   double t0, t1, tt;
   double ta[axialMaxSplits + 1];
   int next[axialMaxSplits + 1];
-  GfxColor color0, color1;
+  GfxColor color0 = {}, color1 = {};
   int nComps;
   int i, j, k;
   GBool needExtend = gTrue;
@@ -2913,7 +2903,7 @@ void Gfx::doRadialShFill(GfxRadialShading *shading) {
   double xMin, yMin, xMax, yMax;
   double x0, y0, r0, x1, y1, r1, t0, t1;
   int nComps;
-  GfxColor colorA, colorB;
+  GfxColor colorA = {}, colorB = {}, colorC = {};
   double xa, ya, xb, yb, ra, rb;
   double ta, tb, sa, sb;
   double sz, xz, yz, sMin, sMax;
@@ -2944,7 +2934,12 @@ void Gfx::doRadialShFill(GfxRadialShading *shading) {
     xz = x0 + sz * (x1 - x0);
     yz = y0 + sz * (y1 - y0);
     enclosed = (xz - x0) * (xz - x0) + (yz - y0) * (yz - y0) <= r0 * r0;
-    theta = asin(r0 / sqrt((x0 - xz) * (x0 - xz) + (y0 - yz) * (y0 - yz)));
+    const double theta_aux = sqrt((x0 - xz) * (x0 - xz) + (y0 - yz) * (y0 - yz));
+    if (likely(theta_aux != 0)) {
+      theta = asin(r0 / theta_aux);
+    } else {
+      theta = 0;
+    }
     if (r0 > r1) {
       theta = -theta;
     }
@@ -3084,7 +3079,6 @@ void Gfx::doRadialShFill(GfxRadialShading *shading) {
         // same color does not mean all the areas in between have the same color too
         int ic = ia + 1;
         for (; ic <= ib; ic++) {
-          GfxColor colorC;
           const double sc = sMin + ((double)ic / (double)radialMaxSplits) * (sMax - sMin);
           const double tc = t0 + sc * (t1 - t0);
           getShadingColorRadialHelper(t0, t1, tc, shading, &colorC);
@@ -3870,7 +3864,7 @@ void Gfx::opShowSpaceText(Object args[], int numArgs) {
   }
 }
 
-void Gfx::doShowText(GooString *s) {
+void Gfx::doShowText(const GooString *s) {
   GfxFont *font;
   int wMode;
   double riseX, riseY;
@@ -3884,7 +3878,7 @@ void Gfx::doShowText(GooString *s) {
   Dict *resDict;
   Parser *oldParser;
   GfxState *savedState;
-  char *p;
+  const char *p;
   int render;
   GBool patternFill;
   int len, n, uLen, nChars, nSpaces, i;
@@ -4123,7 +4117,7 @@ void Gfx::doShowText(GooString *s) {
 }
 
 // NB: this is only called when ocState is false.
-void Gfx::doIncCharCount(GooString *s) {
+void Gfx::doIncCharCount(const GooString *s) {
   if (out->needCharCount()) {
     out->incCharCount(s->getLength());
   }
@@ -4134,7 +4128,7 @@ void Gfx::doIncCharCount(GooString *s) {
 //------------------------------------------------------------------------
 
 void Gfx::opXObject(Object args[], int numArgs) {
-  char *name;
+  const char *name;
 
   if (!ocState && !out->needCharCount()) {
     return;
@@ -4460,6 +4454,7 @@ void Gfx::doImage(Object *ref, Stream *str, GBool inlineImg) {
       }
       maskColorSpace = GfxColorSpace::parse(nullptr, &obj1, out, state);
       if (!maskColorSpace || maskColorSpace->getMode() != csDeviceGray) {
+	delete maskColorSpace;
 	goto err1;
       }
       obj1 = maskDict->lookup("Decode");
@@ -5022,11 +5017,11 @@ void Gfx::opBeginMarkedContent(Object args[], int numArgs) {
   pushMarkedContent();
   
   OCGs *contentConfig = catalog->getOptContentConfig();
-  char* name0 = args[0].getName();
+  const char* name0 = args[0].getName();
   if ( strncmp( name0, "OC", 2) == 0 && contentConfig) {
     if ( numArgs >= 2 ) {
       if (args[1].isName()) {
-        char* name1 = args[1].getName();
+        const char* name1 = args[1].getName();
         MarkedContentStack *mc = mcStack;
         mc->kind = gfxMCOptionalContent;
         Object markedContent = res->lookupMarkedContentNF( name1 );

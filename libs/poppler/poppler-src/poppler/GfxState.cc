@@ -30,6 +30,7 @@
 // Copyright (C) 2015 Adrian Johnson <ajohnson@redneon.com>
 // Copyright (C) 2016 Marek Kasik <mkasik@redhat.com>
 // Copyright (C) 2017 Oliver Sander <oliver.sander@tu-dresden.de>
+// Copyright (C) 2018 Klarälvdalens Datakonsult AB, a KDAB Group company, <info@kdab.com>. Work sponsored by the LiMux project of the city of Munich
 //
 // To see a description of the changes please see the Changelog file that
 // came with your tarball or type make ChangeLog if you are building from git
@@ -43,6 +44,7 @@
 #endif
 
 #include <algorithm>
+#include <memory>
 #include <stddef.h>
 #include <math.h>
 #include <string.h>
@@ -70,9 +72,13 @@
 
 GBool Matrix::invertTo(Matrix *other) const
 {
-  double det;
+  const double det_denominator = determinant();
+  if (unlikely(det_denominator == 0)) {
+      *other = {1, 0, 0, 1, 0, 0};
+      return gFalse;
+  }
 
-  det = 1 / determinant();
+  const double det = 1 / det_denominator;
   other->m[0] = m[3] * det;
   other->m[1] = -m[1] * det;
   other->m[2] = -m[2] * det;
@@ -2481,7 +2487,7 @@ GfxColorSpace *GfxIndexedColorSpace::parse(GfxResources *res, Array *arr, Output
   GfxColorSpace *baseA;
   int indexHighA;
   Object obj1;
-  char *s;
+  const char *s;
   int i, j;
 
   if (arr->getLength() != 4) {
@@ -2810,8 +2816,14 @@ void GfxSeparationColorSpace::getRGB(GfxColor *color, GfxRGB *rgb) {
   } else {
     x = colToDbl(color->c[0]);
     func->transform(&x, c);
-    for (i = 0; i < alt->getNComps(); ++i) {
+    const int altNComps = alt->getNComps();
+    for (i = 0; i < altNComps; ++i) {
       color2.c[i] = dblToCol(c[i]);
+    }
+    if (unlikely(altNComps > func->getOutputSize())) {
+      for (i = func->getOutputSize(); i < altNComps; ++i) {
+	color2.c[i] = 0;
+      }
     }
     alt->getRGB(&color2, rgb);
   }
@@ -3885,7 +3897,7 @@ GfxUnivariateShading::~GfxUnivariateShading() {
   gfree (cacheBounds);
 }
 
-void GfxUnivariateShading::getColor(double t, GfxColor *color) {
+int GfxUnivariateShading::getColor(double t, GfxColor *color) {
   double out[gfxColorMaxComps];
 
   // NB: there can be one function with n outputs or n functions with
@@ -3895,7 +3907,7 @@ void GfxUnivariateShading::getColor(double t, GfxColor *color) {
   if (unlikely(nFuncs < 1 || nComps > gfxColorMaxComps)) {
     for (int i = 0; i < gfxColorMaxComps; i++)
         color->c[i] = 0;
-    return;
+    return gfxColorMaxComps;
   }
 
   if (cacheSize > 0) {
@@ -3935,6 +3947,7 @@ void GfxUnivariateShading::getColor(double t, GfxColor *color) {
   for (int i = 0; i < nComps; ++i) {
     color->c[i] = dblToCol(out[i]);
   }
+  return nComps;
 }
 
 void GfxUnivariateShading::setupCache(const Matrix *ctm,
@@ -4057,7 +4070,6 @@ GfxAxialShading *GfxAxialShading::parse(GfxResources *res, Dict *dict, OutputDev
   int nFuncsA;
   GBool extend0A, extend1A;
   Object obj1;
-  int i;
 
   x0A = y0A = x1A = y1A = 0;
   obj1 = dict->lookup("Coords");
@@ -4096,9 +4108,11 @@ GfxAxialShading *GfxAxialShading::parse(GfxResources *res, Dict *dict, OutputDev
       error(errSyntaxWarning, -1, "Invalid Function array in shading dictionary");
       return nullptr;
     }
-    for (i = 0; i < nFuncsA; ++i) {
+    for (int i = 0; i < nFuncsA; ++i) {
       Object obj2 = obj1.arrayGet(i);
       if (!(funcsA[i] = Function::parse(&obj2))) {
+	for (int j = 0; j < i; ++j)
+	  delete funcsA[j];
 	return nullptr;
       }
     }
@@ -4170,7 +4184,13 @@ void GfxAxialShading::getParameterRange(double *lower, double *upper,
 
   pdx = x1 - x0;
   pdy = y1 - y0;
-  invsqnorm = 1.0 / (pdx * pdx + pdy * pdy);
+  const double invsqnorm_denominator = (pdx * pdx + pdy * pdy);
+  if (unlikely(invsqnorm_denominator == 0)) {
+    *lower = 0;
+    *upper = 0;
+    return;
+  }
+  invsqnorm = 1.0 / invsqnorm_denominator;
   pdx *= invsqnorm;
   pdy *= invsqnorm;
 
@@ -4769,11 +4789,19 @@ GfxGouraudTriangleShading *GfxGouraudTriangleShading::parse(GfxResources *res, i
     error(errSyntaxWarning, -1, "Missing or invalid BitsPerCoordinate in shading dictionary");
     return nullptr;
   }
+  if (unlikely(coordBits <= 0)) {
+    error(errSyntaxWarning, -1, "Invalid BitsPerCoordinate in shading dictionary");
+    return nullptr;
+  }
   obj1 = dict->lookup("BitsPerComponent");
   if (obj1.isInt()) {
     compBits = obj1.getInt();
   } else {
     error(errSyntaxWarning, -1, "Missing or invalid BitsPerComponent in shading dictionary");
+    return nullptr;
+  }
+  if (unlikely(compBits <= 0 || compBits > 31)) {
+    error(errSyntaxWarning, -1, "Invalid BitsPerComponent in shading dictionary");
     return nullptr;
   }
   flagBits = vertsPerRow = 0; // make gcc happy
@@ -4807,7 +4835,7 @@ GfxGouraudTriangleShading *GfxGouraudTriangleShading::parse(GfxResources *res, i
     for (i = 0; 5 + 2*i < obj1.arrayGetLength() && i < gfxColorMaxComps; ++i) {
       cMin[i] = (obj2 = obj1.arrayGet(4 + 2*i), obj2.getNum(&decodeOk));
       cMax[i] = (obj2 = obj1.arrayGet(5 + 2*i), obj2.getNum(&decodeOk));
-      cMul[i] = (cMax[i] - cMin[i]) / (double)((1 << compBits) - 1);
+      cMul[i] = (cMax[i] - cMin[i]) / (double)((1u << compBits) - 1);
     }
     nComps = i;
 
@@ -4914,10 +4942,17 @@ GfxGouraudTriangleShading *GfxGouraudTriangleShading::parse(GfxResources *res, i
     }
   }
   delete bitBuf;
-  if (typeA == 5 && nVerticesA > 0) {
+  if (typeA == 5 && nVerticesA > 0 && vertsPerRow > 0) {
     nRows = nVerticesA / vertsPerRow;
     nTrianglesA = (nRows - 1) * 2 * (vertsPerRow - 1);
-    trianglesA = (int (*)[3])gmallocn(nTrianglesA * 3, sizeof(int));
+    trianglesA = (int (*)[3])gmallocn_checkoverflow(nTrianglesA * 3, sizeof(int));
+    if (unlikely(!trianglesA)) {
+      gfree(verticesA);
+      for (i = 0; i < nFuncsA; ++i) {
+	delete funcsA[i];
+      }
+      return nullptr;
+    }
     k = 0;
     for (i = 0; i < nRows - 1; ++i) {
       for (j = 0; j < vertsPerRow - 1; ++j) {
@@ -5100,7 +5135,6 @@ GfxPatchMeshShading *GfxPatchMeshShading::parse(GfxResources *res, int typeA, Di
   Guint xi, yi;
   double c[4][gfxColorMaxComps];
   Guint ci;
-  GfxShadingBitBuf *bitBuf;
   Object obj1;
   int i, j;
 
@@ -5111,11 +5145,19 @@ GfxPatchMeshShading *GfxPatchMeshShading::parse(GfxResources *res, int typeA, Di
     error(errSyntaxWarning, -1, "Missing or invalid BitsPerCoordinate in shading dictionary");
     return nullptr;
   }
+  if (unlikely(coordBits <= 0)) {
+    error(errSyntaxWarning, -1, "Invalid BitsPerCoordinate in shading dictionary");
+    return nullptr;
+  }
   obj1 = dict->lookup("BitsPerComponent");
   if (obj1.isInt()) {
     compBits = obj1.getInt();
   } else {
     error(errSyntaxWarning, -1, "Missing or invalid BitsPerComponent in shading dictionary");
+    return nullptr;
+  }
+  if (unlikely(compBits <= 0 || compBits > 31)) {
+    error(errSyntaxWarning, -1, "Invalid BitsPerComponent in shading dictionary");
     return nullptr;
   }
   obj1 = dict->lookup("BitsPerFlag");
@@ -5138,7 +5180,7 @@ GfxPatchMeshShading *GfxPatchMeshShading::parse(GfxResources *res, int typeA, Di
     for (i = 0; 5 + 2*i < obj1.arrayGetLength() && i < gfxColorMaxComps; ++i) {
       cMin[i] = (obj2 = obj1.arrayGet(4 + 2*i), obj2.getNum(&decodeOk));
       cMax[i] = (obj2 = obj1.arrayGet(5 + 2*i), obj2.getNum(&decodeOk));
-      cMul[i] = (cMax[i] - cMin[i]) / (double)((1 << compBits) - 1);
+      cMul[i] = (cMax[i] - cMin[i]) / (double)((1u << compBits) - 1);
     }
     nComps = i;
 
@@ -5178,7 +5220,7 @@ GfxPatchMeshShading *GfxPatchMeshShading::parse(GfxResources *res, int typeA, Di
   nPatchesA = 0;
   patchesA = nullptr;
   patchesSize = 0;
-  bitBuf = new GfxShadingBitBuf(str);
+  std::unique_ptr<GfxShadingBitBuf> bitBuf(new GfxShadingBitBuf(str));
   while (1) {
     if (!bitBuf->getBits(flagBits, &flag)) {
       break;
@@ -5274,6 +5316,8 @@ GfxPatchMeshShading *GfxPatchMeshShading::parse(GfxResources *res, int typeA, Di
 	break;
       case 1:
 	if (nPatchesA == 0) {
+          gfree(patchesA);
+	  for (int k = 0; k < nFuncsA; ++k) delete funcsA[k];
 	  return nullptr;
 	}
 	p->x[0][0] = patchesA[nPatchesA-1].x[0][3];
@@ -5309,6 +5353,8 @@ GfxPatchMeshShading *GfxPatchMeshShading::parse(GfxResources *res, int typeA, Di
 	break;
       case 2:
 	if (nPatchesA == 0) {
+          gfree(patchesA);
+	  for (int k = 0; k < nFuncsA; ++k) delete funcsA[k];
 	  return nullptr;
 	}
 	p->x[0][0] = patchesA[nPatchesA-1].x[3][3];
@@ -5344,6 +5390,8 @@ GfxPatchMeshShading *GfxPatchMeshShading::parse(GfxResources *res, int typeA, Di
 	break;
       case 3:
 	if (nPatchesA == 0) {
+          gfree(patchesA);
+	  for (int k = 0; k < nFuncsA; ++k) delete funcsA[k];
 	  return nullptr;
 	}
 	p->x[0][0] = patchesA[nPatchesA-1].x[3][0];
@@ -5422,6 +5470,8 @@ GfxPatchMeshShading *GfxPatchMeshShading::parse(GfxResources *res, int typeA, Di
 	break;
       case 1:
 	if (nPatchesA == 0) {
+          gfree(patchesA);
+	  for (int k = 0; k < nFuncsA; ++k) delete funcsA[k];
 	  return nullptr;
 	}
 	p->x[0][0] = patchesA[nPatchesA-1].x[0][3];
@@ -5465,6 +5515,8 @@ GfxPatchMeshShading *GfxPatchMeshShading::parse(GfxResources *res, int typeA, Di
 	break;
       case 2:
 	if (nPatchesA == 0) {
+          gfree(patchesA);
+	  for (int k = 0; k < nFuncsA; ++k) delete funcsA[k];
 	  return nullptr;
 	}
 	p->x[0][0] = patchesA[nPatchesA-1].x[3][3];
@@ -5508,6 +5560,8 @@ GfxPatchMeshShading *GfxPatchMeshShading::parse(GfxResources *res, int typeA, Di
 	break;
       case 3:
 	if (nPatchesA == 0) {
+          gfree(patchesA);
+	  for (int k = 0; k < nFuncsA; ++k) delete funcsA[k];
 	  return nullptr;
 	}
 	p->x[0][0] = patchesA[nPatchesA-1].x[3][0];
@@ -5554,7 +5608,6 @@ GfxPatchMeshShading *GfxPatchMeshShading::parse(GfxResources *res, int typeA, Di
     ++nPatchesA;
     bitBuf->flushBits();
   }
-  delete bitBuf;
 
   if (typeA == 6) {
     for (i = 0; i < nPatchesA; ++i) {
@@ -5638,7 +5691,7 @@ GfxImageColorMap::GfxImageColorMap(int bitsA, Object *decode,
   Guchar *indexedLookup;
   Function *sepFunc;
   double x[gfxColorMaxComps];
-  double y[gfxColorMaxComps];
+  double y[gfxColorMaxComps] = {};
   int i, j, k;
   double mapped;
   GBool useByteLookup;
@@ -5663,6 +5716,9 @@ GfxImageColorMap::GfxImageColorMap(int bitsA, Object *decode,
     lookup2[k] = nullptr;
   }
   byte_lookup = nullptr;
+
+  if (unlikely(bits <= 0))
+    goto err1;
 
   // get decode map
   if (decode->isNull()) {
@@ -6732,10 +6788,18 @@ void GfxState::setPath(GfxPath *pathA) {
 void GfxState::getUserClipBBox(double *xMin, double *yMin,
 			       double *xMax, double *yMax) {
   double ictm[6];
-  double xMin1, yMin1, xMax1, yMax1, det, tx, ty;
+  double xMin1, yMin1, xMax1, yMax1, tx, ty;
 
   // invert the CTM
-  det = 1 / (ctm[0] * ctm[3] - ctm[1] * ctm[2]);
+  const double det_denominator = (ctm[0] * ctm[3] - ctm[1] * ctm[2]);
+  if (unlikely(det_denominator == 0)) {
+      *xMin = 0;
+      *yMin = 0;
+      *xMax = 0;
+      *yMax = 0;
+      return;
+  }
+  const double det = 1 / det_denominator;
   ictm[0] = ctm[3] * det;
   ictm[1] = -ctm[1] * det;
   ictm[2] = -ctm[2] * det;

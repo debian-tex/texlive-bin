@@ -14,7 +14,7 @@
 // under GPL version 2 or later
 //
 // Copyright (C) 2008 Koji Otani <sho@bbr.jp>
-// Copyright (C) 2008, 2009, 2017 Albert Astals Cid <aacid@kde.org>
+// Copyright (C) 2008, 2009, 2017, 2018 Albert Astals Cid <aacid@kde.org>
 // Copyright (C) 2013 Fabio D'Urso <fabiodurso@hotmail.it>
 // Copyright (C) 2017 Adrian Johnson <ajohnson@redneon.com>
 //
@@ -234,7 +234,7 @@ void CMap::parse2(CMapCache *cache, int (*getCharFunc)(void *), void *data) {
   PSTokenizer *pst;
   char tok1[256], tok2[256], tok3[256];
   int n1, n2, n3;
-  Guint start, end, code;
+  Guint start = 0, end = 0, code;
 
   pst = new PSTokenizer(getCharFunc, data);
   pst->getToken(tok1, sizeof(tok1), &n1);
@@ -478,7 +478,7 @@ GBool CMap::match(GooString *collectionA, GooString *cMapNameA) {
   return !collection->cmp(collectionA) && !cMapName->cmp(cMapNameA);
 }
 
-CID CMap::getCID(char *s, int len, CharCode *c, int *nUsed) {
+CID CMap::getCID(const char *s, int len, CharCode *c, int *nUsed) {
   CMapVectorEntry *vec;
   CharCode cc;
   int n, i;

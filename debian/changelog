@@ -1,3 +1,10 @@
+texlive-bin (2018.20180710.48169-1) unstable; urgency=medium
+
+  * New upstream checkout 2018.20180710.48169
+  * update patches, remove upstream ones
+
+ -- Norbert Preining <preining@debian.org>  Tue, 10 Jul 2018 11:43:24 +0900
+
 texlive-bin (2018.20180416.47457-5) unstable; urgency=medium
 
   * Fix t4ht being completely broken due to %%~ expansion to 

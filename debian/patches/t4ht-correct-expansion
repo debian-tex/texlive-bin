@@ -6,9 +6,9 @@ see http://dirkmittler.homeip.net/blog/archives/5404#comment-11510
 
 --- texlive-bin.orig/texk/tex4htk/t4ht.c
 +++ texlive-bin/texk/tex4htk/t4ht.c
-@@ -668,7 +668,7 @@
-                                  const Q_CHAR *t;
-   
+@@ -850,7 +850,7 @@
+ #line 1458 "./tex4ht-t4ht.tex"
+ 
  #ifdef KPATHSEA
 -const char * texmf = kpse_var_value( "SELFAUTOPARENT" );
 +const char * texmf = "/usr/share/texlive";

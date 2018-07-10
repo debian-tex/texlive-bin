@@ -17,33 +17,4 @@ disdvi_man.patch
 dv2dt_man.patch
 gftodvi_man.patch
 # patches from upstream
-upstream-svn47469-dvipdfm-x-Fix-a-bug-which-causes-a-segfault-with-1-2
-upstream-svn47476-m-tx-0.63a
-upstream-svn47477-ptexdir-fix-a-regression-for-discontinuous-kinsoku-t
-upstream-svn47506-typo
-upstream-svn47625-recover-to-give-tounicode-entries-for-ligatures
-upstream-svn47626-ptexdir-More-strict-check-kanji-token
-upstream-svn47712-dvidvi-error-reporting
-upstream-svn47721-mendex30
-upstream-svn47722-mendex-rename-readme
-upstream-svn47723-dvidvi-cmd-line-error-reporting
-upstream-svn47741-expanded-primitive-pdftex
-upstream-svn47742-pdftex-expanded-test-fixes
-upstream-svn47745-eptex-expanded
-upstream-svn47776-ptexenc-doc-fixes
-upstream-svn47799-dvipdfmx-try-suffix
 t4ht-correct-expansion
-upstream-svn47844-ptex-man
-upstream-svn47918-install-ptex-man
-upstream-svn47967-ptex-utf8-file-names
-upstream-svn47972-ptex-fix-memory-crash
-upstream-svn47979-bibtex-aux-files
-upstream-svn47980-auxinclude-test
-#upstream-svn47983-no-xfee-pdftoepdf -p3
-upstream-svn48008-man-page-fixes
-upstream-svn48107-no-prepend-on-absolute-path
-upstream-svn48112-sync-tex4ht
-upstream-svn48117-tex4ht-fix
-upstream-svn48121-kpse-warn-all-pk
-upstream-svn48168-pdfopen-no-xmu
-upstream-svn48169-write-font-no-charset

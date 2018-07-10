@@ -1,0 +1,56 @@
+commit beaf2e85dab6b1b3f940758aa11378df14877da9
+Author: Karl Berry <karl@freefriends.org>
+Date:   Thu Jun 28 17:42:07 2018 +0000
+
+    do not prepend top-level dir if searched-for filename is absolute
+    
+    git-svn-id: svn://tug.org/texlive/trunk@48107 c570f23f-e606-0410-a88d-b1316a301751
+
+---
+ texk/web2c/lib/ChangeLog   |    7 +++++++
+ texk/web2c/lib/openclose.c |   14 ++++++++------
+ 2 files changed, 15 insertions(+), 6 deletions(-)
+
+--- texlive-bin.orig/texk/web2c/lib/ChangeLog
++++ texlive-bin/texk/web2c/lib/ChangeLog
+@@ -1,3 +1,10 @@
++2018-06-28  Karl Berry  <karl@freefriends.org>
++
++	* openclose.c (open_input_with_dirname): do not prepend the
++	top-level directory name if the subsidiary aux file being searched
++	for is alrady absolute. Private report from John Collins
++	(22 Jun 2018 14:01:31).
++
+ 2018-06-09  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+ 
+ 	* texmfmp.c, openclose.c: Support UTF-8 file names
+--- texlive-bin.orig/texk/web2c/lib/openclose.c
++++ texlive-bin/texk/web2c/lib/openclose.c
+@@ -300,11 +300,12 @@
+ 
+ 
+ /* Open input file *F_PTR (of type FILEFMT), prepending the directory
+-   part of the string FNAME. This is called from BibTeX, to open
+-   subsidiary .aux files, with FNAME set to the top-level aux file. The
+-   idea is that if invoked as bibtex somedir/foo.aux, and foo.aux has an
+-   \@input{bar} statement, we should look for somedir/bar.aux too.
+-   (See bibtex-auxinclude.test.)  */
++   part of the string FNAME to `nameoffile'+1, unless that is already
++   kpse_absolute_p. This is called from BibTeX, to open subsidiary .aux
++   files, with FNAME set to the top-level aux file. The idea is that if
++   we're invoked as bibtex somedir/foo.aux, and foo.aux has an
++   \@input{bar} statement, we should look for somedir/bar.aux too. (See
++   bibtex-auxinclude.test.) */
+ 
+ boolean
+ open_input_with_dirname (FILE **f_ptr, int filefmt, const char *fname)
+@@ -312,7 +313,8 @@
+   boolean ret = false;
+   char *top_dir = xdirname (fname);
+ 
+-  if (top_dir && *top_dir && !STREQ (top_dir, ".")) {
++  if (top_dir && *top_dir && !STREQ (top_dir, ".")
++      && !kpse_absolute_p (nameoffile+1, true)) {
+     char *newname = concat3 (top_dir, DIR_SEP_STRING, nameoffile+1);
+     free (nameoffile);
+     nameoffile = xmalloc (strlen (newname) + 2);

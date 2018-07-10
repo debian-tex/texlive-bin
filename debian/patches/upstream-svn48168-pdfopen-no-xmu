@@ -1,0 +1,72 @@
+commit 3d990936641ada4c678546b3de57c2943d72ac76
+Author: Karl Berry <karl@freefriends.org>
+Date:   Mon Jul 9 17:00:10 2018 +0000
+
+    xpdfopen: omit -lXmu
+    
+    git-svn-id: svn://tug.org/texlive/trunk@48168 c570f23f-e606-0410-a88d-b1316a301751
+
+---
+ utils/README               |    4 ++--
+ utils/xpdfopen/ChangeLog   |    6 ++++++
+ utils/xpdfopen/Makefile.am |    4 ++--
+ utils/xpdfopen/Makefile.in |    2 +-
+ 4 files changed, 11 insertions(+), 5 deletions(-)
+
+--- texlive-bin.orig/utils/README
++++ texlive-bin/utils/README
+@@ -39,9 +39,9 @@
+ 
+ xindy - see just below
+ 
+-xpdfopen 0.86 - checked 24may14
++xpdfopen 0.86 - checked 9jul18
+   http://ctan.org/pkg/xpdfopen/
+-  http://cs.acadiau.ca/~jdiamond/xpdfopen/
++  http://cs.acadiau.ca/~jdiamond/xpdfopen/ (404; no reply from author, 9jul18)
+ 
+ 
+ xindy 2.5.1 - checked 15sep14
+--- texlive-bin.orig/utils/xpdfopen/ChangeLog
++++ texlive-bin/utils/xpdfopen/ChangeLog
+@@ -1,3 +1,9 @@
++2018-07-09  Karl Berry  <karl@tug.org>
++
++	* Makefile.am (LDADD): remove -lXmu, seems nothing it used from
++	that library. Let's hope that X libraries themselves don't either.
++	Report from Ulrich Mueller, 22 Mar 2018 08:55:50.
++
+ 2016-02-22  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+ 
+ 	* Makefile.am, configure.ac: New convention.
+--- texlive-bin.orig/utils/xpdfopen/Makefile.am
++++ texlive-bin/utils/xpdfopen/Makefile.am
+@@ -1,7 +1,7 @@
+ ## $Id$
+ ## Makefile.am for the TeX Live subdirectory utils/xpdfopen/
+ ##
+-## Copyright 2017 Karl Berry <tex-live@tug.org>
++## Copyright 2017-2018 Karl Berry <tex-live@tug.org>
+ ## Copyright 2009-2015 Peter Breitenlohner <tex-live@tug.org>
+ ## You may freely use, modify and/or distribute this file.
+ 
+@@ -17,7 +17,7 @@
+ AM_CPPFLAGS = $(X_CFLAGS)
+ AM_CFLAGS = $(WARNING_CFLAGS)
+ 
+-LDADD = $(X_LIBS) -lX11 -lXmu $(X_EXTRA_LIBS)
++LDADD = $(X_LIBS) -lX11 $(X_EXTRA_LIBS)
+ 
+ bin_PROGRAMS = pdfopen pdfclose
+ 
+--- texlive-bin.orig/utils/xpdfopen/Makefile.in
++++ texlive-bin/utils/xpdfopen/Makefile.in
+@@ -333,7 +333,7 @@
+ NEVER_NAMES_LT = -o -name .libs -o -name '*.lo'
+ AM_CPPFLAGS = $(X_CFLAGS)
+ AM_CFLAGS = $(WARNING_CFLAGS)
+-LDADD = $(X_LIBS) -lX11 -lXmu $(X_EXTRA_LIBS)
++LDADD = $(X_LIBS) -lX11 $(X_EXTRA_LIBS)
+ common_sources = \
+ 	@XPDFOPEN_TREE@/sendx.c \
+ 	@XPDFOPEN_TREE@/utils.c

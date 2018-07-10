@@ -1,0 +1,302 @@
+commit 407ba94a3472d34da2cac80b6eb9e3ff77fe5f2e
+Author: Karl Berry <karl@freefriends.org>
+Date:   Sun Jun 10 22:13:16 2018 +0000
+
+    bibtex: fallback check for subsidiary aux files in the directory of the main aux file
+    
+    git-svn-id: svn://tug.org/texlive/trunk@47979 c570f23f-e606-0410-a88d-b1316a301751
+
+---
+ texk/web2c/ChangeLog                    |   12 ++++++++++
+ texk/web2c/NEWS                         |    4 +++
+ texk/web2c/bibtex.ch                    |   36 +++++++++++++++++++++++++++-----
+ texk/web2c/cpascal.h                    |    3 ++
+ texk/web2c/lib/openclose.c              |   30 +++++++++++++++++++++++++-
+ texk/web2c/tests/auxinclude.aux         |    7 ++++++
+ texk/web2c/tests/auxinclude.bbl         |   16 ++++++++++++++
+ texk/web2c/tests/auxinclude.bib         |    6 +++++
+ texk/web2c/tests/auxinclude.tex         |   13 +++++++++++
+ texk/web2c/tests/auxinclude2.aux        |   20 +++++++++++++++++
+ texk/web2c/tests/auxinclude2.tex        |    4 +++
+ texk/web2c/tests/bibtex-auxinclude.test |   22 +++++++++++++++++++
+ texk/web2c/web2c/ChangeLog              |    4 +++
+ texk/web2c/web2c/common.defines         |    1 
+ 14 files changed, 172 insertions(+), 6 deletions(-)
+
+--- texlive-bin.orig/texk/web2c/ChangeLog
++++ texlive-bin/texk/web2c/ChangeLog
+@@ -1,3 +1,15 @@
++2018-06-08  Karl Berry  <karl@freefriends.org>
++
++	* bibtex.ch (142): also try opening subsidiary .aux files
++	via a_open_in_with_dirname.
++	(bib_makecstring): new fn.
++	* cpascal.h (aopeninwithdirname): new #define.
++	* lib/openclose.c (open_input_with_dirname): new fn.
++	* tests/bibtex-auxinclude.test: new test.
++	* tests/auxinclude*.*: files for test.
++	Suggestion from John Collins. See thread from
++	http://tug.org/pipermail/tex-live/2018-May/041624.html.
++
+ 2018-04-14  Karl Berry  <karl@tug.org>
+ 
+ 	* TeX Live 2018 release.
+--- texlive-bin.orig/texk/web2c/NEWS
++++ texlive-bin/texk/web2c/NEWS
+@@ -1,5 +1,9 @@
+ This file records noteworthy changes.  (Public domain.)
+ 
++BibTeX: subsidiary .aux files are looked for in the directory of the
++main .aux file, if not found as-is (to work better with -output-directory).
++
++
+ 2018 (for TeX Live 2018, 14 April 2018)
+ * Directories in the -output-directory do not mask files by the same name.
+ 
+--- texlive-bin.orig/texk/web2c/bibtex.ch
++++ texlive-bin/texk/web2c/bibtex.ch
+@@ -413,8 +413,24 @@
+ begin rewrite(f,name_of_file,'/O'); a_open_out:=rewrite_OK(f);
+ end;
+ @y
+-@ File opening will be done in C.
++@ File opening will be done in C. But we want an auxiliary function to
++change a \BibTeX\ string into a C string, to keep string pool stuff
++out of the C code in @.{lib/openclose.c}.
++
+ @d no_file_path = -1
++
++@<Procedures and functions for all file...@>=
++function bib_makecstring(s:str_number):cstring;
++var cstr:cstring;
++    i:pool_pointer;
++begin
++  cstr := xmalloc_array (ASCII_code, length (s) + 1);
++  for i := 0 to length(s) - 1 do begin
++    cstr[i] := str_pool[str_start[s] + i];
++  end;
++  cstr[length(s)] := 0;
++  bib_makecstring := cstr;
++exit: end;
+ @z
+ 
+ @x [39] Do file closing in C.
+@@ -1008,8 +1024,15 @@
+         end;
+ @z
+ 
+-% [142] Don't pad with blanks.
+-% Don't use a path to search for subsidiary aux files, either.
++% [142] Don't pad with blanks, terminate with null.
++% Don't use a path to search for subsidiary aux files,
++% but do check the directory of the main .aux file.
++% 
++% This last is useful, for example, when --output-dir is used and the
++% .aux file has an \@input directive resulting from a LaTeX \include;
++% see bibtex-auxinclude.test. It's necessary because BibTeX itself does
++% not have --output-directory. Maybe it would be (have been?) better to
++% add it, but seems too intrusive now? Different bbl location.
+ @x
+ while (name_ptr <= file_name_size) do   {pad with blanks}
+     begin
+@@ -1019,8 +1042,11 @@
+ if (not a_open_in(cur_aux_file)) then
+ @y
+ name_of_file[name_ptr] := 0;
+-if (not kpse_in_name_ok(stringcast(name_of_file+1)) or
+-    not a_open_in(cur_aux_file, no_file_path)) then
++if (not kpse_in_name_ok(stringcast(name_of_file+1))
++    or (not a_open_in(cur_aux_file, no_file_path)
++        and not a_open_in_with_dirname(cur_aux_file, no_file_path,
++                                       bib_makecstring(top_lev_str)))
++    ) then
+ @z
+ 
+ % [152] This goto gets turned into a setjmp/longjmp by ./convert --
+--- texlive-bin.orig/texk/web2c/cpascal.h
++++ texlive-bin/texk/web2c/cpascal.h
+@@ -141,6 +141,9 @@
+ #define aopenout(f)  open_output (&(f), FOPEN_W_MODE)
+ #define aclose close_file
+ 
++/* Used in BibTeX for subsidiary aux files. */
++#define aopeninwithdirname(f,p,s) open_input_with_dirname (&(f), p, s)
++
+ /* How to output to the GF or DVI file.  */
+ #define WRITE_OUT(a, b)							\
+   if ((size_t) fwrite ((char *) &OUT_BUF[a], sizeof (OUT_BUF[a]),       \
+--- texlive-bin.orig/texk/web2c/lib/openclose.c
++++ texlive-bin/texk/web2c/lib/openclose.c
+@@ -141,7 +141,7 @@
+     recorder_record_name ("OUTPUT", name);
+ }
+ 
+-/* Open an input file F, using the kpathsea format FILEFMT and passing
++/* Open input file *F_PTR, using the kpathsea format FILEFMT and passing
+    FOPEN_MODE to fopen.  The filename is in `nameoffile+1'.  We return
+    whether or not the open succeeded.  If it did, `nameoffile' is set to
+    the full filename opened, and `namelength' to its length.  */
+@@ -297,6 +297,34 @@
+ 
+     return *f_ptr != NULL;
+ }
++
++
++/* Open input file *F_PTR (of type FILEFMT), prepending the directory
++   part of the string FNAME. This is called from BibTeX, to open
++   subsidiary .aux files, with FNAME set to the top-level aux file. The
++   idea is that if invoked as bibtex somedir/foo.aux, and foo.aux has an
++   \@input{bar} statement, we should look for somedir/bar.aux too.
++   (See bibtex-auxinclude.test.)  */
++
++boolean
++open_input_with_dirname (FILE **f_ptr, int filefmt, const char *fname)
++{
++  boolean ret = false;
++  char *top_dir = xdirname (fname);
++
++  if (top_dir && *top_dir && !STREQ (top_dir, ".")) {
++    char *newname = concat3 (top_dir, DIR_SEP_STRING, nameoffile+1);
++    free (nameoffile);
++    nameoffile = xmalloc (strlen (newname) + 2);
++    strcpy (nameoffile + 1, newname);
++    ret = open_input (f_ptr, filefmt, FOPEN_RBIN_MODE);
++    free (newname);
++  }
++
++  free (top_dir);
++  return ret;
++}
++
+ 
+ /* Open an output file F either in the current directory or in
+    $TEXMFOUTPUT/F, if the environment variable `TEXMFOUTPUT' exists.
+--- /dev/null
++++ texlive-bin/texk/web2c/tests/auxinclude.aux
+@@ -0,0 +1,7 @@
++\relax 
++\citation{article-minimal}
++\@input{auxinclude2.aux}
++\bibstyle{apalike}
++\bibdata{xampl}
++\bibcite{article-minimal}{Aamport, 1986}
++\bibcite{whole-journal}{GAJ, 1986}
+--- /dev/null
++++ texlive-bin/texk/web2c/tests/auxinclude.bbl
+@@ -0,0 +1,16 @@
++\newcommand{\noopsort}[1]{} \newcommand{\printfirst}[2]{#1}
++  \newcommand{\singleletter}[1]{#1} \newcommand{\switchargs}[2]{#2#1}
++\begin{thebibliography}{}
++
++\bibitem[Aamport, 1986]{article-minimal}
++Aamport, L.~A. (1986).
++\newblock The gnats and gnus document preparation system.
++\newblock {\em \mbox{G-Animal's} Journal}.
++
++\bibitem[GAJ, 1986]{whole-journal}
++GAJ (1986).
++\newblock {\em \mbox{G-Animal's} Journal}, 41(7).
++\newblock The entire issue is devoted to gnats and gnus (this entry is a
++  cross-referenced ARTICLE (journal)).
++
++\end{thebibliography}
+--- /dev/null
++++ texlive-bin/texk/web2c/tests/auxinclude.bib
+@@ -0,0 +1,6 @@
++% $Id$
++% Bibliography test file for bibtex-auxinclude.test (q.v.).
++% Public domain. Originally written 2018, Karl Berry.
++
++@misc{rmain, title="r-main", author="R. Main"}
++@misc{rsub, title="r-sub", author="R. Sub"}
+--- /dev/null
++++ texlive-bin/texk/web2c/tests/auxinclude.tex
+@@ -0,0 +1,13 @@
++% $Id$
++% Top-level test file for bibtex-auxinclude.test (q.v.).
++% Public domain. Originally written 2018, Karl Berry.
++% built with the usual: latex auxinclude && bibtex auxinclude &&
++%   latex auxinclude && latex auxinclude
++% (although we don't use the normal output, just the .aux/bib files).
++\documentclass{article}
++\begin{document}
++article-minimal from main file: \cite{article-minimal}. Including subfile:
++\include{auxinclude2}
++\bibliographystyle{apalike}% just because we already have it in web2c/tests
++\bibliography{xampl}
++\end{document}
+--- /dev/null
++++ texlive-bin/texk/web2c/tests/auxinclude2.aux
+@@ -0,0 +1,20 @@
++\relax 
++\citation{whole-journal}
++\@setckpt{auxinclude2}{
++\setcounter{page}{3}
++\setcounter{equation}{0}
++\setcounter{enumi}{0}
++\setcounter{enumii}{0}
++\setcounter{enumiii}{0}
++\setcounter{enumiv}{0}
++\setcounter{footnote}{0}
++\setcounter{mpfootnote}{0}
++\setcounter{part}{0}
++\setcounter{section}{0}
++\setcounter{subsection}{0}
++\setcounter{subsubsection}{0}
++\setcounter{paragraph}{0}
++\setcounter{subparagraph}{0}
++\setcounter{figure}{0}
++\setcounter{table}{0}
++}
+--- /dev/null
++++ texlive-bin/texk/web2c/tests/auxinclude2.tex
+@@ -0,0 +1,4 @@
++% $Id$
++% Subsidiary (\include-d) test file for bibtex-auxinclude.test (q.v.).
++% Public domain. Originally written 2018, Karl Berry.
++whole-journal from included file: \cite{whole-journal}.
+--- /dev/null
++++ texlive-bin/texk/web2c/tests/bibtex-auxinclude.test
+@@ -0,0 +1,22 @@
++#! /bin/sh -vx
++# $Id$
++# Copyright 2018 Karl Berry <tex-live@tug.org>
++# You may freely use, modify and/or distribute this file.
++
++test -d tests || mkdir -p tests
++
++# in case we're invoked standalone instead of from make.
++test -z "$srcdir" && srcdir=`cd \`dirname $0\`/.. && pwd`
++
++cp $srcdir/tests/auxinclude.aux tests/xauxinclude.aux || exit 1
++cp $srcdir/tests/auxinclude2.aux tests/auxinclude2.aux || exit 1
++
++# [x]auxinclude.aux includes \@input{auxinclude2.aux}, to be found in
++# the ./tests/ (working) subdir, which should be automatically checked
++# since we invoke bibtex on tests/whatever.aux. See thread from
++# http://tug.org/pipermail/tex-live/2018-May/041624.html.
++# 
++TEXMFCNF=$srcdir/../kpathsea \
++  BSTINPUTS=$srcdir/tests \
++  BIBINPUTS=$srcdir/tests \
++  ./bibtex tests/xauxinclude || exit 1
+--- texlive-bin.orig/texk/web2c/web2c/ChangeLog
++++ texlive-bin/texk/web2c/web2c/ChangeLog
+@@ -1,3 +1,7 @@
++2018-06-08  Karl Berry  <karl@freefriends.org>
++
++	* common.defines (aopeninwithdirname): add.
++
+ 2016-04-06  Karl Berry  <karl@tug.org>
+ 
+ 	* convert: remove $pascalfile if it is empty,
+--- texlive-bin.orig/texk/web2c/web2c/common.defines
++++ texlive-bin/texk/web2c/web2c/common.defines
+@@ -97,6 +97,7 @@
+ @define function abs ();
+ @define function addressof ();
+ @define function aopenin ();
++@define function aopeninwithdirname ();
+ @define function aopenout ();
+ @define function atof ();
+ @define function atoi ();

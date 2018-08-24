@@ -1,3 +1,10 @@
+texlive-bin (2018.20180824.48463-1) unstable; urgency=medium
+
+  * New upstream version 2018.20180824.48463
+  * remove upstream included patches
+
+ -- Norbert Preining <preining@debian.org>  Fri, 24 Aug 2018 11:12:56 +0900
+
 texlive-bin (2018.20180710.48169-1) unstable; urgency=medium
 
   * New upstream checkout 2018.20180710.48169

@@ -17,3 +17,4 @@ gftodvi_man.patch
 # patches from upstream
 t4ht-correct-expansion
 svn48595-Fix-broken-ToUnicode-CMap-support
+dvisvgm-fix-missing-libs

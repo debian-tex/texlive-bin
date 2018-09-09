@@ -2,8 +2,9 @@ texlive-bin (2018.20180907.48586-1) unstable; urgency=medium
 
   * New upstream version 2018.20180907.48586 (Closes: #907784)
   * include dvipdfmx toUnicode support fix
+  * fix building dvisvgm for non-texlive builds and external libs
 
- -- Norbert Preining <preining@debian.org>  Fri, 07 Sep 2018 14:05:13 +0900
+ -- Norbert Preining <preining@debian.org>  Sun, 09 Sep 2018 22:13:50 +0900
 
 texlive-bin (2018.20180824.48463-1) unstable; urgency=medium
 

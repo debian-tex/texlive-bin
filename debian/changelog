@@ -1,3 +1,10 @@
+texlive-bin (2018.20180907.48586-2) UNRELEASED; urgency=medium
+
+  * cherry-pick from upstream:
+    - svn48676-uptex-fix-substring-bug
+
+ -- Norbert Preining <preining@debian.org>  Sun, 16 Sep 2018 22:44:57 +0900
+
 texlive-bin (2018.20180907.48586-1) unstable; urgency=medium
 
   * New upstream version 2018.20180907.48586 (Closes: #907784)

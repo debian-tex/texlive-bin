@@ -1,0 +1,83 @@
+commit 14d7b5de88141dcad88c533d740a467fee83b573
+Author: Norbert Preining <norbert@preining.info>
+Date:   Tue Sep 18 11:07:55 2018 +0900
+
+    writet1 protection against buffer overflow
+
+---
+ texk/dvipsk/ChangeLog               |    5 +++++
+ texk/dvipsk/writet1.c               |    2 ++
+ texk/web2c/luatexdir/ChangeLog      |    4 ++++
+ texk/web2c/luatexdir/font/writet1.w |    2 ++
+ texk/web2c/pdftexdir/ChangeLog      |    5 +++++
+ texk/web2c/pdftexdir/writet1.c      |    2 ++
+ 6 files changed, 20 insertions(+)
+
+--- texlive-bin.orig/texk/dvipsk/ChangeLog
++++ texlive-bin/texk/dvipsk/ChangeLog
+@@ -1,3 +1,8 @@
++2018-09-18  Nick Roessler  <nicholas.e.roessler@gmail.com>
++
++	* writet1.c (t1_check_unusual_charstring): protect against buffer
++	overflow.
++
+ 2018-04-14  Karl Berry  <karl@tug.org>
+ 
+ 	* Version 5.998 for TeX Live 2018 release.
+--- texlive-bin.orig/texk/dvipsk/writet1.c
++++ texlive-bin/texk/dvipsk/writet1.c
+@@ -1449,7 +1449,9 @@ static void t1_check_unusual_charstring(
+         *(strend(t1_buf_array) - 1) = ' ';
+ 
+         t1_getline();
++        alloc_array(t1_buf, strlen(t1_line_array) + strlen(t1_buf_array) + 1, T1_BUF_SIZE);
+         strcat(t1_buf_array, t1_line_array);
++        alloc_array(t1_line, strlen(t1_buf_array) + 1, T1_BUF_SIZE);
+         strcpy(t1_line_array, t1_buf_array);
+         t1_line_ptr = eol(t1_line_array);
+     }
+--- texlive-bin.orig/texk/web2c/luatexdir/ChangeLog
++++ texlive-bin/texk/web2c/luatexdir/ChangeLog
+@@ -1,3 +1,7 @@
++2018-09-18 Nick Roessler <nicholas.e.roessler@gmail.com>
++	* fonts/writet1.w (t1_check_unusual_charstring): protect against
++	buffer overflow.
++
+ 2017-11-02 Luigi Scarso <luigi.scarso@gmail.com>
+ 	LuaFilesystem 1.7.0
+ 
+--- texlive-bin.orig/texk/web2c/luatexdir/font/writet1.w
++++ texlive-bin/texk/web2c/luatexdir/font/writet1.w
+@@ -1625,7 +1625,9 @@ static void t1_check_unusual_charstring(
+     if (sscanf(p, "%i", &i) != 1) {
+         strcpy(t1_buf_array, t1_line_array);
+         t1_getline();
++        alloc_array(t1_buf, strlen(t1_line_array) + strlen(t1_buf_array) + 1, T1_BUF_SIZE);
+         strcat(t1_buf_array, t1_line_array);
++        alloc_array(t1_line, strlen(t1_buf_array) + 1, T1_BUF_SIZE);
+         strcpy(t1_line_array, t1_buf_array);
+         t1_line_ptr = eol(t1_line_array);
+     }
+--- texlive-bin.orig/texk/web2c/pdftexdir/ChangeLog
++++ texlive-bin/texk/web2c/pdftexdir/ChangeLog
+@@ -1,3 +1,8 @@
++2018-09-18  Nick Roessler  <nicholas.e.roessler@gmail.com>
++
++	* writet1.c (t1_check_unusual_charstring): protect against buffer
++	overflow.
++
+ 2018-07-09  Karl Berry  <karl@freefriends.org>
+ 
+ 	* writefont.c (write_fontdescriptor) [ENABLE_PDF_CHARSET]:
+--- texlive-bin.orig/texk/web2c/pdftexdir/writet1.c
++++ texlive-bin/texk/web2c/pdftexdir/writet1.c
+@@ -1598,7 +1598,9 @@ static void t1_check_unusual_charstring(
+         *(strend(t1_buf_array) - 1) = ' ';
+ 
+         t1_getline();
++        alloc_array(t1_buf, strlen(t1_line_array) + strlen(t1_buf_array) + 1, T1_BUF_SIZE);
+         strcat(t1_buf_array, t1_line_array);
++        alloc_array(t1_line, strlen(t1_buf_array) + 1, T1_BUF_SIZE);
+         strcpy(t1_line_array, t1_buf_array);
+         t1_line_ptr = eol(t1_line_array);
+     }

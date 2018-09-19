@@ -21,3 +21,4 @@ upstream-svn35518-mpost-fontmap-warnings
 cve-libpng-heap-overflow-fix
 mktexlsr-use-mktemp
 cve-2015-0973
+svn48697-writet1-fix

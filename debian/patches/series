@@ -45,3 +45,4 @@ upstream-svn42803-dvipdfmx-cid-font-info
 #update-luatexdir-luatex1
 teckit-dont-build-sfconv
 upstream-svn43637-pdftex-dont-embed-unitialized-memory-png-alpha
+svn48697-writet1-fix

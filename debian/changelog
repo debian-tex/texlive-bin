@@ -1,3 +1,9 @@
+texlive-bin (2016.20160513.41080.dfsg-2+deb9u1) stretch-security; urgency=high
+
+  * fix buffer overflow in writet1
+
+ -- Norbert Preining <preining@debian.org>  Wed, 19 Sep 2018 13:18:30 +0900
+
 texlive-bin (2016.20160513.41080.dfsg-2) unstable; urgency=medium
 
   * cherrypick upstream svn43637 (Closes: #796490)

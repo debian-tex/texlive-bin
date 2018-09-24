@@ -2,7 +2,7 @@ texlive-bin (2018.20180907.48586-2) unstable; urgency=medium
 
   * cherry-pick from upstream:
     - svn48676-uptex-fix-substring-bug
-    - svn48697-writet1-fix
+    - svn48697-writet1-fix CVE-2018-17407 (Closes: #909317)
 
  -- Norbert Preining <preining@debian.org>  Wed, 19 Sep 2018 13:10:58 +0900
 

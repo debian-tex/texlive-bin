@@ -4,6 +4,9 @@
 export SHELL=/bin/bash
 export CONFIG_SHELL=/bin/bash
 
+# this ships out the test logs when a test failed, set it in any case
+export VERBOSE=1
+
 #
 # the configure code already checks a lot, but it does not catch
 # all cases. We have now two ways to test for where to build.

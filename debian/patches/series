@@ -20,3 +20,4 @@ svn48595-Fix-broken-ToUnicode-CMap-support
 dvisvgm-fix-missing-libs
 svn48676-uptex-fix-substring-bug
 svn48697-writet1-fix
+svn48797-dvipdfmx-fix-mp-ps

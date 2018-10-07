@@ -2,8 +2,9 @@ texlive-bin (2018.20180907.48586-3) UNRELEASED; urgency=medium
 
   * cherry-pick from upstream:
     - svn48797-dvipdfmx-fix-mp-ps (backported)
+    - svn48850-dvipdfmx-clear-static-vars (backported)
 
- -- Norbert Preining <preining@debian.org>  Tue, 02 Oct 2018 11:09:16 +0900
+ -- Norbert Preining <preining@debian.org>  Sun, 07 Oct 2018 23:14:00 +0900
 
 texlive-bin (2018.20180907.48586-2) unstable; urgency=medium
 

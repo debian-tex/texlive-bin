@@ -1,8 +1,7 @@
-texlive-bin (2018.20180907.48586-3) experimental; urgency=medium
+texlive-bin (2018.20181104.49075-1) unstable; urgency=medium
 
-  * cherry-pick from upstream:
-    - svn48797-dvipdfmx-fix-mp-ps (backported)
-    - svn48850-dvipdfmx-clear-static-vars (backported)
+  * New upstream version 2018.20181104.49075
+    (several dvipdfmx fixes, updates to dvisvgm, new luatex)
   * depend on system teckit library
 
  -- Norbert Preining <preining@debian.org>  Thu, 01 Nov 2018 17:25:01 +0900

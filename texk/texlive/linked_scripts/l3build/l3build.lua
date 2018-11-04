@@ -25,7 +25,7 @@ for those people who are interested.
 --]]
 
 -- Version information
-release_date = "2018-08-07"
+release_date = "2018-10-30"
 
 -- File operations are aided by the LuaFileSystem module
 local lfs = require("lfs")
@@ -95,6 +95,20 @@ end
 -- comes after any user versions
 build_require("variables")
 
+-- Ensure that directories are 'space safe'
+maindir       = escapepath(maindir) 
+docfiledir    = escapepath(docfiledir)
+sourcefiledir = escapepath(sourcefiledir)
+supportdir    = escapepath(supportdir)
+testfiledir   = escapepath(testfiledir)
+testsuppdir   = escapepath(testsuppdir)
+builddir      = escapepath(builddir)
+distribdir    = escapepath(distribdir)
+localdir      = escapepath(localdir)
+testdir       = escapepath(testdir)
+typesetdir    = escapepath(typesetdir)
+unpackdir     = escapepath(unpackdir)
+
 -- Tidy up the epoch setting
 -- Force an epoch if set at the command line
 -- Must be done after loading variables, etc.
@@ -137,9 +151,16 @@ if options["target"] == "check" then
       end
     end
     if next(failed) then
-      print("  Failed tests for configs:")
       for _,config in ipairs(failed) do
-        print("  - " .. config)
+        print("Failed tests for configuration " .. config .. ":")
+        print("\n  Check failed with difference files")
+        if config ~= "build" then
+          local testdir = testdir .. "-" .. config
+        end
+        for _,i in ipairs(filelist(testdir,"*" .. os_diffext)) do
+          print("  - " .. testdir .. "/" .. i)
+        end
+        print("")
       end
       exit(1)
     else
@@ -154,6 +175,7 @@ if #checkconfigs == 1 and
    local config = "./" .. checkconfigs[1] .. ".lua"
    if fileexists(config) then
      dofile(config)
+     testdir = testdir .. "-" .. checkconfigs[1]
    else
      print("Error: Cannot find configuration " ..  checkconfigs[1])
      exit(1)

@@ -2,21 +2,18 @@
  texk/dvisvgm/dvisvgm-src/src/Makefile.am |   10 +++++-----
  1 file changed, 5 insertions(+), 5 deletions(-)
 
---- texlive-bin-2018.20180907.48586.orig/texk/dvisvgm/dvisvgm-src/src/Makefile.am
-+++ texlive-bin-2018.20180907.48586/texk/dvisvgm/dvisvgm-src/src/Makefile.am
-@@ -20,8 +20,8 @@ dvisvgm_LDADD += \
- 	../libs/xxHash/libxxhash.a
- else
- dvisvgm_LDADD += \
+--- texlive-bin.orig/texk/dvisvgm/dvisvgm-src/src/Makefile.am
++++ texlive-bin/texk/dvisvgm/dvisvgm-src/src/Makefile.am
+@@ -17,14 +17,14 @@ dvisvgm_srcdir = $(top_srcdir)/dvisvgm-s
+ dvisvgm_LDADD = \
+ 	$(noinst_LIBRARIES) \
+ 	../libs/clipper/libclipper.a \
 -	$(POTRACE_LIBS) \
 -	$(XXHASH_LIBS)
 +	-lpotrace \
 +	-lxxhash
- endif
  
  if ENABLE_WOFF
-@@ -33,8 +33,8 @@ dvisvgm_LDADD += \
- else
  dvisvgm_LDADD += \
  	../libs/ff-woff/libfontforge.a \
 -	$(WOFF2_LIBS) \
@@ -24,9 +21,9 @@
 +	-lwoff2enc -lwoff2dec -lwoff2common \
 +	-lbrotlienc -lbrotlidec -lbrotlicommon
  endif
- endif
  
-@@ -43,7 +43,7 @@ dvisvgm_LDADD += \
+ if USE_BUNDLED_MD5
+@@ -38,7 +38,7 @@ dvisvgm_LDADD += \
  	$(FREETYPE2_LIBS) \
  	$(FONTFORGE_LIBS) \
  	$(ZLIB_LIBS) \

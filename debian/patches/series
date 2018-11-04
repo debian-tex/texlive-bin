@@ -16,9 +16,4 @@ dv2dt_man.patch
 gftodvi_man.patch
 # patches from upstream
 t4ht-correct-expansion
-svn48595-Fix-broken-ToUnicode-CMap-support
 dvisvgm-fix-missing-libs
-svn48676-uptex-fix-substring-bug
-svn48697-writet1-fix
-svn48797-dvipdfmx-fix-mp-ps
-svn48850-dvipdfmx-clear-static-vars

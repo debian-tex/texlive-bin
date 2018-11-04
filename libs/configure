@@ -767,6 +767,7 @@ enable_dtl
 enable_dvi2tty
 enable_dvidvi
 enable_dviljk
+enable_dviout_util
 enable_dvipdfm_x
 enable_dvipng
 enable_debug
@@ -1552,6 +1553,7 @@ Optional Features:
   --disable-dvi2tty       do not build the dvi2tty package
   --disable-dvidvi        do not build the dvidvi package
   --disable-dviljk        do not build the dviljk package
+  --disable-dviout-util   do not build the dviout-util package
   --disable-dvipdfm-x     do not build the dvipdfm-x package
   --disable-dvipng        do not build the dvipng package
   --disable-debug           Compile without debug (-d) option
@@ -3850,8 +3852,6 @@ case $enable_luatex in #(
 esac
 
 test "x$enable_web2c:$enable_luatex" = xyes:yes && {
-  need_poppler=yes
-  need_mpfr=yes
   need_libpng=yes
   need_zziplib=yes
   need_lua52=yes
@@ -3868,8 +3868,6 @@ case $enable_luatex53 in #(
 esac
 
 test "x$enable_web2c:$enable_luatex53" = xyes:yes && {
-  need_poppler=yes
-  need_mpfr=yes
   need_libpng=yes
   need_zziplib=yes
   need_lua53=yes
@@ -3886,8 +3884,6 @@ case $enable_luajittex in #(
 esac
 
 test "x$enable_web2c:$enable_luajittex" = xyes:yes && {
-  need_poppler=yes
-  need_mpfr=yes
   need_libpng=yes
   need_zziplib=yes
   need_luajit=yes
@@ -4309,6 +4305,28 @@ esac
 
 test "x$enable_dviljk" = xno || {
   need_kpathsea=yes
+}
+
+## texk/dviout-util/ac/withenable.ac: configure.ac fragment for the TeX Live subdirectory texk/dviout-util/
+## configure options and TL libraries required for dviout-util
+# Check whether --enable-dviout-util was given.
+if test "${enable_dviout_util+set}" = set; then :
+  enableval=$enable_dviout_util;
+fi
+case $enable_dviout_util in #(
+  yes|no) :
+     ;; #(
+  *) :
+
+   enable_dviout_util=$enable_all_pkgs
+     { $as_echo "$as_me:${as_lineno-$LINENO}: Assuming \`--enable-dviout-util=$enable_dviout_util'" >&5
+$as_echo "$as_me: Assuming \`--enable-dviout-util=$enable_dviout_util'" >&6;}
+     ac_configure_args="$ac_configure_args '--enable-dviout-util=$enable_dviout_util'"
+    ;;
+esac
+
+test "x$enable_dviout_util" = xno || {
+  need_ptexenc=yes
 }
 
 ## texk/dvipdfm-x/ac/withenable.ac: configure.ac fragment for the TeX Live subdirectory texk/dvipdfm-x/

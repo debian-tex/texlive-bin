@@ -1,3 +1,45 @@
+2018-11-01  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* pdftosrc-poppler0.71.0.cc, pdftoepdf-poppler0.71.0.cc:
+	Add to support system poppler-0.71.0.
+	* NEWS: Change comments on system poppler.
+
+2018-10-24  Karl Berry  <karl@tug.org>
+
+	* writet1.c (t1_check_unusual_charstring): don't call
+	strlen(t1_buf_array) if it is null.
+	From Luigi, 22 Oct 2018 22:43:03.
+
+2018-10-22  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* pdftosrc-newpoppler.cc: Add a comment that it works upto
+	the poppler 0.70.0.
+	* pdftoepdf-poppler0.70.0.cc: A new file for poppler-0.70.0
+	and newer.
+
+2018-10-02  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* pdftoepdf.cc: Remove changes for w32.
+
+2018-09-23  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* pdftosrc-newpoppler.cc: Add a comment that it works upto
+	the poppler 0.69.0.
+	* pdftoepdf-poppler0.68.0.cc: Rename pdftoepdf-newpoppler.cc
+	and add comments.
+	* pdftoepdf-poppler0.69.0.cc: A new file for poppler-0.69.0
+	and newer.
+
+2018-09-18  Nick Roessler  <nicholas.e.roessler@gmail.com>
+
+	* writet1.c (t1_check_unusual_charstring): protect against buffer
+	overflow.
+
+2018-09-09  Karl Berry  <karl@tug.org>
+
+	* expanded.test,
+	* ttf2afm.test: LC_ALL=LANGUAGE=C.
+
 2018-07-09  Karl Berry  <karl@freefriends.org>
 
 	* writefont.c (write_fontdescriptor) [ENABLE_PDF_CHARSET]:

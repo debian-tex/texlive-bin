@@ -1,3 +1,72 @@
+2018-10-12  Shunsaku Hirata  <shunsaku.hirata74@gmail.com>
+
+	* dvipdfmx.c: Fix a bug that landscape option is not handled
+	properly.
+	* configure.ac: Version 20181012.
+
+2018-10-08  Shunsaku Hirata  <shunsaku.hirata74@gmail.com>
+
+	* mpost.c: Fix a bug in inline PS code handling.
+	* dpxfile.c, pdfencrypt.c, type0.c: Avoid compiler warnings.
+	* pdfobj.c: Fix a bug in (unused) TIFF predictor code.
+	* configure.ac: Version 20181008.
+
+2018-10-07  Simon Cozens  <simon@simon-cozens.org>
+
+	* pdfobj.c: Clear static variables to allow PDF funcfions to
+	be used more than once.
+
+2018-10-02  Shunsaku Hirata  <shunsaku.hirata74@gmail.com>
+
+	* dvipdfmx.c: Fixed a bug in handling of command line option '-M'.
+	* mpost.c:  Fixed a bug in MetaPost generated PS files.
+	Font selection had not been properly done for gsave/grestore.
+	* configure.ac: Version 20181002.
+
+2018-09-16  Shunsaku Hirata  <shunsaku.hirata74@gmail.com>
+
+	* dvi.[ch], dvipdfmx.c: Fixed a bug that papersize special does
+	not work (introduced in the previous change). Command line
+	options other than papersize now take precedence over special
+	command options.
+	* dpxconf.[ch], tt_aux.c: Moved always_embed flag to dpx_conf.
+	* pdfencrypt.c: Fixed a bug that calculation of encryption key
+	was not done properly for RC4 and revision 2-3 AES security.
+
+2018-09-16  Shunsaku Hirata  <shunsaku.hirata74@gmail.com>
+
+	* dpxutil.[ch], dvi.[ch], dvipdfmx.c, pdfdoc.[ch], pdfencrypt.[ch],
+	pdffont.[ch], xbb.c: Remove duplicated code. Reorganize
+	initialization process. Use struct for passing options.
+	* configure.ac: Version 20180916.
+
+2018-09-14  Shunsaku Hirata  <shunsaku.hirata74@gmail.com>
+
+	* agl.[ch], bmpimage.c, cid.[ch], cidtype0.[ch], cidtype2.[ch],
+	cmap.[ch], cmap_read.c, dpxconf.[ch], dpxfile.[ch], dvi.[ch],
+	dvipdfmx.[ch], epdf.c, fontmap.[ch], jp2image.c, jpegimage.c,
+	mpost.[ch], pdfcolor.[ch], pdfdev.[ch], pdfdoc.[ch], pdfdraw.c,
+	pdfencoding.[ch], pdfencrypt.[ch], pdffont.[ch], pdfobj.[ch],
+	pdfximage.[ch], pngimage.c, spc_pdfm.c, spc_util.[ch],
+	specials.[ch], subfont.[ch], t1_char.c, tfm.[ch], truetype.c,
+	tt_aux.[ch], tt_cmap.[ch], tt_gsub.[ch], type0.[ch], type1.c,
+	type1c.c, vf.[ch], xbb.c: Cleanup. Remove duplicated code.
+	Reorganize global variables.
+	* configure.ac: Version 20180914.
+
+2018-09-09  Karl Berry  <karl@tug.org>
+
+	* xdvipfm-bb.test: LC_ALL=LANGUAGE=C.
+
+2018-09-06  Shunsaku Hirata  <shunsaku.hirata74@gmail.com>
+
+	* pdfencoding.c: Reverted change made for 20071115.
+	ToUnicode creation for simple font was broken. Not working
+	as intended at all.
+	* pdfdoc.c, epdf.c, pdffont.c: Rearranged code.
+	* pdfobj.c: Added some debugging code.
+	* configure.ac: Version 20180906.
+
 2018-09-04  Shunsaku Hirata  <shunsaku.hirata74@gmail.com>
 
 	* pdfobj.c: More fix on circular reference issue.

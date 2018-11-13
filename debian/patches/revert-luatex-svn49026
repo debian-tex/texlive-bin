@@ -1,0 +1,46 @@
+commit f3edea755080432bf62dbb6672cc96180c07fe5e
+Author: Luigi Scarso <luigi.scarso@gmail.com>
+Date:   Tue Oct 30 08:48:55 2018 +0000
+
+    turn off jit by default in mfluajit
+    
+    git-svn-id: svn://tug.org/texlive/trunk@49026 c570f23f-e606-0410-a88d-b1316a301751
+
+---
+ texk/web2c/mfluadir/ChangeLog |    7 -------
+ texk/web2c/mfluadir/mfluac.c  |    4 ----
+ 2 files changed, 11 deletions(-)
+
+--- texlive-bin.orig/texk/web2c/mfluadir/ChangeLog
++++ texlive-bin/texk/web2c/mfluadir/ChangeLog
+@@ -1,10 +1,3 @@
+-2018-30-10 Luigi Scarso <luigi.scarso@gmail.com>
+-
+-	* jit default off in mfluajit: in some platforms (e.g NetBSD8)
+-	  executing code from memory is forbidden by default.
+-	  In case, a user can enable jit at runtime.
+-
+-
+ 2018-02-08 Luigi Scarso <luigi.scarso@gmail.com>
+ 
+ 	* MFLua 0.9.
+--- texlive-bin.orig/texk/web2c/mfluadir/mfluac.c
++++ texlive-bin/texk/web2c/mfluadir/mfluac.c
+@@ -10,9 +10,6 @@
+ #include <lualib.h>
+ #include <lauxlib.h>
+ #include <kpathsea/kpathsea.h>
+-#if defined(JIT)
+-#include <luajit.h>
+-#endif
+ /**************************************************************/
+ /*                                                            */
+ /* private functions                                          */
+@@ -540,7 +537,6 @@ int mfluabeginprogram(void)
+       lua_pushstring(L,"MFbuiltin");
+ #ifdef MFLuaJIT
+       /* 5.1 */ 
+-      luaJIT_setmode(L, 0, LUAJIT_MODE_ENGINE|LUAJIT_MODE_OFF);
+       lua_newtable(L);
+       luaL_register (L,NULL,MFbuiltin_l);
+ #else

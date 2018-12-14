@@ -1,3 +1,12 @@
+texlive-bin (2018.20181214.49410-1) unstable; urgency=medium
+
+  * remove teckit on .orig building
+  * bump standards version, no changes necessary
+  * New upstream version 2018.20181214.49410
+  * update patches
+
+ -- Norbert Preining <preining@debian.org>  Fri, 14 Dec 2018 13:56:51 +0900
+
 texlive-bin (2018.20181104.49075-2) unstable; urgency=medium
 
   * revert luatex to previous version (Closes: #913586)

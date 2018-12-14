@@ -1,12 +1,12 @@
 #!/usr/bin/env perl
-# $Id: tlmgr.pl 48598 2018-09-06 15:01:34Z preining $
+# $Id: tlmgr.pl 49226 2018-11-22 23:37:16Z karl $
 #
 # Copyright 2008-2018 Norbert Preining
 # This file is licensed under the GNU General Public License version 2
 # or any later version.
 
-my $svnrev = '$Revision: 48598 $';
-my $datrev = '$Date: 2018-09-06 17:01:34 +0200 (Thu, 06 Sep 2018) $';
+my $svnrev = '$Revision: 49226 $';
+my $datrev = '$Date: 2018-11-23 00:37:16 +0100 (Fri, 23 Nov 2018) $';
 my $tlmgrrevision;
 my $tlmgrversion;
 my $prg;
@@ -5489,6 +5489,7 @@ sub check_runfiles {
             |.*-noEmbed\.map
             |ps2mfbas\.mf
             |pstricks\.con
+            |readme.*
             |sample\.bib
             |tex4ht\.env
             |test\.mf
@@ -7810,7 +7811,7 @@ checking the TL development repository.
 
 =item  B<conf [texmf|tlmgr|updmap [--conffile I<file>] [--delete] [I<key> [I<value>]]]>
 
-=item B<conf auxtrees [--conffile I<file>] [show|add|delete] [I<value>]>
+=item B<conf auxtrees [--conffile I<file>] [show|add|remove] [I<value>]>
 
 With only C<conf>, show general configuration information for TeX Live,
 including active configuration files, path settings, and more.  This is
@@ -7844,15 +7845,16 @@ additional texmf trees, completely under user control.  C<auxtrees show>
 shows the list of additional trees, C<auxtrees add> I<tree> adds a tree
 to the list, and C<auxtrees remove> I<tree> removes a tree from the list
 (if present). The trees should not contain an C<ls-R> file (or files
-might not be found if the C<ls-R> becomes stale). This works by
-manipulating the Kpathsea variable C<TEXMFAUXTREES>, in
+will not be found if the C<ls-R> becomes stale). This works by
+manipulating the Kpathsea variable C<TEXMFAUXTREES>, in (by default)
 C<ROOT/texmf.cnf>.  Example:
 
   tlmgr conf auxtrees add /quick/test/tree
   tlmgr conf auxtrees remove /quick/test/tree
 
 In all cases the configuration file can be explicitly specified via the
-option C<--conffile> I<file>, if desired.
+option C<--conffile> I<file>, e.g., if you don't want to change the
+system-wide configuration.
 
 Warning: The general facility for changing configuration values is here,
 but tinkering with settings in this way is strongly discouraged.  Again,
@@ -9703,10 +9705,9 @@ automatically selected by the installer. The order of selection is:
 
 =item 1.
 
-If the environment variable C<TEXLIVE_DOWNLOADER> is
-defined, use it; abort if the specified program doesn't work.
-Possible values: C<curl>, C<wget>. The necessary options are added
-internally.
+If the environment variable C<TEXLIVE_DOWNLOADER> is defined, use it;
+abort if the specified program doesn't work. Possible values: C<lwp>,
+C<curl>, C<wget>. The necessary options are added internally.
 
 =item 2.
 
@@ -9729,8 +9730,27 @@ If wget is available (either from the system or TL) and working, use that.
 
 =back
 
-TL still provides C<wget> binaries for some platforms, so
-some download method should always be available.
+TL provides C<wget> binaries for platforms where necessary, so some
+download method should always be available.
+
+=item C<TEXLIVE_PREFER_OWN>
+
+By default, compression and download programs provided by the system,
+i.e., found along C<PATH> are preferred over those shipped with TeX
+Live.
+
+This can create problems with systems that are too old, and so can be
+overridden by setting the environment variable C<TEXLIVE_PREFER_OWN> to
+1. In this case, executables shipped with TL will be preferred.
+
+Extra compression/download programs not provided by TL, such as gzip,
+lwp, and curl, are still checked for on the system and used if
+available, per the above. C<TEXLIVE_PREFER_OWN> only applies when the
+program being checked for is shipped with TL, namely the lz4 and
+xz compressors and wget downloader.
+
+Exception: on Windows, the C<tar.exe> shipped with TL is always used,
+regardless of any setting.
 
 =back
 
@@ -9741,7 +9761,7 @@ This script and its documentation were written for the TeX Live
 distribution (L<http://tug.org/texlive>) and both are licensed under the
 GNU General Public License Version 2 or later.
 
-$Id: tlmgr.pl 48598 2018-09-06 15:01:34Z preining $
+$Id: tlmgr.pl 49226 2018-11-22 23:37:16Z karl $
 =cut
 
 # test HTML version: pod2html --cachedir=/tmp tlmgr.pl >/tmp/tlmgr.html

@@ -23,6 +23,7 @@ pdfjam/pdfjam-slides6up
 pdfjam/pdfjoin
 pdfjam/pdfnup
 pdfjam/pdfpun
+pdftex-quiet/pdftex-quiet
 pdfxup/pdfxup
 pst-pdf/ps4pdf
 simpdftex/simpdftex
@@ -158,6 +159,7 @@ tlshell/tlshell.tcl
 ulqda/ulqda.pl
 urlbst/urlbst
 vpe/vpe.pl
+xindex/xindex.lua
 yplan/yplan
 context/stubs/unix/context
 context/stubs/unix/contextjit

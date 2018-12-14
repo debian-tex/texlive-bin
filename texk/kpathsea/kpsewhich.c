@@ -493,7 +493,7 @@ to also use -engine, or nothing will be returned; in particular,\n\
 -show-path=TYPE        output search path for file type TYPE\n\
                          (list shown by -help-formats).\n\
 -subdir=STRING         only output matches whose directory ends with STRING.\n\
--var-value=STRING      output the value of variable $STRING.\n\
+-var-value=STRING      output the expanded value of variable $STRING.\n\
 -version               display version information number and exit.\n \
 "
 
@@ -767,11 +767,12 @@ int
 main (int argc,  string *argv)
 {
 #ifdef WIN32
+#define puts(s) kpathsea_win32_puts(kpse, (s))
   string *av, enc;
   int ac;
-#endif
+#endif /* WIN32 */
   unsigned unfound = 0;
-  kpathsea kpse = kpathsea_new();
+  kpathsea kpse = kpathsea_new ();
 
   /* Read options, then dependent initializations.  */
   read_command_line (kpse, argc, argv);
@@ -796,7 +797,7 @@ main (int argc,  string *argv)
       argc = ac;
     }
   }
-#endif
+#endif /* WIN32 */
   init_more (kpse);
 
 
@@ -804,40 +805,27 @@ main (int argc,  string *argv)
 
   /* Variable expansion.  */
   if (var_to_expand)
-#ifdef WIN32
-    kpathsea_win32_puts (kpse, kpathsea_var_expand (kpse, var_to_expand));
-#else
     puts (kpathsea_var_expand (kpse, var_to_expand));
-#endif
 
   /* Brace expansion. */
   if (braces_to_expand)
-#ifdef WIN32
-    kpathsea_win32_puts (kpse, kpathsea_brace_expand (kpse, braces_to_expand));
-#else
     puts (kpathsea_brace_expand (kpse, braces_to_expand));
-#endif
 
   /* Path expansion. */
   if (path_to_expand)
-#ifdef WIN32
-    kpathsea_win32_puts (kpse, kpathsea_path_expand (kpse, path_to_expand));
-#else
     puts (kpathsea_path_expand (kpse, path_to_expand));
-#endif
 
   /* Show a search path. */
   if (path_to_show) {
     if (user_format != kpse_last_format) {
-      if (!kpse->format_info[user_format].type) /* needed if arg was numeric */
+      if (!kpse->format_info[user_format].type) {
+        /* needed if arg was numeric */
         kpathsea_init_format (kpse, user_format);
-#ifdef WIN32
-      kpathsea_win32_puts (kpse, kpse->format_info[user_format].path);
-#else
+      }
       puts (kpse->format_info[user_format].path);
-#endif
     } else {
-      WARNING ("kpsewhich: Cannot show path for unknown file type");
+      WARNING1 ("kpsewhich: Unknown file type, cannot show path: ",
+                path_to_show);
     }
   }
 
@@ -848,11 +836,15 @@ main (int argc,  string *argv)
       unfound++;
       value = "";
     }
-#ifdef WIN32
-    kpathsea_win32_puts (kpse, value);
-#else
+
+    /* It is helpful for users to output the fully-expanded (as a
+       string, no filesystem checks) value. We can't call brace_expand
+       as part of kpathsea_var_value, though, because unfortunately it
+       is not reentrant. We use var_value in lots of places in the
+       source, and it clobbers the static buffer in the kpse structure.  */
+    value = kpathsea_brace_expand (kpse, value);
+
     puts (value);
-#endif
   }
 
   if (safe_in_name) {

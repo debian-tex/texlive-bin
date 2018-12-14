@@ -33,7 +33,7 @@ adjust built-in search paths for kpathsea library to Debian standard
  
  % Per-user texmf tree(s) -- organized per the TDS, as usual.  To define
  % more than one per-user tree, set this to a list of directories in
-@@ -83,10 +86,10 @@
+@@ -83,10 +86,10 @@ TEXMFSYSCONFIG = $TEXMFROOT/texmf-config
  TEXMFHOME = ~/texmf
  
  % TEXMFVAR, where texconfig/updmap/fmtutil store cached runtime data.
@@ -46,7 +46,7 @@ adjust built-in search paths for kpathsea library to Debian standard
  
  % This is the value manipulated by tlmgr's auxtrees subcommand in the
  % root texmf.cnf. Kpathsea warns about a literally empty string for a
-@@ -107,7 +110,7 @@
+@@ -107,7 +110,7 @@ TEXMFAUXTREES = {}
  % The odd-looking $TEXMFAUXTREES$TEXMF... construct is so that if no auxtree is
  % ever defined (the 99% common case), no extra elements will be added to
  % the search paths. tlmgr takes care to end any value with a trailing comma.
@@ -55,7 +55,7 @@ adjust built-in search paths for kpathsea library to Debian standard
  
  % Where to look for ls-R files.  There need not be an ls-R in the
  % directories in this path, but if there is one, Kpathsea will use it.
-@@ -115,7 +118,7 @@
+@@ -115,7 +118,7 @@ TEXMF = {$TEXMFAUXTREES$TEXMFCONFIG,$TEX
  % does not create ls-R files in the non-!! elements -- because if an
  % ls-R is present, it will be used, and the disk will not be searched.
  % This is arguably a bug in kpathsea.
@@ -64,7 +64,7 @@ adjust built-in search paths for kpathsea library to Debian standard
  
  % The system trees.  These are the trees that are shared by all users.
  % If a tree appears in this list, the mktex* scripts will use
-@@ -132,7 +135,7 @@
+@@ -132,7 +135,7 @@ TEXMFCACHE = $TEXMFSYSVAR;$TEXMFVAR
  % Where generated fonts may be written.  This tree is used when the sources
  % were found in a system tree and either that tree wasn't writable, or the
  % varfonts feature was enabled in MT_FEATURES in mktex.cnf.
@@ -73,7 +73,7 @@ adjust built-in search paths for kpathsea library to Debian standard
  
  % On some systems, there will be a system tree which contains all the font
  % files that may be created as well as the formats.  For example
-@@ -511,33 +514,8 @@
+@@ -520,33 +523,8 @@ RUBYINPUTS   = $TEXMFDOTDIR;$TEXMF/scrip
  % since we don't want to scatter ../'s throughout the value.  Hence we
  % explicitly list every directory.  Arguably more understandable anyway.
  %

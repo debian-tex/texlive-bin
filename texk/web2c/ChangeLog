@@ -1,3 +1,11 @@
+2018-11-19  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* texmfmp.h: Remove unused functions in XeTeX.
+
+2018-11-17  Joseph Wright  <joseph.wright@morningstar2.co.uk>
+
+	* texmfmp.h: Support some primitives from pdfTeX in XeTeX.
+
 2018-09-09  Karl Berry  <karl@tug.org>
 
 	* mftraptest.test,

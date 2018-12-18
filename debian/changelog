@@ -1,3 +1,12 @@
+texlive-bin (2018.20181218.49446-1) unstable; urgency=medium
+
+  * New upstream version 2018.20181218.49446
+    - reinstatiate old kpsewhich -var-value behaviour and
+      add -var-brace-value instead
+    - preloading fixes
+
+ -- Norbert Preining <preining@debian.org>  Tue, 18 Dec 2018 10:58:02 +0900
+
 texlive-bin (2018.20181214.49410-1) unstable; urgency=medium
 
   * remove teckit on .orig building

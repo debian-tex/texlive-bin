@@ -1,0 +1,128 @@
+--- texlive-bin.orig/texk/xdvik/xdvi.1.in
++++ texlive-bin/texk/xdvik/xdvi.1.in
+@@ -648,7 +648,7 @@
+ .BR -fg .
+ .\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+ .TP
+-.BI \-fullscreen
++.B \-fullscreen
+ When this option is used, xdvi will (try to) run in fullscreen mode, with
+ no window decorations.
+ This option is not guaranteed to work with all windowmanagers/desktops;
+@@ -853,7 +853,7 @@
+ Prints licensing information.
+ .\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+ .TP
+-.BI \-linkcolor
++.B \-linkcolor
+ .RB ( .linkColor )
+ Color used for unvisited hyperlinks (`Blue2' by default). Hyperlinks
+ are unvisited before you click on them, or after the DVI file has been reloaded.
+@@ -867,7 +867,7 @@
+ .BR \-linkstyle .
+ .\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+ .TP
+-.BI \-linkstyle
++.B \-linkstyle
+ .RB ( .LinkStyle )
+ Determines the style in which hyperlinks are displayed. Possible
+ values and their meanings are:
+@@ -882,9 +882,9 @@
+ .sp 1n
+ .fi
+ The values for \fIlink color\fR are specified by the options/resources
+-.BI \-linkcolor
++.B \-linkcolor
+ and
+-.BI \-visitedlinkcolor
++.B \-visitedlinkcolor
+ (which see).
+ .\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+ .TP
+@@ -1165,7 +1165,7 @@
+ #endif
+ .\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+ .TP
+-.BI \-noomega
++.B \-noomega
+ .RB ( .omega )
+ This will disable the use of Omega extensions when interpreting DVI files.
+ By default, the additional opcodes
+@@ -1249,7 +1249,7 @@
+ .\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+ #ift1
+ .TP
+-.BI \-notype1fonts
++.B \-notype1fonts
+ .RB ( .type1 )
+ This will disable the use of the FreeType library to display PostScript<tm>
+ Type 1 fonts.
+@@ -1461,7 +1461,7 @@
+ (default: foreground color).
+ .\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+ .TP
+-.BI \-q
++.B \-q
+ .RB ( .noInitFile )
+ Ignore the
+ .I $HOME/.xdvirc
+@@ -1581,7 +1581,7 @@
+ Otherwise, if one of the filenames does contain a path component (e.g.:
+ .IR ./test.tex ,
+ .IR ../test.tex ,
+-.IR /my/homedir/tex/test.tex
++.I /my/homedir/tex/test.tex
+ or any combination of these), both filenames are expanded to a full path,
+ with any occurrences of
+ .I ../
+@@ -1674,7 +1674,7 @@
+ currently ignored.
+ .\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+ .TP
+-.BI \-useTeXpages
++.B \-useTeXpages
+ Use logical \*(Te\& pages (the values of the
+ .I \ecount0
+ register) instead of physical pages for the pagelist labels and
+@@ -1686,12 +1686,12 @@
+ keystroke.
+ .\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+ .TP
+-.BI \-version
++.B \-version
+ Print information on the version of
+ .BR xdvi .
+ .\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+ .TP
+-.BI \-visitedlinkcolor
++.B \-visitedlinkcolor
+ .RB ( .visitedLinkColor )
+ Color used for visited hyperlinks (`Purple4' by default). Hyperlinks become
+ visited once you click on them. As for
+@@ -1966,7 +1966,7 @@
+ history items.
+ .\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+ .TP
+-.BR ^
++.B ^
+ .RB [ home() ]
+ Move to the ``home'' position of the page.  This is normally the upper
+ left-hand corner of the page, depending on the margins as described in the
+@@ -3267,7 +3267,7 @@
+ stay open after the
+ .B dvips
+ process has terminated. The value of
+-.BR dvipsHangTime
++.B dvipsHangTime
+ is used if the process terminates successfully;
+ .B dvipsFailHangTime
+ is used if it terminates with an error. The default values are 1.5 and 5 seconds, respectively.
+@@ -4112,7 +4112,7 @@
+ .IR %s ,
+ which will be replaced by the file name.
+ .TP
+-.BI needsterminal
++.B needsterminal
+ If this flag is used, the command will be executed in a new xterm
+ window by prepending
+ .RI `` "xterm -e "''

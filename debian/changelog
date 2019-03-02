@@ -1,9 +1,13 @@
-texlive-bin (2018.20181218.49446-2) UNRELEASED; urgency=medium
+texlive-bin (2018.20181218.49446-2) unstable; urgency=medium
 
+  [ Hilmar Preuße ]
   * Add patch_xdvi.1.in to use the correct style macro for a single
     argument. (Closes: #919245)
 
- -- Hilmar Preuße <hille42@web.de>  Mon, 14 Jan 2019 11:55:20 +0100
+  [ Norbert Preining ]
+  * update VCS and my email
+
+ -- Norbert Preining <norbert@preining.info>  Sat, 02 Mar 2019 14:24:16 +0900
 
 texlive-bin (2018.20181218.49446-1) unstable; urgency=medium
 

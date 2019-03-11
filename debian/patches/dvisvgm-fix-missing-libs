@@ -4,7 +4,7 @@
 
 --- texlive-bin.orig/texk/dvisvgm/dvisvgm-src/src/Makefile.am
 +++ texlive-bin/texk/dvisvgm/dvisvgm-src/src/Makefile.am
-@@ -17,14 +17,14 @@ dvisvgm_srcdir = $(top_srcdir)/dvisvgm-s
+@@ -15,14 +15,14 @@ include ../libs/defs.am
  dvisvgm_LDADD = \
  	$(noinst_LIBRARIES) \
  	../libs/clipper/libclipper.a \
@@ -23,7 +23,7 @@
  endif
  
  if USE_BUNDLED_MD5
-@@ -38,7 +38,7 @@ dvisvgm_LDADD += \
+@@ -36,7 +36,7 @@ dvisvgm_LDADD += \
  	$(FREETYPE2_LIBS) \
  	$(FONTFORGE_LIBS) \
  	$(ZLIB_LIBS) \

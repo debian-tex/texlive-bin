@@ -37,11 +37,11 @@ adjust built-in search paths for kpathsea library to Debian standard
  TEXMFHOME = ~/texmf
  
  % TEXMFVAR, where texconfig/updmap/fmtutil store cached runtime data.
--TEXMFVAR = ~/.texlive2018/texmf-var
+-TEXMFVAR = ~/.texlive2019/texmf-var
 +TEXMFVAR = ~/.texmf-var
  
  % TEXMFCONFIG, where texconfig/updmap/fmtutil store configuration data.
--TEXMFCONFIG = ~/.texlive2018/texmf-config
+-TEXMFCONFIG = ~/.texlive2019/texmf-config
 +TEXMFCONFIG = ~/.texmf-config
  
  % This is the value manipulated by tlmgr's auxtrees subcommand in the
@@ -73,7 +73,7 @@ adjust built-in search paths for kpathsea library to Debian standard
  
  % On some systems, there will be a system tree which contains all the font
  % files that may be created as well as the formats.  For example
-@@ -520,33 +523,8 @@ RUBYINPUTS   = $TEXMFDOTDIR;$TEXMF/scrip
+@@ -525,33 +528,8 @@ RUBYINPUTS   = $TEXMFDOTDIR;$TEXMF/scrip
  % since we don't want to scatter ../'s throughout the value.  Hence we
  % explicitly list every directory.  Arguably more understandable anyway.
  %

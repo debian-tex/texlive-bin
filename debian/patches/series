@@ -1,9 +1,3 @@
-revert-luatex-svn49026
-revert-luatex-svn48611
-revert-luatex-svn48594
-revert-luatex-svn48593
-revert-luatex-svn48592
-revert-luatex-svn48591
 debian-use-xdvi-bin
 debian-builtin-searchpath
 debian-no-tl-scripts

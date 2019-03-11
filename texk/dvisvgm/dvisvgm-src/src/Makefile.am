@@ -1,5 +1,5 @@
 ## This file is part of dvisvgm
-## Copyright (C) 2005-2018 Martin Gieseking <martin.gieseking@uos.de>
+## Copyright (C) 2005-2019 Martin Gieseking <martin.gieseking@uos.de>
 ##
 ## Process this file with automake.
 
@@ -11,8 +11,6 @@ dvisvgm_SOURCES = \
 	dvisvgm.cpp
 
 include ../libs/defs.am
-
-dvisvgm_srcdir = $(top_srcdir)/dvisvgm-src
 
 dvisvgm_LDADD = \
 	$(noinst_LIBRARIES) \
@@ -269,7 +267,7 @@ AM_CFLAGS = $(WARNING_CFLAGS) \
 	$(ZLIB_INCLUDES) \
 	$(CODE_COVERAGE_CFLAGS)
 
-AM_CXXFLAGS = $(WARNING_CFLAGS) -Wnon-virtual-dtor -Wno-mismatched-tags \
+AM_CXXFLAGS = $(WARNING_CXXFLAGS) -Wnon-virtual-dtor \
 	-I$(dvisvgm_srcdir)/libs/clipper \
 	-I$(dvisvgm_srcdir)/libs/variant/include
 
@@ -333,9 +331,9 @@ endif ! TEXLIVE_BUILD
 
 CLEANFILES = *.gcda *.gcno
 
-## Rebuild libkpathsea
+# Rebuild libkpathsea:
 @KPATHSEA_RULE@
-## Rebuild libfreetype
+# Rebuild libfreetype:
 @FREETYPE2_RULE@
-## Rebuild libz
+# Rebuild libz:
 @ZLIB_RULE@

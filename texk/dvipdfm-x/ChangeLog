@@ -1,3 +1,56 @@
+2019-03-05  Clerk Ma  <maqiyuan130324@vip.qq.com>
+
+	* tt_table.c: Fix 'null character(s)' warning caused by
+	fonts like Roboto (Android) or YuMincho (Windows 10).
+
+2019-02-25  Hironobu Yamashita  <h.y.acetaminophen@gmail.com>
+
+	* tt_cmap.c (is_PUA_or_presentation):
+	Skip also CJK Radicals Supplement, to lower the priority for
+	double encoded glyphs. This does not break tounicode entries
+	for glyphs which are only encoded in this region.
+
+2019-02-25  Shunsaku Hirata  <shunsaku.hirata74@gmail.com>
+
+	* tt_post.c: Since OpenType ver. 1.7, PostScript glyph names
+	more than 32767 are allowed for version 2.0 post table. Some
+	minore fixes in chek of valid index range.
+	* configure.ac: Version 20190225.
+
+2019-02-23  Hironobu Yamashita  <h.y.acetaminophen@gmail.com>
+
+	* tt_post.c (tt_lookup_post_table): Fix a bug that the loop
+	exceeds post->numberOfGlyphs (= the size of post->glyphNamePtr).
+	https://github.com/texjporg/tex-jp-build/issues/74
+
+2019-02-11  Karl Berry  <karl@tug.org>
+
+	* configure.ac,
+	* dvipdfmx.c: copyright 2019.
+
+2019-02-10  Hironobu Yamashita  <h.y.acetaminophen@gmail.com>
+
+	* cidtype0.c, cidtype2.c: Fix typo.
+
+2019-01-27  Shunsaku Hirata  <shunsaku.hirata74@gmail.com>
+
+	* spc_pdfm.c: Suppress a warning in tounicode special.
+	Dvipdfmx had been giving a wrong warning when an optional
+	argument to tounicode special is not supplied.
+
+2018-12-27  Clerk Ma  <maqiyuan130324@vip.qq.com>
+
+	* pdfobj.c: Introduce a static variable pdf_output_file_stats
+	for LIBDPX. It does not affect (x)dvipdfmx.
+
+2018-12-21  Shunsaku Hirata  <shunsaku.hirata74@gmail.com>
+
+	* dvi.[ch], dvipdfmx.c, pdfdoc.[ch], pdfencrypt.[ch],
+	spc_pdfm.c: Add a new special pdf:trailerid for directly
+	specifying trailer ID.
+	* spc_tpic.c, tfm.c, tt_gsub.c: Avoid compiler warning.
+	* configure.ac: Version 20181221.
+
 2018-10-12  Shunsaku Hirata  <shunsaku.hirata74@gmail.com>
 
 	* dvipdfmx.c: Fix a bug that landscape option is not handled

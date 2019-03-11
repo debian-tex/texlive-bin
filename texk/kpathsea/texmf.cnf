@@ -83,10 +83,10 @@ TEXMFSYSCONFIG = $TEXMFROOT/texmf-config
 TEXMFHOME = ~/texmf
 
 % TEXMFVAR, where texconfig/updmap/fmtutil store cached runtime data.
-TEXMFVAR = ~/.texlive2018/texmf-var
+TEXMFVAR = ~/.texlive2019/texmf-var
 
 % TEXMFCONFIG, where texconfig/updmap/fmtutil store configuration data.
-TEXMFCONFIG = ~/.texlive2018/texmf-config
+TEXMFCONFIG = ~/.texlive2019/texmf-config
 
 % This is the value manipulated by tlmgr's auxtrees subcommand in the
 % root texmf.cnf. Kpathsea warns about a literally empty string for a
@@ -430,6 +430,11 @@ FC_CACHEDIR = $TEXMFSYSVAR/fonts/cache
 TEXDOCS = $TEXMF/doc//
 TEXSOURCES = $TEXMFDOTDIR;$TEXMF/source//
 
+% Top-level directory for any string translations for the binaries, in
+% the same structure as the usual system locale/ directories. This is a
+% single directory, not a path.
+TEXMFLOCALEDIR = $TEXMFMAIN/locale
+
 % Web and CWeb input paths.
 WEBINPUTS = $TEXMFDOTDIR;$TEXMF/web//
 CWEBINPUTS = $TEXMFDOTDIR;$TEXMF/cweb//
@@ -600,6 +605,7 @@ gregorio,\
 kpsewhich,\
 makeindex,\
 repstopdf,\
+r-mpost,\
 texosquery-jre8,\
 
 % we'd like to allow:

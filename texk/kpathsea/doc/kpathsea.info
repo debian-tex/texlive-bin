@@ -3,7 +3,7 @@ kpathsea.texi.
 
 This file documents the Kpathsea library for path searching.
 
-   Copyright (C) 1996-2018 Karl Berry & Olaf Weber.
+   Copyright (C) 1996-2019 Karl Berry & Olaf Weber.
 
    Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -37,7 +37,7 @@ Kpathsea library
 ****************
 
 This manual documents the Kpathsea library for path searching.  It
-corresponds to version 6.3.0, released in December 2018.
+corresponds to version 6.3.1, released in February 2019.
 
 * Menu:
 
@@ -61,8 +61,8 @@ File: kpathsea.info,  Node: Introduction,  Next: unixtex.ftp,  Prev: Top,  Up: T
 1 Introduction
 **************
 
-This manual corresponds to version 6.3.0 of the Kpathsea library,
-released in December 2018.
+This manual corresponds to version 6.3.1 of the Kpathsea library,
+released in February 2019.
 
    The library's fundamental purpose is to return a filename from a list
 of directories specified by the user, similar to what shells do when
@@ -1450,6 +1450,9 @@ Kpsewhich provides some features in addition to path lookup as such:
      Output the variable and tilde expansion of STRING.  For example,
      with the usual 'texmf.cnf', 'kpsewhich --expand-var='$TEXMF''
      returns the TeX system hierarchy root(s).  *Note Path expansion::.
+     The specified STRING can contain anything, though, not just
+     variable references.  This calls 'kpse_var_expand' (*note
+     Programming with config files::).
 
 '--help-formats'
      Output information about each supported format (*note Supported
@@ -2484,18 +2487,22 @@ You can (and probably should) use the same 'texmf.cnf' configuration
 file that Kpathsea uses for your program.  This helps installers by
 keeping all configuration in one place.
 
-   To retrieve a value VAR from config files, the best way is to call
-'kpathsea_var_value' on the string 'VAR'.  This will look first for an
-environment variable VAR, then a config file value.  The result will be
-the value found or 'NULL'.  This function is declared in
+   To retrieve a value for a configuration variable VAR, the best way is
+to call 'kpathsea_var_value' on the string 'VAR'.  This will look first
+for an environment variable VAR, then a config file value.  The result
+will be the value found or 'NULL'.  This function is declared in
 'kpathsea/variable.h'.  For an example, see the 'shell_escape' code in
 'web2c/lib/texmfmp.c'.
 
-   The routine to do variable expansion in the context of a search path
-(as opposed to simply retrieving a value) is 'kpathsea_var_expand', also
-declared in 'kpathsea/variable.h'.  It's generally only necessary to set
+   The routine to do full variable and tilde expansion of an arbitrary
+string in the context of a search path (as opposed to simply retrieving
+a value) is 'kpathsea_var_expand', also declared in
+'kpathsea/variable.h'.  However, it's generally only necessary to set
 the search path structure components as explained in the previous
-section, rather than using this yourself.
+section instead of using this directly.  Because of its usage with any
+input string, undefined '$FOO' constructs in the argument to
+'kpathsea_var_expand' are returned literally ('"$FOO"'), while undefined
+'${FOO}' constructs are expanded to the empty string.
 
    If for some reason you want to retrieve a value _only_ from a config
 file, not automatically looking for a corresponding environment
@@ -2974,7 +2981,7 @@ Index
 * --format=NAME:                         Path searching options.
                                                               (line  48)
 * --help:                                Standard options.    (line   8)
-* --help-formats:                        Auxiliary tasks.     (line  39)
+* --help-formats:                        Auxiliary tasks.     (line  42)
 * --interactive:                         Path searching options.
                                                               (line 130)
 * --mktex=FILETYPE:                      Path searching options.
@@ -2991,13 +2998,13 @@ Index
                                                               (line 151)
 * --progname=NAME:                       Path searching options.
                                                               (line 159)
-* --safe-in-name=NAME:                   Auxiliary tasks.     (line  45)
-* --safe-out-name=NAME:                  Auxiliary tasks.     (line  45)
-* --show-path=NAME:                      Auxiliary tasks.     (line  51)
+* --safe-in-name=NAME:                   Auxiliary tasks.     (line  48)
+* --safe-out-name=NAME:                  Auxiliary tasks.     (line  48)
+* --show-path=NAME:                      Auxiliary tasks.     (line  54)
 * --subdir=STRING:                       Path searching options.
                                                               (line 164)
-* --var-brace-value=VARIABLE:            Auxiliary tasks.     (line  57)
-* --var-value=VARIABLE:                  Auxiliary tasks.     (line  71)
+* --var-brace-value=VARIABLE:            Auxiliary tasks.     (line  60)
+* --var-value=VARIABLE:                  Auxiliary tasks.     (line  74)
 * --version:                             Standard options.    (line  11)
 * --with-mktextex-default:               mktex configuration. (line  12)
 * --without-mktexfmt-default:            mktex configuration. (line  12)
@@ -3204,7 +3211,7 @@ Index
 * cmr10.vf:                              Searching overview.  (line  31)
 * cnf.c:                                 Config files.        (line  86)
 * cnf.h:                                 Programming with config files.
-                                                              (line  23)
+                                                              (line  27)
 * comments, in fontmap files:            Fontmap.             (line  27)
 * comments, in texmf.cnf:                Config files.        (line  27)
 * comments, making:                      Introduction.        (line  29)
@@ -3407,7 +3414,7 @@ Index
 * kpathsea.h:                            Programming overview.
                                                               (line  26)
 * kpathsea_cnf_get:                      Programming with config files.
-                                                              (line  23)
+                                                              (line  27)
 * KPATHSEA_DEBUG:                        Calling sequence.    (line  28)
 * KPATHSEA_DEBUG <1>:                    Debugging.           (line  18)
 * kpathsea_find_file:                    File lookup.         (line  38)
@@ -3893,34 +3900,34 @@ Node: Invoking kpsewhich48985
 Node: Path searching options49940
 Node: Specially-recognized files58459
 Node: Auxiliary tasks59814
-Node: Standard options63353
-Node: TeX support63709
-Node: Supported file formats65063
-Node: File lookup72728
-Node: Glyph lookup74477
-Node: Basic glyph lookup75601
-Node: Fontmap76481
-Node: Fallback font79010
-Node: Suppressing warnings79922
-Node: mktex scripts81049
-Node: mktex configuration82264
-Node: mktex script names88067
-Node: mktex script arguments89453
-Node: Programming90332
-Node: Programming overview90905
-Node: Calling sequence93766
-Node: Program-specific files100298
-Node: Programming with config files101321
-Node: Reporting bugs102633
-Node: Bug checklist103311
-Node: Mailing lists106783
-Node: Debugging107458
-Node: Logging112535
-Node: Common problems114402
-Node: Unable to find files114879
-Node: Slow path searching117289
-Node: Unable to generate fonts118664
-Node: TeX or Metafont failing121135
-Node: Index122337
+Node: Standard options63520
+Node: TeX support63876
+Node: Supported file formats65230
+Node: File lookup72895
+Node: Glyph lookup74644
+Node: Basic glyph lookup75768
+Node: Fontmap76648
+Node: Fallback font79177
+Node: Suppressing warnings80089
+Node: mktex scripts81216
+Node: mktex configuration82431
+Node: mktex script names88234
+Node: mktex script arguments89620
+Node: Programming90499
+Node: Programming overview91072
+Node: Calling sequence93933
+Node: Program-specific files100465
+Node: Programming with config files101488
+Node: Reporting bugs103075
+Node: Bug checklist103753
+Node: Mailing lists107225
+Node: Debugging107900
+Node: Logging112977
+Node: Common problems114844
+Node: Unable to find files115321
+Node: Slow path searching117731
+Node: Unable to generate fonts119106
+Node: TeX or Metafont failing121577
+Node: Index122779
 
 End Tag Table

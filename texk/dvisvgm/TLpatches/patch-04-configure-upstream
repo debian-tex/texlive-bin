@@ -1,4 +1,4 @@
-	These are the (extensive) changes from the previous upstream
+	These are the (extensive) changes from the upstream
 	dvisvgm configure.ac to the current one in TL. For reference
 	only, won't apply to a new version as is. See also
 	patch-04-configure-tl.
@@ -8,21 +8,21 @@
 	TL builds, we want to use the versions of those which are in the
 	TL source tree.
 
---- dvisvgm-2.6.1/configure.ac	2018-10-11 05:25:40.000000000 -0700
-+++ configure.ac	2018-10-29 11:17:00.956683648 -0700
-@@ -1,28 +1,42 @@
+--- dvisvgm-2.6.3/configure.ac	2019-03-09 04:13:38.000000000 -0800
++++ configure.ac	2019-03-10 11:06:11.763261566 -0700
+@@ -1,78 +1,63 @@
 -# This file is part of dvisvgm
--# Copyright (C) 2005-2018 Martin Gieseking <martin.gieseking@uos.de>
+-# Copyright (C) 2005-2019 Martin Gieseking <martin.gieseking@uos.de>
 -#
 -# Process this file with autoconf to produce a configure script.
 -
 -AC_PREREQ(2.59)
--AC_INIT([dvisvgm],[2.6.1],[martin.gieseking@uos.de])
-+# $Id: configure.ac 48654 2018-09-13 17:10:25Z karl $
+-AC_INIT([dvisvgm],[2.6.3],[martin.gieseking@uos.de])
++# $Id: configure.ac 49819 2019-01-25 23:20:32Z karl $
 +dnl Process this file with autoconf to produce a configure script
 +dnl for dvisvgm in TeX Live.
 +dnl
-+dnl   Copyright 2015-2018 Karl Berry <tex-live@tug.org>
++dnl   Copyright 2015-2019 Karl Berry <tex-live@tug.org>
 +dnl   Copyright 2009-2014 Peter Breitenlohner <tex-live@tug.org>
 +dnl
 +dnl   This file is free software; the copyright holder
@@ -30,12 +30,12 @@
 +dnl   with or without modifications, as long as this notice is preserved.
 +dnl
 +dnl  Adapted for TeX Live from original dvisvgm configure.ac
-+dnl  Copyright 2005-2018 Martin Gieseking
++dnl  Copyright 2005-2019 Martin Gieseking
 +dnl
 +AC_PREREQ([2.65])
 +m4_include([version.ac])[] dnl define dvisvgm_version
 +AC_INIT([dvisvgm (TeX Live)], dvisvgm_version, [tex-k@tug.org])
- DATE="October 2018"
+ DATE="March 2019"
 -AC_CONFIG_SRCDIR(src)
 +AC_CONFIG_SRCDIR([dvisvgm-src/src/dvisvgm.cpp])
  AC_CONFIG_HEADERS([config.h])
@@ -67,7 +67,8 @@
  
  AC_PROG_RANLIB
  AC_LANG(C)
-@@ -30,48 +44,20 @@
+ 
+-AX_CHECK_COMPILE_FLAG([-Wmismatched-tags -Wno-mismatched-tags], [CXXFLAGS="$CXXFLAGS -Wno-mismatched-tags"])
  AC_CHECK_HEADERS([sys/time.h sys/timeb.h xlocale.h])
  AC_HEADER_TIOCGWINSZ
  
@@ -130,7 +131,7 @@
  have_libgs=yes
  AC_CHECK_HEADER([ghostscript/iapi.h],
  	[AC_CHECK_LIB(gs, gsapi_revision,, [have_libgs=no])],
-@@ -81,68 +67,87 @@
+@@ -82,68 +67,87 @@
  	[AC_CHECK_LIB(dl, dlopen,,
  		[AC_DEFINE(DISABLE_GS, 1, [Set to 1 if PostScript support should be disabled])]
  		[AC_MSG_WARN(PostScript support disabled)])])
@@ -141,6 +142,17 @@
 -
 -# Check for libraries.
 -PKG_CHECK_MODULES([FREETYPE], [freetype2])
+-
+-AC_ARG_ENABLE([woff],
+-	[AS_HELP_STRING([--disable-woff], [Disable WOFF support @<:@default=no@:>@])],
+-	[],
+-	[enable_woff=yes])
+-AM_CONDITIONAL([ENABLE_WOFF], [test "x$enable_woff" = "xyes"])
+-
+-AC_ARG_WITH([ttfautohint],
+-	[AS_HELP_STRING([--with-ttfautohint@<:@=prefix@:>@], [enable ttfautohint support (disabled by default)])],
+-	[with_ttfautohint="$withval"],
+-	[with_ttfautohint=no])
 +if test -z "$HAVE_LIBGS" || test "$HAVE_LIBGS" -eq 0; then
 +  AC_MSG_NOTICE([not linking to libgs, trying to arrange for dynamic loading])
 +  # Windows (native or MinGW32) has neither <dlfcn.h> nor dlopen().
@@ -204,17 +216,6 @@
 +AC_CHECK_FUNC([kpse_set_program_name], [],
 +              [AC_MSG_ERROR([cannot find/use libkpathsea])])
  
--AC_ARG_ENABLE([woff],
--	[AS_HELP_STRING([--disable-woff], [Disable WOFF support @<:@default=no@:>@])],
--	[],
--	[enable_woff=yes])
--AM_CONDITIONAL([ENABLE_WOFF], [test "x$enable_woff" = "xyes"])
--
--AC_ARG_WITH([ttfautohint],
--	[AS_HELP_STRING([--with-ttfautohint@<:@=prefix@:>@], [enable ttfautohint support (disabled by default)])],
--	[with_ttfautohint="$withval"],
--	[with_ttfautohint=no])
--
 -# Add option to enable linking of bundled libraries (brotli, potrace, woff2, xxhash).
 -AC_ARG_ENABLE([bundled-libs],
 -	[AS_HELP_STRING([--enable-bundled-libs], [use bundled libraries instead of the system ones @<:@default=no@:>@])])
@@ -275,7 +276,7 @@
  # Check for header files.
  AC_HEADER_DIRENT
  AC_HEADER_STDC
-@@ -157,78 +162,61 @@
+@@ -158,79 +162,73 @@
  AC_FUNC_STAT
  AC_CHECK_FUNCS_ONCE([ftime gettimeofday sigaction umask uselocale])
  
@@ -295,15 +296,17 @@
 +	[],
 +	[enable_woff=yes])
 +AM_CONDITIONAL([ENABLE_WOFF], [test "x$enable_woff" = "xyes"])
- 
--AC_SUBST([ZLIB_CFLAGS])
--AC_SUBST([ZLIB_LIBS])
++
 +AC_DEFINE([HAVE_LIBKPATHSEA], 1, [Define to 1 if you have the `kpathsea' library (-lkpathsea).])
 +AC_DEFINE([HAVE_LIBFREETYPE], 1, [Define to 1 if you have the `freetype2' library (-lfreetype).])
 +AC_DEFINE([HAVE_LIBZ], 1, [Define to 1 if you have the `z' library (-lz).])
 +if false; then
 +  AC_DEFINE([KPSE_CXX_UNSAFE], 1, [Define to 1 if the kpathsea headers are not C++ safe.])
 +fi
+ 
+-AC_SUBST([ZLIB_CFLAGS])
+-AC_SUBST([ZLIB_LIBS])
++# TL: skip ttfautohint?
  
 -# Check if the kpathsea headers are C++ safe
 -AC_MSG_CHECKING([if the kpathsea headers are C++ safe])
@@ -315,7 +318,39 @@
 -                AC_DEFINE([KPSE_CXX_UNSAFE], 1,
 -                          [Define to 1 if the kpathsea headers are not C++ safe.])])
 -AC_LANG_POP([C++])
-+# TL: skip ttfautohint?
++# Add option to enable linking of bundled libraries (brotli, potrace, woff2, xxhash).
++AC_ARG_ENABLE([bundled-libs],
++	[AS_HELP_STRING([--enable-bundled-libs], [use bundled libraries instead of the system ones @<:@default=no@:>@])],
++	[use_bundled_libs=yes])
++AM_CONDITIONAL([USE_BUNDLED_LIBS], [test "x$use_bundled_libs" = "xyes" dnl
++                               || test "x$enable_native_texlive_build" = xyes])
++# that is, force using bundled libs for native TL build.
++
++# TL: use bundled md5 too
++AM_CONDITIONAL([USE_BUNDLED_MD5], true)
++
++# TL: these conditionals for system libraries are in the Makefile.am's.
++AM_CONDITIONAL(HAVE_POTRACE, false)
++AM_CONDITIONAL(HAVE_BROTLI, false)
++AM_CONDITIONAL(HAVE_WOFF2, false)
++AM_CONDITIONAL(HAVE_XXHASH, false)
++
++# TL: not going to build_manpage (which is the default).
++# TL: not going to attempt code coverage; need to subst it away.
++AM_CONDITIONAL([CODE_COVERAGE_ENABLED], false)
++CODE_COVERAGE_RULES=
++AC_SUBST([CODE_COVERAGE_RULES])
++
++# TL: the original configure calls pkg_check_modules,
++# which calls ac_arg_var on the _cflags and _libs for various libraries,
++# which calls ac_subst. we'll just ac_subst them to get initial (empty)
++# definitions, so we can retain the += used by the original lib/defs.am.
++# (init brotli)
++AC_SUBST(BROTLI_CFLAGS)
++AC_SUBST(BROTLI_LIBS)
++# (init woff2)
++AC_SUBST(WOFF2_CFLAGS)
++AC_SUBST(WOFF2_LIBS)
  
 -CPPFLAGS="$CPPFLAGS_SAVE"
 -CFLAGS="$CFLAGS_SAVE"
@@ -344,31 +379,10 @@
 -	CXXFLAGS=`echo $CXXFLAGS | sed 's/-O[1-9s]//g'`
 -	changequote([,])
 -])
-+# Add option to enable linking of bundled libraries (brotli, potrace, woff2, xxhash).
-+AC_ARG_ENABLE([bundled-libs],
-+	[AS_HELP_STRING([--enable-bundled-libs], [use bundled libraries instead of the system ones @<:@default=no@:>@])],
-+	[use_bundled_libs=yes])
-+AM_CONDITIONAL([USE_BUNDLED_LIBS], [test "x$use_bundled_libs" = "xyes" dnl
-+                               || test "x$enable_native_texlive_build" = xyes])
-+# that is, force using bundled libs for native TL build.
-+
-+# TL: use bundled md5 too
-+AM_CONDITIONAL([USE_BUNDLED_MD5], true)
-+
-+# TL: these conditionals for system libraries are in the Makefile.am's.
-+AM_CONDITIONAL(HAVE_POTRACE, false)
-+AM_CONDITIONAL(HAVE_BROTLI, false)
-+AM_CONDITIONAL(HAVE_WOFF2, false)
-+AM_CONDITIONAL(HAVE_XXHASH, false)
-+
-+# TL: not going to build_manpage (which is the default).
-+# TL: not going to attempt code coverage; need to subst it away.
-+AM_CONDITIONAL([CODE_COVERAGE_ENABLED], false)
-+CODE_COVERAGE_RULES=
-+AC_SUBST([CODE_COVERAGE_RULES])
-+
 +AC_SUBST([DVISVGM_TREE], [dvisvgm-src])
  
+-AC_SUBST([dvisvgm_srcdir], ['$(top_srcdir)'])
++AC_SUBST([dvisvgm_srcdir], ['$(top_srcdir)/dvisvgm-src'])
  AC_SUBST(DATE)
  AC_SUBST(AM_CPPFLAGS)
  AC_SUBST(AM_LDFLAGS)
@@ -383,6 +397,7 @@
 -	libs/variant/Makefile
 -	libs/woff2/Makefile
 -	libs/xxHash/Makefile
+-	m4/Makefile
 -	src/Makefile
 -	src/version.hpp
 -	tests/Makefile
@@ -403,4 +418,3 @@
 +	dvisvgm-src/src/version.hpp
 +])dnl TL: skipping tests/* and doc/*
  AC_OUTPUT
--

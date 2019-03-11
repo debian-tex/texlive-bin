@@ -2,7 +2,7 @@
 ** dvisvgm.cpp                                                          **
 **                                                                      **
 ** This file is part of dvisvgm -- a fast DVI to SVG converter          **
-** Copyright (C) 2005-2018 Martin Gieseking <martin.gieseking@uos.de>   **
+** Copyright (C) 2005-2019 Martin Gieseking <martin.gieseking@uos.de>   **
 **                                                                      **
 ** This program is free software; you can redistribute it and/or        **
 ** modify it under the terms of the GNU General Public License as       **
@@ -165,9 +165,11 @@ static void check_bbox (const string &bboxstr) {
 			throw MessageException("invalid bounding box format '" + bboxstr + "'");
 		}
 	}
-	// check if given bbox argument is valid, i.e. doesn't throw an exception
-	BoundingBox bbox;
-	bbox.set(bboxstr);
+	else {
+		// check if given bbox argument is valid, i.e. doesn't throw an exception
+		BoundingBox bbox;
+		bbox.set(bboxstr);
+	}
 }
 
 

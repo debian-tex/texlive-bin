@@ -1,11 +1,11 @@
 # This file is part of dvisvgm
-# Copyright (C) 2005-2018 Martin Gieseking <martin.gieseking@uos.de>
+# Copyright (C) 2005-2019 Martin Gieseking <martin.gieseking@uos.de>
 #
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT([dvisvgm],[2.6.1],[martin.gieseking@uos.de])
-DATE="October 2018"
+AC_INIT([dvisvgm],[2.6.3],[martin.gieseking@uos.de])
+DATE="March 2019"
 AC_CONFIG_SRCDIR(src)
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
@@ -27,6 +27,7 @@ LT_INIT
 AC_PROG_RANLIB
 AC_LANG(C)
 
+AX_CHECK_COMPILE_FLAG([-Wmismatched-tags -Wno-mismatched-tags], [CXXFLAGS="$CXXFLAGS -Wno-mismatched-tags"])
 AC_CHECK_HEADERS([sys/time.h sys/timeb.h xlocale.h])
 AC_HEADER_TIOCGWINSZ
 
@@ -211,6 +212,7 @@ AS_IF([ test "$enable_code_coverage" = "yes" ], [
 	changequote([,])
 ])
 
+AC_SUBST([dvisvgm_srcdir], ['$(top_srcdir)'])
 AC_SUBST(DATE)
 AC_SUBST(AM_CPPFLAGS)
 AC_SUBST(AM_LDFLAGS)
@@ -225,10 +227,10 @@ AC_CONFIG_FILES([
 	libs/variant/Makefile
 	libs/woff2/Makefile
 	libs/xxHash/Makefile
+	m4/Makefile
 	src/Makefile
 	src/version.hpp
 	tests/Makefile
 	tests/data/Makefile
 	doc/Makefile])
 AC_OUTPUT
-

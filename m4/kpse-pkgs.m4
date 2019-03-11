@@ -1,15 +1,15 @@
 # $Id$
 # Private Autoconf macros for the TeX Live (TL) tree.
-# Copyright 2016-2018 Karl Berry <tex-live@tug.org>
+# Copyright 2016-2019 Karl Berry <tex-live@tug.org>
 # Copyright 2009-2015 Peter Breitenlohner <tex-live@tug.org>
 #
 # This file is free software; the copyright holder
 # gives unlimited permission to copy and/or distribute it,
 # with or without modifications, as long as this notice is preserved.
 
-## ------------------------------ ##
-## Define lists of sub-packages.  ##
-## ------------------------------ ##
+# ------------------------------ #
+# Define lists of sub-packages.  #
+# ------------------------------ #
 
 # Hopefully these lists are defined here and nowhere else.
 # Note: directories in these lists need not exist.
@@ -41,7 +41,6 @@ freetype2
 libpng
 libpaper
 luajit
-lua52
 lua53
 zlib
 ])[]dnl
@@ -136,11 +135,9 @@ xdvik
 texlive
 ])]) # KPSE_TEXK_PKGS
 
-
-
-## ------------------------------- ##
-##  Loop over one of these lists.  ##
-## ------------------------------- ##
+# ------------------------------- #
+#  Loop over one of these lists.  #
+# ------------------------------- #
 
 # KPSE_FOR_PKGS(LIST, ACTION)
 # ---------------------------

@@ -1,3 +1,41 @@
+2019-01-27  Karl Berry  <karl@gnu.org>
+
+	* pdftex.web (pdf_omit_charset_code, pdf_omit_charset
+	print_param,
+	<Put each...>,
+	get_pdf_omit_charset)
+	* writefont.c (write_fontdescriptor): reverse sense and name
+	to \pdfomitcharset.
+
+2019-01-27  Karl Berry  <karl@gnu.org>
+
+	* pdftex.web (pdf_include_charset_code, pdf_include_charset):
+	new primitive parameter \pdfincludecharset.
+	(print_param): print_esc it.
+	(Put each...): insert in hash table.
+	(get_pdf_include_charset): new fn to get its value.
+	* writefont.c (write_fontdescriptor): check it before outputting
+	CharSet.
+
+2019-01-19  Karl Berry  <karl@tug.org>
+
+        * NEWS,
+        * pdftex_version.h,
+        * pdftex.web (pdftex_revision, pdftex_version_string):
+        version [1.40.]20 for TL19.
+
+2019-01-08  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+
+	* pdftosrc-poppler0.72.0.cc: Support poppler-0.73.0.
+
+2019-01-07  Hironobu Yamashita  <h.y.acetaminophen@gmail.com>
+
+	* tounicode.c (deftounicode): suppress a compiler warning:
+	format specifies type 'unsigned int' but the argument has
+	type 'long' [-Wformat]
+	* writet3.c (writet3): suppress a compiler warning:
+	add explicit braces to avoid dangling else [-Wdangling-else]
+
 2018-12-07  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
 
 	* pdftosrc-poppler0.72.0.cc, pdftoepdf-poppler0.72.0.cc:
@@ -231,9 +269,9 @@
 	pdftosrc-newpoppler.cc, respectively, in order to use these
 	files.
 	The current pdftoepdf.cc and pdftosrc.cc support
-	xpdf-4.00 by default, xpdf-3.04 if XPDF304 is defined, and
-	poppler 0.57.0 or older versions if POPPLER_VERSION is
-	defined.
+	xpdf-4.00 or newer by default, xpdf-3.04 if XPDF304 is
+	defined, and poppler 0.57.0 or older versions if
+	POPPLER_VERSION is defined.
 
 2017-10-10  Shreevatsa R <shreevatsa.public@gmail.com>
 
@@ -476,7 +514,7 @@
 	* pdftex.web (pdf_suppress_warning_page_group): new primitive
 	parameter \pdfsuppresswarningpagegroup.
 	(get_pdf_suppress_warning_page_group): new fn to get its value.
-	* pdftopdf.cc (write_epdf): check it before issuing warning.
+	* pdftoepdf.cc (write_epdf): check it before issuing warning.
 
 2014-01-20  Peter Breitenlohner  <peb@mppmu.mpg.de>
 

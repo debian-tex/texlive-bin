@@ -2,7 +2,7 @@
 
     DVIPDFMx, an eXtended version of DVIPDFM by Mark A. Wicks.
 
-    Copyright (C) 2002-2018 by Jin-Hwan Cho, Matthias Franz, and Shunsaku Hirata,
+    Copyright (C) 2002-2019 by Jin-Hwan Cho, Matthias Franz, Shunsaku Hirata,
     the DVIPDFMx project team.
     
     Copyright (c) 2006 SIL. (xdvipdfmx extensions for XeTeX support)
@@ -39,6 +39,7 @@
 #include "dpxconf.h"
 #include "dpxfile.h"
 #include "dpxutil.h"
+#include "dpxcrypt.h"
 
 #include "dvi.h"
 
@@ -160,8 +161,8 @@ show_version (void)
   if (*my_name == 'x')
     printf ("an extended version of DVIPDFMx, which in turn was\n");
   printf ("an extended version of dvipdfm-0.13.2c developed by Mark A. Wicks.\n");
-  printf ("\nCopyright (C) 2002-2018 the DVIPDFMx project team\n");
-  printf ("Copyright (C) 2006-2018 SIL International.\n");
+  printf ("\nCopyright (C) 2002-2019 the DVIPDFMx project team\n");
+  printf ("Copyright (C) 2006-2019 SIL International.\n");
   printf ("\nThis is free software; you can redistribute it and/or modify\n");
   printf ("it under the terms of the GNU General Public License as published by\n");
   printf ("the Free Software Foundation; either version 2 of the License, or\n");
@@ -450,6 +451,26 @@ get_enc_password (char *oplain, char *uplain)
   }
 
   return 0;
+}
+
+static void
+compute_id_string (unsigned char *id, const char *producer,
+                   const char *dviname, const char *pdfname)
+{
+  char        datestr[32];
+  MD5_CONTEXT md5;
+
+  MD5_init(&md5);
+  /* Don't use timezone for compatibility */
+  dpx_util_format_asn_date(datestr, 0);
+  MD5_write(&md5, (const unsigned char *)datestr, strlen(datestr));
+  if (producer)
+    MD5_write(&md5, (const unsigned char *)producer, strlen(producer));
+  if (dviname)
+    MD5_write(&md5, (const unsigned char *)dviname, strlen(dviname));
+  if (pdfname)
+    MD5_write(&md5, (const unsigned char *)pdfname, strlen(pdfname));
+  MD5_final(id, &md5);
 }
 
 static const char *optstrig = ":hD:r:m:g:x:y:o:s:p:clf:i:qtvV:z:d:I:K:P:O:MSC:Ee";
@@ -892,7 +913,8 @@ do_dvi_pages (void)
         w = page_width; h = page_height; lm = landscape_mode;
         xo = x_offset; yo = y_offset;
         dvi_scan_specials(page_no,
-                          &w, &h, &xo, &yo, &lm, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+                          &w, &h, &xo, &yo, &lm,
+                          NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
         if (lm != landscape_mode) { /* already swapped for the first page */
           SWAP(w, h);
           landscape_mode = lm;
@@ -1015,7 +1037,9 @@ main (int argc, char *argv[])
   char              *base;
   struct pdf_setting settings;
   char               uplain[MAX_PWD_LEN+1], oplain[MAX_PWD_LEN+1]; /* encryption password */
-  const char        *ids[4] = {NULL, NULL, NULL, NULL};
+  const char        *creator = NULL;
+  unsigned char      id1[16], id2[16];
+  int                has_id = 0;
 
 #ifdef WIN32
   int ac;
@@ -1112,12 +1136,13 @@ main (int argc, char *argv[])
     dvi2pts = dvi_init(dvi_filename, mag);
     if (dvi2pts == 0.0)
       ERROR("dvi_init() failed!");
-    ids[3] = dvi_comment(); /* Set PDF Creator entry */
+    creator = dvi_comment(); /* Set PDF Creator entry */
     dvi_scan_specials(0,
                       &paper_width, &paper_height,
                       &x_offset, &y_offset, &landscape_mode,
                       &pdf_version_major, &pdf_version_minor,
-                      &do_encryption, &key_bits, &permission, oplain, uplain);
+                      &do_encryption, &key_bits, &permission, oplain, uplain,
+                      &has_id, id1, id2);
   }
 
   /* Command-line options take precedence */
@@ -1132,22 +1157,14 @@ main (int argc, char *argv[])
 
   /* Encryption and Other Settings */
   {
-#define PRODUCER \
-"%s-%s, Copyright 2002-2015 by Jin-Hwan Cho, Matthias Franz, and Shunsaku Hirata"
-    char producer[256];
-
     memset(&settings.encrypt, 0, sizeof(struct pdf_enc_setting));
     settings.enable_encrypt = do_encryption;
-    sprintf(producer, PRODUCER, my_name, VERSION);
     settings.encrypt.use_aes          = 1;
     settings.encrypt.encrypt_metadata = 1;
     settings.encrypt.key_size   = key_bits;
     settings.encrypt.permission = permission;
     settings.encrypt.uplain     = uplain;
     settings.encrypt.oplain     = oplain;
-    ids[0] = producer;
-    ids[1] = dvi_filename;
-    ids[2] = pdf_filename;
   }
 
   if (opt_flags & OPT_PDFOBJ_NO_OBJSTM) {
@@ -1189,8 +1206,18 @@ main (int argc, char *argv[])
   if (enable_thumbnail)
     pdf_doc_enable_manual_thumbnails();
 
+  if (!has_id) {
+#define PRODUCER \
+"%s-%s, Copyright 2002-2015 by Jin-Hwan Cho, Matthias Franz, and Shunsaku Hirata"
+    char producer[256];
+    
+    sprintf(producer, PRODUCER, my_name, VERSION);
+    compute_id_string(id1, producer, dvi_filename, pdf_filename);
+    memcpy(id2, id1, 16);
+  }
+
   /* Initialize PDF document creation routine. */
-  pdf_open_document(pdf_filename, ids, settings);
+  pdf_open_document(pdf_filename, creator, id1, id2, settings);
 
   if (opt_flags & OPT_CIDFONT_FIXEDPITCH)
     CIDFont_set_flags(CIDFONT_FORCE_FIXEDPITCH);

@@ -221,8 +221,6 @@ override_dh_installchangelogs:
 		texk/ptexenc/ChangeLog
 	dh_installchangelogs -plibsynctex2 -plibsynctex-dev \
 		texk/web2c/synctexdir/ChangeLog
-	dh_installchangelogs -plibtexlua52 -plibtexlua52-dev \
-		libs/lua52/TLpatches/ChangeLog
 	dh_installchangelogs -plibtexlua53 -plibtexlua53-dev \
 		libs/lua53/TLpatches/ChangeLog
 ifeq ($(WITHLUAJIT), yes)
@@ -237,7 +235,6 @@ override_dh_makeshlibs:
 	dh_makeshlibs -plibkpathsea6
 	dh_makeshlibs -plibptexenc1
 	dh_makeshlibs -plibsynctex2
-	dh_makeshlibs -plibtexlua52
 	dh_makeshlibs -plibtexlua53
 ifeq ($(WITHLUAJIT), yes)
 	dh_makeshlibs -plibtexluajit2
@@ -246,7 +243,6 @@ endif
 SHLIBDEPS = -l debian/libkpathsea6/usr/lib/* \
 		-l debian/libptexenc1/usr/lib/* \
 		-l debian/libsynctex2/usr/lib/* \
-		-l debian/libtexlua52/usr/lib/* \
 		-l debian/libtexlua53/usr/lib/*
 
 ifeq ($(WITHLUAJIT), yes)

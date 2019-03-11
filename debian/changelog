@@ -3,8 +3,9 @@ texlive-bin (2019.20190311.50335-1) experimental; urgency=medium
   * New upstream version 2019.20190311.50335
   * update/cleanup patches
   * bump breaks to 2018
+  * drop libtexlua52*, gone upstream
 
- -- Norbert Preining <norbert@preining.info>  Mon, 11 Mar 2019 15:50:19 +0900
+ -- Norbert Preining <norbert@preining.info>  Mon, 11 Mar 2019 17:01:22 +0900
 
 texlive-bin (2018.20181218.49446-2) unstable; urgency=medium
 

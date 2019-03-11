@@ -14,7 +14,7 @@ else
     svnroot=~/Development/TeX/texlive-svn/Build/source
   fi
 fi
-baseyear=2018
+baseyear=2019
 
 cmd="svn info"
 if [ $gitmode = 1 ] ; then
@@ -87,6 +87,10 @@ done
 
 # remove non-free stuff from teckit
 rm -rf $verstr/libs/teckit/TECkit-src/SFconv
+
+# remove pplib docs with too much javascript I don't want 
+# to work on
+rm -rf $verstr/texk/web2c/luatexdir/luapplib/html
 
 # remove VCS traces
 find $verstr -name \.svn -exec rm -rf '{}' \;

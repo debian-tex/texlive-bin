@@ -52,10 +52,7 @@ rm -rf $verstr/utils/ps2eps
 rm -rf $verstr/utils/t1utils
 # irrelevant for sources on Linux, Win32 only
 # don't remove the source, automake checks for these files in reautoconf!
-rm -f $verstr/texk/texlive/w32_wrapper/runscript.{dll,exe}
-rm -f $verstr/texk/texlive/w64_wrapper/runscript.{dll,exe}
-rm -f $verstr/texk/texlive/w32_wrapper/context/mtxrun.{dll,exe}
-rm -f $verstr/texk/texlive/w64_wrapper/context/mtxrun.{dll,exe}
+find $verstr -name \*.dll -o -name \*.exe | xargs rm
 
 #
 # remove system libraries, keep only teckit and lua52 and libpng

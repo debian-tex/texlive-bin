@@ -1,7 +1,9 @@
-Index: texlive-bin/texk/web2c/man/gftodvi.man
-===================================================================
---- texlive-bin.orig/texk/web2c/man/gftodvi.man	2018-05-24 22:52:15.885635652 +0200
-+++ texlive-bin/texk/web2c/man/gftodvi.man	2018-05-28 10:48:05.319845833 +0200
+---
+ texk/web2c/man/gftodvi.man |   22 +++++++++++-----------
+ 1 file changed, 11 insertions(+), 11 deletions(-)
+
+--- texlive-bin.orig/texk/web2c/man/gftodvi.man
++++ texlive-bin/texk/web2c/man/gftodvi.man
 @@ -17,7 +17,7 @@
  gftodvi \- make proof sheets from generic font files
  .SH SYNOPSIS
@@ -11,7 +13,7 @@ Index: texlive-bin/texk/web2c/man/gftodvi.man
  .RB [ \-verbose ]
  .I gf_file_name
  .\"=====================================================================
-@@ -34,7 +34,7 @@
+@@ -34,7 +34,7 @@ program converts a generic font
  file output by, for example,
  .BR mf (1),
  to a device independent (DVI) file (that can then be typeset using the same
@@ -20,7 +22,7 @@ Index: texlive-bin/texk/web2c/man/gftodvi.man
  .I gf
  file will appear one per page, with labels, titles, and annotations
  as specified in Appendix H (Hardcopy Proofs) of
-@@ -45,11 +45,11 @@
+@@ -45,11 +45,11 @@ uses other fonts in addition to the main
  .I gf
  file.
  A `gray' font is used to typeset the
@@ -35,22 +37,7 @@ Index: texlive-bin/texk/web2c/man/gftodvi.man
  font is used to typeset diagonal lines, which
  otherwise have to be simulated using horizontal and vertical rules.
  The default gray, title, and label fonts are
-@@ -60,12 +60,12 @@
- respectively; there is no default slant font.
- .PP
- To change the default fonts, you can give
--.BR special
-+.B special
- commands in your
- \*(MF source file, or you can change the fonts online. An online dialog
- ensues if you end the
- .I gf_file_name
--with a `/'. For example,
-+with a `/'.  For example,
- .br
- .ti +2
- gftodvi cmr10.300gf/
-@@ -94,12 +94,12 @@
+@@ -94,12 +94,12 @@ The
  on the command line must be complete.  Because
  the resolution is part of the extension, it would not make
  sense to append a default extension as is done with \*(TX or
@@ -65,7 +52,7 @@ Index: texlive-bin/texk/web2c/man/gftodvi.man
  .I cmr10.2602gf
  would become
  .IR cmr10.dvi .
-@@ -125,7 +125,7 @@
+@@ -125,7 +125,7 @@ looks for
  .I gf_file_name
  using the
  environment variable GFFONTS.  If that is not set, it uses the variable
@@ -74,7 +61,7 @@ Index: texlive-bin/texk/web2c/man/gftodvi.man
  .PP
  See
  .BR tex (1)
-@@ -143,17 +143,17 @@
+@@ -143,17 +143,17 @@ The \*(MF sources.
  .BR tex (1),
  .BR mf (1).
  .br

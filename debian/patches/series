@@ -10,11 +10,8 @@ fix-maxpathlen-hurd
 # disabled for now
 #poppler-0.64
 # to be sent upstream at some point
-freetype-use-pkg-config
-disdvi_man.patch
 dv2dt_man.patch
 gftodvi_man.patch
 # patches from upstream
 t4ht-correct-expansion
 dvisvgm-fix-missing-libs
-patch_xdvi.1.in

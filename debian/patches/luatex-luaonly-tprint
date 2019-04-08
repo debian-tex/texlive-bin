@@ -1,0 +1,25 @@
+Fix from Hironobu Yamashita for luatex segfaults
+> Do you have any plan of fixing this?
+> If not, please consider the attached patch.
+> Without this, even the simple file test.lua containing
+> 
+> pdfe.open("foo.pdf")
+---
+ texk/web2c/luatexdir/tex/printing.c |    6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+--- texlive-bin.orig/texk/web2c/luatexdir/tex/printing.c
++++ texlive-bin/texk/web2c/luatexdir/tex/printing.c
+@@ -416,7 +416,11 @@ void tprint(const char *sss)
+ {
+     char *buffer = NULL;
+     int i = 0;
+-    int newlinechar = new_line_char_par;
++    int newlinechar;
++    if (lua_only == 1)
++        newlinechar = 10;
++    else
++        newlinechar = new_line_char_par;
+     int dolog = 0;
+     int doterm = 0;
+     switch (selector) {

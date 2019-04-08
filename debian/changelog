@@ -2,8 +2,9 @@ texlive-bin (2019.20190408.50842-1) experimental; urgency=medium
 
   * TeX Live 2019 release
   * update/cleanup patches
+  * include luatex patch for tprint
 
- -- Norbert Preining <norbert@preining.info>  Mon, 08 Apr 2019 18:43:27 +0900
+ -- Norbert Preining <norbert@preining.info>  Mon, 08 Apr 2019 21:55:11 +0900
 
 texlive-bin (2019.20190311.50335-1) experimental; urgency=medium
 

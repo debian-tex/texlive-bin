@@ -1,9 +1,9 @@
-texlive-bin (2019.20190324.50560-1) experimental; urgency=medium
+texlive-bin (2019.20190408.50842-1) experimental; urgency=medium
 
-  * New upstream version 2019.20190324.50560
-    fixes luatex problems with some pdfs
+  * TeX Live 2019 release
+  * update/cleanup patches
 
- -- Norbert Preining <norbert@preining.info>  Sun, 24 Mar 2019 16:28:47 +0900
+ -- Norbert Preining <norbert@preining.info>  Mon, 08 Apr 2019 18:43:27 +0900
 
 texlive-bin (2019.20190311.50335-1) experimental; urgency=medium
 

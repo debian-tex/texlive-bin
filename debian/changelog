@@ -1,3 +1,11 @@
+texlive-bin (2019.20190506.51016-1) experimental; urgency=medium
+
+  * New upstream version 2019.20190506.51016
+    - fixes to dvipdfmx and dvips
+  * update patches
+
+ -- Norbert Preining <norbert@preining.info>  Mon, 06 May 2019 09:16:56 +0900
+
 texlive-bin (2019.20190408.50842-1) experimental; urgency=medium
 
   * TeX Live 2019 release

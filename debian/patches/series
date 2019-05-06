@@ -15,4 +15,3 @@ gftodvi_man.patch
 # patches from upstream
 t4ht-correct-expansion
 dvisvgm-fix-missing-libs
-luatex-luaonly-tprint

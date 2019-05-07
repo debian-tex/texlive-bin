@@ -1,3 +1,12 @@
+texlive-bin (2019.20190507.51032-1) experimental; urgency=medium
+
+  * New upstream version 2019.20190507.51032
+    - fixes to dvipdfmx and CFF data loading
+    - upTeX 1.25
+    - fixes to pTeX
+
+ -- Norbert Preining <norbert@preining.info>  Tue, 07 May 2019 14:45:59 +0900
+
 texlive-bin (2019.20190506.51016-1) experimental; urgency=medium
 
   * New upstream version 2019.20190506.51016

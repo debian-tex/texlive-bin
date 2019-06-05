@@ -1542,13 +1542,6 @@ void AcroFormField::drawText(GString *text, GString *da, GfxFontDict *fontDict,
     fontSize = atof(tok->getCString());
   } else {
     error(errSyntaxError, -1, "Missing 'Tf' operator in field's DA string");
-    fontSize = 10;
-    if (!daToks) {
-      daToks = new GList();
-    }
-    daToks->append(new GString("/xpdf_default_font"));
-    daToks->append(new GString("10"));
-    daToks->append(new GString("Tf"));
   }
 
   // setup
@@ -1610,11 +1603,7 @@ void AcroFormField::drawText(GString *text, GString *da, GfxFontDict *fontDict,
     // starting y coordinate
     // (note: each line of text starts with a Td operator that moves
     // down a line)
-    if (dy > fontSize + 6) {
-      y = dy - 3;
-    } else {
-      y = 0.5 * dy - 0.4 * fontSize + fontSize;
-    }
+    y = dy - 3;
 
     // set the font matrix
     if (tmPos >= 0) {

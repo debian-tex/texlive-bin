@@ -1,15 +1,12 @@
 #!/bin/sh
-# Adapted from tlcockpit.sh to ensure the script works with cygwin
 
-scriptname=`basename "$0" .sh`
-jar="$scriptname.jar"
-jarpath=`kpsewhich --progname="$scriptname" --format=texmfscripts "$jar"`
-
-kernel=`uname -s 2>/dev/null`
-if echo "$kernel" | grep CYGWIN >/dev/null; then
-  CYGWIN_ROOT=`cygpath -w /`
-  export CYGWIN_ROOT
-  jarpath=`cygpath -w "$jarpath"`
+kernel=`uname -s`
+if test "${kernel#*CYGWIN}" != "$kernel"
+then
+ jarpath=`cygpath -w $(kpsewhich --progname=convertgls2bib --format=texmfscripts convertgls2bib.jar)`
+else
+ jarpath=`kpsewhich --progname=convertgls2bib --format=texmfscripts convertgls2bib.jar`
 fi
 
-exec java -jar "$jarpath" "$@"
+java -jar "$jarpath" "$@"
+

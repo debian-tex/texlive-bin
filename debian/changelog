@@ -1,3 +1,11 @@
+texlive-bin (2019.20190605.51237-1) experimental; urgency=medium
+
+  * New upstream version 2019.20190605.51237
+    - switch to 2019 branch not to follow development branch
+  * update patch
+
+ -- Norbert Preining <norbert@preining.info>  Wed, 05 Jun 2019 12:11:38 +0900
+
 texlive-bin (2019.20190507.51032-1) experimental; urgency=medium
 
   * New upstream version 2019.20190507.51032

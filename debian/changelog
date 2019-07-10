@@ -9,8 +9,9 @@ texlive-bin (2019.20190605.51237-2) unstable; urgency=medium
       situations. (S. Hirata)
     - xetex: lib/texmfmp.c: fix for \filedump of XeTeX
     - xetex: lib/texmfmp.c: fix for \creationdate (XeTeX only)
+  * Silence synctex warning when no synctex file is present (Closes: #908964)
 
- -- Norbert Preining <norbert@preining.info>  Wed, 10 Jul 2019 09:43:02 +0900
+ -- Norbert Preining <norbert@preining.info>  Wed, 10 Jul 2019 09:59:23 +0900
 
 texlive-bin (2019.20190605.51237-1) experimental; urgency=medium
 

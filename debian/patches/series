@@ -13,6 +13,7 @@ fix-maxpathlen-hurd
 dv2dt_man.patch
 gftodvi_man.patch
 # patches from upstream
+silence-synctex-warning
 t4ht-correct-expansion
 dvisvgm-fix-missing-libs
 0001-cherry-picking-Fix-for-compiler-warnings.-S.-Hirata.patch

@@ -1,0 +1,39 @@
+From a1a682e28d58d42277327aeaa86748a4b8a4f116 Mon Sep 17 00:00:00 2001
+From: Akira Kakuto <kakuto@fuk.kindai.ac.jp>
+Date: Tue, 28 May 2019 04:02:47 +0000
+Subject: [PATCH 2/7] Sync version number of upmpost with uptex.
+
+svn 51241
+---
+ texk/web2c/pmpostdir/ChangeLog | 4 ++++
+ texk/web2c/pmpostdir/pmp.ch    | 2 +-
+ 2 files changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/texk/web2c/pmpostdir/ChangeLog b/texk/web2c/pmpostdir/ChangeLog
+index 0002fbee6..2314d6f92 100644
+--- a/texk/web2c/pmpostdir/ChangeLog
++++ b/texk/web2c/pmpostdir/ChangeLog
+@@ -1,3 +1,7 @@
++2019-05-28  Akira Kakuto  <kakuto@w32tex.org>
++
++	* pmp.ch: Bump upmpost version to 2.00-0.04-u1.25.
++
+ 2019-03-22  Akira Kakuto  <kakuto@w32tex.org>
+ 
+ 	* pmp.ch: Sync with the change of mp.w.
+diff --git a/texk/web2c/pmpostdir/pmp.ch b/texk/web2c/pmpostdir/pmp.ch
+index f84038f95..5af32603e 100644
+--- a/texk/web2c/pmpostdir/pmp.ch
++++ b/texk/web2c/pmpostdir/pmp.ch
+@@ -22,7 +22,7 @@
+ @y
+ #ifdef UPMP
+ #define P_UP "up"
+-#define metapost_version "2.00-0.04-u1.24"
++#define metapost_version "2.00-0.04-u1.25"
+ #else
+ #define P_UP "p"
+ #define metapost_version "2.00-0.04"
+-- 
+2.22.0
+

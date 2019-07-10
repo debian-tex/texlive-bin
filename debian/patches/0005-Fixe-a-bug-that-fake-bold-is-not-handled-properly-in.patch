@@ -1,0 +1,55 @@
+From 198d76de64a8ef47b7e3a20f08fc2a520328d510 Mon Sep 17 00:00:00 2001
+From: Akira Kakuto <kakuto@fuk.kindai.ac.jp>
+Date: Sat, 29 Jun 2019 21:29:52 +0000
+Subject: [PATCH 5/7] Fixe a bug that fake-bold is not handled properly in some
+ situations. (S. Hirata)
+
+svn 51507
+---
+ texk/dvipdfm-x/ChangeLog | 10 ++++++++++
+ texk/dvipdfm-x/pdfdev.c  |  4 ++--
+ 2 files changed, 12 insertions(+), 2 deletions(-)
+
+diff --git a/texk/dvipdfm-x/ChangeLog b/texk/dvipdfm-x/ChangeLog
+index cb4eb2b55..d37f62b4c 100644
+--- a/texk/dvipdfm-x/ChangeLog
++++ b/texk/dvipdfm-x/ChangeLog
+@@ -1,3 +1,13 @@
++2019-06-30  Shunsaku Hirata  <shunsaku.hirata74@gmail.com>
++
++	* pdfdev.c: Fix a bug that fake-bold is not handled properly
++	in some situations as reported in
++	https://tug.org/pipermail/dvipdfmx/2019-June/000014.html.
++	When text rendering mode is changed within a text block which
++	is enclosed by q and Q, the change does not affect subsequent
++	text blocks. Current implementation of text handling is not
++	robust so we may need to reconsider it.
++
+ 2019-06-01  Shunsaku Hirata  <shunsaku.hirata74@gmail.com>
+ 
+ 	* unicode.c: Fix a bug that end of buffer check was wrong.
+diff --git a/texk/dvipdfm-x/pdfdev.c b/texk/dvipdfm-x/pdfdev.c
+index f9d853bdd..49af5bb96 100644
+--- a/texk/dvipdfm-x/pdfdev.c
++++ b/texk/dvipdfm-x/pdfdev.c
+@@ -571,7 +571,7 @@ reset_text_state (void)
+   /*
+    * We need to reset the line matrix to handle slanted fonts.
+    */
+-  pdf_doc_add_page_content(" BT", 3);  /* op: BT */
++  pdf_doc_add_page_content(" q BT", 5);  /* op: BT */
+   /*
+    * text_state.matrix is identity at top of page.
+    * This sometimes write unnecessary "Tm"s when transition from
+@@ -619,7 +619,7 @@ graphics_mode (void)
+     pdf_doc_add_page_content(text_state.is_mb ? ">]TJ" : ")]TJ", 4);  /* op: TJ */
+     /* continue */
+   case TEXT_MODE:
+-    pdf_doc_add_page_content(" ET", 3);  /* op: ET */
++    pdf_doc_add_page_content(" ET Q", 5);  /* op: ET */
+     text_state.force_reset =  0;
+     text_state.font_id     = -1;
+     break;
+-- 
+2.22.0
+

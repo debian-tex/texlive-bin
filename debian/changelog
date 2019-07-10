@@ -1,3 +1,17 @@
+texlive-bin (2019.20190605.51237-2) unstable; urgency=medium
+
+  * Cherry pick various fixes:
+    - dvipdfmx: Fix for compiler warnings. (S. Hirata)
+    - pmpost: Sync version number of upmpost with uptex
+    - dvipdfmx: Fix a bug that end of buffer check was wrong. (S. Hirata)
+    - dvisvgm: psdefs.cpp patch since GS_PDF_ProcSet was removed in
+    - dvipdfmx: Fix a bug that fake-bold is not handled properly in some
+      situations. (S. Hirata)
+    - xetex: lib/texmfmp.c: fix for \filedump of XeTeX
+    - xetex: lib/texmfmp.c: fix for \creationdate (XeTeX only)
+
+ -- Norbert Preining <norbert@preining.info>  Wed, 10 Jul 2019 09:43:02 +0900
+
 texlive-bin (2019.20190605.51237-1) experimental; urgency=medium
 
   * New upstream version 2019.20190605.51237

@@ -15,3 +15,10 @@ gftodvi_man.patch
 # patches from upstream
 t4ht-correct-expansion
 dvisvgm-fix-missing-libs
+0001-cherry-picking-Fix-for-compiler-warnings.-S.-Hirata.patch
+0002-Sync-version-number-of-upmpost-with-uptex.patch
+0003-Fix-a-bug-that-end-of-buffer-check-was-wrong.-S.-Hir.patch
+0004-psdefs.cpp-patch-since-GS_PDF_ProcSet-was-removed-in.patch
+0005-Fixe-a-bug-that-fake-bold-is-not-handled-properly-in.patch
+0006-lib-texmfmp.c-fix-for-filedump-of-XeTeX.patch
+0007-lib-texmfmp.c-fix-for-creationdate-XeTeX-only.patch

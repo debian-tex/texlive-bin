@@ -1,0 +1,288 @@
+From 44e50a4c5ee5d56a2c8fff8638675198a1769013 Mon Sep 17 00:00:00 2001
+From: Hironobu Yamashita <h.y.acetaminophen@gmail.com>
+Date: Sun, 30 Jun 2019 13:42:49 +0000
+Subject: [PATCH 6/7] lib/texmfmp.c: fix for \filedump of XeTeX
+
+svn 51510
+---
+ texk/web2c/Makefile.in                  | 108 ++++++++++++------------
+ texk/web2c/lib/ChangeLog                |   7 ++
+ texk/web2c/lib/texmfmp.c                |   5 +-
+ texk/web2c/xetexdir/ChangeLog           |   5 ++
+ texk/web2c/xetexdir/am/xetex.am         |   7 +-
+ texk/web2c/xetexdir/tests/filedump.log  |   5 ++
+ texk/web2c/xetexdir/tests/filedump.tex  |   5 ++
+ texk/web2c/xetexdir/xetex-filedump.test |  22 +++++
+ 8 files changed, 109 insertions(+), 55 deletions(-)
+ create mode 100644 texk/web2c/xetexdir/tests/filedump.log
+ create mode 100644 texk/web2c/xetexdir/tests/filedump.tex
+ create mode 100755 texk/web2c/xetexdir/xetex-filedump.test
+
+diff --git a/texk/web2c/Makefile.in b/texk/web2c/Makefile.in
+index f6b0a7449..ab2d49717 100644
+--- a/texk/web2c/Makefile.in
++++ b/texk/web2c/Makefile.in
+@@ -3101,56 +3101,58 @@ EXTRA_DIST = PROJECTS cftests cpascal.h help.h w2c/config.h \
+ 	xetexdir/COPYING xetexdir/NEWS xetexdir/image/README \
+ 	xetexdir/unicode-char-prep.pl xetexdir/xewebmac.tex \
+ 	$(xetex_tests) xetexdir/tests/bug73.log \
+-	xetexdir/tests/bug73.tex omegaware/README omegaware/ChangeLog \
+-	$(odvicopy_sources) $(odvitype_sources) omegaware/ofm2opl.web \
+-	omegaware/ofm2opl.up omegaware/ofm2opl.ch \
+-	omegaware/opl2ofm.web omegaware/opl2ofm.up \
+-	omegaware/opl2ofm.ch $(otangle_sources) omegaware/ovf2ovp.web \
+-	omegaware/ovf2ovp.up omegaware/ovf2ovp.ch \
+-	omegaware/ovp2ovf.web omegaware/ovp2ovf.up \
+-	omegaware/ovp2ovf.ch $(OTANGLE_tests) $(OMFONTS_tests) \
+-	omegaware/tests/badofm.ofm omegaware/tests/badopl.opl \
+-	omegaware/tests/badovf.ofm omegaware/tests/badovf.ovf \
+-	omegaware/tests/badovp.ovp omegaware/tests/charwd-r.pl \
+-	omegaware/tests/charwd-v.vpl omegaware/tests/check.ofm \
+-	omegaware/tests/check.opl omegaware/tests/checked.opl \
+-	omegaware/tests/level1.opl omegaware/tests/ligall.opl \
+-	omegaware/tests/ligbch.opl omegaware/tests/ligbdy.opl \
+-	omegaware/tests/ligblb.opl omegaware/tests/ligblv.opl \
+-	omegaware/tests/ligblv.ovp omegaware/tests/ligloop1.ofm \
+-	omegaware/tests/ligloop1.opl omegaware/tests/ligloop2.opl \
+-	omegaware/tests/liguse.opl omegaware/tests/liguse1.opl \
+-	omegaware/tests/liguse2.opl omegaware/tests/ofontd1.dvi \
+-	omegaware/tests/ofontd1.typ omegaware/tests/ofontd2.dvi \
+-	omegaware/tests/ofontd2.typ omegaware/tests/ofontd3.dvi \
+-	omegaware/tests/ofontd3.typ omegaware/tests/ofontr1.vf \
+-	omegaware/tests/ofontr2.ovf omegaware/tests/ofontr3.ovf \
+-	omegaware/tests/ofontv4.vf omegaware/tests/ofontv5.ovf \
+-	omegaware/tests/ofontv6.ovf omegaware/tests/ofontd0.dtl \
+-	omegaware/tests/ofontd0.dvi omegaware/tests/ofontd0.typ \
+-	omegaware/tests/ofontr0.tfm omegaware/tests/ofontr1.tfm \
+-	omegaware/tests/ofontr2.ofm omegaware/tests/ofontr3.ofm \
+-	omegaware/tests/ofontv4.tfm omegaware/tests/ofontv5.ofm \
+-	omegaware/tests/ofontv6.ofm omegaware/tests/ofontr0.pl \
+-	omegaware/tests/ofontr1.pl omegaware/tests/ofontr1.vpl \
+-	omegaware/tests/ofontr2.opl omegaware/tests/ofontr2.ovp \
+-	omegaware/tests/ofontr3.opl omegaware/tests/ofontr3.ovp \
+-	omegaware/tests/ofontv4.pl omegaware/tests/ofontv4.vpl \
+-	omegaware/tests/ofontv5.opl omegaware/tests/ofontv5.ovp \
+-	omegaware/tests/ofontv6.opl omegaware/tests/ofontv6.ovp \
+-	omegaware/tests/Cherokee.pl omegaware/tests/OCherokee.ovp \
+-	omegaware/tests/inbmp.opl omegaware/tests/overbmp.opl \
+-	omegaware/tests/overbmp.ovp omegaware/tests/realnum.opl \
+-	omegaware/tests/realnum.out omegaware/tests/repeat.opl \
+-	omegaware/tests/repeated.opl omegaware/tests/sample.out \
+-	omegaware/tests/sample.ovp omegaware/tests/sample0-h.opl \
+-	omegaware/tests/shorten.opl omegaware/tests/specialhex.ovp \
+-	omegaware/tests/vrepeat0.ofm omegaware/tests/vrepeat0.opl \
+-	omegaware/tests/vrepeat1.ofm omegaware/tests/vrepeat1.opl \
+-	omegaware/tests/vrepeat1.ovf omegaware/tests/vrepeat1.ovp \
+-	omegaware/tests/arabicr.pl omegaware/tests/arabic.ovp \
+-	$(aleph_web_srcs) $(aleph_ch_srcs) alephdir/ChangeLog \
+-	alephdir/aleph.defines alephdir/aleph.version $(aleph_tests) \
++	xetexdir/tests/bug73.tex xetexdir/tests/filedump.log \
++	xetexdir/tests/filedump.tex omegaware/README \
++	omegaware/ChangeLog $(odvicopy_sources) $(odvitype_sources) \
++	omegaware/ofm2opl.web omegaware/ofm2opl.up \
++	omegaware/ofm2opl.ch omegaware/opl2ofm.web \
++	omegaware/opl2ofm.up omegaware/opl2ofm.ch $(otangle_sources) \
++	omegaware/ovf2ovp.web omegaware/ovf2ovp.up \
++	omegaware/ovf2ovp.ch omegaware/ovp2ovf.web \
++	omegaware/ovp2ovf.up omegaware/ovp2ovf.ch $(OTANGLE_tests) \
++	$(OMFONTS_tests) omegaware/tests/badofm.ofm \
++	omegaware/tests/badopl.opl omegaware/tests/badovf.ofm \
++	omegaware/tests/badovf.ovf omegaware/tests/badovp.ovp \
++	omegaware/tests/charwd-r.pl omegaware/tests/charwd-v.vpl \
++	omegaware/tests/check.ofm omegaware/tests/check.opl \
++	omegaware/tests/checked.opl omegaware/tests/level1.opl \
++	omegaware/tests/ligall.opl omegaware/tests/ligbch.opl \
++	omegaware/tests/ligbdy.opl omegaware/tests/ligblb.opl \
++	omegaware/tests/ligblv.opl omegaware/tests/ligblv.ovp \
++	omegaware/tests/ligloop1.ofm omegaware/tests/ligloop1.opl \
++	omegaware/tests/ligloop2.opl omegaware/tests/liguse.opl \
++	omegaware/tests/liguse1.opl omegaware/tests/liguse2.opl \
++	omegaware/tests/ofontd1.dvi omegaware/tests/ofontd1.typ \
++	omegaware/tests/ofontd2.dvi omegaware/tests/ofontd2.typ \
++	omegaware/tests/ofontd3.dvi omegaware/tests/ofontd3.typ \
++	omegaware/tests/ofontr1.vf omegaware/tests/ofontr2.ovf \
++	omegaware/tests/ofontr3.ovf omegaware/tests/ofontv4.vf \
++	omegaware/tests/ofontv5.ovf omegaware/tests/ofontv6.ovf \
++	omegaware/tests/ofontd0.dtl omegaware/tests/ofontd0.dvi \
++	omegaware/tests/ofontd0.typ omegaware/tests/ofontr0.tfm \
++	omegaware/tests/ofontr1.tfm omegaware/tests/ofontr2.ofm \
++	omegaware/tests/ofontr3.ofm omegaware/tests/ofontv4.tfm \
++	omegaware/tests/ofontv5.ofm omegaware/tests/ofontv6.ofm \
++	omegaware/tests/ofontr0.pl omegaware/tests/ofontr1.pl \
++	omegaware/tests/ofontr1.vpl omegaware/tests/ofontr2.opl \
++	omegaware/tests/ofontr2.ovp omegaware/tests/ofontr3.opl \
++	omegaware/tests/ofontr3.ovp omegaware/tests/ofontv4.pl \
++	omegaware/tests/ofontv4.vpl omegaware/tests/ofontv5.opl \
++	omegaware/tests/ofontv5.ovp omegaware/tests/ofontv6.opl \
++	omegaware/tests/ofontv6.ovp omegaware/tests/Cherokee.pl \
++	omegaware/tests/OCherokee.ovp omegaware/tests/inbmp.opl \
++	omegaware/tests/overbmp.opl omegaware/tests/overbmp.ovp \
++	omegaware/tests/realnum.opl omegaware/tests/realnum.out \
++	omegaware/tests/repeat.opl omegaware/tests/repeated.opl \
++	omegaware/tests/sample.out omegaware/tests/sample.ovp \
++	omegaware/tests/sample0-h.opl omegaware/tests/shorten.opl \
++	omegaware/tests/specialhex.ovp omegaware/tests/vrepeat0.ofm \
++	omegaware/tests/vrepeat0.opl omegaware/tests/vrepeat1.ofm \
++	omegaware/tests/vrepeat1.opl omegaware/tests/vrepeat1.ovf \
++	omegaware/tests/vrepeat1.ovp omegaware/tests/arabicr.pl \
++	omegaware/tests/arabic.ovp $(aleph_web_srcs) $(aleph_ch_srcs) \
++	alephdir/ChangeLog alephdir/aleph.defines \
++	alephdir/aleph.version $(aleph_tests) \
+ 	synctexdir/synctex_parser_c-auto.h synctexdir/ChangeLog \
+ 	synctexdir/README.txt synctexdir/synctex_parser_readme.txt \
+ 	synctexdir/synctex_parser_version.txt synctexdir/tests \
+@@ -3229,7 +3231,8 @@ DISTCLEANFILES = CXXLD.sh tangle.c tangle.h tangle.p tangle-web2c \
+ 	test-15.xref $(nodist_libluatex_sources) luaimage.* \
+ 	luajitimage.* $(nodist_xetex_SOURCES) xetex.web xetex.ch \
+ 	xetex-web2c xetex.p xetex.pool xetex-tangle bug73.fmt \
+-	bug73.log bug73.out bug73.tex $(omegaware_programs:=.c) \
++	bug73.log bug73.out bug73.tex filedump.log filedump.out \
++	filedump.tex $(omegaware_programs:=.c) \
+ 	$(omegaware_programs:=.h) $(omegaware_programs:=.p) \
+ 	$(omegaware_programs:=-web2c) ofm2opl.web opl2ofm.web \
+ 	ovf2ovp.web ovp2ovf.web omegaware/bad*.* \
+@@ -4738,6 +4741,7 @@ libxetex_prereq = xetexd.h $(xetex_dependencies)
+ # XeTeX Tests
+ #
+ xetex_tests = \
++	xetexdir/xetex-filedump.test \
+ 	xetexdir/xetex-bug73.test \
+ 	xetexdir/xetex.test
+ 
+@@ -18772,7 +18776,7 @@ $(srcdir)/xetexdir/xetex_version.h: @MAINTAINER_MODE_TRUE@ xetexdir/xetex.web
+ xetex.ch: tie$(EXEEXT) $(xetex_ch_srcs)
+ 	$(tie_c) $(xetex_ch_srcs)
+ $(libxetex_a_OBJECTS): $(libxetex_prereq)
+-xetexdir/xetex-bug73.log xetexdir/xetex.log: xetex$(EXEEXT)
++xetexdir/xetex-filedump.log xetexdir/xetex-bug73.log xetexdir/xetex.log: xetex$(EXEEXT)
+ odvicopy.c odvicopy.h: odvicopy-web2c
+ 	@$(web2c) odvicopy
+ odvicopy-web2c: odvicopy.p $(web2c_depend)
+diff --git a/texk/web2c/lib/ChangeLog b/texk/web2c/lib/ChangeLog
+index 5dd7cd63b..65e4c117c 100644
+--- a/texk/web2c/lib/ChangeLog
++++ b/texk/web2c/lib/ChangeLog
+@@ -1,3 +1,10 @@
++2019-06-30  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
++
++	* texmfmp.c (getfiledump): Change readbuffer to unsigned char*.
++	Without this change, xetexdir/tests/filedump.tex ends up with
++	"!error: snprintf failed: file ../../../texk/web2c/lib/texmfmp.c"
++	(XeTeX only).
++
+ 2019-03-30  Akira Kakuto  <kakuto@w32tex.org>
+ 
+ 	* texmfmp.c: Improve to record texmf.cnf. (ptex and friends,
+diff --git a/texk/web2c/lib/texmfmp.c b/texk/web2c/lib/texmfmp.c
+index 64a7d3116..83fe1586c 100644
+--- a/texk/web2c/lib/texmfmp.c
++++ b/texk/web2c/lib/texmfmp.c
+@@ -3274,7 +3274,8 @@ void getfiledump(integer s, int offset, int length)
+     FILE *f;
+     int read, i;
+ #if defined(XeTeX)
+-    char *readbuffer, strbuf[3];
++    unsigned char *readbuffer;
++    char strbuf[3];
+     int j, k;
+ #else
+     poolpointer data_ptr;
+@@ -3318,7 +3319,7 @@ void getfiledump(integer s, int offset, int length)
+         return;
+     }
+ #if defined(XeTeX)
+-    readbuffer = (char *)xmalloc (length + 1);
++    readbuffer = (unsigned char *)xmalloc (length + 1);
+     read = fread(readbuffer, sizeof(char), length, f);
+     fclose(f);
+     for (j = 0; j < read; j++) {
+diff --git a/texk/web2c/xetexdir/ChangeLog b/texk/web2c/xetexdir/ChangeLog
+index 0dc1913e6..c34d5f012 100644
+--- a/texk/web2c/xetexdir/ChangeLog
++++ b/texk/web2c/xetexdir/ChangeLog
+@@ -1,3 +1,8 @@
++2019-06-30  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
++
++	* xetex-filedump.test, filedump.tex, filedump.log: New tests.
++	* am/xetex.am: Adjusted for new test.
++
+ 2019-01-03  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
+ 
+ 	* NEWS, xetex_version.h, xetex.web: Sync with the upstream.
+diff --git a/texk/web2c/xetexdir/am/xetex.am b/texk/web2c/xetexdir/am/xetex.am
+index 8d8c65921..de3a61e46 100644
+--- a/texk/web2c/xetexdir/am/xetex.am
++++ b/texk/web2c/xetexdir/am/xetex.am
+@@ -200,9 +200,10 @@ EXTRA_DIST += \
+ # XeTeX Tests
+ #
+ xetex_tests = \
++	xetexdir/xetex-filedump.test \
+ 	xetexdir/xetex-bug73.test \
+ 	xetexdir/xetex.test
+-xetexdir/xetex-bug73.log xetexdir/xetex.log: xetex$(EXEEXT)
++xetexdir/xetex-filedump.log xetexdir/xetex-bug73.log xetexdir/xetex.log: xetex$(EXEEXT)
+ 
+ EXTRA_DIST += $(xetex_tests)
+ 
+@@ -213,3 +214,7 @@ endif XETEX
+ ## xetex-bug73.test
+ EXTRA_DIST += xetexdir/tests/bug73.log xetexdir/tests/bug73.tex
+ DISTCLEANFILES += bug73.fmt bug73.log bug73.out bug73.tex
++
++## xetex-filedump.test
++EXTRA_DIST += xetexdir/tests/filedump.log xetexdir/tests/filedump.tex
++DISTCLEANFILES += filedump.log filedump.out filedump.tex
+diff --git a/texk/web2c/xetexdir/tests/filedump.log b/texk/web2c/xetexdir/tests/filedump.log
+new file mode 100644
+index 000000000..8489dae91
+--- /dev/null
++++ b/texk/web2c/xetexdir/tests/filedump.log
+@@ -0,0 +1,5 @@
++ restricted \write18 enabled.
++ %&-line parsing enabled.
++**filedump
++(./filedump.tex 25C2AA0A5C636174636F6465605C7B3D310A5C63 )
++No pages of output.
+diff --git a/texk/web2c/xetexdir/tests/filedump.tex b/texk/web2c/xetexdir/tests/filedump.tex
+new file mode 100644
+index 000000000..dd5096138
+--- /dev/null
++++ b/texk/web2c/xetexdir/tests/filedump.tex
+@@ -0,0 +1,5 @@
++%ª
++\catcode`\{=1
++\catcode`\}=2
++\message{\filedump length 20{\jobname.tex}}
++\end
+diff --git a/texk/web2c/xetexdir/xetex-filedump.test b/texk/web2c/xetexdir/xetex-filedump.test
+new file mode 100755
+index 000000000..1d1a2e751
+--- /dev/null
++++ b/texk/web2c/xetexdir/xetex-filedump.test
+@@ -0,0 +1,22 @@
++#! /bin/sh -vx
++# Copyright 2019 Karl Berry <tex-live@tug.org>
++# You may freely use, modify and/or distribute this file.
++
++LC_ALL=C; export LC_ALL;  LANGUAGE=C; export LANGUAGE
++
++TEXMFCNF=$srcdir/../kpathsea;export TEXMFCNF
++TEXINPUTS=.:$srcdir/tests; export TEXINPUTS
++TEXFORMATS=.; export TEXFORMATS
++
++# get same filename in log
++rm -f filedump.tex
++$LN_S $srcdir/xetexdir/tests/filedump.tex .
++
++#exit 77
++
++./xetex -ini filedump || exit 1
++
++sed 1d filedump.log >filedump.out
++
++diff $srcdir/xetexdir/tests/filedump.log filedump.out || exit 1
++
+-- 
+2.22.0
+

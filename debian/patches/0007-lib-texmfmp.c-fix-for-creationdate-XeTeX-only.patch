@@ -1,0 +1,40 @@
+From fad9db461f9c12fbfd4d6f7fa3c89806c2c32a74 Mon Sep 17 00:00:00 2001
+From: Hironobu Yamashita <h.y.acetaminophen@gmail.com>
+Date: Mon, 1 Jul 2019 16:01:48 +0000
+Subject: [PATCH 7/7] lib/texmfmp.c: fix for \creationdate (XeTeX only)
+
+svn 51518
+---
+ texk/web2c/lib/ChangeLog | 4 ++++
+ texk/web2c/lib/texmfmp.c | 2 +-
+ 2 files changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/texk/web2c/lib/ChangeLog b/texk/web2c/lib/ChangeLog
+index 65e4c117c..b3c2408d2 100644
+--- a/texk/web2c/lib/ChangeLog
++++ b/texk/web2c/lib/ChangeLog
+@@ -1,3 +1,7 @@
++2019-07-01  Hironobu Yamashita  <h.y.acetaminophen@gmail.com>
++
++	* texmfmp.c (getcreationdate): Fix a wrong conditional (XeTeX only).
++
+ 2019-06-30  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+ 
+ 	* texmfmp.c (getfiledump): Change readbuffer to unsigned char*.
+diff --git a/texk/web2c/lib/texmfmp.c b/texk/web2c/lib/texmfmp.c
+index 83fe1586c..57c25e2b8 100644
+--- a/texk/web2c/lib/texmfmp.c
++++ b/texk/web2c/lib/texmfmp.c
+@@ -3169,8 +3169,8 @@ void getcreationdate(void)
+         strpool[poolptr++] = (uint16_t)start_time_str[i];
+ #else
+     memcpy(&strpool[poolptr], start_time_str, len);
+-#endif
+     poolptr += len;
++#endif
+ }
+ 
+ void getfilemoddate(integer s)
+-- 
+2.22.0
+

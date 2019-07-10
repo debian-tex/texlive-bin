@@ -1,0 +1,357 @@
+From 26885a054785e76e568282d06ccc6f6c54ef4a6b Mon Sep 17 00:00:00 2001
+From: Akira Kakuto <kakuto@fuk.kindai.ac.jp>
+Date: Sun, 26 May 2019 04:55:48 +0000
+Subject: [PATCH 1/7] cherry picking: Fix for compiler warnings. (S. Hirata)
+
+svn 51226
+---
+ texk/dvipdfm-x/ChangeLog    | 17 +++++++++++++++++
+ texk/dvipdfm-x/cmap_write.c | 20 +++++++++++---------
+ texk/dvipdfm-x/dvipdfmx.c   | 29 ++++++++++++++++-------------
+ texk/dvipdfm-x/pdfdev.c     |  4 ++--
+ texk/dvipdfm-x/pdfdev.h     |  4 ++--
+ texk/dvipdfm-x/pdfdoc.c     |  7 ++++---
+ texk/dvipdfm-x/spc_dvips.c  | 10 +++++-----
+ texk/dvipdfm-x/spc_pdfm.c   | 12 ++++++------
+ texk/dvipdfm-x/system.h     |  4 +++-
+ texk/dvipdfm-x/truetype.c   |  4 ++--
+ texk/dvipdfm-x/tt_post.c    |  1 +
+ texk/dvipdfm-x/xbb.c        | 12 +++++++-----
+ 12 files changed, 76 insertions(+), 48 deletions(-)
+
+diff --git a/texk/dvipdfm-x/ChangeLog b/texk/dvipdfm-x/ChangeLog
+index d904fa943..2acbde196 100644
+--- a/texk/dvipdfm-x/ChangeLog
++++ b/texk/dvipdfm-x/ChangeLog
+@@ -1,3 +1,20 @@
++2019-05-26  Shunsaku Hirata  <shunsaku.hirata74@gmail.com>
++
++	* cmap_write.c, dvipdfmx.c, pdfdev.c, pdfdev.h, pdfdoc.c
++	spc_dvips.c, spc_pdfm.c, truetype.c, xbb.c:
++	Fix for compiler warnings.
++	* tt_post.c: Add missing "*/" in a deactivated section.
++	* system.h: "pragma warning" only when _MSC_VER is defined.
++
++2019-05-22  Shunsaku Hirata  <shunsaku.hirata74@gmail.com>
++
++	* tt_gsub.c: Fix a bug that otl_gsub_read_alternate() and
++	otl_gsub_read_ligature() exit loops wrongly for erroneous
++	data, which leads to uninitialized values.
++	Reported by Chih-Hsuan Yen:
++	https://tug.org/pipermail/dvipdfmx/2019-May/000004.html.
++	* configure.ac: Version 20190522.
++
+ 2019-05-08  Akira Kakuto  <kakuto@w32tex.org>
+ 
+ 	* dpxfile.c: Avoid buffer overflow.
+diff --git a/texk/dvipdfm-x/cmap_write.c b/texk/dvipdfm-x/cmap_write.c
+index 88036b572..314a9e952 100644
+--- a/texk/dvipdfm-x/cmap_write.c
++++ b/texk/dvipdfm-x/cmap_write.c
+@@ -1,6 +1,6 @@
+ /* This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
+ 
+-    Copyright (C) 2002-2018 by Jin-Hwan Cho and Shunsaku Hirata,
++    Copyright (C) 2002-2019 by Jin-Hwan Cho and Shunsaku Hirata,
+     the dvipdfmx project team.
+ 
+     This program is free software; you can redistribute it and/or modify
+@@ -240,13 +240,14 @@ write_map (mapDef *mtab, int count,
+ 
+ /* duplicated from pdfobj.c */
+ static void
+-write_string (char **outptr, char *endptr, const char *string)
++write_string (char **outptr, char *endptr, const char *strptr)
+ {
+-  char *s, *p;
+-  int i, length;
++  const char *s;
++  char       *p;
++  int         i, length;
+ 
+-  s      = (char *) string;
+-  length = string ? strlen(string) : 0;
++  s      = strptr;
++  length = strptr ? strlen(strptr) : 0;
+   p      = *outptr;
+ 
+   *p++ = '(';
+@@ -276,10 +277,11 @@ write_string (char **outptr, char *endptr, const char *string)
+ static void
+ write_name (char **outptr, char *endptr, const char *name)
+ {
+-  char *s, *p;
+-  int i, length;
++  const char *s;
++  char       *p;
++  int         i, length;
+ 
+-  s      = (char *) name;
++  s      = name;
+   length = name ? strlen(name) : 0;
+   p      = *outptr;
+ #ifndef is_delim
+diff --git a/texk/dvipdfm-x/dvipdfmx.c b/texk/dvipdfm-x/dvipdfmx.c
+index 86ab2018f..e6a0fc89a 100644
+--- a/texk/dvipdfm-x/dvipdfmx.c
++++ b/texk/dvipdfm-x/dvipdfmx.c
+@@ -130,22 +130,25 @@ static void
+ set_default_pdf_filename(void)
+ {
+   const char *dvi_base;
++  const char *suffix;
++  size_t      len = 0;
+ 
+   dvi_base = xbasename(dvi_filename);
+-  if (dpx_conf.compat_mode == dpx_mode_mpost_mode &&
+-      strlen(dvi_base) > 4 &&
+-      FILESTRCASEEQ(".mps", dvi_base + strlen(dvi_base) - 4)) {
+-    pdf_filename = NEW(strlen(dvi_base)+1, char);
+-    strncpy(pdf_filename, dvi_base, strlen(dvi_base) - 4);
+-    pdf_filename[strlen(dvi_base)-4] = '\0';
+-  } else if (strlen(dvi_base) > 4 &&
+-             (FILESTRCASEEQ(".dvi", dvi_base+strlen(dvi_base)-4) ||
+-              FILESTRCASEEQ(".xdv", dvi_base+strlen(dvi_base)-4))) {
+-    pdf_filename = NEW(strlen(dvi_base)+1, char);
+-    strncpy(pdf_filename, dvi_base, strlen(dvi_base)-4);
+-    pdf_filename[strlen(dvi_base)-4] = '\0';
++  len      = strlen(dvi_base) - strlen(".dvi");
++  suffix   = dvi_base + len;
++  if (dpx_conf.compat_mode == dpx_mode_mpost_mode && len > 0 &&
++      FILESTRCASEEQ(".mps", suffix)) {
++    pdf_filename = NEW(len+strlen(".pdf")+1, char);
++    strncpy(pdf_filename, dvi_base, len);
++    pdf_filename[len] = '\0';
++  } else if (len > 0 &&
++             (FILESTRCASEEQ(".dvi", suffix) ||
++              FILESTRCASEEQ(".xdv", suffix))) {
++    pdf_filename = NEW(len+strlen(".pdf")+1, char);
++    strncpy(pdf_filename, dvi_base, len);
++    pdf_filename[len] = '\0';
+   } else {
+-    pdf_filename = NEW(strlen(dvi_base)+5, char);
++    pdf_filename = NEW(strlen(dvi_base)+strlen(".pdf")+1, char);
+     strcpy(pdf_filename, dvi_base);
+   }
+ 
+diff --git a/texk/dvipdfm-x/pdfdev.c b/texk/dvipdfm-x/pdfdev.c
+index 8186e9189..f9d853bdd 100644
+--- a/texk/dvipdfm-x/pdfdev.c
++++ b/texk/dvipdfm-x/pdfdev.c
+@@ -1,6 +1,6 @@
+ /* This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
+ 
+-    Copyright (C) 2002-2018 by Jin-Hwan Cho and Shunsaku Hirata,
++    Copyright (C) 2002-2019 by Jin-Hwan Cho and Shunsaku Hirata,
+     the dvipdfmx project team.
+     
+     Copyright (C) 1998, 1999 by Mark A. Wicks <mwicks@kettering.edu>
+@@ -1963,7 +1963,7 @@ pdf_dev_begin_actualtext (uint16_t *unicodes, int count)
+ }
+ 
+ void
+-pdf_dev_end_actualtext ()
++pdf_dev_end_actualtext (void)
+ {
+   graphics_mode();
+ 
+diff --git a/texk/dvipdfm-x/pdfdev.h b/texk/dvipdfm-x/pdfdev.h
+index 5bd3db83f..09124e278 100644
+--- a/texk/dvipdfm-x/pdfdev.h
++++ b/texk/dvipdfm-x/pdfdev.h
+@@ -1,6 +1,6 @@
+ /* This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
+ 
+-    Copyright (C) 2002-2018 by Jin-Hwan Cho and Shunsaku Hirata,
++    Copyright (C) 2002-2019 by Jin-Hwan Cho and Shunsaku Hirata,
+     the dvipdfmx project team.
+     
+     Copyright (C) 1998, 1999 by Mark A. Wicks <mwicks@kettering.edu>
+@@ -219,6 +219,6 @@ extern void   pdf_dev_push_coord(double xpos, double ypos);
+ extern void   pdf_dev_pop_coord(void);
+ 
+ extern void   pdf_dev_begin_actualtext (uint16_t *unicodes, int len);
+-extern void   pdf_dev_end_actualtext ();
++extern void   pdf_dev_end_actualtext (void);
+ 
+ #endif /* _PDFDEV_H_ */
+diff --git a/texk/dvipdfm-x/pdfdoc.c b/texk/dvipdfm-x/pdfdoc.c
+index cecc318b7..8299af94e 100644
+--- a/texk/dvipdfm-x/pdfdoc.c
++++ b/texk/dvipdfm-x/pdfdoc.c
+@@ -2545,9 +2545,10 @@ pdf_open_document (const char *filename,
+   if (manual_thumb_enabled) {
+     if (strlen(filename) > 4 &&
+         !strncmp(".pdf", filename + strlen(filename) - 4, 4)) {
+-      thumb_basename = NEW(strlen(filename)-4+1, char);
+-      strncpy(thumb_basename, filename, strlen(filename)-4);
+-      thumb_basename[strlen(filename)-4] = 0;
++      size_t len = strlen(filename) - strlen(".pdf");
++      thumb_basename = NEW(len+1, char);
++      strncpy(thumb_basename, filename, len);
++      thumb_basename[len] = 0;
+     } else {
+       thumb_basename = NEW(strlen(filename)+1, char);
+       strcpy(thumb_basename, filename);
+diff --git a/texk/dvipdfm-x/spc_dvips.c b/texk/dvipdfm-x/spc_dvips.c
+index 7813c0114..33847f1bf 100644
+--- a/texk/dvipdfm-x/spc_dvips.c
++++ b/texk/dvipdfm-x/spc_dvips.c
+@@ -1,6 +1,6 @@
+ /* This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
+ 
+-    Copyright (C) 2002-2018 by Jin-Hwan Cho and Shunsaku Hirata,
++    Copyright (C) 2002-2019 by Jin-Hwan Cho and Shunsaku Hirata,
+     the dvipdfmx project team.
+     
+     Copyright (C) 1998, 1999 by Mark A. Wicks <mwicks@kettering.edu>
+@@ -353,7 +353,7 @@ spc_handler_ps_tricks_tdef (struct spc_env *spe, struct spc_arg *args)
+   return 0;
+ }
+ 
+-static int calculate_PS (char *string, int length, double *res1, double *res2, double *res3, double *res4, double *res5, double *res6);
++static int calculate_PS (char *strptr, int length, double *res1, double *res2, double *res3, double *res4, double *res5, double *res6);
+ 
+ static int
+ spc_handler_ps_tricks_bput (struct spc_env *spe, struct spc_arg *args, int must_def, int pre_def)
+@@ -483,7 +483,7 @@ spc_handler_ps_tricks_transform (struct spc_env *spe, struct spc_arg *args)
+   static const char *post = "concat matrix currentmatrix ==";
+ 
+   cmd = calloc(l + 41, 1);
+-  strncpy(cmd, "matrix setmatrix ", 17);
++  strncpy(cmd, "matrix setmatrix ", 18);
+   strncpy(cmd + 17, args->curptr, l);
+   concat = strstr(cmd, "concat");
+   if (concat != 0) {
+@@ -1027,7 +1027,7 @@ spc_dvips_setup_handler (struct spc_handler *handle,
+ #endif
+ 
+ static
+-int calculate_PS (char *string, int length, double *res1, double *res2, double *res3, double *res4, double *res5, double *res6) {
++int calculate_PS (char *strptr, int length, double *res1, double *res2, double *res3, double *res4, double *res5, double *res6) {
+   char *formula, *cmd;
+   FILE *fp, *coord;
+   int k;
+@@ -1049,7 +1049,7 @@ int calculate_PS (char *string, int length, double *res1, double *res2, double *
+     fprintf(fp, "(%s) run\n", page_defs);
+   if (temporary_defs)
+     fprintf(fp, "(%s) run\n", temporary_defs);
+-  fwrite(string, 1, length, fp);
++  fwrite(strptr, 1, length, fp);
+   fclose(fp);
+ #ifdef MIKTEX
+   {
+diff --git a/texk/dvipdfm-x/spc_pdfm.c b/texk/dvipdfm-x/spc_pdfm.c
+index 52a5df78b..aa80a6ba5 100644
+--- a/texk/dvipdfm-x/spc_pdfm.c
++++ b/texk/dvipdfm-x/spc_pdfm.c
+@@ -453,12 +453,12 @@ reencodestring (CMap *cmap, pdf_obj *instring)
+ static int
+ maybe_reencode_utf8(pdf_obj *instring)
+ {
+-  unsigned char* inbuf;
+-  int            inlen;
+-  int            non_ascii = 0;
+-  unsigned char* cp;
+-  unsigned char* op;
+-  unsigned char  wbuf[WBUF_SIZE];
++  unsigned char       *inbuf;
++  int                  inlen;
++  int                  non_ascii = 0;
++  const unsigned char *cp;
++  unsigned char       *op;
++  unsigned char        wbuf[WBUF_SIZE];
+ 
+   if (!instring)
+     return 0;
+diff --git a/texk/dvipdfm-x/system.h b/texk/dvipdfm-x/system.h
+index 6c57141e9..1c81cdad3 100644
+--- a/texk/dvipdfm-x/system.h
++++ b/texk/dvipdfm-x/system.h
+@@ -1,6 +1,6 @@
+ /* This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
+ 
+-    Copyright (C) 2002-2016 by Jin-Hwan Cho and Shunsaku Hirata,
++    Copyright (C) 2002-2019 by Jin-Hwan Cho and Shunsaku Hirata,
+     the dvipdfmx project team.
+     
+     Copyright (C) 1998, 1999 by Mark A. Wicks <mwicks@kettering.edu>
+@@ -32,7 +32,9 @@
+ #endif
+ 
+ #ifdef WIN32
++#ifdef _MSC_VER
+ #  pragma warning(disable : 4101 4018)
++#endif /* _MSC_VER */
+ #endif /* WIN32 */
+ 
+ #endif /* _SYSTEM_H_ */
+diff --git a/texk/dvipdfm-x/truetype.c b/texk/dvipdfm-x/truetype.c
+index 45b39159f..6d48699da 100644
+--- a/texk/dvipdfm-x/truetype.c
++++ b/texk/dvipdfm-x/truetype.c
+@@ -1,6 +1,6 @@
+ /* This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
+ 
+-    Copyright (C) 2007-2018 by Jin-Hwan Cho and Shunsaku Hirata,
++    Copyright (C) 2007-2019 by Jin-Hwan Cho and Shunsaku Hirata,
+     the dvipdfmx project team.
+     
+     This program is free software; you can redistribute it and/or modify
+@@ -129,7 +129,7 @@ pdf_font_open_truetype (pdf_font *font)
+     length = tt_get_ps_fontname(sfont, fontname, 255);
+     if (length < 1) {
+       length = MIN(strlen(ident), 255);
+-      strncpy(fontname, ident, length);
++      memcpy(fontname, ident, length);
+     }
+     fontname[length] = '\0';
+     for (n = 0; n < length; n++) {
+diff --git a/texk/dvipdfm-x/tt_post.c b/texk/dvipdfm-x/tt_post.c
+index 05d0edecd..898e563cb 100644
+--- a/texk/dvipdfm-x/tt_post.c
++++ b/texk/dvipdfm-x/tt_post.c
+@@ -63,6 +63,7 @@ read_v2_post_names (struct tt_post_table *post, sfnt *sfont)
+    *   -- https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6post.html
+    *
+    * But there are no restriction in Microsoft's OpenType spec.
++   */
+ 
+       if (idx > 32767) {
+         /* Although this is strictly speaking out of spec, it seems to work
+diff --git a/texk/dvipdfm-x/xbb.c b/texk/dvipdfm-x/xbb.c
+index c5063dad2..1ade936ec 100644
+--- a/texk/dvipdfm-x/xbb.c
++++ b/texk/dvipdfm-x/xbb.c
+@@ -107,8 +107,8 @@ static int xbb_to_file = 1;
+ 
+ static char *make_xbb_filename(const char *name)
+ {
+-  int i;
+   char *result;
++  int   i;
+ 
+   for (i = 0; i < sizeof(extensions) / sizeof(extensions[0]); i++) {
+     if (strlen(extensions[i]) < strlen(name) &&
+@@ -117,12 +117,14 @@ static char *make_xbb_filename(const char *name)
+   }
+   if (i == sizeof(extensions) / sizeof(extensions[0])) {
+     WARN("%s: Filename does not end in a recognizable extension.\n", name);
+-    result = NEW(strlen(name)+5, char);  /* 5 = ".xbb" + trailing 0 */
++    result = NEW(strlen(name)+strlen(".xbb")+1, char);
+     strcpy(result, name);
+   } else { /* Remove extension */
+-    result = NEW(strlen(name)-strlen(extensions[i])+5, char);  /* 5 = ".xbb" + trailing 0 */
+-    strncpy(result, name, strlen(name)-strlen(extensions[i]));
+-    result[strlen(name)-strlen(extensions[i])] = 0;
++    size_t len;
++    len    = strlen(name) - strlen(extensions[i]);
++    result = NEW(len+strlen(".xbb")+1, char);
++    strncpy(result, name, len);
++    result[len] = 0;
+   }
+   strcat(result, ((dpx_conf.compat_mode == dpx_mode_compat_mode) ? ".bb" : ".xbb"));
+   return result;
+-- 
+2.22.0
+

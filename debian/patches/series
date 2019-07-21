@@ -23,3 +23,4 @@ dvisvgm-fix-missing-libs
 0005-Fixe-a-bug-that-fake-bold-is-not-handled-properly-in.patch
 0006-lib-texmfmp.c-fix-for-filedump-of-XeTeX.patch
 0007-lib-texmfmp.c-fix-for-creationdate-XeTeX-only.patch
+xdvi-new-gs-support

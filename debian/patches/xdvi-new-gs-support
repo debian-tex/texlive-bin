@@ -1,0 +1,16 @@
+---
+ texk/xdvik/psgs.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+--- texlive-bin.orig/texk/xdvik/psgs.c
++++ texlive-bin/texk/xdvik/psgs.c
+@@ -561,7 +561,8 @@ initGS(void)
+ 	">> setuserparams .locksafe "
+ 	"} stopped pop\n";
+     static const char str1[] =
+-	"/xdvi$run {$error /newerror false put {currentfile cvx execute} stopped pop} "
++	"/xdvi$run "
++	"{$error /newerror false put currentfile cvx stopped {handleerror} if} "
+ 	"def "
+ 	"/xdvi$ack (\347\310\376) def "
+ 	"/xdvi$dslen countdictstack def "

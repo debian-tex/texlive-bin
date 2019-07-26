@@ -141,6 +141,7 @@ override_dh_auto_configure:
 	--disable-lacheck			\
 	--disable-texdoctk			\
 	--disable-ttf2pk			\
+	--disable-dvisvgm			\
 	--enable-ttf2pk2			\
 	--enable-ipc				
 
@@ -178,8 +179,8 @@ override_dh_install:
 	done
 	#
 	# install dvisvgm man page
-	install -m 0644 texk/dvisvgm/dvisvgm-src/doc/dvisvgm.1 \
-		debian/texlive-binaries/usr/share/man/man1/dvisvgm.1
+	#install -m 0644 texk/dvisvgm/dvisvgm-src/doc/dvisvgm.1 \
+	#	debian/texlive-binaries/usr/share/man/man1/dvisvgm.1
 	# for alternatives treatment we rename usr/bin/bibtex to
 	# usr/bin/bibtex.original
 	mv debian/texlive-binaries/usr/bin/bibtex \

@@ -1,3 +1,11 @@
+texlive-bin (2019.20190605.51237-3) UNRELEASED; urgency=medium
+
+  * Stop building dvisvgm package to solve FTBFS on HURD
+    (Closes: #926701). It will be packaged separately (see #932968).
+    Add the new package to Suggests.
+
+ -- Hilmar Preusse <hille42@web.de>  Fri, 26 Jul 2019 08:40:00 +0200
+
 texlive-bin (2019.20190605.51237-2) unstable; urgency=medium
 
   * Cherry pick various fixes:

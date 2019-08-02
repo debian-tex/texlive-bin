@@ -24,3 +24,4 @@ dvisvgm-fix-missing-libs
 0006-lib-texmfmp.c-fix-for-filedump-of-XeTeX.patch
 0007-lib-texmfmp.c-fix-for-creationdate-XeTeX-only.patch
 xdvi-new-gs-support
+synctex_pdftex_man.patch

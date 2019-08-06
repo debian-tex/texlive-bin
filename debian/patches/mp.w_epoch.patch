@@ -1,0 +1,16 @@
+diff -ur texlive-bin.orig/texk/web2c/mplibdir/mp.w texlive-bin/texk/web2c/mplibdir/mp.w
+--- texlive-bin.orig/texk/web2c/mplibdir/mp.w	2019-08-03 22:48:47.000000000 +0200
++++ texlive-bin/texk/web2c/mplibdir/mp.w	2019-08-03 23:44:23.597334712 +0200
+@@ -4350,7 +4350,11 @@
+ 
+ @c
+ static void mp_fix_date_and_time (MP mp) {
+-  time_t aclock = time ((time_t *) 0);
++  time_t aclock;
++  char *source_date_epoch;
++  if ((source_date_epoch = getenv("SOURCE_DATE_EPOCH")) == NULL ||
++      (aclock = (time_t) strtoll(source_date_epoch, NULL, 10)) <= 0)
++    aclock = time ((time_t *) 0);
+   struct tm *tmptr = localtime (&aclock);
+   set_internal_from_number (mp_time, unity_t);
+   number_multiply_int (internal_value(mp_time), (tmptr->tm_hour * 60 + tmptr->tm_min));

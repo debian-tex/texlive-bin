@@ -19,6 +19,7 @@ texlive-bin (2019.20190605.51237-3) UNRELEASED; urgency=medium
     - dvipdfmx: Fix a crash observed in add_ligature1_inverse_map()
     - dvipdfmx: Fix a bug that OTL coverage data were sometimes not
       read and were initialized to wrong values. 
+    - dvipdfmx: Fix evaluation of option "-m" (Closes: #926642)
 
  -- Norbert Preining <norbert@preining.info>  Tue, 06 Aug 2019 17:44:39 +0900
 

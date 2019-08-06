@@ -5,7 +5,7 @@ texlive-bin (2019.20190605.51237-3) UNRELEASED; urgency=medium
     (Closes: #926701). It will be packaged separately (see #932968).
     Add the new package to Suggests.
   * Add patch to pdftex.man to document -synctex option (Closes: #772928).
-  * Patch by Gero Treuner <gt_72_debian.org@innocircle.com>
+  * Patch by Gero Treuner <gt_72_debian.org@innocircle.com> (mp.w_epoch.patch)
     MetaPost does not honour SOURCE_DATE_EPOCH (Closes: #890734).
 
   [ Norbert Preining ]

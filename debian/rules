@@ -144,6 +144,10 @@ override_dh_auto_configure:
 	--disable-dvisvgm			\
 	--enable-ttf2pk2			\
 	--enable-ipc				
+	# make sure that the lacheck test script is executable
+	# this is only necessary since quilt/dpkg does not support
+	# permissions
+	chmod ugo+x utils/lacheck/test-def.test
 
 override_dh_auto_install:
 	dh_auto_install -- DESTDIR=$(CURDIR)/debian/tmp

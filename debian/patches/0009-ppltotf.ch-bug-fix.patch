@@ -1,0 +1,40 @@
+From 47cbfddd76312a53982fb7190bdd990a95cd18f3 Mon Sep 17 00:00:00 2001
+From: Hironobu Yamashita <h.y.acetaminophen@gmail.com>
+Date: Sun, 4 Aug 2019 12:29:26 +0000
+Subject: [PATCH 09/10] ppltotf.ch: bug fix
+
+git-svn-id: svn://tug.org/texlive/trunk/Build/source@51814 c570f23f-e606-0410-a88d-b1316a301751
+---
+ texk/web2c/ptexdir/ChangeLog  | 5 +++++
+ texk/web2c/ptexdir/ppltotf.ch | 2 +-
+ 2 files changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/texk/web2c/ptexdir/ChangeLog b/texk/web2c/ptexdir/ChangeLog
+index e7a228942..f95f33d06 100644
+--- a/texk/web2c/ptexdir/ChangeLog
++++ b/texk/web2c/ptexdir/ChangeLog
+@@ -1,3 +1,8 @@
++2019-08-04  Hironobu Yamashita  <h.y.acetaminophen@gmail.com>
++
++	* ppltotf.ch: 'This property name doesn't belong in a TYPE list'
++	was never available.
++
+ 2019-06-24  Hironobu Yamashita  <h.y.acetaminophen@gmail.com>
+ 
+ 	* ptex-base.ch: 'Improper alphabetic or KANJI constant' error
+diff --git a/texk/web2c/ptexdir/ppltotf.ch b/texk/web2c/ptexdir/ppltotf.ch
+index f02f46b66..cb9aafa10 100644
+--- a/texk/web2c/ptexdir/ppltotf.ch
++++ b/texk/web2c/ptexdir/ppltotf.ch
+@@ -520,7 +520,7 @@ end;
+ @ @<Read a kanji property@>=
+ begin get_name;
+ if cur_code=comment_code then skip_to_end_of_item
+-else if (cur_code<char_wd_code)and(cur_code>char_ic_code) then
++else if (cur_code<char_wd_code)or(cur_code>char_ic_code) then
+   flush_error('This property name doesn''t belong in a TYPE list')
+ else  begin case cur_code of
+   char_wd_code: char_wd[c]:=sort_in(width,get_fix);
+-- 
+2.23.0.rc1
+

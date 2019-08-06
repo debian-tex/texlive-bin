@@ -7,9 +7,18 @@ texlive-bin (2019.20190605.51237-3) UNRELEASED; urgency=medium
   * Add patch to pdftex.man to document -synctex option (Closes: #772928).
 
   [ Norbert Preining ]
-  * Include upupstream fix for ghostscript 9.27 and above incompatibilities
+  * Cherry pick session:
+    - lacheck: separate patterns for handling \def and \newcommand
+    - lacheck: version bump 1.29
+    - ptex: strict '! Improper alphabetic or KANJI constant.'
+    - eptex: version 190709 (add \ifincsname, revise \iffontchar and \fontchar)
+    - eptex.ech: more compatible with original e-TeX
+    - xdvi: don't use now-gone-from-ghostscript execute operator (from upstream)
+    - dvipdfmx: Fix a crash observed in add_ligature1_inverse_map()
+    - dvipdfmx: Fix a bug that OTL coverage data were sometimes not
+      read and were initialized to wrong values. 
 
- -- Norbert Preining <norbert@preining.info>  Fri, 26 Jul 2019 16:14:28 +0900
+ -- Norbert Preining <norbert@preining.info>  Tue, 06 Aug 2019 17:44:39 +0900
 
 texlive-bin (2019.20190605.51237-2) unstable; urgency=medium
 

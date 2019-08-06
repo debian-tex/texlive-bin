@@ -23,5 +23,14 @@ dvisvgm-fix-missing-libs
 0005-Fixe-a-bug-that-fake-bold-is-not-handled-properly-in.patch
 0006-lib-texmfmp.c-fix-for-filedump-of-XeTeX.patch
 0007-lib-texmfmp.c-fix-for-creationdate-XeTeX-only.patch
-xdvi-new-gs-support
 synctex_pdftex_man.patch
+0001-separate-patterns-for-handling-def-and-newcommand.patch
+0002-lacheck-version-1.29.patch
+0003-ptex-strict-Improper-alphabetic-or-KANJI-constant.-e.patch
+0004-eptex-version-190709-add-ifincsname-revise-iffontcha.patch
+0005-eptex.ech-more-compatible-with-original-e-TeX.patch
+0006-initGS-don-t-use-now-gone-from-ghostscript.patch
+0007-Fix-a-crash-observed-in-add_ligature1_inverse_map-.-.patch
+0008-Fix-a-bug-that-OTL-coverage-data-were-sometimes-not-.patch
+0009-ppltotf.ch-bug-fix.patch
+0010-Ignore-some-of-zlib-errors.-Fix-a-bug-in-m-option.-S.patch

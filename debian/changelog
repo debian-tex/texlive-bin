@@ -7,6 +7,9 @@ texlive-bin (2019.20190605.51237-3) UNRELEASED; urgency=medium
   * Add patch to pdftex.man to document -synctex option (Closes: #772928).
   * Patch by Gero Treuner <gt_72_debian.org@innocircle.com> (mp.w_epoch.patch)
     MetaPost does not honour SOURCE_DATE_EPOCH (Closes: #890734).
+  * Patch by John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>
+    (sparc64-fix-alignment.patch) to enable the alignment fixes for Linux on
+    SPARC64 (Closes: #931873).
 
   [ Norbert Preining ]
   * Cherry pick session:

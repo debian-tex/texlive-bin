@@ -1,7 +1,8 @@
-diff -ur texlive-bin.orig/texk/web2c/mplibdir/mp.w texlive-bin/texk/web2c/mplibdir/mp.w
---- texlive-bin.orig/texk/web2c/mplibdir/mp.w	2019-08-03 22:48:47.000000000 +0200
-+++ texlive-bin/texk/web2c/mplibdir/mp.w	2019-08-03 23:44:23.597334712 +0200
-@@ -4350,7 +4350,11 @@
+Index: texlive-bin/texk/web2c/mplibdir/mp.w
+===================================================================
+--- texlive-bin.orig/texk/web2c/mplibdir/mp.w	2019-08-15 19:53:31.028423175 +0200
++++ texlive-bin/texk/web2c/mplibdir/mp.w	2019-08-15 19:53:31.020419175 +0200
+@@ -4380,7 +4380,11 @@
  
  @c
  static void mp_fix_date_and_time (MP mp) {

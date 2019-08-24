@@ -23,8 +23,11 @@ texlive-bin (2019.20190605.51237-3) UNRELEASED; urgency=medium
     - dvipdfmx: Fix a bug that OTL coverage data were sometimes not
       read and were initialized to wrong values. 
     - dvipdfmx: Fix evaluation of option "-m" (Closes: #926642)
+    - dvipdfmx: workaround for problems in user defined resources
+    - gsftopk: gs-9.28(rc1) requires -dNOSAFER
+    - dvipdfmx: Take into account summertime. Always output color change code
 
- -- Norbert Preining <norbert@preining.info>  Tue, 06 Aug 2019 17:44:39 +0900
+ -- Norbert Preining <norbert@preining.info>  Sat, 24 Aug 2019 20:38:17 +0900
 
 texlive-bin (2019.20190605.51237-2) unstable; urgency=medium
 

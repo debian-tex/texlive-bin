@@ -36,3 +36,6 @@ synctex_pdftex_man.patch
 0010-Ignore-some-of-zlib-errors.-Fix-a-bug-in-m-option.-S.patch
 mp.w_epoch.patch
 sparc64-fix-alignment.patch
+0001-Workaround-for-some-problems-in-adding-user-defined-.patch
+0002-gs-9.28-rc1-requires-dNOSAFER-in-gsftopk.patch
+0003-Take-into-account-summertime.-Always-output-color-ch.patch

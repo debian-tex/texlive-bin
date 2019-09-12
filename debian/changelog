@@ -1,4 +1,4 @@
-texlive-bin (2019.20190605.51237-3) UNRELEASED; urgency=medium
+texlive-bin (2019.20190605.51237-3) unstable; urgency=medium
 
   [ Hilmar Preusse ]
   * Stop building dvisvgm package to solve FTBFS on HURD
@@ -28,8 +28,9 @@ texlive-bin (2019.20190605.51237-3) UNRELEASED; urgency=medium
     - dvipdfmx: Take into account summertime. Always output color change code
     - dvipdfmx: show appropriate message if unsupported pfa is used
     - e-pTeX: e-pTeX 190908: \readline correctly handles Japanese characters
+    - ptexenc.c: updates from H. Kitagawa
 
- -- Norbert Preining <norbert@preining.info>  Mon, 09 Sep 2019 07:36:39 +0900
+ -- Norbert Preining <norbert@preining.info>  Thu, 12 Sep 2019 16:07:00 +0900
 
 texlive-bin (2019.20190605.51237-2) unstable; urgency=medium
 

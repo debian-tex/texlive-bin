@@ -42,3 +42,4 @@ sparc64-fix-alignment.patch
 0001-jfmutil-4sep19.patch
 0002-show-appropriate-message-if-unsupported-pfa-is-used.patch
 0003-e-pTeX-190908-readline-correctly-handles-Japanese-ch.patch
+0001-ptexenc.c-updates-from-H.-Kitagawa.patch

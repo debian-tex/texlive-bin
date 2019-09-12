@@ -59,8 +59,7 @@ Depends: libptexenc1 (>= ${source:Version}),
   t1utils,
   ${shlibs:Depends}, ${misc:Depends}, 
   tex-common (>= 6), perl, dpkg (>= 1.15.4) | install-info
-Recommends: texlive-base
-Suggests: dvisvgm
+Recommends: texlive-base, dvisvgm
 Replaces: texlive-metapost (<< 2010), texlive-base (<< 2010), ptex-bin, mendexk, jmpost, luatex (<< 2014), musixtex (<< 1:1.20.ctan20151216-3), pmx (<< 2.7.0.ctan20150301-3), m-tx (<< 0.61.ctan20151217-2), gregorio (<= 2.3-1), tex4ht (<< 20160814), texlive-lang-japanese (<< 2017)
 Conflicts: mendexk, makejvf, jmpost
 Breaks: texlive-base (<< 2018), jtex-bin, multex-bin, luatex (<< 2014), tex-common (<< 6), musixtex (<< 1:1.20.ctan20151216-3), pmx (<< 2.7.0.ctan20150301-3), m-tx (<< 0.61.ctan20151217-2), gregorio (<= 2.3-1), context (<< 2016), tex4ht (<< 20160814),

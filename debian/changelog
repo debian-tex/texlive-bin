@@ -19,6 +19,7 @@ texlive-bin (2019.20190605.51237-3) unstable; urgency=medium
     - eptex: version 190709 (add \ifincsname, revise \iffontchar and \fontchar)
     - eptex.ech: more compatible with original e-TeX
     - xdvi: don't use now-gone-from-ghostscript execute operator (from upstream)
+      (Closes: #940191)
     - dvipdfmx: Fix a crash observed in add_ligature1_inverse_map()
     - dvipdfmx: Fix a bug that OTL coverage data were sometimes not
       read and were initialized to wrong values. 
@@ -30,7 +31,7 @@ texlive-bin (2019.20190605.51237-3) unstable; urgency=medium
     - e-pTeX: e-pTeX 190908: \readline correctly handles Japanese characters
     - ptexenc.c: updates from H. Kitagawa
 
- -- Norbert Preining <norbert@preining.info>  Thu, 12 Sep 2019 16:07:00 +0900
+ -- Norbert Preining <norbert@preining.info>  Wed, 18 Sep 2019 17:15:44 +0900
 
 texlive-bin (2019.20190605.51237-2) unstable; urgency=medium
 

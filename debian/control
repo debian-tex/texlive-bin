@@ -36,6 +36,7 @@ Build-Depends:
   m4 (>= 1.4.16),
   sharutils,
   texinfo,
+  texlive-binaries <cross>,
   time,
   zlib1g-dev | libz-dev
 Standards-Version: 4.2.1

@@ -1,3 +1,10 @@
+texlive-bin (2019.20190605.51237-4) UNRELEASED; urgency=medium
+
+  * Fix FTCBFS: Add texlive-binaries <cross> to Build-Depends to have
+    a native tangle. (Closes: #940691) (Thanks to Helmut Grohne)
+
+ -- Norbert Preining <norbert@preining.info>  Thu, 19 Sep 2019 13:38:30 +0900
+
 texlive-bin (2019.20190605.51237-3) unstable; urgency=medium
 
   [ Hilmar Preusse ]

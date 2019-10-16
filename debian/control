@@ -13,7 +13,7 @@ Build-Depends:
   libbrotli-dev,
   libcairo2-dev,
   libfontconfig1-dev,
-  libfreetype6-dev,
+  libfreetype-dev,
   libgd-dev,
   libgmp-dev,
   libgraphite2-dev,

@@ -7,8 +7,7 @@ Build-Depends:
   autoconf (>= 2.69),
   automake (>= 1:1.13.1),
   bison,
-  debhelper (>= 9),
-  dh-autoreconf,
+  debhelper-compat (= 12),
   flex,
   libbrotli-dev,
   libcairo2-dev,
@@ -47,18 +46,18 @@ Vcs-Browser: https://github.com/debian-tex/texlive-bin
 Package: texlive-binaries
 Architecture: any
 Multi-Arch: foreign
-Depends: libptexenc1 (>= ${source:Version}), 
-  libptexenc1 (<< ${source:Version}.1~), 
-  libkpathsea6 (>= ${source:Version}), 
-  libkpathsea6 (<< ${source:Version}.1~), 
+Depends: libptexenc1 (>= ${source:Version}),
+  libptexenc1 (<< ${source:Version}.1~),
+  libkpathsea6 (>= ${source:Version}),
+  libkpathsea6 (<< ${source:Version}.1~),
   libsynctex2 (>= ${source:Version}),
   libsynctex2 (<< ${source:Version}.1~),
-  libtexlua53 (>= ${source:Version}), 
-  libtexlua53 (<< ${source:Version}.1~), 
-  libtexluajit2 (>= ${source:Version}) [amd64 armel armhf hurd-i386 i386 kfreebsd-amd64 kfreebsd-i386 powerpc], 
-  libtexluajit2 (<< ${source:Version}.1~) [amd64 armel armhf hurd-i386 i386 kfreebsd-amd64 kfreebsd-i386 powerpc], 
+  libtexlua53 (>= ${source:Version}),
+  libtexlua53 (<< ${source:Version}.1~),
+  libtexluajit2 (>= ${source:Version}) [amd64 armel armhf hurd-i386 i386 kfreebsd-amd64 kfreebsd-i386 powerpc],
+  libtexluajit2 (<< ${source:Version}.1~) [amd64 armel armhf hurd-i386 i386 kfreebsd-amd64 kfreebsd-i386 powerpc],
   t1utils,
-  ${shlibs:Depends}, ${misc:Depends}, 
+  ${shlibs:Depends}, ${misc:Depends},
   tex-common (>= 6), perl, dpkg (>= 1.15.4) | install-info
 Recommends: texlive-base, dvisvgm
 Replaces: texlive-metapost (<< 2010), texlive-base (<< 2010), ptex-bin, mendexk, jmpost, luatex (<< 2014), musixtex (<< 1:1.20.ctan20151216-3), pmx (<< 2.7.0.ctan20150301-3), m-tx (<< 0.61.ctan20151217-2), gregorio (<= 2.3-1), tex4ht (<< 20160814), texlive-lang-japanese (<< 2017)

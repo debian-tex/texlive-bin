@@ -7,7 +7,7 @@ Build-Depends:
   autoconf (>= 2.69),
   automake (>= 1:1.13.1),
   bison,
-  debhelper (>= 9),
+  debhelper (>= 12~),
   dh-autoreconf,
   flex,
   libbrotli-dev,

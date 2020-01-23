@@ -67,7 +67,7 @@ endif
 # must be adapted to also patch the Makefile.in!
 
 %:
-	dh $@ --with autoreconf --builddirectory Work
+	dh $@ --builddirectory Work
 
 #
 # we use TL provided reautoconf script as it has some built-in magic

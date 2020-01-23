@@ -8,7 +8,6 @@ Build-Depends:
   automake (>= 1:1.13.1),
   bison,
   debhelper-compat (= 12),
-  dh-autoreconf,
   flex,
   libbrotli-dev,
   libcairo2-dev,

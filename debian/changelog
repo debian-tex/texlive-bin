@@ -10,6 +10,7 @@ texlive-bin (2019.20190605.51237-4) UNRELEASED; urgency=medium
   * Bump debhelper from old 9 to 12.
   * Set debhelper-compat version in Build-Depends.
   * Drop unnecessary dependency on dh-autoreconf.
+  * Rely on pre-initialized dpkg-architecture variables.
 
  -- Norbert Preining <norbert@preining.info>  Thu, 19 Sep 2019 13:38:30 +0900
 

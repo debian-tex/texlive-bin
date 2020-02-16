@@ -5,7 +5,7 @@
 
 --- texlive-bin.orig/texk/web2c/man/etex.man
 +++ texlive-bin/texk/web2c/man/etex.man
-@@ -319,6 +319,20 @@
+@@ -327,6 +327,20 @@ is set when e-\*(TX is compiled.
  Search path for font metric
  .RI ( .tfm )
  files.
@@ -28,7 +28,7 @@
  The location of the files mentioned below varies from system to
 --- texlive-bin.orig/texk/web2c/man/tex.man
 +++ texlive-bin/texk/web2c/man/tex.man
-@@ -427,6 +427,14 @@
+@@ -434,6 +434,14 @@ is set when \*(TX is compiled.
  Search path for font metric
  .RI ( .tfm )
  files.

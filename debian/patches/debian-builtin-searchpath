@@ -1,11 +1,11 @@
 adjust built-in search paths for kpathsea library to Debian standard
 ---
- texk/kpathsea/texmf.cnf |   50 +++++++++++++-----------------------------------
- 1 file changed, 14 insertions(+), 36 deletions(-)
+ texk/kpathsea/texmf.cnf |   46 ++++++++++++----------------------------------
+ 1 file changed, 12 insertions(+), 34 deletions(-)
 
 --- texlive-bin.orig/texk/kpathsea/texmf.cnf
 +++ texlive-bin/texk/kpathsea/texmf.cnf
-@@ -61,20 +61,23 @@
+@@ -62,20 +62,23 @@
  TEXMFROOT = $SELFAUTOPARENT
  
  % The main tree of distributed packages and programs:
@@ -33,20 +33,7 @@ adjust built-in search paths for kpathsea library to Debian standard
  
  % Per-user texmf tree(s) -- organized per the TDS, as usual.  To define
  % more than one per-user tree, set this to a list of directories in
-@@ -83,10 +86,10 @@ TEXMFSYSCONFIG = $TEXMFROOT/texmf-config
- TEXMFHOME = ~/texmf
- 
- % TEXMFVAR, where texconfig/updmap/fmtutil store cached runtime data.
--TEXMFVAR = ~/.texlive2019/texmf-var
-+TEXMFVAR = ~/.texmf-var
- 
- % TEXMFCONFIG, where texconfig/updmap/fmtutil store configuration data.
--TEXMFCONFIG = ~/.texlive2019/texmf-config
-+TEXMFCONFIG = ~/.texmf-config
- 
- % This is the value manipulated by tlmgr's auxtrees subcommand in the
- % root texmf.cnf. Kpathsea warns about a literally empty string for a
-@@ -107,7 +110,7 @@ TEXMFAUXTREES = {}
+@@ -108,7 +111,7 @@ TEXMFAUXTREES = {}
  % The odd-looking $TEXMFAUXTREES$TEXMF... construct is so that if no auxtree is
  % ever defined (the 99% common case), no extra elements will be added to
  % the search paths. tlmgr takes care to end any value with a trailing comma.
@@ -55,7 +42,7 @@ adjust built-in search paths for kpathsea library to Debian standard
  
  % Where to look for, and where mktexlsr creates, ls-R files. By default,
  % this is all and only the !! elements of TEXMF, so that mktexlsr does not
-@@ -115,7 +118,7 @@ TEXMF = {$TEXMFAUXTREES$TEXMFCONFIG,$TEX
+@@ -116,7 +119,7 @@ TEXMF = {$TEXMFAUXTREES$TEXMFCONFIG,$TEX
  % present, it will be used, and the disk will not (usually) be searched,
  % regardless of !!.  Although in principle a directory listed here need
  % not contain an ls-R file, in practice they all should.
@@ -64,7 +51,7 @@ adjust built-in search paths for kpathsea library to Debian standard
  
  % The system trees.  These are the trees that are shared by all users.
  % If a tree appears in this list, the mktex* scripts will use
-@@ -132,7 +135,7 @@ TEXMFCACHE = $TEXMFSYSVAR;$TEXMFVAR
+@@ -133,7 +136,7 @@ TEXMFCACHE = $TEXMFSYSVAR;$TEXMFVAR
  % Where generated fonts may be written.  This tree is used when the sources
  % were found in a system tree and either that tree wasn't writable, or the
  % varfonts feature was enabled in MT_FEATURES in mktex.cnf.
@@ -73,7 +60,7 @@ adjust built-in search paths for kpathsea library to Debian standard
  
  % On some systems, there will be a system tree which contains all the font
  % files that may be created as well as the formats.  For example
-@@ -525,33 +528,8 @@ RUBYINPUTS   = $TEXMFDOTDIR;$TEXMF/scrip
+@@ -557,33 +560,8 @@ RUBYINPUTS   = $TEXMFDOTDIR;$TEXMF/scrip
  % since we don't want to scatter ../'s throughout the value.  Hence we
  % explicitly list every directory.  Arguably more understandable anyway.
  %

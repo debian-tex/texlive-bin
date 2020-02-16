@@ -1,8 +1,10 @@
-Index: texlive-bin/texk/web2c/mplibdir/mp.w
-===================================================================
---- texlive-bin.orig/texk/web2c/mplibdir/mp.w	2019-08-15 19:53:31.028423175 +0200
-+++ texlive-bin/texk/web2c/mplibdir/mp.w	2019-08-15 19:53:31.020419175 +0200
-@@ -4380,7 +4380,11 @@
+---
+ texk/web2c/mplibdir/mp.w |    6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+--- texlive-bin.orig/texk/web2c/mplibdir/mp.w
++++ texlive-bin/texk/web2c/mplibdir/mp.w
+@@ -4387,7 +4387,11 @@ be used after the year 32767.
  
  @c
  static void mp_fix_date_and_time (MP mp) {

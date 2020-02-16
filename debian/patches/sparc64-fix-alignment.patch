@@ -2,10 +2,10 @@ Description: Fix alignment issues on sparc64
 Author: John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>
 Last-Update: 2019-08-15
 
-Index: texlive-bin/texk/web2c/luatexdir/luapplib/ppconf.h
+Index: texlive-bin/texk/web2c/luatexdir/luapplib/src/ppconf.h
 ===================================================================
---- texlive-bin.orig/texk/web2c/luatexdir/luapplib/ppconf.h	2019-08-15 19:55:15.420598147 +0200
-+++ texlive-bin/texk/web2c/luatexdir/luapplib/ppconf.h	2019-08-15 19:55:15.412594147 +0200
+--- texlive-bin.orig/texk/web2c/luatexdir/luapplib/src/ppconf.h	2019-08-15 19:55:15.420598147 +0200
++++ texlive-bin/texk/web2c/luatexdir/luapplib/src/ppconf.h	2019-08-15 19:55:15.412594147 +0200
 @@ -3,7 +3,7 @@
  #define PP_CONF_H
  
@@ -15,10 +15,10 @@ Index: texlive-bin/texk/web2c/luatexdir/luapplib/ppconf.h
  #  define ARM_COMPLIANT 1
  #else
  #  define ARM_COMPLIANT 0
-Index: texlive-bin/texk/web2c/luatexdir/luapplib/ppheap.c
+Index: texlive-bin/texk/web2c/luatexdir/luapplib/src/ppheap.c
 ===================================================================
---- texlive-bin.orig/texk/web2c/luatexdir/luapplib/ppheap.c	2019-08-15 19:55:15.420598147 +0200
-+++ texlive-bin/texk/web2c/luatexdir/luapplib/ppheap.c	2019-08-15 19:55:15.412594147 +0200
+--- texlive-bin.orig/texk/web2c/luatexdir/luapplib/src/ppheap.c	2019-08-15 19:55:15.420598147 +0200
++++ texlive-bin/texk/web2c/luatexdir/luapplib/src/ppheap.c	2019-08-15 19:55:15.412594147 +0200
 @@ -15,7 +15,11 @@
  #if defined(__sun) && defined(__SVR4)
  # define PPHEAP_NEED_ALIGNMENT
@@ -32,10 +32,10 @@ Index: texlive-bin/texk/web2c/luatexdir/luapplib/ppheap.c
  #ifdef PPHEAP_NEED_ALIGNMENT 
  /* Tests has shown that long double seems to work: */
  /* for 32bit aligned_data has  algn: 64 as ppxref and ppref, */
-Index: texlive-bin/texk/web2c/luatexdir/luapplib/util/utilarm.h
+Index: texlive-bin/texk/web2c/luatexdir/luapplib/src/util/utilarm.h
 ===================================================================
---- texlive-bin.orig/texk/web2c/luatexdir/luapplib/util/utilarm.h	2019-08-15 19:55:15.420598147 +0200
-+++ texlive-bin/texk/web2c/luatexdir/luapplib/util/utilarm.h	2019-08-15 19:55:15.412594147 +0200
+--- texlive-bin.orig/texk/web2c/luatexdir/luapplib/src/util/utilarm.h	2019-08-15 19:55:15.420598147 +0200
++++ texlive-bin/texk/web2c/luatexdir/luapplib/src/util/utilarm.h	2019-08-15 19:55:15.412594147 +0200
 @@ -1,10 +1,10 @@
  #ifndef UTIL_ARM_H
  #define UTIL_ARM_H

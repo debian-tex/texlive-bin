@@ -4,9 +4,9 @@
 
 --- texlive-bin.orig/texk/dvisvgm/dvisvgm-src/src/Makefile.am
 +++ texlive-bin/texk/dvisvgm/dvisvgm-src/src/Makefile.am
-@@ -15,14 +15,14 @@ include ../libs/defs.am
- dvisvgm_LDADD = \
+@@ -17,14 +17,14 @@ dvisvgm_LDADD = \
  	$(noinst_LIBRARIES) \
+ 	optimizer/liboptimizer.a \
  	../libs/clipper/libclipper.a \
 -	$(POTRACE_LIBS) \
 -	$(XXHASH_LIBS)
@@ -23,7 +23,7 @@
  endif
  
  if USE_BUNDLED_MD5
-@@ -36,7 +36,7 @@ dvisvgm_LDADD += \
+@@ -38,7 +38,7 @@ dvisvgm_LDADD += \
  	$(FREETYPE2_LIBS) \
  	$(FONTFORGE_LIBS) \
  	$(ZLIB_LIBS) \

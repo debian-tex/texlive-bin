@@ -1,6 +1,6 @@
 /* This is dvipdfmx, an eXtended version of dvipdfm by Mark A. Wicks.
 
-    Copyright (C) 2002-2018 by Jin-Hwan Cho and Shunsaku Hirata,
+    Copyright (C) 2002-2019 by Jin-Hwan Cho and Shunsaku Hirata,
     the dvipdfmx project team.
     
     Copyright (C) 1998, 1999 by Mark A. Wicks <mwicks@kettering.edu>
@@ -571,7 +571,7 @@ reset_text_state (void)
   /*
    * We need to reset the line matrix to handle slanted fonts.
    */
-  pdf_doc_add_page_content(" BT", 3);  /* op: BT */
+  pdf_doc_add_page_content(" q BT", 5);  /* op: BT */
   /*
    * text_state.matrix is identity at top of page.
    * This sometimes write unnecessary "Tm"s when transition from
@@ -619,7 +619,7 @@ graphics_mode (void)
     pdf_doc_add_page_content(text_state.is_mb ? ">]TJ" : ")]TJ", 4);  /* op: TJ */
     /* continue */
   case TEXT_MODE:
-    pdf_doc_add_page_content(" ET", 3);  /* op: ET */
+    pdf_doc_add_page_content(" ET Q", 5);  /* op: ET */
     text_state.force_reset =  0;
     text_state.font_id     = -1;
     break;
@@ -1963,7 +1963,7 @@ pdf_dev_begin_actualtext (uint16_t *unicodes, int count)
 }
 
 void
-pdf_dev_end_actualtext ()
+pdf_dev_end_actualtext (void)
 {
   graphics_mode();
 

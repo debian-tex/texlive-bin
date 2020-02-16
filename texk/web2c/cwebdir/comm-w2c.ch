@@ -946,14 +946,9 @@ scan_args(void)
 @ We use all of |*argv| for the |web_file_name| if there is a |'.'| in it,
 otherwise we add |".w"|. If this file can't be opened, we prepare an
 |alt_web_file_name| by adding |"web"| after the dot.
-The other file names come from adding other things
-after the dot.  We must check that there is enough room in
-|web_file_name| and the other arrays for the argument.
 @y
 @ We use all of |*argv| for the |web_file_name| if there is a |'.'| in it,
-otherwise we add |".w"|.  The other file names come from adding other things
-after the dot.  We must check that there is enough room in |web_file_name| and
-the other arrays for the argument.
+otherwise we add |".w"|.
 @z
 
 @x
@@ -1383,7 +1378,7 @@ template in English.
 @<Display version information and |exit|@>=
 printversionandexit(cb_banner,
   program == ctwill ? "Donald E. Knuth" : "Silvio Levy and Donald E. Knuth",
-  NULL, NULL);
+  NULL, "Contemporary development on https://github.com/ascherer/cwebbin.\n");
 @.--version@>
 
 @ But the ``banner'' is, at least the first part.

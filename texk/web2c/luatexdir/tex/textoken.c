@@ -76,7 +76,7 @@ unsigned fix_mem_max;
 
 /*tex how much memory is in use */
 
-int var_used, dyn_used;
+int dyn_used;
 
 /*tex head of the list of available one-word nodes */
 
@@ -2352,8 +2352,9 @@ void ins_the_toks(void)
 
 */
 
-void combine_the_toks(int how)
+void combine_the_toks(void)
 {
+    halfword how = cur_chr;
     halfword source = null;
     halfword target = null;
     halfword append = (how == 0) || (how == 1) || (how == 4) || (how == 5);

@@ -1,3 +1,49 @@
+2019-12-10  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* am/eptex.am (eptex_CPPFLAGS): append $(ZLIB_INCLUDES).
+	(eptex_LDADD): append $(ZLIB_LIBS.)
+	(eptex_DEPENDENCIES): append $(ZLIB_DEPEND) 
+	(eptex_web_srcs): append zlib-fmt.ch.
+
+2019-11-12  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* pdfutils.ch: Add primitives \Uchar and \Ucharcat.
+	* tests/uchar.tex: Added.
+	* eptex.ech, eptex_version.h: e-pTeX version 191112.
+
+2019-10-28  Hironobu Yamashita  <h.y.acetaminophen@gmail.com>
+
+	* eptex.ech: Add primitives \current(x)spacingmode.
+
+2019-09-08  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* eptex.ech: \readline correctly handles Japanese characters.
+
+2019-07-21  Hironobu Yamashita  <h.y.acetaminophen@gmail.com>
+
+	* eptex.ech: More compatible with original e-TeX, because
+	'\fontchar??' and '\iffontchar' for Latin font is effective
+	only for 0--255.
+
+2019-07-09  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* pdfutils.ch: Add primitive \ifincsname.
+	* eptex.ech: Revise \iffontchar and \fontchar?? to treat
+	negative value as char_type.
+	  - \iffontchar (Japanese font f) (number c):
+	    - c >= 0: true iff is_char_kanji(c)
+	    - c < 0: true iff f has char_type -(c+1)
+	  - \fontcharwd (Japanese font f) (number c):
+	    - c >= 0: return the width of character c
+	    - c < 0: return the width of char_type -(c+1)
+	* tests/fontchar.{sh,tex}, tests/zero_search.tex: Added.
+	* eptex.ech, eptex_version.h: e-pTeX version 190709.
+
+2019-05-28  Hironobu Yamashita  <h.y.acetaminophen@gmail.com>
+
+	* am/eptex.am: Add a new test.
+	* epver.test: New test file for version number consistency.
+
 2019-04-02  Hironobu Yamashita  <h.y.acetaminophen@gmail.com>
 
 	* eptex.ech: \fontcharwd etc. for Japanese fonts correctly

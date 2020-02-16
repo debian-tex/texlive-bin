@@ -1,6 +1,7 @@
+## $Id$
 ## Makefile.am for the TeX Live subdirectory texk/texlive/linked_scripts/
 ##
-## Copyright 2016-2017 Karl Berry <tex-live@tug.org>
+## Copyright 2016-2019 Karl Berry <tex-live@tug.org>
 ## Copyright 2009-2015 Peter Breitenlohner <tex-live@tug.org>
 ## You may freely use, modify and/or distribute this file.
 ##
@@ -66,33 +67,39 @@ texmf_shell_scripts = \
 	ltxfileinfo/ltxfileinfo \
 	lua2dox/lua2dox_filter \
 	pdfbook2/pdfbook2 \
-	pdfjam/pdf180 \
-	pdfjam/pdf270 \
-	pdfjam/pdf90 \
-	pdfjam/pdfbook \
-	pdfjam/pdfflip \
 	pdfjam/pdfjam \
-	pdfjam/pdfjam-pocketmod \
-	pdfjam/pdfjam-slides3up \
-	pdfjam/pdfjam-slides6up \
-	pdfjam/pdfjoin \
-	pdfjam/pdfnup \
-	pdfjam/pdfpun \
 	pdftex-quiet/pdftex-quiet \
 	pdfxup/pdfxup \
 	pst-pdf/ps4pdf \
 	simpdftex/simpdftex \
+	texlive-extra/allcm.sh \
+	texlive-extra/allneeded.sh \
+	texlive-extra/dvi2fax.sh \
+	texlive-extra/dvired.sh \
+	texlive-extra/fontinst.sh \
+	texlive-extra/kpsetool.sh \
+	texlive-extra/kpsewhere.sh \
+	texlive-extra/ps2frag.sh \
+	texlive-extra/pslatex.sh \
+	texlive-extra/rubibtex.sh \
+	texlive-extra/rumakeindex.sh \
+	texlive-extra/texconfig-dialog.sh \
+	texlive-extra/texconfig-sys.sh \
+	texlive-extra/texconfig.sh \
+	texlive-extra/texlinks.sh \
 	texosquery/texosquery.sh \
 	texosquery/texosquery-jre5.sh \
 	texosquery/texosquery-jre8.sh \
 	typeoutfileinfo/typeoutfileinfo.sh \
 	wordcount/wordcount.sh
+
 texmf_other_scripts = \
 	a2ping/a2ping.pl \
 	accfonts/mkt1font \
 	accfonts/vpl2ovp \
 	accfonts/vpl2vpl \
 	arara/arara.sh \
+	attachfile2/pdfatfi.pl \
 	authorindex/authorindex \
 	bib2gls/bib2gls.sh \
 	bib2gls/convertgls2bib.sh \
@@ -100,7 +107,9 @@ texmf_other_scripts = \
 	bundledoc/bundledoc \
 	cachepic/cachepic.tlu \
 	checkcites/checkcites.lua \
+	chklref/chklref.pl \
 	cjk-gs-integrate/cjk-gs-integrate.pl \
+	clojure-pamphlet/pamphletangler \
 	cluttex/cluttex.lua \
 	context/perl/mptopdf.pl \
 	convbkmk/convbkmk.rb \
@@ -133,6 +142,7 @@ texmf_other_scripts = \
 	glossaries/makeglossaries \
 	glossaries/makeglossaries-lite.lua \
 	jfmutil/jfmutil.pl \
+	ketcindy/ketcindy.pl \
 	kotex-utils/jamo-normalize.pl \
 	kotex-utils/komkindex.pl \
 	kotex-utils/ttf2kotexfont.pl \
@@ -165,7 +175,6 @@ texmf_other_scripts = \
 	multibibliography/multibibliography.pl \
 	musixtex/musixflx.lua \
 	musixtex/musixtex.lua \
-	oberdiek/pdfatfi.pl \
 	pax/pdfannotextractor.pl \
 	pdfcrop/pdfcrop.pl \
 	pdflatexpicscale/pdflatexpicscale.pl \
@@ -202,13 +211,19 @@ texmf_other_scripts = \
 	texlive/fmtutil-sys.sh \
 	texlive/fmtutil-user.sh \
 	texlive/fmtutil.pl \
+	texlive/mktexlsr \
+	texlive/mktexmf \
+	texlive/mktexpk \
+	texlive/mktextfm \
 	texlive/rungs.tlu \
 	texlive/tlmgr.pl \
 	texlive/updmap-sys.sh \
 	texlive/updmap-user.sh \
 	texlive/updmap.pl \
+	texlive-extra/e2pall.pl \
 	texliveonfly/texliveonfly.py \
 	texloganalyser/texloganalyser \
+	texplate/texplate.sh \
 	thumbpdf/thumbpdf.pl \
 	tlcockpit/tlcockpit.sh \
 	tlshell/tlshell.tcl \
@@ -218,6 +233,7 @@ texmf_other_scripts = \
 	webquiz/webquiz.py \
 	xindex/xindex.lua \
 	yplan/yplan
+
 texmf_context_scripts = \
 	context/stubs/unix/context \
 	context/stubs/unix/contextjit \
@@ -238,12 +254,18 @@ nobase_dist_texmf_scripts_SCRIPTS = \
 
 ## Symlinks within $(bindir): FILE:LINK here means "ln -s FILE LINK" is done.
 bin_links = \
+	allcm:allec \
 	cluttex:clxelatex \
 	cluttex:cllualatex \
 	epstopdf:repstopdf \
+	fmtutil:mktexfmt \
+	kpsetool:kpsexpand \
+	kpsetool:kpsepath \
+	mktexlsr:texhash \
 	pdfcrop:rpdfcrop \
 	texdef:latexdef
 
+# 
 # The idea is to install the scripts themselves in texmf*/scripts, and
 # have bin/arch/foo be a symlink to, say,
 # ../../texmf-dist/scripts/foo/foo.pl.  That way we save a bit of disk

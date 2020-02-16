@@ -24,6 +24,11 @@
 %%
 %% \pdfelapsedtime and \pdfresettimer
 %%
+%% \expanded
+%%
+%% \ifincsname
+%%
+%% \Uchar, \Ucharcat
 
 @x
 @* \[8] Packed data.
@@ -620,6 +625,27 @@ no_expand: if chr_code=0 then print_esc("noexpand")
    else print_esc("pdfprimitive");
 @z
 
+@x \ifincsname
+var t:halfword; {token that is being ``expanded after''}
+@!p,@!q,@!r:pointer; {for list manipulation}
+@y
+var t:halfword; {token that is being ``expanded after''}
+@!b:boolean; {keep track of nested csnames}
+@!p,@!q,@!r:pointer; {for list manipulation}
+@z
+
+@x
+@ @<Expand a nonmacro@>=
+@y
+@ @<Glob...@>=
+@!is_in_csname: boolean;
+
+@ @<Set init...@>=
+is_in_csname := false;
+
+@ @<Expand a nonmacro@>=
+@z
+
 @x
 no_expand:@<Suppress expansion of the next token@>;
 @y
@@ -715,6 +741,22 @@ goto restart;
 end
 @z
 
+@x
+begin r:=get_avail; p:=r; {head of the list of characters}
+repeat get_x_token;
+@y
+begin r:=get_avail; p:=r; {head of the list of characters}
+b := is_in_csname; is_in_csname := true;
+repeat get_x_token;
+@z
+
+@x
+@<Look up the characters of list |r| in the hash table, and set |cur_cs|@>;
+@y
+is_in_csname := b;
+@<Look up the characters of list |r| in the hash table, and set |cur_cs|@>;
+@z
+
 @x scan_keyword
 @!k:pool_pointer; {index into |str_pool|}
 begin p:=backup_head; link(p):=null; k:=str_start[s];
@@ -790,6 +832,33 @@ else if cur_tok=cs_token_flag+frozen_primitive then
   @<Reset |cur_tok| for unexpandable primitives, goto restart@>
 @z
 
+@x \Ucharcat: str_toks_cat
+function str_toks(@!b:pool_pointer):pointer;
+@y
+function str_toks_cat(@!b:pool_pointer;@!cat:small_number):pointer;
+@z
+
+@x \Ucharcat: str_toks_cat
+  else if t=" " then t:=space_token
+  else t:=other_token+t;
+@y
+  else if (t=" ")and(cat=0) then t:=space_token
+  else if (cat=0)or(cat>=kanji) then t:=other_token+t
+  else if cat=active_char then t:= cs_token_flag + active_base + t
+  else t:=left_brace_token*cat+t;
+@z
+
+@x \Ucharcat: str_toks_cat
+pool_ptr:=b; str_toks:=p;
+end;
+@y
+pool_ptr:=b; str_toks_cat:=p;
+end;
+
+function str_toks(@!b:pool_pointer):pointer;
+begin str_toks:=str_toks_cat(b,0); end;
+@z
+
 @x
 @d etex_convert_codes=etex_convert_base+1 {end of \eTeX's command codes}
 @d job_name_code=etex_convert_codes {command code for \.{\\jobname}}
@@ -806,15 +875,18 @@ else if cur_tok=cs_token_flag+frozen_primitive then
 @d uniform_deviate_code     = pdf_first_expand_code+6 {command code for \.{\\pdfuniformdeviate}}
 @d normal_deviate_code      = pdf_first_expand_code+7 {command code for \.{\\pdfnormaldeviate}}
 @d pdf_convert_codes        = pdf_first_expand_code+8 {end of \pdfTeX-like command codes}
-@d job_name_code=pdf_convert_codes {command code for \.{\\jobname}}
+@d Uchar_convert_code       = pdf_convert_codes   {command code for \.{\\Uchar}}
+@d Ucharcat_convert_code    = pdf_convert_codes+1 {command code for \.{\\Ucharcat}}
+@d eptex_convert_codes      = pdf_convert_codes+2 {end of \epTeX's command codes}
+@d job_name_code=eptex_convert_codes {command code for \.{\\jobname}}
 @z
 
 @x
 primitive("jobname",convert,job_name_code);@/
 @y
 @#
-primitive("expanded",convert,expanded_code);@/ 
-@!@:expanded_}{\.{\\expanded} primitive@> 
+primitive("expanded",convert,expanded_code);@/
+@!@:expanded_}{\.{\\expanded} primitive@>
 @#
 primitive("jobname",convert,job_name_code);@/
 @z
@@ -832,6 +904,8 @@ primitive("jobname",convert,job_name_code);@/
   pdf_file_dump_code:     print_esc("pdffiledump");
   uniform_deviate_code:   print_esc("pdfuniformdeviate");
   normal_deviate_code:    print_esc("pdfnormaldeviate");
+  Uchar_convert_code:     print_esc("Uchar");
+  Ucharcat_convert_code:  print_esc("Ucharcat");
 @z
 
 @x
@@ -844,6 +918,10 @@ we have to create a temporary string that is destroyed immediately after.
 
 @d save_cur_string==if str_start[str_ptr]<pool_ptr then u:=make_string else u:=0
 @d restore_cur_string==if u<>0 then decr(str_ptr)
+
+@ Not all catcode values are allowed by \.{\\Ucharcat}:
+@d illegal_Ucharcat_ascii_catcode(#)==(#<left_brace)or(#>active_char)or(#=out_param)or(#=ignore)
+@d illegal_Ucharcat_wchar_catcode(#)==(#<kanji)or(#>other_kchar)
 
 @p procedure conv_toks;
 @z
@@ -859,13 +937,20 @@ we have to create a temporary string that is destroyed immediately after.
 @!s: str_number; {first temp string}
 @!i: integer;
 @!j: integer;
+@!cat:small_number; {desired catcode, or 0 for automatic |spacer|/|other_char| selection}
 @z
 
 @x
 begin c:=cur_chr; @<Scan the argument for command |c|@>;
 @y
-begin c:=cur_chr; @<Scan the argument for command |c|@>;
+begin cat:=0; c:=cur_chr; @<Scan the argument for command |c|@>;
 u:=0; { will become non-nil if a string is already being built}
+@z
+
+@x
+selector:=old_setting; link(garbage):=str_toks(b); ins_list(link(temp_head));
+@y
+selector:=old_setting; link(garbage):=str_toks_cat(b,cat); ins_list(link(temp_head));
 @z
 
 @x
@@ -1021,6 +1106,21 @@ pdf_file_dump_code:
   end;
 uniform_deviate_code:     scan_int;
 normal_deviate_code:      do_nothing;
+Uchar_convert_code:       scan_char_num;
+Ucharcat_convert_code:
+  begin
+    scan_ascii_num;
+    i:=cur_val;
+    scan_int;
+    if illegal_Ucharcat_ascii_catcode(cur_val) then
+      begin print_err("Invalid code ("); print_int(cur_val);
+@.Invalid code@>
+      print("), should be in the ranges 1..4, 6..8, 10..13");
+      help1("I'm going to use 12 instead of that illegal code value.");@/
+      error; cat:=12;
+    end else cat:=cur_val;
+    cur_val:=i;
+    end;
 @z
 
 @x
@@ -1030,14 +1130,19 @@ eTeX_revision_code: print(eTeX_revision);
 pdf_strcmp_code: print_int(cur_val);
 uniform_deviate_code:     print_int(unif_rand(cur_val));
 normal_deviate_code:      print_int(norm_rand);
+Uchar_convert_code:
+if is_char_ascii(cur_val) then print_char(cur_val) else print_kanji(cur_val);
+Ucharcat_convert_code:
+if cat<kanji then print_char(cur_val) else print_kanji(cur_val);
 @z
 
-@x \[if]pdfprimitive
-@d if_mbox_code=if_dbox_code+1 { `\.{\\ifmbox}' }
+@x e-pTeX: if primitives - leave room for \ifincsname
+@d if_tdir_code=if_case_code+4 { `\.{\\iftdir}' }
 @y
-@d if_mbox_code=if_dbox_code+1 { `\.{\\ifmbox}' }
+@d if_in_csname_code=20 { `\.{\\ifincsname}';  |if_font_char_code| + 1 }
+@d if_pdfprimitive_code=21 { `\.{\\ifpdfprimitive}' }
 @#
-@d if_pdfprimitive_code=if_mbox_code+1 { `\.{\\ifpdfprimitive}' }
+@d if_tdir_code=if_pdfprimitive_code+1 { `\.{\\iftdir}' }
 @z
 
 @x \[if]pdfprimitive
@@ -1045,6 +1150,15 @@ normal_deviate_code:      print_int(norm_rand);
 @y
   if_mbox_code:print_esc("ifmbox");
   if_pdfprimitive_code:print_esc("ifpdfprimitive");
+@z
+
+@x \ifincsname
+var b:boolean; {is the condition true?}
+@!r:"<"..">"; {relation to be evaluated}
+@y
+var b:boolean; {is the condition true?}
+@!e:boolean; {keep track of nested csnames}
+@!r:"<"..">"; {relation to be evaluated}
 @z
 
 @x \[if]pdfprimitive
@@ -1263,6 +1377,10 @@ primitive("pdfelapsedtime",last_item,elapsed_time_code);
 @!@:elapsed_time_}{\.{\\pdfelapsedtime} primitive@>
 primitive("pdfresettimer",extension,reset_timer_code);@/
 @!@:reset_timer_}{\.{\\pdfresettimer} primitive@>
+primitive("Uchar",convert,Uchar_convert_code);@/
+@!@:Uchar_}{\.{\\Uchar} primitive@>
+primitive("Ucharcat",convert,Ucharcat_convert_code);@/
+@!@:Ucharcat_}{\.{\\Ucharcat} primitive@>
 @z
 
 @x
@@ -1292,6 +1410,46 @@ pdf_shell_escape_code:
   end;
 elapsed_time_code: cur_val := get_microinterval;
 random_seed_code:  cur_val := random_seed;
+@z
+
+@x
+primitive("iffontchar",if_test,if_font_char_code);
+@!@:if_font_char_}{\.{\\iffontchar} primitive@>
+@y
+primitive("iffontchar",if_test,if_font_char_code);
+@!@:if_font_char_}{\.{\\iffontchar} primitive@>
+primitive("ifincsname",if_test,if_in_csname_code);
+@!@:if_in_csname_}{\.{\\ifincsname} primitive@>
+@z
+
+@x
+if_font_char_code:print_esc("iffontchar");
+@y
+if_font_char_code:print_esc("iffontchar");
+if_in_csname_code:print_esc("ifincsname");
+@z
+
+@x
+if_cs_code:begin n:=get_avail; p:=n; {head of the list of characters}
+  repeat get_x_token;
+@y
+if_cs_code:begin n:=get_avail; p:=n; {head of the list of characters}
+ e := is_in_csname; is_in_csname := true;
+  repeat get_x_token;
+@z
+
+@x
+  b:=(eq_type(cur_cs)<>undefined_cs);
+@y
+  b:=(eq_type(cur_cs)<>undefined_cs);
+  is_in_csname := e;
+@z
+
+@x
+if_font_char_code:begin scan_font_ident; n:=cur_val;
+@y
+if_in_csname_code: b := is_in_csname;
+if_font_char_code:begin scan_font_ident; n:=cur_val;
 @z
 
 @x
@@ -1509,7 +1667,7 @@ s:=0; t:=0; bl:=true;
 while (k<pool_ptr)and bl do
   if (sop(k)>='0')and (sop(k)<='9') then begin s:=10*s+sop(k)-'0'; incr(k); @+end
   else bl:=false;
-ifps(1) sop(k)='.' then 
+ifps(1) sop(k)='.' then
   begin incr(k); bl:=true; i:=0; dig[0]:=0;
   while (k<pool_ptr)and bl do begin
     if (sop(k)>='0')and (sop(k)<='9') then
@@ -1522,7 +1680,7 @@ ifps(1) sop(k)='.' then
 if k+4>pool_ptr then
   if (sop(k)='t')and(sop(k+1)='r')and(sop(k+2)='u')and(sop(k+3)='e') then
     k:=k+4;
-if mag<>1000 then 
+if mag<>1000 then
   begin s:=xn_over_d(s,1000,mag);
   t:=(1000*t+@'200000*remainder) div mag;
   s:=s+(t div @'200000); t:=t mod @'200000;

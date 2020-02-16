@@ -60,6 +60,7 @@
 % (2018-01-21) HK  Added \ptexversion primitive and co. pTeX p3.8.
 % (2018-04-14) HK  pTeX p3.8.1 Bug fix for discontinuous KINSOKU table.
 % (2019-02-03) HK  pTeX p3.8.2 Change \inhibitglue, add \disinhibitglue.
+% (2019-10-14) HY  pTeX p3.8.3 Allow getting \kansujichar.
 %
 
 @x
@@ -75,8 +76,8 @@
 @y
 @d pTeX_version=3
 @d pTeX_minor_version=8
-@d pTeX_revision==".2"
-@d pTeX_version_string=='-p3.8.2' {current \pTeX\ version}
+@d pTeX_revision==".3"
+@d pTeX_version_string=='-p3.8.3' {current \pTeX\ version}
 @#
 @d pTeX_banner=='This is pTeX, Version 3.14159265',pTeX_version_string
 @d pTeX_banner_k==pTeX_banner
@@ -993,7 +994,7 @@ kern_node,math_node,penalty_node: begin r:=get_node(small_node_size);
 @d hyph_data=set_box+1 {hyphenation data ( \.{\\hyphenation}, \.{\\patterns} )}
 @d set_interaction=hyph_data+1 {define level of interaction ( \.{\\batchmode}, etc.~)}
 @d set_auto_spacing=set_interaction+1 {set auto spacing mode
-  ( \.{\\autospacing}, \.{\\noautospacing}, ( \.{\\autoxspacing}, \.{\\noautoxspacing} )}
+  ( \.{\\autospacing}, \.{\\noautospacing}, \.{\\autoxspacing}, \.{\\noautoxspacing} )}
 @d max_command=set_auto_spacing {the largest command code seen at |big_switch|}
 @z
 
@@ -2060,6 +2061,7 @@ begin m:=cur_chr;
 case cur_cmd of
 assign_kinsoku: @<Fetch breaking penalty from some table@>;
 assign_inhibit_xsp_code: @<Fetch inhibit type from some table@>;
+set_kansuji_char: @<Fetch kansuji char code from some table@>;
 def_code: @<Fetch a character code from some table@>;
 toks_register,assign_toks,def_family,set_font,def_font,def_jfont,def_tfont:
   @<Fetch a token list or font identifier, provided that |level=tok_val|@>;
@@ -2275,8 +2277,16 @@ if cur_tok<cs_token_flag then
   end
 else if cur_tok<cs_token_flag+single_base then
   cur_val:=cur_tok-cs_token_flag-active_base
-else cur_val:=cur_tok-cs_token_flag-single_base;
-if (cur_val>255)and((cur_cmd<kanji)or(cur_cmd>max_char_code)) then
+else
+  { the token is a CS;
+    * if |kanji|<=|cur_cmd|<=|max_char_code|, then CS is let-equal to |wchar_token|
+    * if |max_char_code|<|cur_cmd|, then CS is a multibyte CS
+      => both case should raise "Improper ..." error
+    * otherwise it should be a single-character CS with |cur_val|<=255 }
+  begin if not (cur_cmd<kanji) then cur_cmd:=invalid_char;
+  cur_val:=cur_tok-cs_token_flag-single_base;
+  end;
+if (cur_val>255)and(cur_cmd<kanji) then
   begin print_err("Improper alphabetic or KANJI constant");
 @.Improper alphabetic constant@>
   help2("A one-character control sequence belongs after a ` mark.")@/
@@ -2459,6 +2469,9 @@ string_code:if cur_cs<>0 then sprint_cs(cur_cs)
 @d if_ybox_code=if_tbox_code+1 { `\.{\\ifybox}' }
 @d if_dbox_code=if_ybox_code+1 { `\.{\\ifdbox}' }
 @d if_mbox_code=if_dbox_code+1 { `\.{\\ifmbox}' }
+@#
+@d if_jfont_code=if_mbox_code+1  { `\.{\\ifjfont}' }
+@d if_tfont_code=if_jfont_code+1 { `\.{\\iftfont}' }
 @z
 
 @x [28.487] l.9887 - pTeX: iftdir, ifydir, ifddir, iftbox, ifybox, ifdbox
@@ -2483,6 +2496,10 @@ primitive("ifdbox",if_test,if_dbox_code);
 @!@:if_dbox_}{\.{\\ifdbox} primitive@>
 primitive("ifmbox",if_test,if_mbox_code);
 @!@:if_mbox_}{\.{\\ifmbox} primitive@>
+primitive("ifjfont",if_test,if_jfont_code);
+@!@:if_jfont_}{\.{\\ifjfont} primitive@>
+primitive("iftfont",if_test,if_tfont_code);
+@!@:if_tfont_}{\.{\\iftfont} primitive@>
 @z
 
 @x [28.488] l.9907 - pTeX: iftdir, ifydir, ifddir, iftbox, ifybox, ifdbox
@@ -2497,6 +2514,8 @@ primitive("ifmbox",if_test,if_mbox_code);
   if_ybox_code:print_esc("ifybox");
   if_dbox_code:print_esc("ifdbox");
   if_mbox_code:print_esc("ifmbox");
+  if_jfont_code:print_esc("ifjfont");
+  if_tfont_code:print_esc("iftfont");
 @z
 
 @x [28.501] l.10073 - pTeX: iftdir, ifydir, ifddir, iftbox, ifybox, ifdbox
@@ -2508,6 +2527,11 @@ if_ddir_code: b:=(abs(direction)=dir_dtou);
 if_mdir_code: b:=(direction<0);
 if_void_code, if_hbox_code, if_vbox_code, if_tbox_code, if_ybox_code, if_dbox_code, if_mbox_code:
   @<Test box register status@>;
+if_jfont_code, if_tfont_code:
+  begin scan_font_ident;
+  if this_if=if_jfont_code then b:=(font_dir[cur_val]=dir_yoko)
+  else if this_if=if_tfont_code then b:=(font_dir[cur_val]=dir_tate);
+  end;
 @z
 
 @x [28.505] l.10118 - pTeX: Test box register status : iftbox, ifybox, ifdbox
@@ -2599,6 +2623,7 @@ loop@+begin if (cur_cmd>other_char)or(cur_chr>255) then {not a character}
   if not more_name(cur_chr) then goto done;
   get_x_token;
   end;
+  end;
 done: end_name; name_in_progress:=false;
 @y
 skip_mode:=false;
@@ -2616,6 +2641,7 @@ loop@+begin
    spurious spaces to file names in some cases.}
    else if ((cur_chr=" ") and (state<>token_list) and (loc>limit)) or not more_name(cur_chr) then goto done;
   get_x_token;
+  end;
   end;
 done: end_name; name_in_progress:=false;
 skip_mode:=true;
@@ -6396,6 +6422,17 @@ else if (n<0)or(n>9) then
 else
   define(kansuji_base+n,n,tokanji(toDVI(cur_val)));
 end;
+
+@ @<Fetch kansuji char code from some table@>=
+begin scan_int; cur_val_level:=int_val;
+  if (cur_val<0)or(cur_val>9) then
+    begin print_err("Invalid KANSUJI number ("); print_int(cur_val); print_char(")");
+    help1("I'm skipping this control sequences.");@/
+    error; return;
+    end
+  else
+    cur_val:=fromDVI(kansuji_char(cur_val));
+end
 
 @ |print_kansuji| procedure converts a number to KANJI number.
 

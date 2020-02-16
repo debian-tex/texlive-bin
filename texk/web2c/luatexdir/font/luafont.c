@@ -169,6 +169,207 @@ static void dump_math_kerns(lua_State * L, charinfo * co, int l, int id)
     }
 }
 
+#define set_packet_number(fw) { \
+    fw = *(vfp++);              \
+    fw = fw * 256 + *(vfp++);   \
+    fw = fw * 256 + *(vfp++);   \
+    fw = fw * 256 + *(vfp++);   \
+}
+
+#define set_packet_scaled(fw) { \
+    fw = *(vfp++);              \
+    if (fw > 127) {             \
+        fw = fw - 256;          \
+    }                           \
+    fw = fw * 256 + *(vfp++);   \
+    fw = fw * 256 + *(vfp++);   \
+    fw = fw * 256 + *(vfp++);   \
+}
+
+static void font_commands_to_lua(lua_State * L, internal_font_number f, charinfo * co)
+{
+    eight_bits *vfp = get_charinfo_packets(co);
+    if (vfp != NULL) {
+        int cmd;
+        int i = 1;
+        lua_push_string_by_name(L,commands);
+        lua_newtable(L);
+        while ((cmd = *(vfp++)) != packet_end_code) {
+            switch (cmd) {
+                case packet_font_code:
+                    {
+                        halfword f ;
+                        set_packet_number(f);
+                        lua_createtable(L, 2, 0);
+                        lua_push_string_by_name(L,font);
+                        lua_rawseti(L, -2, 1);
+                        lua_pushinteger(L, f);
+                        lua_rawseti(L, -2, 2);
+                        lua_rawseti(L, -2, i++);
+                    }
+                    break;
+                case packet_push_code:
+                    {
+                        lua_createtable(L, 1, 0);
+                        lua_push_string_by_name(L,push);
+                        lua_rawseti(L, -2, 1);
+                        lua_rawseti(L, -2, i++);
+                    }
+                    break;
+                case packet_pop_code:
+                    {
+                        lua_createtable(L, 1, 0);
+                        lua_push_string_by_name(L,pop);
+                        lua_rawseti(L, -2, 1);
+                        lua_rawseti(L, -2, i++);
+                    }
+                    break;
+                case packet_char_code:
+                    {
+                        halfword c ;
+                        set_packet_number(c);
+                        lua_createtable(L, 2, 0);
+                        lua_push_string_by_name(L,char);
+                        lua_rawseti(L, -2, 1);
+                        lua_pushinteger(L, c);
+                        lua_rawseti(L, -2, 2);
+                        lua_rawseti(L, -2, i++);
+                    }
+                    break;
+                case packet_rule_code:
+                    {
+                        halfword h, w ;
+                        set_packet_scaled(h);
+                        set_packet_scaled(w);
+                        lua_createtable(L, 3, 0);
+                        lua_push_string_by_name(L,rule);
+                        lua_rawseti(L, -2, 1);
+                        lua_pushinteger(L, h);
+                        lua_rawseti(L, -2, 2);
+                        lua_pushinteger(L, w);
+                        lua_rawseti(L, -2, 3);
+                        lua_rawseti(L, -2, i++);
+                    }
+                    break;
+                case packet_right_code:
+                    {
+                        halfword r ;
+                        set_packet_scaled(r);
+                        lua_createtable(L, 1, 0);
+                        lua_push_string_by_name(L,right);
+                        lua_rawseti(L, -2, 1);
+                        lua_pushinteger(L, r);
+                        lua_rawseti(L, -2, 2);
+                        lua_rawseti(L, -2, i++);
+                    }
+                    break;
+                case packet_down_code:
+                    {
+                        halfword d ;
+                        set_packet_scaled(d);
+                        lua_createtable(L, 1, 0);
+                        lua_push_string_by_name(L,down);
+                        lua_rawseti(L, -2, 1);
+                        lua_pushinteger(L, d);
+                        lua_rawseti(L, -2, 2);
+                        lua_rawseti(L, -2, i++);
+                    }
+                    break;
+                case packet_pdf_code:
+                    {
+                        halfword m, l;
+                        set_packet_number(m);
+                        set_packet_number(l);
+                        lua_createtable(L, 3, 0);
+                        lua_push_string_by_name(L,pdf);
+                        lua_rawseti(L, -2, 1);
+                        lua_pushinteger(L, m);
+                        lua_rawseti(L, -2, 2);
+                        lua_pushstring(L,"<pdf data>");
+                        lua_rawseti(L, -2, 3);
+                        lua_rawseti(L, -2, i++);
+                        vfp += l;
+                    }
+                    break;
+                case packet_pdf_mode:
+                    {
+                        halfword m;
+                        set_packet_number(m);
+                        lua_createtable(L, 2, 0);
+                        lua_push_string_by_name(L,mode);
+                        lua_rawseti(L, -2, 1);
+                        lua_pushinteger(L, m);
+                        lua_rawseti(L, -2, 2);
+                        lua_rawseti(L, -2, i++);
+                    }
+                    break;
+                case packet_special_code:
+                    {
+                        halfword l;
+                        set_packet_number(l);
+                        lua_createtable(L, 2, 0);
+                        lua_push_string_by_name(L,special);
+                        lua_rawseti(L, -2, 1);
+                        lua_pushstring(L,"<special data>");
+                        lua_rawseti(L, -2, 2);
+                        lua_rawseti(L, -2, i++);
+                        vfp += l;
+                    }
+                    break;
+                case packet_lua_code:
+                    {
+                        halfword n;
+                        set_packet_number(n);
+                        lua_createtable(L, 2, 0);
+                        lua_push_string_by_name(L,lua);
+                        lua_rawseti(L, -2, 1);
+                        lua_pushstring(L,"<lua data>");
+                        lua_rawseti(L, -2, 2);
+                        lua_rawseti(L, -2, i++);
+                    }
+                    break;
+                case packet_image_code:
+                    {
+                        halfword n;
+                        set_packet_number(n);
+                        lua_createtable(L, 2, 0);
+                        lua_push_string_by_name(L,image);
+                        lua_rawseti(L, -2, 1);
+                        lua_pushstring(L,"<image data>");
+                        lua_rawseti(L, -2, 2);
+                        lua_rawseti(L, -2, i++);
+                    }
+                    break;
+                case packet_node_code:
+                    {
+                        halfword n;
+                        set_packet_number(n);
+                        lua_createtable(L, 2, 0);
+                        lua_push_string_by_name(L,node);
+                        lua_rawseti(L, -2, 1);
+                        lua_pushstring(L,"<node data>");
+                        lua_rawseti(L, -2, 2);
+                        lua_rawseti(L, -2, i++);
+                    }
+                    break;
+                case packet_nop_code:
+                    {
+                        lua_createtable(L, 1, 0);
+                        lua_push_string_by_name(L,nop);
+                        lua_rawseti(L, -2, 1);
+                        lua_rawseti(L, -2, i++);
+                    }
+                    break;
+                case packet_scale_code:
+                    break;
+                default:
+                    break;
+            }
+        }
+        lua_rawset(L, -3);
+    }
+}
+
 static void font_char_to_lua(lua_State * L, internal_font_number f, charinfo * co)
 {
     liginfo *l;
@@ -343,6 +544,7 @@ static void font_char_to_lua(lua_State * L, internal_font_number f, charinfo * c
         else
             lua_pop(L, 2);
     }
+    font_commands_to_lua(L,f,co);
 }
 
 static void write_lua_parameters(lua_State * L, int f)
@@ -432,11 +634,11 @@ static void write_lua_math_parameters(lua_State * L, int f)
     lua_rawset(L, -3);
 }
 
-int font_to_lua(lua_State * L, int f)
+int font_to_lua(lua_State * L, int f, int usecache)
 {
     int k;
     charinfo *co;
-    if (font_cache_id(f) > 0) {
+    if (usecache && font_cache_id(f) > 0) {
         /*tex Fetch the table from the registry if it was saved there by |font_from_lua|. */
         lua_rawgeti(L, LUA_REGISTRYINDEX, font_cache_id(f));
         return 1;
@@ -478,6 +680,7 @@ int font_to_lua(lua_State * L, int f)
     dump_intfield(L,width,font_width(f));
     dump_intfield(L,direction,font_natural_dir(f));
     dump_intfield(L,encodingbytes,font_encodingbytes(f));
+    dump_intfield(L,subfont,font_subfont(f));
     dump_booleanfield(L,oldmath,font_oldmath(f));
     dump_intfield(L,tounicode,font_tounicode(f));
     /*tex The next one is read only: */
@@ -500,7 +703,7 @@ int font_to_lua(lua_State * L, int f)
     write_lua_math_parameters(L, f);
     /*tex Characters: */
     lua_push_string_by_name(L,characters);
-    lua_createtable(L, font_tables[f]->charinfo_size, 0);
+    lua_createtable(L, charinfo_size(f), 0);
     if (has_left_boundary(f)) {
         co = get_charinfo(f, left_boundarychar);
         lua_push_string_by_name(L,left_boundary);
@@ -522,13 +725,6 @@ int font_to_lua(lua_State * L, int f)
         }
     }
     lua_rawset(L, -3);
-    if (font_cache_id(f) == 0) {
-        /*tex Renew the cache. */
-        int r;
-        lua_pushvalue(L, -1);
-        r = luaL_ref(L, LUA_REGISTRYINDEX);
-        set_font_cache_id(f, r);
-    }
     return 1;
 }
 
@@ -950,8 +1146,16 @@ static void read_char_packets(lua_State * L, int *l_fonts, charinfo * co, intern
                         lua_rawgeti(L, -2, 2);
                         if (lua_istable(L, -1)) {
                             lua_getglobal(L, "img");
+                            /*tex Just in case one accidentely wipes |img|: */
+                            if (lua_type(L,-1) != LUA_TTABLE) {
+                                normal_error("vf command","no img table found");
+                            }
                             lua_pushstring(L, "new");
                             lua_gettable(L, -2);
+                            /*tex or the |new| entry: */
+                            if (lua_type(L,-1) != LUA_TFUNCTION) {
+                                normal_error("vf command","no img.new function found");
+                            }
                             lua_insert(L, -3);
                             lua_pop(L, 1);
                             lua_call(L, 1, 1);
@@ -1546,6 +1750,8 @@ int font_from_lua(lua_State * L, int f)
     if (font_encodingbytes(f) == 0 && (font_format(f) == opentype_format || font_format(f) == truetype_format)) {
         set_font_encodingbytes(f, 2);
     }
+    i = lua_numeric_field_by_index(L,lua_key_index(subfont), 0);
+    set_font_subfont(f,i);
     /*tex Now fetch the base fonts, if needed. */
     count_hash_items(L, fonts, n);
     if (n > 0) {

@@ -8,7 +8,7 @@
 -----------------------------------------------------------------------
 
         xindex = xindex or { }
- local version = 0.10
+ local version = 0.19
 xindex.version = version
 --xindex.self = "xindex"
 
@@ -29,6 +29,8 @@ Report bugs to
 
 kpse.set_program_name("luatex")
 
+local f = kpse.find_file("lualibs.lua")
+print ("filename "..f)
 require("lualibs")  -- all part of LuaTeX
 require('unicode')
 require('string')
@@ -156,13 +158,20 @@ Config_File = kpse.find_file(config_file)
 cfg = require(Config_File)
 writeLog(2," ... done\n",0)
 
+-- Create the character list maps for faster sorting
+
+alphabet_lower_map = CreateCharListMap(alphabet_lower)
+alphabet_upper_map = CreateCharListMap(alphabet_upper)
+
 local esc_char = args.escapechar
 writeLog(2,"Escapechar = "..esc_char.."\n",1)
 escape_chars = { -- by default " is the escape char
-  {esc_char..'"', '//escapedquote//', '\\"{}' },
-  {esc_char..'@', '//escapedat//',    '@'    },
-  {esc_char..'|', '//escapedvert//',  "|"    },
-  {esc_char..'!', '//scapedexcl//',  '!'    }
+  {esc_char..'"', '//escapedquote//',     '\\"{}' },
+  {esc_char..'@', '//escapedat//',        '@'    },
+  {esc_char..'|', '//escapedvert//',      '|'    },
+  {esc_char..'!', '//scapedexcl//',       '!'    },
+  {esc_char..'(', '//escapedparenleft//', '('    },
+  {esc_char..')', '//escapedparenright//',')'    }
 }
 
 language = string.lower(args["language"])
@@ -196,5 +205,4 @@ BaseRunFile = kpse.find_file("xindex-base.lua")
 dofile(BaseRunFile)
 
 logFile:close()
-
 

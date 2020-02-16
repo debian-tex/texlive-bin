@@ -1,11 +1,11 @@
 # TeXLive::TLConfig.pm - module exporting configuration values
-# Copyright 2007-2018 Norbert Preining
+# Copyright 2007-2019 Norbert Preining
 # This file is licensed under the GNU General Public License version 2
 # or any later version.
 
 package TeXLive::TLConfig;
 
-my $svnrev = '$Revision: 50190 $';
+my $svnrev = '$Revision: 53076 $';
 my $_modulerevision = ($svnrev =~ m/: ([0-9]+) /) ? $1 : "unknown";
 sub module_revision { return $_modulerevision; }
 
@@ -29,6 +29,7 @@ BEGIN {
     %Compressors
     $InfraLocation
     $DatabaseName
+    $DatabaseLocation
     $PackageBackupDir 
     $BlockSize
     $Archive
@@ -81,10 +82,12 @@ our $DefaultCategory = "Package";
 # relative to a root (e.g., the Master/, or the installation path)
 our $InfraLocation = "tlpkg";
 our $DatabaseName = "texlive.tlpdb";
+our $DatabaseLocation = "$InfraLocation/$DatabaseName";
 
 # location of backups in default autobackup setting (under tlpkg)
 our $PackageBackupDir = "$InfraLocation/backups";
 
+# for computing disk usage; this is most common.
 our $BlockSize = 4096;
 
 # timeout for network connections (wget, LWP) in seconds
@@ -113,10 +116,10 @@ if ($^O =~ /^MSWin/i) {
 our @AcceptedFallbackDownloaders = qw/curl wget/;
 our %FallbackDownloaderProgram = ( 'wget' => 'wget', 'curl' => 'curl');
 our %FallbackDownloaderArgs = (
-  'curl' => ['--user-agent', 'texlive/curl', '--retry', '10', 
+  'curl' => ['--user-agent', 'texlive/curl', '--retry', '4', '--retry-delay', '5',
              '--fail', '--location',
              '--connect-timeout', "$NetworkTimeout", '--silent', '--output'],
-  'wget' => ['--user-agent=texlive/wget', '--tries=10',
+  'wget' => ['--user-agent=texlive/wget', '--tries=4',
              "--timeout=$NetworkTimeout", '-q', '-O'],
 );
 # the way we package things on the web
@@ -232,7 +235,7 @@ our %TLPDBSettings = (
 our $WindowsMainMenuName = "TeX Live $ReleaseYear";
 
 # Comma-separated list of engines which do not exist on all platforms.
-our $PartialEngineSupport = "luajittex,mfluajit";
+our $PartialEngineSupport = "luahbtex,luajittex,mfluajit";
 
 # Flags for error handling across the scripts and modules
 # all fine
@@ -310,6 +313,16 @@ The default category used when creating new packages.
 The subdirectory with various infrastructure files (C<texlive.tlpdb>,
 tlpobj files, ...) relative to the root of the installation; currently
 C<tlpkg>.
+
+=item C<$TeXLive::TLConfig::DatabaseName>
+
+The name of our so-called database file: C<texlive.tlpdb>. It's just a
+plain text file, not any kind of relational or other database.
+
+=item C<$TeXLive::TLConfig::DatabaseLocation>
+
+Concatenation of C<InfraLocation> "/" C<DatabaseName>, i.e.,
+C<tlpkg/texlive.tlpdb>.
 
 =item C<$TeXLive::TLConfig::BlockSize>
 

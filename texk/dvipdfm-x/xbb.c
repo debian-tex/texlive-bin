@@ -1,5 +1,5 @@
 /* This is extractbb, a bounding box extraction program.
-    Copyright (C) 2008-2019 by Jin-Hwan Cho and Matthias Franz
+    Copyright (C) 2008-2020 by Jin-Hwan Cho and Matthias Franz
     and the dvipdfmx project team.
 
     This program is free software; you can redistribute it and/or modify
@@ -52,7 +52,7 @@ static int Include_Page = 1;
 static void show_version(void)
 {
   fprintf (stdout, "\nThis is %s Version " VERSION "\n", my_name);
-  fprintf (stdout, "\nCopyright (C) 2008-2019 by Jin-Hwan Cho and Matthias Franz\n");
+  fprintf (stdout, "\nCopyright (C) 2008-2020 by Jin-Hwan Cho and Matthias Franz\n");
   fprintf (stdout, "\nThis is free software; you can redistribute it and/or modify\n");
   fprintf (stdout, "it under the terms of the GNU General Public License as published by\n");
   fprintf (stdout, "the Free Software Foundation; either version 2 of the License, or\n");
@@ -107,8 +107,8 @@ static int xbb_to_file = 1;
 
 static char *make_xbb_filename(const char *name)
 {
-  int i;
   char *result;
+  int   i;
 
   for (i = 0; i < sizeof(extensions) / sizeof(extensions[0]); i++) {
     if (strlen(extensions[i]) < strlen(name) &&
@@ -117,12 +117,14 @@ static char *make_xbb_filename(const char *name)
   }
   if (i == sizeof(extensions) / sizeof(extensions[0])) {
     WARN("%s: Filename does not end in a recognizable extension.\n", name);
-    result = NEW(strlen(name)+5, char);  /* 5 = ".xbb" + trailing 0 */
+    result = NEW(strlen(name)+strlen(".xbb")+1, char);
     strcpy(result, name);
   } else { /* Remove extension */
-    result = NEW(strlen(name)-strlen(extensions[i])+5, char);  /* 5 = ".xbb" + trailing 0 */
-    strncpy(result, name, strlen(name)-strlen(extensions[i]));
-    result[strlen(name)-strlen(extensions[i])] = 0;
+    size_t len;
+    len    = strlen(name) - strlen(extensions[i]);
+    result = NEW(len+strlen(".xbb")+1, char);
+    strncpy(result, name, len);
+    result[len] = 0;
   }
   strcat(result, ((dpx_conf.compat_mode == dpx_mode_compat_mode) ? ".bb" : ".xbb"));
   return result;

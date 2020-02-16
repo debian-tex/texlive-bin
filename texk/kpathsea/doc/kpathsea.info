@@ -1,9 +1,9 @@
-This is kpathsea.info, produced by makeinfo version 6.6 from
+This is kpathsea.info, produced by makeinfo version 5.1 from
 kpathsea.texi.
 
 This file documents the Kpathsea library for path searching.
 
-   Copyright (C) 1996-2019 Karl Berry & Olaf Weber.
+   Copyright (C) 1996-2020 Karl Berry & Olaf Weber.
 
    Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -37,7 +37,7 @@ Kpathsea library
 ****************
 
 This manual documents the Kpathsea library for path searching.  It
-corresponds to version 6.3.1, released in March 2019.
+corresponds to version 6.3.2, released in January 2020.
 
 * Menu:
 
@@ -61,8 +61,8 @@ File: kpathsea.info,  Node: Introduction,  Next: unixtex.ftp,  Prev: Top,  Up: T
 1 Introduction
 **************
 
-This manual corresponds to version 6.3.1 of the Kpathsea library,
-released in March 2019.
+This manual corresponds to version 6.3.2 of the Kpathsea library,
+released in January 2020.
 
    The library's fundamental purpose is to return a filename from a list
 of directories specified by the user, similar to what shells do when
@@ -80,7 +80,7 @@ this library:
 Other software that we do not maintain also uses it.
 
    Kpathsea is now maintained as part of the TeX Live distribution
-(<http://tug.org/texlive>), which includes several more Kpathsea-using
+(<https://tug.org/texlive>), which includes several more Kpathsea-using
 programs.  For information on configuration, building, installing, and
 more, *note (tlbuild)::.
 
@@ -95,7 +95,7 @@ changes you have made, and allow anyone to modify the library source and
 distribute their modifications.  It does not mean you have to distribute
 the source to your program using the library, although we hope you will.
 See accompanying files for the text of the GNU licenses, or
-<http2://www.gnu.org/licenses>.
+<https://gnu.org/licenses>.
 
    If you know enough about TeX to be reading this manual, then you (or
 your institution) should consider joining the TeX Users Group (if you're
@@ -291,8 +291,8 @@ This section describes the default installation hierarchy of the
 distribution.  It conforms to both the GNU coding standards and the TeX
 directory structure (TDS) standard.  For rationale and further
 explanation, please see those documents.  The GNU document is available
-from <http://www.gnu.org/prep/standards>.  The TDS document is available
-from <http://www.mirror.ctan.org/tds> (*note unixtex.ftp::).
+from <https://gnu.org/prep/standards>.  The TDS document is available
+from <http://mirror.ctan.org/tds> (*note unixtex.ftp::).
 
    In short, here is a skeleton of the default directory structure,
 extracted from the TDS document:
@@ -373,6 +373,11 @@ File: kpathsea.info,  Node: Path searching,  Next: TeX support,  Prev: TeX direc
 This chapter describes the generic path searching mechanism Kpathsea
 provides.  For information about searching for particular file types
 (e.g., TeX fonts), see the next chapter.
+
+   This section, with minor differences, has been translated into
+several other languages (Chinese, Spanish, Russian, Japanese, French,
+German, ...) as part of the TeX Live guide; see
+<https://tug.org/texlive/doc.html> for links.
 
 * Menu:
 
@@ -467,7 +472,10 @@ File: kpathsea.info,  Node: Path sources,  Next: Path expansion,  Prev: Searchin
 A search path or other configuration value can come from many sources.
 In the order in which Kpathsea looks for them:
 
-  1. A user-set environment variable, e.g., 'TEXINPUTS'.  Environment
+  1. A command-line option such as '--cnf-line', available in
+     'kpsewhich' and most TeX engines.  *Note Path searching options::.
+
+     A user-set environment variable, e.g., 'TEXINPUTS'.  Environment
      variables with an underscore and the program name appended
      override; for example, 'TEXINPUTS_latex' overrides 'TEXINPUTS' if
      the program being run is named 'latex'.
@@ -519,11 +527,11 @@ mentions most features.  The format of 'texmf.cnf' files follows:
 
    * Comments start with '%', either at the beginning of a line or
      preceded by whitespace, and continue to the end of the line.  That
-     is, as with most shells, a '%' in the "middle" of a value does not
-     start a comment.  Examples:
+     is, similar to most shells, a '%' in the "middle" of a value does
+     not start a comment.  Examples:
 
           % this is a comment
-          var = a%b  % but the value of var will be "a%b".
+          var = a%b  % but the value of var will be "a%b"
 
    * Blank lines are ignored.
 
@@ -531,7 +539,7 @@ mentions most features.  The format of 'texmf.cnf' files follows:
      the next line is appended.  Whitespace at the beginning of
      continuation lines is not ignored.
 
-   * Each remaining line must look like
+   * Each remaining line will look like:
 
           VARIABLE [. PROGNAME] [=] VALUE
 
@@ -540,20 +548,27 @@ mentions most features.  The format of 'texmf.cnf' files follows:
    * The VARIABLE name may contain any character other than whitespace,
      '=', or '.', but sticking to 'A-Za-z_' is safest.
 
-   * If '.PROGNAME' is present, the definition only applies if the
-     program that is running is named (i.e., the last component of
-     'argv[0]' is) PROGNAME or 'PROGNAME.{exe,bat,cmd,...}'.  Most
-     notably, this allows different flavors of TeX to have different
-     search paths.
+   * If '.PROGNAME' is present (preceding spaces are ignored), the
+     definition only applies if the program that is running is named
+     (i.e., the last component of 'argv[0]' is) PROGNAME or
+     'PROGNAME.{exe,bat,cmd,...}'.  Most notably, this allows different
+     flavors of TeX to have different search paths.  The PROGNAME value
+     is used literally, without variable or other expansions.
 
-   * VALUE may contain any characters except '%' and '@'.  (These
-     restrictions are only necessary because of the processing done on
-     'texmf.cnf' at build time, so you can stick those characters in
-     after installation if you have to.)  The '$VAR.PROG' feature is not
-     available on the right-hand side; instead, you must use an
-     additional variable (see below for example).  A ';' in VALUE is
-     translated to ':' if running under Unix; this is useful to write a
-     single 'texmf.cnf' which can be used under both Unix and Windows.
+   * Considered as strings, VALUE may contain any character.  However,
+     in practice most 'texmf.cnf' values are related to path expansion,
+     and since various special characters are used in expansion, such as
+     braces and commas, they cannot be used in directory names.
+
+     The '$VAR.PROG' feature is not available on the right-hand side;
+     instead, you must use an additional variable (see below for
+     example).
+
+     A ';' in VALUE is translated to ':' if running under Unix, in order
+     to have a single 'texmf.cnf' that can support both Unix and Windows
+     systems.  This translation happens with any value, not just search
+     paths, but fortunately in practice ';' is not needed in other
+     values.
 
    * All definitions are read before anything is expanded, so you can
      use variables before they are defined (like Make, unlike most other
@@ -569,12 +584,31 @@ Here is a configuration file fragment illustrating most of these points:
      TEXINPUTS.latex2e = $latex2e_inputs
      TEXINPUTS.latex = $latex2e_inputs
 
-   This format has obvious similarities to Bourne shell scripts--change
-the comment character to '#', disallow spaces around the '=', and get
-rid of the '.NAME' convention, and it could be run through the shell.
-However, there seemed little advantage in this, since all the
-information would have to passed back to Kpathsea and parsed there
-anyway, since the 'sh' process couldn't affect its parent's environment.
+   This format has some similarity to Bourne shell scripts--change the
+comment character to '#', disallow spaces around the '=', and get rid of
+the '.NAME' convention, and it could be run through the shell.  However,
+there seemed little advantage in this, since all the information would
+have to passed back to Kpathsea and parsed there anyway, since the 'sh'
+process couldn't affect its parent's environment.
+
+   The combination of spaces being ignored before the '.' of a program
+name qualifer and the optional '=' for the assignment has an unexpected
+consequence: if the value begins with a literal '.' and the '=' is
+omitted, the intended value is interpreted as a program name.  For
+example, a line 'var .;/some/path' is taken as an empty value for 'var'
+running under the program named ';/some/path'.  To diagnose this,
+Kpathsea warns if the program name contains a path separator or other
+special character.  The simplest way to avoid the problem is to use the
+'='.
+
+   Exactly when a character will be considered special or act as itself
+depends on the context in which it is used.  The rules are inherent in
+the multiple levels of interpretation of the configuration (parsing,
+expansion, search, ...) and so cannot be concisely stated,
+unfortunately.  There is no general escape mechanism; in particular, '\'
+is not an "escape character" in 'texmf.cnf' files.  When it comes
+choosing directory names for installation, it is safest to avoid them
+all.
 
    The implementation of all this is in 'kpathsea/cnf.c'.
 
@@ -801,7 +835,7 @@ if the path specification is, say, '$TEXMF/fonts//pk//', then files in a
 subdirectory '.../pk', even if it is a leaf, are checked.  The reason
 cannot be explained without reference to the implementation, so read
 'kpathsea/elt-dirs.c' (search for 'may descend') if you are curious.
-And if you can find a way to _solve_ the problem, please let me know.
+And if you find a way to solve the problem, please let me know.
 
    Subdirectory expansion is implemented in the source file
 'kpathsea/elt-dirs.c'.
@@ -936,7 +970,7 @@ steps:
    Sorry that it's annoyingly lengthy, but implementing this inside
 Kpathsea would be a lot of error-prone trouble for something that is
 only useful for debugging.  If your 'find' does not support '-iname',
-you can get GNU Find from <https://www.gnu.org/software/findutils>.
+you can get GNU Find from <https://gnu.org/software/findutils>.
 
    The casefolding search is implemented in the source file
 'kpathsea/pathsearch.c'.  Two implementation points:
@@ -961,7 +995,7 @@ File: kpathsea.info,  Node: Filename database,  Next: Invoking kpsewhich,  Prev:
 
 Kpathsea goes to some lengths to minimize disk accesses for searches
 (*note Subdirectory expansion::).  Nevertheless, in practice searching
-each possible directory in typical TeX installations takes an
+every possible directory in typical TeX installations takes an
 excessively long time.
 
    Therefore, Kpathsea can use an externally-built "filename database"
@@ -969,8 +1003,7 @@ file named 'ls-R' that maps files to directories, thus avoiding the need
 to exhaustively search the disk.
 
    A second database file 'aliases' allows you to give additional names
-to the files listed in 'ls-R'.  This can be helpful to adapt to "8.3"
-filename conventions in source files.
+to the files listed in 'ls-R'.
 
    The 'ls-R' and 'aliases' features are implemented in the source file
 'kpathsea/db.c'.
@@ -1181,6 +1214,27 @@ filename, and returns the first file found.
      become case-sensitive when the underlying (file)system is
      case-insensitive, it merely means that Kpathsea does not do any
      casefolding itself.
+
+'--cnf-line=STR'
+     Parse STR as if it were a line in the 'texmf.cnf' configuration
+     file (*note Config files::), overriding settings in the actual
+     configuration files, and also in the environment (*note Path
+     sources::).  This is implemented by making any settings from STR in
+     the environment, overwriting any value already there.  Thus, an
+     extra colon in a '--cnf-line' value will refer to the value from a
+     configuration file, not a user-set environment variable.
+
+     Furthermore, any variable set from STR will also be set with the
+     program name suffix.  For example, 'pdftex
+     --cnf-line=TEXINPUTS=/foo:' will set both 'TEXINPUTS' and
+     'TEXINPUTS_pdftex' in the environment (and the value will be '/foo'
+     followed by the setting from 'texmf.cnf', ignoring any user-set
+     'TEXINPUTS').
+
+     This behavior is desirable because, in practice, many variables in
+     the distributed 'texmf.cnf' are program-specific, and the intuitive
+     behavior is for values set on the command line with '--cnf-line' to
+     override them.
 
 '--dpi=NUM'
      Set the resolution to NUM; this only affects 'gf' and 'pk' lookups.
@@ -1499,8 +1553,8 @@ Kpsewhich provides some features in addition to path lookup as such:
      Unix-ish system) '.:/home/karl', supposing the latter is the
      current user's home directory.  Note that the ';' in the source
      value, as commonly used in 'texmf.cnf', has changed to a ':', as
-     the normal path separator on the current system.  (On a Windows-ish
-     system, the ';' would remain.)
+     the normal path separator on the current system.  On a Windows-ish
+     system, the ';' would remain.
 
 '--var-value=VARIABLE'
      Outputs the value of VARIABLE (a simple identifier like
@@ -1514,7 +1568,8 @@ Kpsewhich provides some features in addition to path lookup as such:
      default is not changed) '1'.
 
      Example to contrast with '--var-brace-value': 'FOO='.;~' kpsewhich
-     --var-value=FOO' outputs '.;~', i.e., the same as the input value.
+     --var-value=FOO' outputs '.;~', i.e., the same as the input value,
+     on all systems.
 
 
 File: kpathsea.info,  Node: Standard options,  Prev: Auxiliary tasks,  Up: Invoking kpsewhich
@@ -1596,14 +1651,14 @@ Auxiliary tasks::).
 
 'bltxml'
      (BibLaTeXML bibliography files for Biber,
-     <http://ctan.org/pkg/biber>) 'BLTXMLINPUTS' suffix '.bltxml'.
+     <https://ctan.org/pkg/biber>) 'BLTXMLINPUTS' suffix '.bltxml'.
 
 'bst'
      (BibTeX style, *note Basic BibTeX style files: (web2c)Basic BibTeX
      style files.) 'BSTINPUTS'; suffix '.bst'.
 
 'clua'
-     (dynamic libraries for Lua, <http://ctan.org/pkg/luatex>)
+     (dynamic libraries for Lua, <https://ctan.org/pkg/luatex>)
      'CLUAINPUTS' suffixes '.dll' and '.so'.
 
 'cmap'
@@ -1735,7 +1790,7 @@ Auxiliary tasks::).
 
 'ris'
      (RIS bibliography files, primarily for Biber,
-     <http://ctan.org/pkg/biber>) 'RISINPUTS' suffix '.ris'.
+     <https://ctan.org/pkg/biber>) 'RISINPUTS' suffix '.ris'.
 
 'subfont definition files'
      (subfont definition files) 'SFDFONTS' suffix '.sfd'.
@@ -2468,7 +2523,7 @@ library.)
 different systems.  You will almost certainly want to use Autoconf and
 probably Automake for configuring and building your software if you use
 Kpathsea; I strongly recommend using Autoconf and Automake regardless.
-They are available from <http://www.gnu.org/software>.
+They are available from <https://gnu.org/software>.
 
 
 File: kpathsea.info,  Node: Program-specific files,  Next: Programming with config files,  Prev: Calling sequence,  Up: Programming
@@ -2608,7 +2663,7 @@ investigation, your report should include the following:
 
    * If the bug involved is an actual crash (i.e., core dump), it is
      easy and useful to include a stack trace from a debugger (I
-     recommend the GNU debugger GDB (<http://www.gnu.org/software/gdb>).
+     recommend the GNU debugger GDB (<https://gnu.org/software/gdb>).
      If the cause is apparent (a 'NULL' value being dereferenced, for
      example), please send the details along.  If the program involved
      is TeX or Metafont, and the crash is happening at apparently-sound
@@ -2627,7 +2682,7 @@ File: kpathsea.info,  Node: Mailing lists,  Next: Debugging,  Prev: Bug checklis
 
 Web2c and Kpathsea in general are discussed on the mailing list
 <tex-k@tug.org>.  You can subscribe and peruse the archives on the web
-<http://lists.tug.org/tex-k>.
+<https://lists.tug.org/tex-k>.
 
    You do not need to join to submit a report, nor will it affect
 whether you get a response.  Be aware that large data files are
@@ -2636,7 +2691,7 @@ join the list.
 
    If you are looking for general TeX help, such as how to install a
 full TeX system or how to use LaTeX, please see
-<http://tug.org/begin.html>.
+<https://tug.org/begin.html>.
 
 
 File: kpathsea.info,  Node: Debugging,  Next: Logging,  Prev: Mailing lists,  Up: Reporting bugs
@@ -2923,7 +2978,7 @@ configuration file:
 the wrong device, most likely 'mktexpk''s built-in guess for the mode is
 wrong, and you should override it as above.
 
-   See <http://ctan.org/pkg/modes> for a list of resolutions and mode
+   See <https://ctan.org/pkg/modes> for a list of resolutions and mode
 names for most devices (additional submissions are welcome).
 
    If Metafont runs but generates fonts at a resolution of 2602dpi (and
@@ -2982,46 +3037,49 @@ Index
 * !! and casefolding:                    Casefolding examples.
                                                               (line  57)
 * !! in path specifications:             ls-R.                (line  57)
-* !! in TEXMFDBS:                        ls-R.                (line  11)
+* !! in 'TEXMFDBS':                      ls-R.                (line  11)
 * $ expansion:                           Variable expansion.  (line   6)
 * --all:                                 Path searching options.
                                                               (line  12)
 * --casefold-search:                     Path searching options.
                                                               (line  19)
+* --cnf-line:                            Path searching options.
+                                                              (line  28)
+* '--cnf-line', source for path:         Path sources.        (line   9)
 * --color=tty:                           ls-R.                (line  25)
 * --debug=NUM:                           Auxiliary tasks.     (line   9)
 * --dpi=NUM:                             Path searching options.
-                                                              (line  28)
+                                                              (line  49)
 * --engine=NAME:                         Path searching options.
-                                                              (line  32)
+                                                              (line  53)
 * --expand-braces=STRING:                Auxiliary tasks.     (line  12)
 * --expand-path=STRING:                  Auxiliary tasks.     (line  16)
 * --expand-var=STRING:                   Auxiliary tasks.     (line  34)
 * --format=NAME:                         Path searching options.
-                                                              (line  48)
+                                                              (line  69)
 * --help:                                Standard options.    (line   8)
 * --help-formats:                        Auxiliary tasks.     (line  42)
 * --interactive:                         Path searching options.
-                                                              (line 130)
+                                                              (line 151)
 * --mktex=FILETYPE:                      Path searching options.
-                                                              (line 135)
+                                                              (line 156)
 * --mode=STRING:                         Path searching options.
-                                                              (line 141)
+                                                              (line 162)
 * --must-exist:                          Path searching options.
-                                                              (line 146)
+                                                              (line 167)
 * --no-casefold-search:                  Path searching options.
                                                               (line  19)
 * --no-mktex=FILETYPE:                   Path searching options.
-                                                              (line 135)
+                                                              (line 156)
 * --path=STRING:                         Path searching options.
-                                                              (line 151)
+                                                              (line 172)
 * --progname=NAME:                       Path searching options.
-                                                              (line 159)
+                                                              (line 180)
 * --safe-in-name=NAME:                   Auxiliary tasks.     (line  48)
 * --safe-out-name=NAME:                  Auxiliary tasks.     (line  48)
 * --show-path=NAME:                      Auxiliary tasks.     (line  54)
 * --subdir=STRING:                       Path searching options.
-                                                              (line 164)
+                                                              (line 185)
 * --var-brace-value=VARIABLE:            Auxiliary tasks.     (line  60)
 * --var-value=VARIABLE:                  Auxiliary tasks.     (line  74)
 * --version:                             Standard options.    (line  11)
@@ -3033,12 +3091,12 @@ Index
 * --without-mktexpk-default:             mktex configuration. (line  12)
 * --without-mktextfm-default:            mktex configuration. (line  12)
 * -1 debugging value:                    Debugging.           (line  23)
-* -A option to ls:                       ls-R.                (line  39)
+* -A option to 'ls':                     ls-R.                (line  39)
 * -D NUM:                                Path searching options.
-                                                              (line  28)
+                                                              (line  49)
 * -iname, find predicate:                Casefolding examples.
                                                               (line  78)
-* -L option to ls:                       ls-R.                (line  44)
+* -L option to 'ls':                     ls-R.                (line  44)
 * . directories, ignored:                ls-R.                (line  39)
 * . files:                               ls-R.                (line  39)
 * .2602gf:                               Unable to generate fonts.
@@ -3115,6 +3173,7 @@ Index
                                                               (line 195)
 * .pro:                                  Supported file formats.
                                                               (line 169)
+* .PROGNAME qualifier in 'texmf.cnf':    Config files.        (line  50)
 * .rhosts, writable by TeX:              Security.            (line  10)
 * .ris:                                  Supported file formats.
                                                               (line 173)
@@ -3124,7 +3183,7 @@ Index
                                                               (line  42)
 * .tex:                                  Supported file formats.
                                                               (line 180)
-* .tex file, included in ls-R:           ls-R.                (line  39)
+* .tex file, included in 'ls-R':         ls-R.                (line  39)
 * .tfm:                                  Supported file formats.
                                                               (line 199)
 * .ttc:                                  Supported file formats.
@@ -3152,7 +3211,9 @@ Index
 * 8.3 filenames, using:                  mktex configuration. (line  68)
 * : may not be ::                        Searching overview.  (line  13)
 * :: expansion:                          Default expansion.   (line   6)
-* \, line continuation in texmf.cnf:     Config files.        (line  37)
+* ; translated to ':' in 'texmf.cnf':    Config files.        (line  66)
+* = omitted in 'texmf.cnf' and misparsing: Config files.      (line  93)
+* \, line continuation in 'texmf.cnf':   Config files.        (line  37)
 * \openin:                               Searching overview.  (line  31)
 * \special, suppressing warnings about:  Suppressing warnings.
                                                               (line  31)
@@ -3175,15 +3236,15 @@ Index
 * announcement mailing list:             Mailing lists.       (line   6)
 * API, re-entrant:                       Programming overview.
                                                               (line  16)
-* append-only directories and mktexpk:   Security.            (line  36)
+* append-only directories and 'mktexpk': Security.            (line  36)
 * appendonlydir:                         mktex configuration. (line  60)
 * Apple filesystem, case-insensitive:    Casefolding rationale.
                                                               (line   6)
-* arguments to mktex:                    mktex script arguments.
+* arguments to 'mktex':                  mktex script arguments.
                                                               (line   6)
 * argv[0]:                               Calling sequence.    (line  14)
 * autoconf, recommended:                 Calling sequence.    (line 117)
-* automounter, and ls-R:                 ls-R.                (line  46)
+* automounter, and 'ls-R':               ls-R.                (line  46)
 * auxiliary tasks:                       Auxiliary tasks.     (line   6)
 * Bach, Johann Sebastian:                Default expansion.   (line  41)
 * backslash-newline:                     Config files.        (line  37)
@@ -3193,7 +3254,7 @@ Index
                                                               (line  30)
 * BIBINPUTS <1>:                         Supported file formats.
                                                               (line 121)
-* blank lines, in texmf.cnf:             Config files.        (line  35)
+* blank lines, in 'texmf.cnf':           Config files.        (line  35)
 * BLTXMLINPUTS:                          Supported file formats.
                                                               (line  34)
 * brace expansion:                       Brace expansion.     (line   6)
@@ -3221,22 +3282,22 @@ Index
 * checksum:                              Suppressing warnings.
                                                               (line  16)
 * circle fonts:                          Fontmap.             (line  19)
-* client_path in kpse->format_info:      Calling sequence.    (line  47)
+* client_path in 'kpse->format_info':    Calling sequence.    (line  47)
 * CLUAINPUTS:                            Supported file formats.
                                                               (line  42)
 * CMAPFONTS:                             Supported file formats.
                                                               (line  46)
 * cmr10, as fallback font:               Fallback font.       (line  15)
 * cmr10.vf:                              Searching overview.  (line  31)
-* cnf.c:                                 Config files.        (line  86)
+* cnf.c:                                 Config files.        (line 112)
 * cnf.h:                                 Programming with config files.
                                                               (line  27)
 * comments, in fontmap files:            Fontmap.             (line  27)
-* comments, in texmf.cnf:                Config files.        (line  27)
+* comments, in 'texmf.cnf':              Config files.        (line  27)
 * comments, making:                      Introduction.        (line  29)
 * common features in glyph lookup:       Basic glyph lookup.  (line   6)
 * common problems:                       Common problems.     (line   6)
-* compilation value, source for path:    Path sources.        (line  20)
+* compilation value, source for path:    Path sources.        (line  23)
 * compiler bugs:                         TeX or Metafont failing.
                                                               (line   6)
 * compiler bugs, finding:                TeX or Metafont failing.
@@ -3256,10 +3317,11 @@ Index
                                                               (line  57)
 * config.status:                         Bug checklist.       (line  27)
 * configuration bugs:                    Bug checklist.       (line  27)
-* configuration file, source for path:   Path sources.        (line  17)
-* configuration files as shell scripts.: Config files.        (line  79)
-* configuration of mktex scripts:        mktex configuration. (line   6)
-* configure options for mktex scripts:   mktex configuration. (line  12)
+* configuration file, source for path:   Path sources.        (line  20)
+* configuration files as shell scripts.: Config files.        (line  86)
+* configuration of 'mktex' scripts:      mktex configuration. (line   6)
+* 'configure' options for 'mktex' scripts: mktex configuration.
+                                                              (line  12)
 * context diff:                          Bug checklist.       (line  52)
 * continuation character:                Config files.        (line  37)
 * core dumps, reporting:                 Bug checklist.       (line  58)
@@ -3283,7 +3345,7 @@ Index
 * directory permissions:                 Security.            (line  51)
 * directory structure, for TeX files:    TeX directory structure.
                                                               (line   6)
-* disabling mktex scripts:               mktex configuration. (line   6)
+* disabling 'mktex' scripts:             mktex configuration. (line   6)
 * disk search:                           Searching overview.  (line  22)
 * disk searching, avoiding:              ls-R.                (line  57)
 * disk usage, reducing:                  Logging.             (line   6)
@@ -3310,12 +3372,12 @@ Index
                                                               (line  41)
 * elt-dirs.c <1>:                        Subdirectory expansion.
                                                               (line  48)
-* enabling mktex scripts:                mktex configuration. (line   6)
+* enabling 'mktex' scripts:              mktex configuration. (line   6)
 * ENCFONTS:                              Supported file formats.
                                                               (line  61)
 * engine name:                           Path searching options.
-                                                              (line  32)
-* environment variable, source for path: Path sources.        (line   9)
+                                                              (line  53)
+* environment variable, source for path: Path sources.        (line  12)
 * environment variables for TeX:         Supported file formats.
                                                               (line   6)
 * environment variables in paths:        Variable expansion.  (line   6)
@@ -3339,7 +3401,7 @@ Index
 * extensions, filename:                  File lookup.         (line  24)
 * externally-built filename database:    Filename database.   (line   6)
 * extra colons:                          Default expansion.   (line   6)
-* failed mktex... script invocation:     mktex script names.  (line  35)
+* failed 'mktex...' script invocation:   mktex script names.  (line  35)
 * fallback font:                         Fallback font.       (line   6)
 * fallback resolutions:                  Fallback font.       (line   6)
 * FAQ, Kpathsea:                         Common problems.     (line   6)
@@ -3422,14 +3484,14 @@ Index
                                                               (line  84)
 * input lines, reading:                  Calling sequence.    (line 110)
 * interactive query:                     Path searching options.
-                                                              (line 130)
+                                                              (line 151)
 * interface, not frozen:                 Introduction.        (line  29)
 * introduction:                          Introduction.        (line   6)
-* kdebug::                               Debugging.           (line 105)
+* 'kdebug:':                             Debugging.           (line 105)
 * kdefault.c:                            Default expansion.   (line  48)
 * Knuth, Donald E.:                      History.             (line   6)
 * Knuth, Donald E., archive of programs by: unixtex.ftp.      (line  19)
-* Kpathsea config file, source for path: Path sources.        (line  17)
+* Kpathsea config file, source for path: Path sources.        (line  20)
 * kpathsea.h:                            Programming overview.
                                                               (line  26)
 * kpathsea_cnf_get:                      Programming with config files.
@@ -3528,9 +3590,9 @@ Index
                                                               (line  20)
 * mkocp:                                 mktex script names.  (line  18)
 * mkofm:                                 mktex script names.  (line  21)
-* mktex script configuration:            mktex configuration. (line   6)
-* mktex script names:                    mktex script names.  (line   6)
-* mktex scripts:                         mktex scripts.       (line   6)
+* 'mktex' script configuration:          mktex configuration. (line   6)
+* 'mktex' script names:                  mktex script names.  (line   6)
+* 'mktex' scripts:                       mktex scripts.       (line   6)
 * mktex.cnf:                             Specially-recognized files.
                                                               (line  28)
 * mktex.cnf <1>:                         mktex configuration. (line  29)
@@ -3540,7 +3602,7 @@ Index
 * mktexfmt:                              mktex script names.  (line  10)
 * mktexmf:                               mktex script names.  (line  15)
 * mktexpk:                               mktex script names.  (line  24)
-* mktexpk can't guess mode:              Unable to generate fonts.
+* 'mktexpk' can't guess mode:            Unable to generate fonts.
                                                               (line  12)
 * mktextex:                              mktex script names.  (line  27)
 * mktextfm:                              mktex script names.  (line  30)
@@ -3561,9 +3623,9 @@ Index
 * MT_FEATURES:                           mktex configuration. (line  39)
 * multiple TeX hierarchies:              Brace expansion.     (line  20)
 * must exist:                            Searching overview.  (line  31)
-* names for mktex scripts:               mktex script names.  (line   6)
+* names for 'mktex' scripts:             mktex script names.  (line   6)
 * Neumann, Gustaf:                       History.             (line  56)
-* NFS and ls-R:                          ls-R.                (line  46)
+* NFS and 'ls-R':                        ls-R.                (line  46)
 * nomfdrivers:                           mktex configuration. (line  92)
 * nomode:                                mktex configuration. (line  97)
 * none:                                  Suppressing warnings.
@@ -3645,10 +3707,10 @@ Index
 * reporting bugs:                        Reporting bugs.      (line   6)
 * resident.c:                            Calling sequence.    (line  47)
 * resolution, setting:                   Path searching options.
-                                                              (line  28)
+                                                              (line  49)
 * resolutions, last-resort:              Fallback font.       (line   6)
 * retrieving TeX:                        unixtex.ftp.         (line   6)
-* right-hand side of variable assignments: Config files.      (line  56)
+* right-hand side of variable assignments: Config files.      (line  57)
 * RISINPUTS:                             Supported file formats.
                                                               (line 173)
 * Rokicki, Tom:                          History.             (line  12)
@@ -3672,11 +3734,11 @@ Index
 * setgid scripts:                        Security.            (line  40)
 * SFDFONTS:                              Supported file formats.
                                                               (line 177)
-* shell scripts as configuration files:  Config files.        (line  79)
+* shell scripts as configuration files:  Config files.        (line  86)
 * shell variables:                       Variable expansion.  (line  17)
 * shell_escape, example for code:        Programming with config files.
                                                               (line  10)
-* site overrides for mktex...:           mktex configuration. (line  29)
+* site overrides for 'mktex...':         mktex configuration. (line  29)
 * skeleton TeX directory:                TeX directory structure.
                                                               (line   6)
 * slow startup time:                     Slow path searching. (line   6)
@@ -3711,7 +3773,7 @@ Index
                                                               (line   6)
 * symbolic links not found:              Unable to find files.
                                                               (line  21)
-* symbolic links, and ls-R:              ls-R.                (line  44)
+* symbolic links, and 'ls-R':            ls-R.                (line  44)
 * symlinks, resolving:                   Calling sequence.    (line  31)
 * system C compiler bugs:                TeX or Metafont failing.
                                                               (line  16)
@@ -3777,10 +3839,10 @@ Index
                                                               (line   6)
 * texmf.cnf:                             Specially-recognized files.
                                                               (line  38)
-* texmf.cnf missing, warning about:      Config files.        (line  18)
+* 'texmf.cnf' missing, warning about:    Config files.        (line  18)
 * texmf.cnf, and variable expansion:     Variable expansion.  (line   6)
 * texmf.cnf, definition for:             Config files.        (line   6)
-* texmf.cnf, source for path:            Path sources.        (line  17)
+* texmf.cnf, source for path:            Path sources.        (line  20)
 * TEXMFCNF:                              Config files.        (line   6)
 * TEXMFCNF <1>:                          Supported file formats.
                                                               (line  49)
@@ -3822,8 +3884,10 @@ Index
 * tilde.c:                               Tilde expansion.     (line  25)
 * time system call:                      Logging.             (line  15)
 * tolerance for glyph lookup:            Basic glyph lookup.  (line  15)
-* trailing / in home directory:          Tilde expansion.     (line  19)
+* trailing '/' in home directory:        Tilde expansion.     (line  19)
 * trailing colons:                       Default expansion.   (line   6)
+* translations, of path searching description: Path searching.
+                                                              (line  10)
 * TRFONTS:                               Supported file formats.
                                                               (line 203)
 * trick for detecting leaf directories:  Subdirectory expansion.
@@ -3846,7 +3910,7 @@ Index
 * unreadable file warnings:              Suppressing warnings.
                                                               (line  27)
 * unreadable files:                      Searching overview.  (line  63)
-* unusable ls-R warning:                 ls-R.                (line  51)
+* unusable 'ls-R' warning:               ls-R.                (line  51)
 * usage patterns, finding:               Logging.             (line   6)
 * USERPROFILE, as ~ expansion:           Tilde expansion.     (line   6)
 * USE_TEXMFVAR:                          mktex configuration. (line 128)
@@ -3864,8 +3928,8 @@ Index
                                                               (line 219)
 * Vojta, Paul:                           History.             (line  30)
 * Walsh, Norman:                         History.             (line  56)
-* warning about unusable ls-R:           ls-R.                (line  51)
-* warning, about missing texmf.cnf:      Config files.        (line  18)
+* warning about unusable 'ls-R':         ls-R.                (line  51)
+* warning, about missing 'texmf.cnf':    Config files.        (line  18)
 * warnings, file access:                 Searching overview.  (line  63)
 * warnings, suppressing:                 Suppressing warnings.
                                                               (line   6)
@@ -3892,61 +3956,61 @@ Index
 
 Tag Table:
 Node: Top1480
-Node: Introduction2260
-Node: History4330
-Node: unixtex.ftp8926
-Node: Security10351
-Node: TeX directory structure12855
-Node: Path searching16903
-Node: Searching overview17630
-Node: Path sources21449
-Node: Config files22540
-Node: Path expansion26467
-Node: Default expansion27420
-Node: Variable expansion29490
-Node: Tilde expansion30891
-Node: Brace expansion31871
-Node: KPSE_DOT expansion32810
-Node: Subdirectory expansion33323
-Node: Casefolding search35677
-Node: Casefolding rationale36446
-Node: Casefolding examples37785
-Node: Filename database42835
-Node: ls-R43893
-Node: Filename aliases47569
-Node: Database format48747
-Node: Invoking kpsewhich49760
-Node: Path searching options50715
-Node: Specially-recognized files59234
-Node: Auxiliary tasks60589
-Node: Standard options64295
-Node: TeX support64651
-Node: Supported file formats66005
-Node: File lookup73670
-Node: Glyph lookup75419
-Node: Basic glyph lookup76543
-Node: Fontmap77423
-Node: Fallback font79952
-Node: Suppressing warnings80864
-Node: mktex scripts81991
-Node: mktex configuration83206
-Node: mktex script names89009
-Node: mktex script arguments90395
-Node: Programming91274
-Node: Programming overview91847
-Node: Calling sequence94708
-Node: Program-specific files101240
-Node: Programming with config files102263
-Node: Reporting bugs103850
-Node: Bug checklist104528
-Node: Mailing lists108000
-Node: Debugging108675
-Node: Logging113752
-Node: Common problems115619
-Node: Unable to find files116096
-Node: Slow path searching118506
-Node: Unable to generate fonts119881
-Node: TeX or Metafont failing122352
-Node: Index123554
+Node: Introduction2262
+Node: History4331
+Node: unixtex.ftp8927
+Node: Security10352
+Node: TeX directory structure12856
+Node: Path searching16897
+Node: Searching overview17855
+Node: Path sources21674
+Node: Config files22900
+Node: Path expansion28163
+Node: Default expansion29116
+Node: Variable expansion31186
+Node: Tilde expansion32587
+Node: Brace expansion33567
+Node: KPSE_DOT expansion34506
+Node: Subdirectory expansion35019
+Node: Casefolding search37367
+Node: Casefolding rationale38136
+Node: Casefolding examples39475
+Node: Filename database44521
+Node: ls-R45503
+Node: Filename aliases49179
+Node: Database format50357
+Node: Invoking kpsewhich51370
+Node: Path searching options52325
+Node: Specially-recognized files61923
+Node: Auxiliary tasks63278
+Node: Standard options67003
+Node: TeX support67359
+Node: Supported file formats68713
+Node: File lookup76381
+Node: Glyph lookup78130
+Node: Basic glyph lookup79254
+Node: Fontmap80134
+Node: Fallback font82663
+Node: Suppressing warnings83575
+Node: mktex scripts84702
+Node: mktex configuration85917
+Node: mktex script names91720
+Node: mktex script arguments93106
+Node: Programming93985
+Node: Programming overview94558
+Node: Calling sequence97419
+Node: Program-specific files103948
+Node: Programming with config files104971
+Node: Reporting bugs106558
+Node: Bug checklist107236
+Node: Mailing lists110705
+Node: Debugging111382
+Node: Logging116459
+Node: Common problems118326
+Node: Unable to find files118803
+Node: Slow path searching121213
+Node: Unable to generate fonts122588
+Node: TeX or Metafont failing125060
+Node: Index126262
 
 End Tag Table

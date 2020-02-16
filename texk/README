@@ -56,19 +56,18 @@ dvipdfm-x - maintained here, by us, contains
   xdvipdfmx
     old info: http://project.ktug.org/dvipdfmx/
 
-dvipng 1.16 - checked 7apr19
-  http://savannah.nongnu.org/files/?group=dvipng
-  http://mirror.ctan.org/dviware/dvipng/ (but maybe stale)
+dvipng 1.17 - checked 06jan20
+  http://mirror.ctan.org/dviware/dvipng/
 
 dvipos - maintained here, by us
 
 dvipsk - maintained here, by us
 
-dvisvgm 2.6.3 - checked 10mar19
+dvisvgm 2.8.2 - checked 10dec19
   https://dvisvgm.de/Downloads/
 
-gregorio 5.2.0 - checked 11mar19
-  CTAN/support/gregoriotex/gregorio-5.2.0.zip
+gregorio 5.2.1 - checked 19dec19
+  CTAN/support/gregoriotex/gregorio-5.2.1.zip
 
 gsftopk - from Paul Vojta's xdvi?
 

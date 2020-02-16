@@ -1,3 +1,26 @@
+2020-02-10  Akira Kakuto  <kakuto@w32tex.org>
+
+	* xetex.ch: Sync with tex.ch for changes by Phelype Oleinik
+	to support \input {...}.
+
+2019-12-31  Akira Kakuto  <kakuto@w32tex.org>
+
+	* XeTeX_ext.c: Support system poppler version 0.84.0.
+
+2019-12-10  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* xetex.defines (gzFile): move to ../web2c/common.defines.
+
+2019-06-30  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* xetex-filedump.test, filedump.tex, filedump.log: New tests.
+	* am/xetex.am: Adjusted for new test.
+
+2019-05-30  Khaled Hosny  <dr.khaled.hosny@gmail.com>
+
+	* XeTeXLayoutInterface.cpp: Do not use hb-icu if HarfBuzz
+	version is 2.5.0 or newer.
+
 2019-01-03  Akira Kakuto  <kakuto@fuk.kindai.ac.jp>
 
 	* NEWS, xetex_version.h, xetex.web: Sync with the upstream.

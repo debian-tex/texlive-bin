@@ -1,3 +1,161 @@
+2020-01-19  Karl Berry  <karl@freefriends.org>
+
+	* kpsewhich.c (ENSURE_NONEMPTY_STRING): new macro.
+	(read_command_line): ensure nonempty arguments to --format,
+	--safe-{in,out}-name, --var-brace-value, --var-value.
+	Empty args to the other options seem possible.
+
+	* line.c (read_line): silently drop nul (zero) bytes.
+	* tests/cnfnull.test: test for nul bytes in texmf.cnf.
+	* Makefile.am (TESTS),
+	(tests/cnfnull.test): add it.
+
+2020-01-16  Karl Berry  <karl@freefriends.org>
+
+	* doc/kpathsea.texi,
+	* version.ac (kpse_dev): no /dev.
+
+2019-12-31  Akira Kakuto  <kakuto@w32tex.org>
+
+	* access.c: not test x bit on Windows, because access() crashes.
+
+2019-12-29  Karl Berry  <karl@tug.org>
+
+	* mktexlsr,
+	* mktexmf,
+	* mktexpk,
+	* mktextfm: remove; these will now be maintained only in
+	Master/texmf-dist/scripts/texlive, with slave copies in
+	Build/source/texk/texlive/linked_scripts as usual.
+	* Makefile.am (dist_noinst_SCRIPTS): remove, nothing left.
+	(install-exec-local): likewise remove.
+	(uninstall-local): don't uninstall the dist_noinst_SCRIPTS.
+	(bin_links): remove, now also handled in linked_scripts.
+	
+	* man/Makefile.am (man_sources): remove mktex{lsr,mf,pk,tfm}.man;
+	(man1_links): remove; these man pages will now be maintained in
+	Build/source/texk/texlive/tl_scripts.
+
+2019-12-26  Karl Berry  <karl@tug.org>
+
+	* Makefile.am (install-data-local): must mkdir web2cdir here.
+
+	* mktexdir,
+	* mktexnam,
+	* mktexupd,
+	* mktex.opt,
+	* mktexdir.opt,
+	* mktexnam.opt: remove; these will now be maintained
+	 (if changes are needed) only in Master/texmf-dist/web2c.
+	* Makefile.am (dist_web2c_DATA, dist_web2c_SCRIPTS): remove.
+	(All this is primarily so that $Id$ expansions will not be lost;
+	the user-level mktex* scripts will happen in a few days.)
+	
+	* mktex.cnf: remove this unused file.
+	* Makefile.am (EXTRA_DIST): remove it here.
+
+2019-12-22  Karl Berry  <karl@freefriends.org>
+
+	* doc/kpathsea.texi (Path searching): mention translations for TL.
+	(Config files): distinguish special characters at different levels.
+	(Filename database): don't mention talking about 8.3 filenames.
+	
+2019-12-16  Karl Berry  <karl@freefriends.org>
+
+	* texmf.cnf (glob_str_size): increase from 20,000 to 200,000
+	for web2c/tests/bibtex-bigauth.test (q.v.).
+	(ent_str_size, max_strings.bibtex*): increase these while we're here.
+
+2019-11-03  Karl Berry  <karl@tug.org>
+
+	* progname.c: remove nowadays-useless register declarations.
+	Mentioned by Doug McKenna.
+
+2019-10-10  Karl Berry  <karl@tug.org>
+
+	* texmf.cnf (LUAINPUTS.luahblatex{,-dev}): define a la other
+	LUAINPUTS.*. Report from Marcel Fabian Krueger, 10 Oct 2019 23:08:37.
+
+2019-09-04  Akira Kakuto  <kakuto@w32tex.org>
+
+	* hash.c: Typo in a comment.
+
+2019-08-13  Karl Berry  <karl@freefriends.org>
+
+	* cnf.c (do_line): warn about a program name qualifier which is
+	empty or contains one of our usual special characters: .{}$;:
+	since it is probably a misparsing, especially if the = is omitted.
+	Report from Johannes Kunde, 1 Aug 2019 20:57:14.
+	* Makefile.am (TESTS): new tests/cnfprog.test
+	(cnfprog.log): another target for kpsewhich.
+	(EXTRA_DIST): add tests/cnfprog/texmf.cnf.
+	* doc/kpathsea.texi (Config files): mention example of above.
+
+2019-08-09  Karl Berry  <karl@freefriends.org>
+
+	* texmf.cnf (log_openout): new configuration variable, true
+	by default for all but tex and initex, to remove one technical
+	trip incompatibility. Report from David Fuchs.
+
+	* cnf.c,
+	* progname.h,
+	* tex-file.c,
+	* types.h: doc/formatting fixes.
+
+2019-08-06  Karl Berry  <karl@freefriends.org>
+
+	* kpsewhich.c (USAGE, read_command_line): new option --cnf-line.
+	(user_cnf_lines, user_cnf_nlines): new variables to store the args.
+	(init_more): call kpathsea_cnf_line_env_progname on each line.
+
+	* cnf.h (kpathsea_cnf_line_env_progname): declare new fn.
+	* cnf.c (do_line): new argument ENV_PROGNAME,
+	to insert settings in the environment instead of the hash table.
+	(kpathsea_cnf_line_env_progname): entry point to call do_line
+	with env_progname=true.
+	(read_all_cnf): change do_line call to have env_progname=false.
+	Also, don't create cnf_hash here, instead ...
+	(kpathsea_cnf_get): ... here (if needed).
+
+	* tests/cnfline.test: new test for --cnf-line.
+	* tests/cnfline/texmf.cnf: new directory/file for cnfline.test.
+	* Makefile.am (tests),
+	(tests/cnfline.log),
+	(EXTRA_DIST): add new test.
+	* doc/kpathsea.texi (Path sources, Path searching options): doc.
+
+2019-07-26  Karl Berry  <karl@tug.org>
+
+	* texmf.cnf (TEXINPUTS, etc.): include explicit latex,
+	element at end so that files under latex/ are preferred to those
+	under latex-dev/. From Ulrike Fischer.
+
+	* texmf.cnf (TEXINPUTS.latex-dev, *-dev): new -dev format
+	names for LaTeX pre-release testing.
+
+2019-07-24  Akira Kakuto  <kakuto@w32tex.org>
+
+	* texmf.cnf: Define command_line_encoding = utf-8 for
+	Windows only.
+
+2019-07-11  Karl Berry  <karl@tug.org>
+
+	* texmf.cnf (TEXINPUTS.lua{,jit}hb{,la}tex): four new engines,
+	luahbtex with/without jit, with/without latex. Same path as non-hb.
+
+2019-06-02  Karl Berry  <karl@tug.org>
+
+	* texmf.cnf (TEXINPUTS.harf{,la}tex): new engine.
+	Turns out we want harf{,la}tex/ directories.
+
+2019-05-05  Karl Berry  <karl@tug.org>
+
+	* texmf.cnf: missed top 2018's.
+
+2019-05-03  Karl Berry  <karl@tug.org>
+
+	* version.ac: 6.3.2/dev since TL'19 is released.
+
 2019-04-07  Karl Berry  <karl@freefriends.org>
 
 	* TeX Live 2019.
@@ -1256,7 +1414,7 @@
 
 2012-03-04  Peter Breitenlohner  <peb@mppmu.mpg.de>
 
-	Avoid 'the address of XXX will always evaluate as true' warnings.
+	Avoid 'the address of X will always evaluate as true' warnings.
 	* lib.h (STREQ): Test '(s) != NULL' instead of '(s)'.
 	Gcc >=4.3 produces identical code but -Wall yields no warning.
 

@@ -461,6 +461,7 @@ const char *math_param_names[] = {
     "stackvgap", "stacknumup", "stackdenomdown",
     "fractionrule", "fractionnumvgap", "fractionnumup",
     "fractiondenomvgap", "fractiondenomdown", "fractiondelsize",
+    "skewedfractionhgap", "skewedfractionvgap",
     "limitabovevgap", "limitabovebgap", "limitabovekern",
     "limitbelowvgap", "limitbelowbgap", "limitbelowkern",
     "nolimitsubfactor", "nolimitsupfactor", /* bonus */
@@ -720,7 +721,9 @@ void display_normal_noad(pointer p)
         }
         break;
     case radical_noad:
-        if (subtype(p) == 6)
+        if (subtype(p) == 7)
+            tprint_esc("Uhextensible");
+        else if (subtype(p) == 6)
             tprint_esc("Udelimiterover");
         else if (subtype(p) == 5)
             tprint_esc("Udelimiterunder");
@@ -1445,8 +1448,7 @@ void set_math_char(mathcodeval mval)
         } else {
             math_class_to_type(subtype(p),mval.class_value);
         }
-        vlink(tail) = p;
-        tail = p;
+        tail_append(p);
     }
 }
 
@@ -1471,8 +1473,7 @@ void math_char_in_text(mathcodeval mval)
         back_input();
     } else {
         p = new_char(fam_fnt(mval.family_value, text_size), mval.character_value);
-        vlink(tail) = p;
-        tail = p;
+        tail_append(p);
     }
 }
 
@@ -2618,7 +2619,8 @@ void after_math(void)
             tail_append(new_dir(math_direction_par));
         }
         run_mlist_to_hlist(p, (mode > 0), text_style);
-        vlink(tail) = vlink(temp_head);
+	try_couple_nodes(tail,vlink(temp_head));
+
         while (vlink(tail) != null) {
             tail = vlink(tail);
         }

@@ -344,7 +344,7 @@ end
 if os.type == "windows" then
 package.preload["texrunner.shellutil"] = function(...)
 --[[
-  Copyright 2016 ARATA Mizuki
+  Copyright 2016,2019 ARATA Mizuki
 
   This file is part of ClutTeX.
 
@@ -363,6 +363,7 @@ package.preload["texrunner.shellutil"] = function(...)
 ]]
 
 local string_gsub = string.gsub
+local os_execute = os.execute
 
 -- s: string
 local function escape(s)
@@ -370,14 +371,21 @@ local function escape(s)
 end
 
 
+local function has_command(name)
+  local result = os_execute("where " .. escape(name) .. " > NUL 2>&1")
+  -- Note that os.execute returns a number on Lua 5.1 or LuaTeX
+  return result == 0 or result == true
+end
+
 return {
   escape = escape,
+  has_command = has_command,
 }
 end
 else
 package.preload["texrunner.shellutil"] = function(...)
 --[[
-  Copyright 2016 ARATA Mizuki
+  Copyright 2016,2019 ARATA Mizuki
 
   This file is part of ClutTeX.
 
@@ -400,6 +408,7 @@ local string_match = string.match
 local table = table
 local table_insert = table.insert
 local table_concat = table.concat
+local os_execute = os.execute
 
 -- s: string
 local function escape(s)
@@ -430,8 +439,15 @@ local function escape(s)
 end
 
 
+local function has_command(name)
+  local result = os_execute("which " .. escape(name) .. " > /dev/null")
+  -- Note that os.execute returns a number on Lua 5.1 or LuaTeX
+  return result == 0 or result == true
+end
+
 return {
   escape = escape,
+  has_command = has_command,
 }
 end
 end
@@ -542,6 +558,7 @@ package.preload["texrunner.option"] = function(...)
 
 -- options_and_params, i = parseoption(arg, options)
 -- options[i] = {short = "o", long = "option" [, param = true] [, boolean = true] [, allow_single_hyphen = false]}
+-- options_and_params[j] = {"option", "value"}
 -- arg[i], arg[i + 1], ..., arg[#arg] are non-options
 local function parseoption(arg, options)
   local i = 1
@@ -581,6 +598,7 @@ local function parseoption(arg, options)
           elseif o.boolean and name == "no-" .. o.long then
             -- --no-option
             opt = o
+            param = false
             break
           end
         end
@@ -620,6 +638,7 @@ local function parseoption(arg, options)
           elseif o.boolean and name == "no-" .. o.long then
             -- -no-option
             opt = o
+            param = false
             break
           end
         elseif o.long and #name >= 2 and (o.long == name or (o.boolean and name == "no-" .. o.long)) then
@@ -673,7 +692,7 @@ return {
 end
 package.preload["texrunner.tex_engine"] = function(...)
 --[[
-  Copyright 2016 ARATA Mizuki
+  Copyright 2016,2019 ARATA Mizuki
 
   This file is part of ClutTeX.
 
@@ -700,7 +719,7 @@ local shellutil = require "texrunner.shellutil"
 --[[
 engine.name: string
 engine.type = "onePass" or "twoPass"
-engine:build_command(inputfile, options)
+engine:build_command(inputline, options)
   options:
     halt_on_error: boolean
     interaction: string
@@ -714,7 +733,6 @@ engine:build_command(inputfile, options)
     output_format: "pdf" or "dvi"
     draftmode: boolean (pdfTeX / XeTeX / LuaTeX)
     fmt: string
-    tex_injection: string
     lua_initialization_script: string (LuaTeX only)
 engine.executable: string
 engine.supports_pdf_generation: boolean
@@ -726,8 +744,9 @@ engine.is_luatex: true or nil
 local engine_meta = {}
 engine_meta.__index = engine_meta
 engine_meta.dvi_extension = "dvi"
-function engine_meta:build_command(inputfile, options)
-  local command = {self.executable, "-recorder"}
+function engine_meta:build_command(inputline, options)
+  local executable = options.engine_executable or self.executable
+  local command = {executable, "-recorder"}
   if options.fmt then
     table.insert(command, "-fmt=" .. options.fmt)
   end
@@ -764,11 +783,7 @@ function engine_meta:build_command(inputfile, options)
       table.insert(command, v)
     end
   end
-  if type(options.tex_injection) == "string" then
-    table.insert(command, shellutil.escape(options.tex_injection .. "\\input " .. inputfile)) -- TODO: what if filename contains spaces?
-  else
-    table.insert(command, shellutil.escape(inputfile))
-  end
+  table.insert(command, shellutil.escape(inputline))
   return table.concat(command, " ")
 end
 
@@ -1118,8 +1133,9 @@ local function parse_aux_file(auxfile, outdir, report, seen)
   for l in io.lines(auxfile) do
     local subauxfile = string_match(l, "\\@input{(.+)}")
     if subauxfile then
-      if fsutil.isfile(subauxfile) then
-        parse_aux_file(pathutil.join(outdir, subauxfile), outdir, report, seen)
+      local subauxfile_abs = pathutil.abspath(subauxfile, outdir)
+      if fsutil.isfile(subauxfile_abs) then
+        parse_aux_file(subauxfile_abs, outdir, report, seen)
       else
         local dir = pathutil.join(outdir, pathutil.dirname(subauxfile))
         if not fsutil.isdir(dir) then
@@ -1144,8 +1160,11 @@ local function extract_bibtex_from_aux_file(auxfile, outdir, biblines)
       end
     elseif name == "@input" then
       local subauxfile = string_match(l, "\\@input{(.+)}")
-      if subauxfile and fsutil.isfile(subauxfile) then
-        extract_bibtex_from_aux_file(pathutil.join(outdir, subauxfile), outdir, biblines)
+      if subauxfile then
+        local subauxfile_abs = pathutil.abspath(subauxfile, outdir)
+        if fsutil.isfile(subauxfile_abs) then
+          extract_bibtex_from_aux_file(subauxfile_abs, outdir, biblines)
+        end
       end
     end
   end
@@ -1177,17 +1196,19 @@ local texio_write_nl = texio.write_nl
 
   -- Packages coded in Lua doesn't follow -output-directory option and doesn't write command to the log file
   initscript:write(string.format("local output_directory = %q\n", options.output_directory))
+  -- tex.jobname may not be available when io.open is called for the first time
+  initscript:write(string.format("local jobname = %q\n", options.jobname))
   initscript:write([==[
 local luawritelog
 local function openluawritelog()
   if not luawritelog then
-    luawritelog = assert(io_open(output_directory .. "/" .. tex.jobname .. ".cluttex-fls", "w"))
+    luawritelog = assert(io_open(output_directory .. "/" .. jobname .. ".cluttex-fls", "w"))
   end
   return luawritelog
 end
 io.open = function(fname, mode)
   -- luatexja-ruby
-  if mode == "w" and fname == tex.jobname .. ".ltjruby" then
+  if mode == "w" and fname == jobname .. ".ltjruby" then
     fname = output_directory .. "/" .. fname
   end
   if type(mode) == "string" and string.find(mode, "w") ~= nil then
@@ -1348,7 +1369,7 @@ return {
 end
 package.preload["texrunner.handleoption"] = function(...)
 local COPYRIGHT_NOTICE = [[
-Copyright (C) 2016,2018-2019  ARATA Mizuki
+Copyright (C) 2016-2020  ARATA Mizuki
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -1385,6 +1406,9 @@ Options:
                                      xelatex, xetex, latex, etex, tex,
                                      platex, eptex, ptex,
                                      uplatex, euptex, uptex,
+      --engine-executable=COMMAND+OPTIONs
+                               The actual TeX command to use.
+                                 [default: ENGINE]
   -o, --output=FILE            The name of output file.
                                  [default: JOBNAME.pdf or JOBNAME.dvi]
       --fresh                  Clean intermediate files before running TeX.
@@ -1400,17 +1424,26 @@ Options:
       --dvipdfmx-option[s]=OPTION[s]  Same for dvipdfmx.
       --makeindex=COMMAND+OPTIONs  Command to generate index, such as
                                      `makeindex' or `mendex'.
-      --bibtex=COMMAND+OPTIONs  Command for BibTeX, such as
+      --bibtex=COMMAND+OPTIONs     Command for BibTeX, such as
                                      `bibtex' or `pbibtex'.
-      --biber[=COMMAND+OPTIONs]  Command for Biber.
+      --biber[=COMMAND+OPTIONs]    Command for Biber.
       --makeglossaries[=COMMAND+OPTIONs]  Command for makeglossaries.
   -h, --help                   Print this message and exit.
   -v, --version                Print version information and exit.
   -V, --verbose                Be more verbose.
-      --color=WHEN             Make ClutTeX's message colorful. WHEN is one of
-                                 `always', `auto', or `never'.  [default: auto]
+      --color[=WHEN]           Make ClutTeX's message colorful. WHEN is one of
+                                 `always', `auto', or `never'.
+                                 [default: `auto' if --color is omitted,
+                                           `always' if WHEN is omitted]
       --includeonly=NAMEs      Insert '\includeonly{NAMEs}'.
       --make-depends=FILE      Write dependencies as a Makefile rule.
+      --print-output-directory  Print the output directory and exit.
+      --package-support=PKG1[,PKG2,...]
+                               Enable special support for some shell-escaping
+                                 packages.
+                               Currently supported: minted, epstopdf
+      --check-driver=DRIVER    Check that the correct driver file is loaded.
+                               DRIVER is one of `dvipdfmx', `dvips', `dvisvgm'.
 
       --[no-]shell-escape
       --shell-restricted
@@ -1432,6 +1465,10 @@ local option_spec = {
   {
     short = "e",
     long = "engine",
+    param = true,
+  },
+  {
+    long = "engine-executable",
     param = true,
   },
   {
@@ -1480,6 +1517,17 @@ local option_spec = {
   },
   {
     long = "make-depends",
+    param = true
+  },
+  {
+    long = "print-output-directory",
+  },
+  {
+    long = "package-support",
+    param = true
+  },
+  {
+    long = "check-driver",
     param = true
   },
   -- Options for TeX
@@ -1585,6 +1633,10 @@ local function set_default_values(options)
   if options.halt_on_error == nil then
     options.halt_on_error = true
   end
+
+  if options.output_format == nil then
+    options.output_format = "pdf"
+  end
 end
 
 -- inputfile, engine, options = handle_cluttex_options(arg)
@@ -1596,6 +1648,7 @@ local function handle_cluttex_options(arg)
   local options = {
     tex_extraoptions = {},
     dvipdfmx_extraoptions = {},
+    package_support = {},
   }
   CLUTTEX_VERBOSITY = 0
   for _,option in ipairs(option_and_params) do
@@ -1605,6 +1658,10 @@ local function handle_cluttex_options(arg)
     if name == "engine" then
       assert(options.engine == nil, "multiple --engine options")
       options.engine = param
+
+    elseif name == "engine-executable" then
+      assert(options.engine_executable == nil, "multiple --engine-executable options")
+      options.engine_executable = param
 
     elseif name == "output" then
       assert(options.output == nil, "multiple --output options")
@@ -1654,6 +1711,24 @@ local function handle_cluttex_options(arg)
     elseif name == "make-depends" then
       assert(options.make_depends == nil, "multiple --make-depends options")
       options.make_depends = param
+
+    elseif name == "print-output-directory" then
+      assert(options.print_output_directory == nil, "multiple --print-output-directory options")
+      options.print_output_directory = true
+
+    elseif name == "package-support" then
+      local known_packages = {["minted"] = true, ["epstopdf"] = true}
+      for pkg in string.gmatch(param, "[^,%s]+") do
+        options.package_support[pkg] = true
+        if not known_packages[pkg] and CLUTTEX_VERBOSITY >= 1 then
+          message.warn("ClutTeX provides no special support for '"..pkg.."'.")
+        end
+      end
+
+    elseif name == "check-driver" then
+      assert(options.check_driver == nil, "multiple --check-driver options")
+      assert(param == "dvipdfmx" or param == "dvips" or param == "dvisvgm", "wrong value for --check-driver option")
+      options.check_driver = param
 
       -- Options for TeX
     elseif name == "synctex" then
@@ -1764,6 +1839,27 @@ local function handle_cluttex_options(arg)
   end
 
   set_default_values(options)
+
+  if options.output_format == "pdf" then
+    if options.check_driver ~= nil then
+      error("--check-driver can only be used when the output format is DVI.")
+    end
+    if engine.supports_pdf_generation then
+      if engine.is_luatex then
+        options.check_driver = "luatex"
+      elseif engine.name == "xetex" or engine.name == "xelatex" then
+        options.check_driver = "xetex"
+      elseif engine.name == "pdftex" or engine.name == "pdflatex" then
+        options.check_driver = "pdftex"
+      else
+        message.warning("Unknown engine: "..engine.name)
+        message.warning("Driver check will not work.")
+      end
+    else
+      -- ClutTeX uses dvipdfmx to generate PDF from DVI output.
+      options.check_driver = "dvipdfmx"
+    end
+  end
 
   return inputfile, engine, options
 end
@@ -2073,7 +2169,7 @@ local CMD = {
 
 local function exec_msg(commandline)
   if use_colors then
-    io.stderr:write(CMD.fg_x_white, CMD.bg_red, "[EXEC]", CMD.reset, " ", CMD.fg_red, commandline, CMD.reset, "\n")
+    io.stderr:write(CMD.fg_x_white, CMD.bg_red, "[EXEC]", CMD.reset, " ", CMD.fg_cyan, commandline, CMD.reset, "\n")
   else
     io.stderr:write("[EXEC] ", commandline, "\n")
   end
@@ -2124,8 +2220,9 @@ return {
   info  = info_msg,
 }
 end
+package.preload["texrunner.fswatcher_windows"] = function(...)
 --[[
-  Copyright 2016,2018-2019 ARATA Mizuki
+  Copyright 2019 ARATA Mizuki
 
   This file is part of ClutTeX.
 
@@ -2143,7 +2240,673 @@ end
   along with ClutTeX.  If not, see <http://www.gnu.org/licenses/>.
 ]]
 
-CLUTTEX_VERSION = "v0.2"
+local ffi = require "ffi"
+local bitlib = assert(bit32 or bit, "Neither bit32 (Lua 5.2) nor bit (LuaJIT) found") -- Lua 5.2 or LuaJIT
+
+ffi.cdef[[
+typedef int BOOL;
+typedef unsigned int UINT;
+typedef uint32_t DWORD;
+typedef void *HANDLE;
+typedef uintptr_t ULONG_PTR;
+typedef uint16_t WCHAR;
+typedef struct _OVERLAPPED {
+  ULONG_PTR Internal;
+  ULONG_PTR InternalHigh;
+  union {
+    struct {
+      DWORD Offset;
+      DWORD OffsetHigh;
+    };
+    void *Pointer;
+  };
+  HANDLE hEvent;
+} OVERLAPPED;
+typedef struct _FILE_NOTIFY_INFORMATION {
+  DWORD NextEntryOffset;
+  DWORD Action;
+  DWORD FileNameLength;
+  WCHAR FileName[?];
+} FILE_NOTIFY_INFORMATION;
+typedef void (__stdcall *LPOVERLAPPED_COMPLETION_ROUTINE)(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfered, OVERLAPPED *lpOverlapped);
+DWORD GetLastError();
+BOOL CloseHandle(HANDLE hObject);
+HANDLE CreateFileA(const char *lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, void *lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile);
+HANDLE CreateIoCompletionPort(HANDLE fileHandle, HANDLE existingCompletionPort, ULONG_PTR completionKey, DWORD numberOfConcurrentThreads);
+BOOL ReadDirectoryChangesW(HANDLE hDirectory, void *lpBuffer, DWORD nBufferLength, BOOL bWatchSubtree, DWORD dwNotifyFilter, DWORD *lpBytesReturned, OVERLAPPED *lpOverlapped, LPOVERLAPPED_COMPLETION_ROUTINE lpOverlappedCompletionRoutine);
+BOOL GetQueuedCompletionStatus(HANDLE CompletionPort, DWORD *lpNumberOfBytes, ULONG_PTR *lpCompletionKey, OVERLAPPED **lpOverlapped, DWORD dwMilliseconds);
+int MultiByteToWideChar(UINT CodePage, DWORD dwFlags, const char *lpMultiByteStr, int cbMultiByte, WCHAR *lpWideCharStr, int cchWideChar);
+int WideCharToMultiByte(UINT CodePage, DWORD dwFlags, const WCHAR *lpWideCharStr, int cchWideChar, char *lpMultiByteStr, int cbMultiByte, const char *lpDefaultChar, BOOL *lpUsedDefaultChar);
+DWORD GetFullPathNameA(const char *lpFileName, DWORD nBufferLength, char *lpBuffer, char **lpFilePart);
+uint64_t GetTickCount64();
+]]
+
+-- LuaTeX's FFI does not equate a null pointer with nil.
+-- On LuaJIT, ffi.NULL is just nil.
+local NULL = ffi.NULL
+
+-- GetLastError
+local ERROR_FILE_NOT_FOUND         = 0x0002
+local ERROR_PATH_NOT_FOUND         = 0x0003
+local ERROR_ACCESS_DENIED          = 0x0005
+local ERROR_INVALID_PARAMETER      = 0x0057
+local ERROR_INSUFFICIENT_BUFFER    = 0x007A
+local WAIT_TIMEOUT                 = 0x0102
+local ERROR_ABANDONED_WAIT_0       = 0x02DF
+local ERROR_NOACCESS               = 0x03E6
+local ERROR_INVALID_FLAGS          = 0x03EC
+local ERROR_NOTIFY_ENUM_DIR        = 0x03FE
+local ERROR_NO_UNICODE_TRANSLATION = 0x0459
+local KnownErrors = {
+  [ERROR_FILE_NOT_FOUND] = "ERROR_FILE_NOT_FOUND",
+  [ERROR_PATH_NOT_FOUND] = "ERROR_PATH_NOT_FOUND",
+  [ERROR_ACCESS_DENIED] = "ERROR_ACCESS_DENIED",
+  [ERROR_INVALID_PARAMETER] = "ERROR_INVALID_PARAMETER",
+  [ERROR_INSUFFICIENT_BUFFER] = "ERROR_INSUFFICIENT_BUFFER",
+  [ERROR_ABANDONED_WAIT_0] = "ERROR_ABANDONED_WAIT_0",
+  [ERROR_NOACCESS] = "ERROR_NOACCESS",
+  [ERROR_INVALID_FLAGS] = "ERROR_INVALID_FLAGS",
+  [ERROR_NOTIFY_ENUM_DIR] = "ERROR_NOTIFY_ENUM_DIR",
+  [ERROR_NO_UNICODE_TRANSLATION] = "ERROR_NO_UNICODE_TRANSLATION",
+}
+
+-- CreateFile
+local FILE_FLAG_BACKUP_SEMANTICS = 0x02000000
+local FILE_FLAG_OVERLAPPED       = 0x40000000
+local OPEN_EXISTING              = 3
+local FILE_SHARE_READ            = 0x00000001
+local FILE_SHARE_WRITE           = 0x00000002
+local FILE_SHARE_DELETE          = 0x00000004
+local FILE_LIST_DIRECTORY        = 0x1
+local INVALID_HANDLE_VALUE       = ffi.cast("void *", -1)
+
+-- ReadDirectoryChangesW / FILE_NOTIFY_INFORMATION
+local FILE_NOTIFY_CHANGE_FILE_NAME   = 0x00000001
+local FILE_NOTIFY_CHANGE_DIR_NAME    = 0x00000002
+local FILE_NOTIFY_CHANGE_ATTRIBUTES  = 0x00000004
+local FILE_NOTIFY_CHANGE_SIZE        = 0x00000008
+local FILE_NOTIFY_CHANGE_LAST_WRITE  = 0x00000010
+local FILE_NOTIFY_CHANGE_LAST_ACCESS = 0x00000020
+local FILE_NOTIFY_CHANGE_CREATION    = 0x00000040
+local FILE_NOTIFY_CHANGE_SECURITY    = 0x00000100
+local FILE_ACTION_ADDED              = 0x00000001
+local FILE_ACTION_REMOVED            = 0x00000002
+local FILE_ACTION_MODIFIED           = 0x00000003
+local FILE_ACTION_RENAMED_OLD_NAME   = 0x00000004
+local FILE_ACTION_RENAMED_NEW_NAME   = 0x00000005
+
+-- WideCharToMultiByte / MultiByteToWideChar
+local CP_ACP  = 0
+local CP_UTF8 = 65001
+
+local C = ffi.C
+
+local function format_error(name, lasterror, extra)
+  local errorname = KnownErrors[lasterror] or string.format("error code %d", lasterror)
+  if extra then
+    return string.format("%s failed with %s (0x%04x) [%s]", name, errorname, lasterror, extra)
+  else
+    return string.format("%s failed with %s (0x%04x)", name, errorname, lasterror)
+  end
+end
+local function wcs_to_mbs(wstr, wstrlen, codepage)
+  -- wstr: FFI uint16_t[?]
+  -- wstrlen: length of wstr, or -1 if NUL-terminated
+  if wstrlen == 0 then
+    return ""
+  end
+  codepage = codepage or CP_ACP
+  local dwFlags = 0
+  local result = C.WideCharToMultiByte(codepage, dwFlags, wstr, wstrlen, nil, 0, nil, nil)
+  if result <= 0 then
+    -- Failed
+    local lasterror = C.GetLastError()
+    -- Candidates: ERROR_INSUFFICIENT_BUFFER, ERROR_INVALID_FLAGS, ERROR_INVALID_PARAMETER, ERROR_NO_UNICODE_TRANSLATION
+    return nil, format_error("WideCharToMultiByte", lasterror)
+  end
+  local mbsbuf = ffi.new("char[?]", result)
+  result = C.WideCharToMultiByte(codepage, dwFlags, wstr, wstrlen, mbsbuf, result, nil, nil)
+  if result <= 0 then
+    -- Failed
+    local lasterror = C.GetLastError()
+    -- Candidates: ERROR_INSUFFICIENT_BUFFER, ERROR_INVALID_FLAGS, ERROR_INVALID_PARAMETER, ERROR_NO_UNICODE_TRANSLATION
+    return nil, format_error("WideCharToMultiByte", lasterror)
+  end
+  return ffi.string(mbsbuf, result)
+end
+local function mbs_to_wcs(str, codepage)
+  -- str: Lua string
+  if str == "" then
+    return ffi.new("WCHAR[0]")
+  end
+  codepage = codepage or CP_ACP
+  local dwFlags = 0
+  local result = C.MultiByteToWideChar(codepage, dwFlags, str, #str, nil, 0)
+  if result <= 0 then
+    local lasterror = C.GetLastError()
+    -- ERROR_INSUFFICIENT_BUFFER, ERROR_INVALID_FLAGS, ERROR_INVALID_PARAMETER, ERROR_NO_UNICODE_TRANSLATION
+    return nil, format_error("MultiByteToWideChar", lasterror)
+  end
+  local wcsbuf = ffi.new("WCHAR[?]", result)
+  result = C.MultiByteToWideChar(codepage, dwFlags, str, #str, wcsbuf, result)
+  if result <= 0 then
+    local lasterror = C.GetLastError()
+    return nil, format_error("MultiByteToWideChar", lasterror)
+  end
+  return wcsbuf, result
+end
+
+
+local function get_full_path_name(filename)
+  local bufsize = 1024
+  local buffer
+  local filePartPtr = ffi.new("char*[1]")
+  local result
+  repeat
+    buffer = ffi.new("char[?]", bufsize)
+    result = C.GetFullPathNameA(filename, bufsize, buffer, filePartPtr)
+    if result == 0 then
+      local lasterror = C.GetLastError()
+      return nil, format_error("GetFullPathNameA", lasterror, filename)
+    elseif bufsize < result then
+      -- result: buffer size required to hold the path + terminating NUL
+      bufsize = result
+    end
+  until result < bufsize
+  local fullpath = ffi.string(buffer, result)
+  local filePart = ffi.string(filePartPtr[0])
+  local dirPart = ffi.string(buffer, ffi.cast("intptr_t", filePartPtr[0]) - ffi.cast("intptr_t", buffer)) -- LuaTeX's FFI doesn't support pointer subtraction
+  return fullpath, filePart, dirPart
+end
+
+--[[
+  dirwatche.dirname : string
+  dirwatcher._rawhandle : cdata HANDLE
+  dirwatcher._overlapped : cdata OVERLAPPED
+  dirwatcher._buffer : cdata char[?]
+]]
+local dirwatcher_meta = {}
+dirwatcher_meta.__index = dirwatcher_meta
+function dirwatcher_meta:close()
+  if self._rawhandle ~= nil then
+    C.CloseHandle(ffi.gc(self._rawhandle, nil))
+    self._rawhandle = nil
+  end
+end
+local function open_directory(dirname)
+  local dwShareMode = bitlib.bor(FILE_SHARE_READ, FILE_SHARE_WRITE, FILE_SHARE_DELETE)
+  local dwFlagsAndAttributes = bitlib.bor(FILE_FLAG_BACKUP_SEMANTICS, FILE_FLAG_OVERLAPPED)
+  local handle = C.CreateFileA(dirname, FILE_LIST_DIRECTORY, dwShareMode, nil, OPEN_EXISTING, dwFlagsAndAttributes, nil)
+  if handle == INVALID_HANDLE_VALUE then
+    local lasterror = C.GetLastError()
+    print("Failed to open "..dirname)
+    return nil, format_error("CreateFileA", lasterror, dirname)
+  end
+  return setmetatable({
+    dirname = dirname,
+    _rawhandle = ffi.gc(handle, C.CloseHandle),
+    _overlapped = ffi.new("OVERLAPPED"),
+    _buffer = ffi.new("char[?]", 1024),
+  }, dirwatcher_meta)
+end
+function dirwatcher_meta:start_watch(watchSubtree)
+  local dwNotifyFilter = bitlib.bor(FILE_NOTIFY_CHANGE_FILE_NAME, FILE_NOTIFY_CHANGE_DIR_NAME, FILE_NOTIFY_CHANGE_ATTRIBUTES, FILE_NOTIFY_CHANGE_SIZE, FILE_NOTIFY_CHANGE_LAST_WRITE, FILE_NOTIFY_CHANGE_LAST_ACCESS, FILE_NOTIFY_CHANGE_CREATION, FILE_NOTIFY_CHANGE_SECURITY)
+  local buffer = self._buffer
+  local bufferSize = ffi.sizeof(buffer)
+  local result = C.ReadDirectoryChangesW(self._rawhandle, buffer, bufferSize, watchSubtree, dwNotifyFilter, nil, self._overlapped, nil)
+  if result == 0 then
+    local lasterror = C.GetLastError()
+    return nil, format_error("ReadDirectoryChangesW", lasterror, self.dirname)
+  end
+  return true
+end
+local ActionTable = {
+  [FILE_ACTION_ADDED] = "added",
+  [FILE_ACTION_REMOVED] = "removed",
+  [FILE_ACTION_MODIFIED] = "modified",
+  [FILE_ACTION_RENAMED_OLD_NAME] = "rename_from",
+  [FILE_ACTION_RENAMED_NEW_NAME] = "rename_to",
+}
+function dirwatcher_meta:process(numberOfBytes)
+  -- self._buffer received `numberOfBytes` bytes
+  local buffer = self._buffer
+  numberOfBytes = math.min(numberOfBytes, ffi.sizeof(buffer))
+  local ptr = ffi.cast("char *", buffer)
+  local structSize = ffi.sizeof("FILE_NOTIFY_INFORMATION", 1)
+  local t = {}
+  while numberOfBytes >= structSize do
+    local notifyInfo = ffi.cast("FILE_NOTIFY_INFORMATION*", ptr)
+    local nextEntryOffset = notifyInfo.NextEntryOffset
+    local action = notifyInfo.Action
+    local fileNameLength = notifyInfo.FileNameLength
+    local fileName = notifyInfo.FileName
+    local u = { action = ActionTable[action], filename = wcs_to_mbs(fileName, fileNameLength / 2) }
+    table.insert(t, u)
+    if nextEntryOffset == 0 or numberOfBytes <= nextEntryOffset then
+      break
+    end
+    numberOfBytes = numberOfBytes - nextEntryOffset
+    ptr = ptr + nextEntryOffset
+  end
+  return t
+end
+
+--[[
+  watcher._rawport : cdata HANDLE
+  watcher._pending : array of {
+    action = ..., filename = ...
+  }
+  watcher._directories[dirname] = {
+    dir = directory watcher,
+    dirname = dirname,
+    files = { [filename] = user-supplied path } -- files to watch
+  }
+  watcher[i] = i-th directory (_directories[dirname] for some dirname)
+]]
+
+local fswatcher_meta = {}
+fswatcher_meta.__index = fswatcher_meta
+local function new_watcher()
+  local port = C.CreateIoCompletionPort(INVALID_HANDLE_VALUE, nil, 0, 0)
+  if port == NULL then
+    local lasterror = C.GetLastError()
+    return nil, format_error("CreateIoCompletionPort", lasterror)
+  end
+  return setmetatable({
+    _rawport = ffi.gc(port, C.CloseHandle), -- ?
+    _pending = {},
+    _directories = {},
+  }, fswatcher_meta)
+end
+local function add_directory(self, dirname)
+  local t = self._directories[dirname]
+  if not t then
+    local dirwatcher, err = open_directory(dirname)
+    if not dirwatcher then
+      return dirwatcher, err
+    end
+    t = { dirwatcher = dirwatcher, dirname = dirname, files = {} }
+    table.insert(self, t)
+    local i = #self
+    local result = C.CreateIoCompletionPort(dirwatcher._rawhandle, self._rawport, i, 0)
+    if result == NULL then
+      local lasterror = C.GetLastError()
+      return nil, format_error("CreateIoCompletionPort", lasterror, dirname)
+    end
+    self._directories[dirname] = t
+    local result, err = dirwatcher:start_watch(false)
+    if not result then
+      return result, err
+    end
+  end
+  return t
+end
+function fswatcher_meta:add_file(path, ...)
+  local fullpath, filename, dirname = get_full_path_name(path)
+  local t, err = add_directory(self, dirname)
+  if not t then
+    return t, err
+  end
+  t.files[filename] = path
+  return true
+end
+local INFINITE = 0xFFFFFFFF
+local function get_queued(self, timeout)
+  local startTime = C.GetTickCount64()
+  local timeout_ms
+  if timeout == nil then
+    timeout_ms = INFINITE
+  else
+    timeout_ms = timeout * 1000
+  end
+  local numberOfBytesPtr = ffi.new("DWORD[1]")
+  local completionKeyPtr = ffi.new("ULONG_PTR[1]")
+  local lpOverlapped = ffi.new("OVERLAPPED*[1]")
+  repeat
+    local result = C.GetQueuedCompletionStatus(self._rawport, numberOfBytesPtr, completionKeyPtr, lpOverlapped, timeout_ms)
+    if result == 0 then
+      local lasterror = C.GetLastError()
+      if lasterror == WAIT_TIMEOUT then
+        return nil, "timeout"
+      else
+        return nil, format_error("GetQueuedCompletionStatus", lasterror)
+      end
+    end
+    local numberOfBytes = numberOfBytesPtr[0]
+    local completionKey = tonumber(completionKeyPtr[0])
+    local dir_t = assert(self[completionKey], "invalid completion key: " .. tostring(completionKey))
+    local t = dir_t.dirwatcher:process(numberOfBytes)
+    dir_t.dirwatcher:start_watch(false)
+    local found = false
+    for i,v in ipairs(t) do
+      local path = dir_t.files[v.filename]
+      if path then
+        found = true
+        table.insert(self._pending, {path = path, action = v.action})
+      end
+    end
+    if found then
+      return true
+    end
+    if timeout_ms ~= INFINITE then
+      local tt = C.GetTickCount64()
+      timeout_ms = timeout_ms - (tt - startTime)
+      startTime = tt
+    end
+  until timeout_ms < 0
+  return nil, "timeout"
+end
+function fswatcher_meta:next(timeout)
+  if #self._pending > 0 then
+    local result = table.remove(self._pending, 1)
+    get_queued(self, 0) -- ignore error
+    return result
+  else
+    local result, err = get_queued(self, timeout)
+    if result == nil then
+      return nil, err
+    end
+    return table.remove(self._pending, 1)
+  end
+end
+function fswatcher_meta:close()
+  if self._rawport ~= nil then
+    for i,v in ipairs(self) do
+      v.dirwatcher:close()
+    end
+    C.CloseHandle(ffi.gc(self._rawport, nil))
+    self._rawport = nil
+  end
+end
+--[[
+local watcher = require("fswatcher_windows").new()
+assert(watcher:add_file("rdc-sync.c"))
+assert(watcher:add_file("sub2/hoge"))
+for i = 1, 10 do
+    local result, err = watcher:next(2)
+    if err == "timeout" then
+        print(os.date(), "timeout")
+    else
+        assert(result, err)
+        print(os.date(), result.path, result.action)
+    end
+end
+watcher:close()
+]]
+return {
+  new = new_watcher,
+}
+end
+package.preload["texrunner.safename"] = function(...)
+--[[
+  Copyright 2019 ARATA Mizuki
+
+  This file is part of ClutTeX.
+
+  ClutTeX is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  ClutTeX is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with ClutTeX.  If not, see <http://www.gnu.org/licenses/>.
+]]
+
+local string = string
+local table = table
+
+local function dounsafechar(c)
+  if c == " " then
+    return "_"
+  else
+    return string.format("_%02x", c:byte(1))
+  end
+end
+
+local function escapejobname(name)
+  return (string.gsub(name, "[%s\"$%%&'();<>\\^`|]", dounsafechar))
+end
+
+local function handlespecialchar(s)
+  return (string.gsub(s, "[%\\%%^%{%}%~%#]", "~\\%1"))
+end
+
+local function handlespaces(s)
+  return (string.gsub(s, "  +", function(s) return string.rep(" ", #s, "~") end))
+end
+
+local function handlenonascii(s)
+  return (string.gsub(s, "[\x80-\xFF]+", "\\detokenize{%1}"))
+end
+
+local function safeinput(name, engine)
+  local escaped = handlespaces(handlespecialchar(name))
+  if engine.name == "pdftex" or engine.name == "pdflatex" then
+    escaped = handlenonascii(escaped)
+  end
+  if name == escaped then
+    return string.format("\\input\"%s\"", name)
+  else
+    return string.format("\\begingroup\\escapechar-1\\let~\\string\\edef\\x{\"%s\" }\\expandafter\\endgroup\\expandafter\\input\\x", escaped)
+  end
+end
+
+return {
+  escapejobname = escapejobname,
+  safeinput = safeinput,
+}
+end
+package.preload["texrunner.checkdriver"] = function(...)
+--[[
+  Copyright 2020 ARATA Mizuki
+
+  This file is part of ClutTeX.
+
+  ClutTeX is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  ClutTeX is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with ClutTeX.  If not, see <http://www.gnu.org/licenses/>.
+]]
+local assert = assert
+local ipairs = ipairs
+local error = error
+local string = string
+local pathutil = require "texrunner.pathutil"
+local message = require "texrunner.message"
+
+local right_values = {
+  dvips = {
+    graphics = "dvips",
+    expl3    = "dvips",
+    hyperref = "dvips",
+    xypic    = "dvips",
+  },
+  dvipdfmx = {
+    graphics = "dvipdfmx",
+    expl3    = "dvipdfmx",
+    hyperref = "dvipdfmx",
+    xypic    = "pdf",
+  },
+  dvisvgm = {
+    graphics = "dvisvgm",
+    expl3    = "dvisvgm",
+  },
+  xetex = {
+    graphics = "xetex",
+    expl3    = "xdvipdfmx",
+    hyperref = "xetex",
+    xypic    = "pdf",
+  },
+  pdftex = {
+    graphics = "pdftex",
+    expl3    = "pdfmode",
+    hyperref = "pdftex",
+    xypic    = "pdf",
+  },
+  luatex = {
+    graphics = "luatex",
+    expl3    = "pdfmode",
+    hyperref = "luatex",
+    xypic    = "pdf",
+  },
+}
+
+-- expected_driver: one of "dvips", "dvipdfmx", "dvisvgm", "pdftex", "xetex", "luatex"
+local function checkdriver(expected_driver, filelist)
+  if CLUTTEX_VERBOSITY >= 1 then
+    message.info("checkdriver: expects ", expected_driver)
+  end
+
+  local loaded = {}
+  for i,t in ipairs(filelist) do
+    if t.kind == "input" then
+      local basename = pathutil.basename(t.path)
+      loaded[basename] = true
+    end
+  end
+
+  local graphics_driver = nil -- "dvipdfmx" | "dvips" | "dvisvgm" | "pdftex" | "luatex" | "xetex" | "unknown"
+  if loaded["graphics.sty"] or loaded["color.sty"] then
+    if loaded["dvipdfmx.def"] then
+      graphics_driver = "dvipdfmx"
+    elseif loaded["dvips.def"] then
+      graphics_driver = "dvips"
+    elseif loaded["dvisvgm.def"] then
+      graphics_driver = "dvisvgm"
+    elseif loaded["pdftex.def"] then
+      graphics_driver = "pdftex"
+    elseif loaded["luatex.def"] then
+      graphics_driver = "luatex"
+    elseif loaded["xetex.def"] then
+      graphics_driver = "xetex"
+    else
+      -- Not supported: dvipdf, dvipsone, emtex, textures, pctexps, pctexwin, pctexhp, pctex32, truetex, tcidvi, vtex
+      graphics_driver = "unknown"
+    end
+  end
+  local expl3_driver = nil -- "pdfmode" | "dvisvgm" | "xdvipdfmx" | "dvipdfmx" | "dvips" | "unknown"
+  if loaded["expl3-code.tex"] or loaded["expl3.sty"] or loaded["l3backend-dvips.def"] or loaded["l3backend-dvipdfmx.def"] or loaded["l3backend-xdvipdfmx.def"] or loaded["l3backend-pdfmode.def"] then
+    if loaded["l3backend-pdfmode.def"] then
+      expl3_driver = "pdfmode" -- pdftex, luatex
+    elseif loaded["l3backend-dvisvgm.def"] then
+      expl3_driver = "dvisvgm"
+    elseif loaded["l3backend-xdvipdfmx.def"] then
+      expl3_driver = "xdvipdfmx"
+    elseif loaded["l3backend-dvipdfmx.def"] then
+      expl3_driver = "dvipdfmx"
+    elseif loaded["l3backend-dvips.def"] then
+      expl3_driver = "dvips"
+    else
+      -- TODO: driver=latex2e?
+      expl3_driver = "unknown"
+    end
+  end
+  local hyperref_driver = nil -- "luatex" | "pdftex" | "xetex" | "dvipdfmx" | "dvips" | "unknown"
+  if loaded["hyperref.sty"] then
+    if loaded["hluatex.def"] then
+      hyperref_driver = "luatex"
+    elseif loaded["hpdftex.def"] then
+      hyperref_driver = "pdftex"
+    elseif loaded["hxetex.def"] then
+      hyperref_driver = "xetex"
+    elseif loaded["hdvipdfm.def"] then
+      hyperref_driver = "dvipdfmx"
+    elseif loaded["hdvips.def"] then
+      hyperref_driver = "dvips"
+    else
+      -- Not supported: dvipson, dviwind, tex4ht, texture, vtex, vtexhtm, xtexmrk, hypertex
+      hyperref_driver = "unknown"
+    end
+    -- TODO: dvisvgm?
+  end
+  local xypic_driver = nil -- "pdf" | "dvips" | "unknown"
+  if loaded["xy.tex"] then
+    if loaded["xypdf.tex"] then
+      xypic_driver = "pdf" -- pdftex, luatex, xetex, dvipdfmx
+    elseif loaded["xydvips.tex"] then
+      xypic_driver = "dvips"
+    else
+      -- Not supported: dvidrv, dvitops, oztex, 17oztex, textures, 16textures, xdvi
+      xypic_driver = "unknown"
+    end
+    -- TODO: dvisvgm?
+  end
+
+  if CLUTTEX_VERBOSITY >= 1 then
+    message.info("checkdriver: graphics=", tostring(graphics_driver))
+    message.info("checkdriver: expl3=", tostring(expl3_driver))
+    message.info("checkdriver: hyperref=", tostring(hyperref_driver))
+    message.info("checkdriver: xypic=", tostring(xypic_driver))
+  end
+
+  local expected = assert(right_values[expected_driver], "invalid value for expected_driver")
+  if graphics_driver ~= nil and expected.graphics ~= nil and graphics_driver ~= expected.graphics then
+    message.diag("The driver option for graphics(x)/color is missing or wrong.")
+    message.diag("Consider setting '", expected.graphics, "' option.")
+  end
+  if expl3_driver ~= nil and expected.expl3 ~= nil and expl3_driver ~= expected.expl3 then
+    message.diag("The driver option for expl3 is missing or wrong.")
+    message.diag("Consider setting 'driver=", expected.expl3, "' option when loading expl3.")
+  end
+  if hyperref_driver ~= nil and expected.hyperref ~= nil and hyperref_driver ~= expected.hyperref then
+    message.diag("The driver option for hyperref is missing or wrong.")
+    message.diag("Consider setting '", expected.hyperref, "' option.")
+  end
+  if xypic_driver ~= nil and expected.xypic ~= nil and xypic_driver ~= expected.xypic then
+    message.diag("The driver option for Xy-pic is missing or wrong.")
+    if expected_driver == "dvipdfmx" then
+      message.diag("Consider setting 'dvipdfmx' option or running \\xyoption{pdf}.")
+    elseif expected_driver == "pdftex" then
+      message.diag("Consider setting 'pdftex' option or running \\xyoption{pdf}.")
+    elseif expected.xypic == "pdf" then
+      message.diag("Consider setting 'pdf' package option or running \\xyoption{pdf}.")
+    elseif expected.xypic == "dvips" then
+      message.diag("Consider setting 'dvips' option.")
+    end
+  end
+end
+
+--[[
+filelist[i] = {path = ""}
+]]
+
+return {
+  checkdriver = checkdriver,
+}
+end
+--[[
+  Copyright 2016-2020 ARATA Mizuki
+
+  This file is part of ClutTeX.
+
+  ClutTeX is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  ClutTeX is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with ClutTeX.  If not, see <http://www.gnu.org/licenses/>.
+]]
+
+CLUTTEX_VERSION = "v0.5"
 
 -- Standard libraries
 local coroutine = coroutine
@@ -2162,8 +2925,12 @@ local reruncheck  = require "texrunner.reruncheck"
 local luatexinit  = require "texrunner.luatexinit"
 local recoverylib = require "texrunner.recovery"
 local message     = require "texrunner.message"
+local safename    = require "texrunner.safename"
 local extract_bibtex_from_aux_file = require "texrunner.auxfile".extract_bibtex_from_aux_file
 local handle_cluttex_options = require "texrunner.handleoption".handle_cluttex_options
+local checkdriver = require "texrunner.checkdriver".checkdriver
+
+os.setlocale("", "ctype") -- Workaround for recent Universal CRT
 
 -- arguments: input file name, jobname, etc...
 local function genOutputDirectory(...)
@@ -2180,12 +2947,17 @@ end
 
 local inputfile, engine, options = handle_cluttex_options(arg)
 
-local jobname = options.jobname or pathutil.basename(pathutil.trimext(inputfile))
+local jobname_for_output
+if options.jobname == nil then
+  local basename = pathutil.basename(pathutil.trimext(inputfile))
+  options.jobname = safename.escapejobname(basename)
+  jobname_for_output = basename
+else
+  jobname_for_output = options.jobname
+end
+local jobname = options.jobname
 assert(jobname ~= "", "jobname cannot be empty")
 
-if options.output_format == nil then
-  options.output_format = "pdf"
-end
 local output_extension
 if options.output_format == "dvi" then
   output_extension = engine.dvi_extension or "dvi"
@@ -2194,13 +2966,13 @@ else
 end
 
 if options.output == nil then
-  options.output = jobname .. "." .. output_extension
+  options.output = jobname_for_output .. "." .. output_extension
 end
 
 -- Prepare output directory
 if options.output_directory == nil then
   local inputfile_abs = pathutil.abspath(inputfile)
-  options.output_directory = genOutputDirectory(inputfile_abs, jobname, options.engine)
+  options.output_directory = genOutputDirectory(inputfile_abs, jobname, options.engine_executable or options.engine)
 
   if not fsutil.isdir(options.output_directory) then
     assert(fsutil.mkdir_rec(options.output_directory))
@@ -2218,6 +2990,12 @@ if options.output_directory == nil then
 elseif options.fresh then
   message.error("--fresh and --output-directory cannot be used together.")
   os.exit(1)
+end
+
+-- --print-output-directory
+if options.print_output_directory then
+  io.write(options.output_directory, "\n")
+  os.exit(0)
 end
 
 local pathsep = ":"
@@ -2258,6 +3036,7 @@ local recorderfile = path_in_output_directory("fls")
 local recorderfile2 = path_in_output_directory("cluttex-fls")
 
 local tex_options = {
+  engine_executable = options.engine_executable,
   interaction = options.interaction,
   file_line_error = options.file_line_error,
   halt_on_error = options.halt_on_error,
@@ -2284,7 +3063,7 @@ end
 -- should_rerun, newauxstatus = single_run([auxstatus])
 -- This function should be run in a coroutine.
 local function single_run(auxstatus, iteration)
-  local minted = false
+  local minted, epstopdf = false, false
   local bibtex_aux_hash = nil
   local mainauxfile = path_in_output_directory("aux")
   if fsutil.isfile(recorderfile) then
@@ -2297,7 +3076,9 @@ local function single_run(auxstatus, iteration)
     for _,fileinfo in ipairs(filelist) do
       if string.match(fileinfo.path, "minted/minted%.sty$") then
         minted = true
-        break
+      end
+      if string.match(fileinfo.path, "epstopdf%.sty$") then
+        epstopdf = true
       end
     end
     if options.bibtex then
@@ -2316,13 +3097,37 @@ local function single_run(auxstatus, iteration)
   end
   --local timestamp = os.time()
 
+  local tex_injection = ""
+
   if options.includeonly then
-    tex_options.tex_injection = string.format("%s\\includeonly{%s}", tex_options.tex_injection or "", options.includeonly)
+    tex_injection = string.format("%s\\includeonly{%s}", tex_options.tex_injection or "", options.includeonly)
   end
 
-  if minted and not (tex_options.tex_injection and string.find(tex_options.tex_injection,"minted") == nil) then
-    tex_options.tex_injection = string.format("%s\\PassOptionsToPackage{outputdir=%s}{minted}", tex_options.tex_injection or "", options.output_directory)
+  if minted or options.package_support["minted"] then
+    local outdir = options.output_directory
+    if os.type == "windows" then
+      outdir = string.gsub(outdir, "\\", "/") -- Use forward slashes
+    end
+    tex_injection = string.format("%s\\PassOptionsToPackage{outputdir=%s}{minted}", tex_injection or "", outdir)
+    if not options.package_support["minted"] then
+      message.diag("You may want to use --package-support=minted option.")
+    end
   end
+  if epstopdf or options.package_support["epstopdf"] then
+    local outdir = options.output_directory
+    if os.type == "windows" then
+      outdir = string.gsub(outdir, "\\", "/") -- Use forward slashes
+    end
+    if string.sub(outdir, -1, -1) ~= "/" then
+      outdir = outdir.."/" -- Must end with a directory separator
+    end
+    tex_injection = string.format("%s\\PassOptionsToPackage{outdir=%s}{epstopdf}", tex_injection or "", outdir)
+    if not options.package_support["epstopdf"] then
+      message.diag("You may want to use --package-support=epstopdf option.")
+    end
+  end
+
+  local inputline = tex_injection .. safename.safeinput(inputfile, engine)
 
   local current_tex_options, lightweight_mode = tex_options, false
   if iteration == 1 and options.start_with_draft then
@@ -2340,7 +3145,7 @@ local function single_run(auxstatus, iteration)
     current_tex_options.draftmode = false
   end
 
-  local command = engine:build_command(inputfile, current_tex_options)
+  local command = engine:build_command(inputline, current_tex_options)
 
   local execlog -- the contents of .log file
 
@@ -2374,6 +3179,10 @@ local function single_run(auxstatus, iteration)
     local logfile = assert(io.open(path_in_output_directory("log")))
     execlog = logfile:read("*a")
     logfile:close()
+  end
+
+  if options.check_driver ~= nil then
+    checkdriver(options.check_driver, filelist)
   end
 
   if options.makeindex then
@@ -2610,7 +3419,90 @@ end
 
 if options.watch then
   -- Watch mode
+
+  local fswatcherlib
+  if os.type == "windows" then
+    -- Windows: Try built-in filesystem watcher
+    local succ, result = pcall(require, "texrunner.fswatcher_windows")
+    if not succ and CLUTTEX_VERBOSITY >= 1 then
+      message.warn("Failed to load texrunner.fswatcher_windows: " .. result)
+    end
+    fswatcherlib = result
+  end
+
+  local do_watch
+  if fswatcherlib then
+    if CLUTTEX_VERBOSITY >= 2 then
+      message.info("Using built-in filesystem watcher for Windows")
+    end
+    do_watch = function(files)
+      local watcher = assert(fswatcherlib.new())
+      for _,path in ipairs(files) do
+        assert(watcher:add_file(path))
+      end
+      local result = assert(watcher:next())
+      if CLUTTEX_VERBOSITY >= 2 then
+        message.info(string.format("%s %s", result.action, result.path))
+      end
+      watcher:close()
+      return true
+    end
+  elseif shellutil.has_command("fswatch") then
+    if CLUTTEX_VERBOSITY >= 2 then
+      message.info("Using `fswatch' command")
+    end
+    do_watch = function(files)
+      local fswatch_command = {"fswatch", "--one-event", "--event=Updated", "--"}
+      for _,path in ipairs(files) do
+        table.insert(fswatch_command, shellutil.escape(path))
+      end
+      local fswatch_command_str = table.concat(fswatch_command, " ")
+      if CLUTTEX_VERBOSITY >= 1 then
+        message.exec(fswatch_command_str)
+      end
+      local fswatch = assert(io.popen(fswatch_command_str, "r"))
+      for l in fswatch:lines() do
+        for _,path in ipairs(files) do
+          if l == path then
+            fswatch:close()
+            return true
+          end
+        end
+      end
+      return false
+    end
+  elseif shellutil.has_command("inotifywait") then
+    if CLUTTEX_VERBOSITY >= 2 then
+      message.info("Using `inotifywait' command")
+    end
+    do_watch = function(files)
+      local inotifywait_command = {"inotifywait", "--event=modify", "--event=attrib", "--format=%w", "--quiet"}
+      for _,path in ipairs(files) do
+        table.insert(inotifywait_command, shellutil.escape(path))
+      end
+      local inotifywait_command_str = table.concat(inotifywait_command, " ")
+      if CLUTTEX_VERBOSITY >= 1 then
+        message.exec(inotifywait_command_str)
+      end
+      local inotifywait = assert(io.popen(inotifywait_command_str, "r"))
+      for l in inotifywait:lines() do
+        for _,path in ipairs(files) do
+          if l == path then
+            inotifywait:close()
+            return true
+          end
+        end
+      end
+      return false
+    end
+  else
+    message.error("Could not watch files because neither `fswatch' nor `inotifywait' was installed.")
+    message.info("See ClutTeX's manual for details.")
+    os.exit(1)
+  end
+
   local success, status = do_typeset()
+  -- TODO: filenames here can be UTF-8 if command_line_encoding=utf-8
   local filelist, filemap = reruncheck.parse_recorder_file(recorderfile, options)
   if engine.is_luatex and fsutil.isfile(recorderfile2) then
     filelist, filemap = reruncheck.parse_recorder_file(recorderfile2, options, filelist, filemap)
@@ -2621,26 +3513,21 @@ if options.watch then
       table.insert(input_files_to_watch, fileinfo.abspath)
     end
   end
-  local fswatch_command = {"fswatch", "--event=Updated", "--"}
-  for _,path in ipairs(input_files_to_watch) do
-    table.insert(fswatch_command, shellutil.escape(path))
-  end
-  if CLUTTEX_VERBOSITY >= 1 then
-    message.exec(table.concat(fswatch_command, " "))
-  end
-  local fswatch = assert(io.popen(table.concat(fswatch_command, " "), "r"))
-  for l in fswatch:lines() do
-    local found = false
-    for _,path in ipairs(input_files_to_watch) do
-      if l == path then
-        found = true
-        break
+
+  while do_watch(input_files_to_watch) do
+    local success, status = do_typeset()
+    if not success then
+      -- error
+    else
+      local filelist, filemap = reruncheck.parse_recorder_file(recorderfile, options)
+      if engine.is_luatex and fsutil.isfile(recorderfile2) then
+        filelist, filemap = reruncheck.parse_recorder_file(recorderfile2, options, filelist, filemap)
       end
-    end
-    if found then
-      local success, status = do_typeset()
-      if not success then
-        -- Not successful
+      input_files_to_watch = {}
+      for _,fileinfo in ipairs(filelist) do
+        if fileinfo.kind == "input" then
+          table.insert(input_files_to_watch, fileinfo.abspath)
+        end
       end
     end
   end

@@ -114,9 +114,9 @@ void line_break(boolean d, int line_break_context)
         tail_append(new_penalty(inf_penalty,line_penalty));
     } else {
         halfword t = alink(cur_list.tail_field);
-		flush_node(cur_list.tail_field);
-		cur_list.tail_field = t;
-		tail_append(new_penalty(inf_penalty,line_penalty));
+        flush_node(cur_list.tail_field);
+        cur_list.tail_field = t;
+        tail_append(new_penalty(inf_penalty,line_penalty));
     }
     final_par_glue = new_param_glue(par_fill_skip_code);
     couple_nodes(cur_list.tail_field, final_par_glue);
@@ -1811,8 +1811,25 @@ static void ext_try_break(
                 else
                     d += final_hyphen_demerits;
             }
-            if (abs(fit_class - fitness(r)) > 1)
-                d = d + adj_demerits;
+            /*tex 
+
+              Direct calculation of the absolute value in ((|fit_class| - |fitness(r)|) > 1) 
+              can lead to unexpected results even if the type of the members of |fit_class|, which is |int| 
+              (see C99 §6.7.2.2), and the integer promotion rules for |fitness(r)|, whose also 
+              give an |int| type,  should set the expression as substraction between two |int|. 
+              In this case GCC set the type of |fit_class| to |unsigned int| (perhaps because the members are all positives?)
+              and hence the expression is converted to a sum of |unsigned int|, leading to a different result.
+              The choice of type is implementation-defined, as stated in C99 §6.7.2.2.4:
+  
+              "Each enumerated type shall be compatible with char, a signed integer type, or an unsigned integer type.
+               The choice of type is implementation-defined, but shall be capable of representing the values 
+               of all the members of the enumeration."
+ 
+               It's better to use the equivalent expanded expression.
+            */
+            if ( (fit_class>(fitness(r)+1)) || (fitness(r)>(fit_class+1)) )
+                  d = d + adj_demerits;
+
         }
         if (tracing_paragraphs > 0) {
             print_feasible_break(cur_p, r, b, pi, d, artificial_demerits);

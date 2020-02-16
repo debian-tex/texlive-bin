@@ -9,8 +9,8 @@
 
 local ProvidesLuaModule = { 
     name          = "luaotfload-tool",
-    version       = "2.96",       --TAGVERSION
-    date          = "2019-02-14", --TAGDATE
+    version       = "3.12",       --TAGVERSION
+    date          = "2020-02-02", --TAGDATE
     description   = "luaotfload-tool / database functionality",
     license       = "GPL v2.0"
 }
@@ -25,6 +25,7 @@ local version                  = ProvidesLuaModule.version
 luaotfload.version             = ProvidesLuaModule.version
 luaotfload.min_luatex_version  = { 0, 95, 0 }
 luaotfload.self                = "luaotfload-tool"
+luaotfload.fontloader          = _G -- We don't isolate the fontloader here
 
 --[[doc--
 
@@ -70,7 +71,7 @@ do
     local minimum         = luaotfload.min_luatex_version
     local actual          = { 0, 0, 0 }
     if stats then
-        local major    = stats.luatex_version / 100
+        local major    = stats.luatex_version // 100
         local minor    = stats.luatex_version % 100
         local revision = stats.luatex_revision --[[ : string ]]
         local revno    = tonumber (revision)
@@ -152,7 +153,7 @@ require "fontloader-basics-gen.lua"
 texio.write, texio.write_nl          = backup.write, backup.write_nl
 utilities                            = backup.utilities
 
-pdf = pdf or { } --- for font-tfm
+pdf = pdf or { } --- for fonts-tfm
 
 require "fontloader-data-con"
 require "fontloader-font-ini"
@@ -162,6 +163,7 @@ require "fontloader-font-cid"
 require "fontloader-font-map"
 require "fontloader-font-oti"
 require "fontloader-font-otr"
+require "fontloader-font-ott"
 require "fontloader-font-cff"
 require "fontloader-font-ttf"
 require "fontloader-font-dsp"
@@ -452,6 +454,9 @@ local show_info_table show_info_table = function (t, depth)
     for n = 1, #keys do
         local key = keys [n]
         local val = t [key]
+        if key == "subfontindex" then
+            val = val - 1 -- We use 0-based subfont indices
+        end
         if type (val) == "table" then
             texiowrite_nl (indent .. stringformat (info_fmt, key, "<table>"))
             show_info_table (val, depth + 1)
@@ -628,7 +633,7 @@ local display_feature_set = function (set)
 end
 
 local display_features_type = function (id, feat)
-    if next (feat) then
+    if feat and next (feat) then
         print_heading(id, 3)
         display_feature_set(feat)
         return true
@@ -640,10 +645,19 @@ local display_features = function (features)
     texiowrite_nl ""
     print_heading("Features", 2)
 
-    if not display_features_type ("GSUB Features", features.gsub)
-    or not display_features_type ("GPOS Features", features.gpos)
-    then
+    local status = 0
+    if not display_features_type ("GSUB Features", features.gsub) then
+        status = status + 1
+    end
+    if not display_features_type ("GPOS Features", features.gpos) then
+        status = status + 2
+    end
+    if status == 3 then
         texiowrite_nl("font defines neither gsub nor gpos features")
+    elseif status == 2 then
+        texiowrite_nl("font defines no gpos feature")
+    elseif status == 1 then
+        texiowrite_nl("font defines no gsub feature")
     end
 end
 
@@ -659,16 +673,11 @@ end
 
 local subfont_by_name
 subfont_by_name = function (lst, askedname, n)
-    if not n then
-        return subfont_by_name (lst, askedname, 1)
-    end
-
-    local font = lst[n]
-    if font then
+    for n = 1, #lst do
+        local font = lst[n]
         if fonts.names.sanitize_fontname (font.fullname) == askedname then
             return font
         end
-        return subfont_by_name (lst, askedname, n + 1)
     end
     return false
 end
@@ -715,7 +724,7 @@ local show_font_info = function (basename, askedname, detail, subfont)
                 for subfont = 1, nfonts do
                     logreport (true, 1, "resolve",
                                [[Showing info for font no. %d]],
-                               subfont)
+                               subfont - 1)
                     show_info_items(shortinfo[subfont])
                     if detail == true then
                         show_full_info(fullname, subfont)
@@ -1188,8 +1197,8 @@ actions.query = function (job)
         end
     elseif tmpspec.lookup == "file" then
         needle  = tmpspec.name
-        subfont = tmpspec.sub
     end
+    subfont = tmpspec.sub
 
     if needle then
         foundname, _, success = fonts.names.lookup_font_file (tmpspec.name)
@@ -1200,7 +1209,7 @@ actions.query = function (job)
         if subfont then
             logreport (false, 0, "resolve",
                        "Resolved file name %q, subfont nr. %q",
-                       foundname, subfont)
+                       foundname, subfont - 1)
         else
             logreport (false, 0, "resolve",
                        "Resolved file name %q", foundname)

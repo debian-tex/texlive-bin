@@ -292,7 +292,7 @@ static void checktypebyextension(integer img)
 
 integer readimage(strnumber s, integer page_num, strnumber page_name,
                   integer colorspace, integer pagebox,
-                  integer pdfversion, integer pdfinclusionerrorlevel)
+                  integer pdfmajorversion, integer pdfminorversion, integer pdfinclusionerrorlevel)
 {
     char *dest = NULL;
     integer img = new_image_entry();
@@ -302,12 +302,10 @@ integer readimage(strnumber s, integer page_num, strnumber page_name,
        already used by cur_file_name */
     if (page_name != 0)
         dest = xstrdup(makecstring(page_name));
-    cur_file_name = makecfilename(s);
-    img_name(img) = kpse_find_file(cur_file_name, kpse_tex_format, true);
+    cur_file_name = find_input_file(s);
+    img_name(img) = cur_file_name;
     if (img_name(img) == NULL)
         pdftex_fail("cannot find image file");
-    /* kpse_find_file perhaps changed the file name */
-    cur_file_name = img_name(img);
     recorder_record_input(cur_file_name);
     /* type checks */
     checktypebyheader(img);
@@ -318,7 +316,7 @@ integer readimage(strnumber s, integer page_num, strnumber page_name,
         pdf_ptr(img) = xtalloc(1, pdf_image_struct);
         pdf_ptr(img)->page_box = pagebox;
         page_num = read_pdf_info(img_name(img), dest, page_num, pagebox,
-                                 pdfversion, pdfinclusionerrorlevel);
+                                 pdfmajorversion, pdfminorversion, pdfinclusionerrorlevel);
         img_width(img) = bp2int(epdf_width);
         img_height(img) = bp2int(epdf_height);
         img_rotate(img) = epdf_rotate;
@@ -343,10 +341,10 @@ integer readimage(strnumber s, integer page_num, strnumber page_name,
         read_jpg_info(img);
         break;
     case IMAGE_TYPE_JBIG2:
-        if (pdfversion < 4) {
+        if (pdfmajorversion == 1 && pdfminorversion < 4) {
             pdftex_fail
                 ("JBIG2 images only possible with at least PDF 1.4; you are generating PDF 1.%i",
-                 (int) pdfversion);
+                 (int) pdfminorversion);
         }
         jbig2_ptr(img) = xtalloc(1, JBIG2_IMAGE_INFO);
         img_type(img) = IMAGE_TYPE_JBIG2;
@@ -509,7 +507,7 @@ void dumpimagemeta(void)
     }
 }
 
-void undumpimagemeta(integer pdfversion, integer pdfinclusionerrorlevel)
+void undumpimagemeta(integer pdfmajorversion, integer pdfminorversion, integer pdfinclusionerrorlevel)
 {
     int cur_image, img;
 
@@ -544,7 +542,7 @@ void undumpimagemeta(integer pdfversion, integer pdfinclusionerrorlevel)
             undumpinteger(pdf_ptr(img)->selected_page);
 
             read_pdf_info(img_name(img), NULL, pdf_ptr(img)->selected_page,
-                          pdf_ptr(img)->page_box, pdfversion,
+                          pdf_ptr(img)->page_box, pdfmajorversion, pdfminorversion,
                           pdfinclusionerrorlevel);
 
             img_width(img) = bp2int(epdf_width);
@@ -564,10 +562,10 @@ void undumpimagemeta(integer pdfversion, integer pdfinclusionerrorlevel)
             read_jpg_info(img);
             break;
         case IMAGE_TYPE_JBIG2:
-            if (pdfversion < 4) {
+            if (pdfmajorversion == 1 && pdfminorversion < 4) {
                 pdftex_fail
                     ("JBIG2 images only possible with at least PDF 1.4; you are generating PDF 1.%i",
-                     (int) pdfversion);
+                     (int) pdfminorversion);
             }
             jbig2_ptr(img) = xtalloc(1, JBIG2_IMAGE_INFO);
             img_type(img) = IMAGE_TYPE_JBIG2;

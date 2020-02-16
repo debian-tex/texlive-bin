@@ -1,3 +1,94 @@
+2020-02-12  Luigi Scarso <luigi.scarso@gmail.com>
+    * restore state for \input delimited with {}
+
+
+2020-02-11  Luigi Scarso <luigi.scarso@gmail.com>
+    * patches for -fno-common (thanks to D. Seifert of Gentoo team)
+
+
+2020-01-25  Luigi Scarso <luigi.scarso@gmail.com>
+    * sync with upstream pplib 
+    * sync with upstream luaharfbuzz 
+
+
+2020-01-11  Luigi Scarso <luigi.scarso@gmail.com>
+    * shape fix (HH)
+
+2020-01-03  Luigi Scarso <luigi.scarso@gmail.com>
+    * luatex 1.12.0: updated to pplib 2.0
+
+2020-01-02  Luigi Scarso <luigi.scarso@gmail.com>
+    * better separation between luatex and luahbtex at build time
+
+
+2019-12-31  Luigi Scarso <luigi.scarso@gmail.com>
+    * scaled virtual font (HH)
+
+
+2019-12-19  Luigi Scarso <luigi.scarso@gmail.com>
+    * fixed inclusion of pdf files with a invalid pageDict (exit, don't load it)
+
+
+2019-12-11  Luigi Scarso <luigi.scarso@gmail.com>
+    * add catcode table check to set_macro (HH)
+
+
+2019-12-05  Luigi Scarso <luigi.scarso@gmail.com>
+    * two fixes for lua user nodes (error report of Sigitas Tolusis <sigitas@vtex.lt> )
+
+
+2019-11-08  Luigi Scarso <luigi.scarso@gmail.com>
+    * record a few more files (in kpse enabled mode) (HH)
+    * better recorder code in wrapped lua
+
+2019-11-05  Luigi Scarso <luigi.scarso@gmail.com>
+    * fixed calculation of  if (abs(fit_class - fitness(r)) > 1)
+      in lineabreak.c (thanks to M. Krüger). This produced different
+      results in Windows and Linux.
+
+
+2019-10-31  Luigi Scarso <luigi.scarso@gmail.com>
+    * subfont key in font table (to identify subfint in ttc) plus
+      some cleanup (HH)
+
+2019-10-28 Luigi Scarso <luigi.scarso@gmail.com>
+    * New callback lua.getcodepage()  for diagnostic purposes.
+
+
+2019-10-25 Luigi Scarso <luigi.scarso@gmail.com>
+    * Also support {oeps.foo} filenames in openin/out
+
+
+2019-10-22 Luigi Scarso <luigi.scarso@gmail.com>
+    *  *** DROPPED  "page_objnum_provider" callback , replaced with "page_order_index" ***
+
+
+2019-10-18 Luigi Scarso <luigi.scarso@gmail.com>
+	* following https://tug.org/pipermail/tlbuild/2019q3/004553.html
+          we have now define(__sparc)
+
+2019-10-13 Luigi Scarso <luigi.scarso@gmail.com>
+	* additional primitives  \eTeXglue[stretch|shrink]order for querying order the etex way (HH)
+	* extra features runtoks (HH)
+	* tex.getmodenames() (as these can differ per engine/version) (HH)
+	* permit nested runtoks in more complex situations of nesting (HH)
+	* more accurate and correct test for tex.[set|get]math
+	* minor clean-up and bugs fixed
+
+
+
+2019-08-12 Luigi Scarso <luigi.scarso@gmail.com>
+	* Support new option --cnf-line from  kapthsea.
+
+
+2019-07-27 Luigi Scarso <luigi.scarso@gmail.com>
+	* Fixed \opein, to be consistent with pdftex in opening
+	  a file without extension (but not enclosed in {})
+
+2019-07-06 Luigi Scarso <luigi.scarso@gmail.com>
+	* Integration of harfbuzz. 
+	* Splitting of exe into *hbtex variants.
+
 2019-02-19 Luigi Scarso <luigi.scarso@gmail.com>
 	* am/luatex.am ([un]install-lua[jit]tex-links) [MINGW32]:
 	different commands for mingw.

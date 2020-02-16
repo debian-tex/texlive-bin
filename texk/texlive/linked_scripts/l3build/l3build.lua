@@ -2,7 +2,7 @@
 
 --[[
 
-File l3build.lua Copyright (C) 2014-2018 The LaTeX3 Project
+File l3build.lua Copyright (C) 2014-2020 The LaTeX3 Project
 
 It may be distributed and/or modified under the conditions of the
 LaTeX Project Public License (LPPL), either version 1.3c of this
@@ -25,7 +25,7 @@ for those people who are interested.
 --]]
 
 -- Version information
-release_date = "2019-02-10"
+release_date = "2020-02-03"
 
 -- File operations are aided by the LuaFileSystem module
 local lfs = require("lfs")
@@ -174,11 +174,17 @@ if options["target"] == "check" then
 end
 if #checkconfigs == 1 and
    checkconfigs[1] ~= "build" and
-   (options["target"] == "check" or options["target"] == "save") then
+   (options["target"] == "check" or options["target"] == "save" or options["target"] == "clean") then
    local config = "./" .. gsub(checkconfigs[1],".lua$","") .. ".lua"
    if fileexists(config) then
+     local savedtestfiledir = testfiledir
      dofile(config)
      testdir = testdir .. "-" .. checkconfigs[1]
+     -- Reset testsuppdir if required
+     if savedtestfiledir ~= testfiledir and
+       testsuppdir == savedtestfiledir .. "/support" then
+       testsuppdir = testfiledir .. "/support"
+     end
    else
      print("Error: Cannot find configuration " ..  checkconfigs[1])
      exit(1)

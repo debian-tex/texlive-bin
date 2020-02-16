@@ -14,7 +14,7 @@
    use the Perl makeglossaries script.
   
    This file is distributed as part of the glossaries LaTeX package.
-   Copyright 2015 Nicola L.C. Talbot
+   Copyright 2019 Nicola L.C. Talbot
    This work may be distributed and/or modified under the
    conditions of the LaTeX Project Public License, either version 1.3
    of this license or any later version.
@@ -36,6 +36,10 @@
    Also makeglossaries and makeglossaries-lite.lua.
   
    History:
+   * 4.45:
+     - no change.
+   * 4.44:
+     - no change.
    * 4.41:
      - no change.
    * 4.40:
@@ -64,7 +68,7 @@
      - changed first line from lua to texlua
 --]]
 
-thisversion = "4.41 (2018-07-23)"
+thisversion = "4.45 (2020-01-18)"
 
 quiet = false
 dryrun = false

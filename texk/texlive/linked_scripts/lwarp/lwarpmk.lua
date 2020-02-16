@@ -1,8 +1,8 @@
 #!/usr/bin/env texlua
 
--- Copyright 2016-2018 Brian Dunn
+-- Copyright 2016-2020 Brian Dunn
 
-printversion = "v0.70"
+printversion = "v0.79"
 requiredconfversion = "2" -- also at *lwarpmk.conf
 
 function printhelp ()
@@ -32,7 +32,8 @@ lwarpmk pdftohtml [-p project]:
 lwarpmk pdftosvg <list of file names>: Converts each PDF file to SVG.
 lwarpmk epstopdf <list of file names>: Converts each EPS file to PDF.
 lwarpmk clean [-p project]: Remove *.aux, *.toc, *.lof/t,
-    *.idx, *.ind, *.log, *_html_inc.*, .gl*
+    *.idx, *.ind, *.log, *_html_inc.*, .gl*,
+    *_html.pdf, *_html.html, *_html.sidetoc
 lwarpmk cleanall [-p project]: Remove auxiliary files, project.pdf, *.html
 lwarpmk cleanlimages: Removes all images from the "lateximages" directory.
 lwarpmk -h: Print this help message.
@@ -40,6 +41,23 @@ lwarpmk --help: Print this help message.
 
 ]] )
 -- printconf ()
+end
+
+function splitfilename ( pathandfilename )
+--
+-- Separates out the path and extension from a filename.
+-- Returns path, filename with extension, and extension.
+-- Ex: thispath, thisfilename, thisextension = splitfilename ("path/to/filename.ext")
+--
+-- https://www.fhug.org.uk/wiki/wiki/doku.php?id=plugins:code_snippets:
+--      split_filename_in_to_path_filename_and_extension
+--
+    if lfs.attributes(pathandfilename,"mode") == "directory" then
+        local strPath = pathandfilename:gsub("[\\/]$","") -- $ (syntax highlighting)
+        return strPath.."\\","",""
+    end
+    pathandfilename = pathandfilename.."."
+    return pathandfilename:match("^(.-)([^\\/]-)%.([^\\/%.]-)%.?$")
 end
 
 function splitfile (destfile,sourcefile)
@@ -78,6 +96,20 @@ function cvalueerror ( line, linenum , cvalue )
 --    printconf () ;
     os.exit(1) ;
 end
+
+function printhowtorecompile ()
+-- Tells the user how to recompile to regenerate the configuration files.
+    print ("lwarpmk: The configuration files lwarpmk.conf and "..sourcename..".lwarpmkconf" )
+    print ("lwarpmk:   must be updated.  To do so, recompile" )
+    print ("lwarpmk:   " , sourcename..".tex" )
+    if ( printlatexcmd == "" ) then
+        print ("lwarpmk:   using xe/lua/pdflatex," )
+    else
+        print ("lwarpmk:   using the command:")
+        print ("lwarpmk:   " , printlatexcmd )
+    end
+    print ("lwarpmk:   then use lwarpmk again.")
+end -- printhowtorecompile
 
 function ignoreconf ()
 -- Global argument index
@@ -240,19 +272,14 @@ end --- for Windows
 if ( (package.config:sub(1,1)) ~= dirslash ) then
     print ("lwarpmk: ===")
     print ("lwarpmk: It appears that lwarpmk.conf is for a different operating system." )
-    print ("lwarpmk: To adjust lwarpmk.conf for the current operating system," )
-    print ("lwarpmk:   recompile the original document using xe/lua/pdflatex." )
-    print ("lwarpmk: ")
-    print ("lwarpmk: lwarpmk shall attempt to continue...")
+    printhowtorecompile ()
     print ("lwarpmk: ===")
+    os.exit(1)
 end
 -- Error if the configuration file's version is not current:
 if ( confversion ~= requiredconfversion ) then
     print ("lwarpmk: ===")
-    print ("lwarpmk: The configuration files lwarpmk.conf and "..sourcename..".lwarpmkconf" )
-    print ("lwarpmk:   must be updated.  To update the configuration files," )
-    print ("lwarpmk:   recompile "..sourcename..".tex using xe/lua/pdflatex," )
-    print ("lwarpmk:   then use lwarpmk again.")
+    printhowtorecompile ()
     print ("lwarpmk: ===")
     os.exit(1)
 end
@@ -349,6 +376,8 @@ function removeaux ()
 --
 -- Remove auxiliary files:
 -- All .aux files are removed since there may be many bbl*.aux files.
+-- Also removes sourcename_html.pdf, sourcename_html.html,
+-- and sourcename_html.sidetoc.
 --
 os.execute ( rmname .. " *.aux " ..
     sourcename ..".toc " .. sourcename .. "_html.toc " ..
@@ -359,6 +388,9 @@ os.execute ( rmname .. " *.aux " ..
     sourcename ..".ps " .. sourcename .."_html.ps " ..
     sourcename ..".log " .. sourcename .. "_html.log " ..
     sourcename ..".gl* " .. sourcename .. "_html.gl* " ..
+    sourcename .. "_html.pdf " ..
+    sourcename .. "_html.html " ..
+    sourcename .. "_html.sidetoc " ..
     " *_html_inc.* "
     )
 end
@@ -556,7 +588,7 @@ function createlateximages ()
 --
 -- See if the document must be recompiled first:
 checklimages ()
--- See if the print version exists:
+-- See if the HTML version exists:
 checkhtmlpdfexists ()
 -- Attempt to create the lateximages:
 print ("lwarpmk: Creating lateximages.")
@@ -600,7 +632,7 @@ function convertepstopdf ()
 --
 -- Converts EPS files to PDF files.
 -- The filenames are arg[argindex] and up.
--- arg[1] is the command "pdftosvg".
+-- arg[1] is the command "epstopdf".
 --
 ignoreconf ()
 for i = argindex , #arg do
@@ -608,7 +640,16 @@ for i = argindex , #arg do
         print ("lwarpmk: File \"" .. arg[i] .. "\" does not exist.")
     else
         print ("lwarpmk: Converting \"" .. arg[i] .. "\"")
-        os.execute ( "epstopdf " .. arg[i] )
+        thispath, thisfilename, thisextension = splitfilename(arg[i])
+        if ( thispath == nil ) then
+            os.execute ( "epstopdf " .. arg[i] )
+        else
+            os.execute (
+                "epstopdf " ..
+                thispath .. thisfilename .. "." .. thisextension .. " " ..
+                thispath .. thisfilename .. ".pdf"
+            )
+        end
     end -- if
 end -- do
 end --function
@@ -625,7 +666,16 @@ for i = argindex , #arg do
         print ("lwarpmk: File \"" .. arg[i] .. "\" does not exist.")
     else
         print ("lwarpmk: Converting \"" .. arg[i] .. "\"")
-        os.execute ( "pdftocairo -svg " .. arg[i] )
+        thispath, thisfilename, thisextension = splitfilename(arg[i])
+        if ( thispath == nil ) then
+            os.execute ( "pdftocairo -svg " .. arg[i] )
+        else
+            os.execute (
+                "pdftocairo -svg " ..
+                thispath .. thisfilename .. "." .. thisextension .. " " ..
+                thispath .. thisfilename .. ".svg"
+            )
+        end
     end -- if
 end -- do
 end --function
@@ -649,7 +699,7 @@ else -- not --version
 
 -- print intro:
 
-print ("lwarpmk: " .. printversion .. "  Automated make for the LaTeX lwarp package.")
+print ("lwarpmk: " .. printversion .. "  Automated make for the LaTeX Lwarp package.")
 
 -- lwarpmk print:
 

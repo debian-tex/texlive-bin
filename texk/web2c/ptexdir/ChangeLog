@@ -1,3 +1,51 @@
+2020-02-09  Phelype Oleinik  <phe.h.o1@gmail.com>
+
+	* ptexdir/ptex-base.ch: extra end; needed for the scan_file_name
+	change in tex.ch.
+
+2020-02-09  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* ptex-base.ch: forgot to set cur_val_level in fetching
+	\kansujichar (Bug introduced in commit on 2019-10-14).
+
+2020-02-05  Hironobu Yamashita  <h.y.acetaminophen@gmail.com>
+
+	* ptex-base.ch: Add new primitives \ifjfont and \iftfont.
+
+2019-12-10  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* am/ptex.am (ptex_cppflags): append $(ZLIB_INCLUDES).
+	(ptex_ldadd): append $(ZLIB_LIBS.)
+	(ptex_dependencies): append $(ZLIB_DEPEND) 
+	(ptex_web_srcs): append zlib-fmt.ch.
+	* kanji.h: #include <zlib.h>
+	(dump_kanji, undump_kanji): arg is now type gzFile instead of FILE *.
+	* kanji_dump.c (pTeX) [!pTeX]: #define if not already.
+	(dump_kanji, undump_kanji): chang arg type.
+	* zfmtcompress.test: new script (not enabled).
+
+2019-10-14  Hironobu Yamashita  <h.y.acetaminophen@gmail.com>
+
+	* ptex-base.ch: Allow getting \kansujichar.
+	* ptex_version.h: pTeX version p3.8.3.
+
+2019-08-04  Hironobu Yamashita  <h.y.acetaminophen@gmail.com>
+
+	* ppltotf.ch: 'This property name doesn't belong in a TYPE list'
+	was never available.
+
+2019-06-24  Hironobu Yamashita  <h.y.acetaminophen@gmail.com>
+
+	* ptex-base.ch: 'Improper alphabetic or KANJI constant' error
+	should be raised for multibyte CS.
+	* tests/let_char_token.tex: Added.
+
+2019-05-28  Hironobu Yamashita  <h.y.acetaminophen@gmail.com>
+
+	* am/ptex.am: Add a new test.
+	* pver.test: New test file for version number consistency.
+	* tests/pver1.tex, ptexdir/tests/pver2.tex: New.
+
 2019-05-06  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
 
 	* ptex-base.ch:

@@ -172,7 +172,8 @@ override_dh_install:
 	# remove tlbuild info document, not needed
 	rm debian/texlive-binaries/usr/share/info/tlbuild.info*
 	# remove various man pages
-	for i in latex pdflatex lamed amstex ; do \
+	for i in latex latex-dev pdflatex pdflatex-dev lamed lualatex-dev dvilualatex-dev \
+		dviluatex platex-dev uplatex-dev xelatex-dev amstex ; do \
 	  rm debian/texlive-binaries/usr/share/man/man1/$$i.1* ; \
 	done
 	#

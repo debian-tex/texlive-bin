@@ -1,10 +1,11 @@
-texlive-bin (2020.20200306.54106-1~1) UNRELEASED; urgency=medium
+texlive-bin (2020.20200313.54259-1) experimental; urgency=medium
 
   [ Norbert Preining ]
   * TL 2020 source build
   * Fix FTCBFS: Add texlive-binaries <cross> to Build-Depends to have
     a native tangle. (Closes: #940691) (Thanks to Helmut Grohne)
   * Change BD: libfreetype6-dev -> libfreetype-dev
+  * Update patches
 
   [ Debian Janitor ]
   * Trim trailing whitespace.
@@ -13,7 +14,7 @@ texlive-bin (2020.20200306.54106-1~1) UNRELEASED; urgency=medium
   * Drop unnecessary dependency on dh-autoreconf.
   * Rely on pre-initialized dpkg-architecture variables.
 
- -- Norbert Preining <norbert@preining.info>  Fri, 06 Mar 2020 15:58:39 +0900
+ -- Norbert Preining <norbert@preining.info>  Fri, 13 Mar 2020 11:03:33 +0900
 
 texlive-bin (2019.20190605.51237-3) unstable; urgency=medium
 

@@ -4,7 +4,7 @@
 
 --- texlive-bin.orig/texk/web2c/mplibdir/mp.w
 +++ texlive-bin/texk/web2c/mplibdir/mp.w
-@@ -4387,7 +4387,11 @@ be used after the year 32767.
+@@ -4380,7 +4380,11 @@ be used after the year 32767.
  
  @c
  static void mp_fix_date_and_time (MP mp) {

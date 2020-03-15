@@ -43,11 +43,11 @@ endif
 # for whitelisting good archs
 ifeq (,$(filter $(DEB_HOST_ARCH), $(LUAJIT_GOOD_ARCHS)))
   # it is not in the list of good archs -> disable luajittex
-  BUILDLUAJITTEX=--disable-luajittex --disable-mfluajit
+  BUILDLUAJITTEX=--disable-luajittex --disable-mfluajit --disable-luajithbtex
   WITHLUAJIT=no
 else
   # not necessary, but for completeness
-  BUILDLUAJITTEX=--enable-luajittex --enable-mfluajit
+  BUILDLUAJITTEX=--enable-luajittex --enable-mfluajit --enable-luajithbtex
   WITHLUAJIT=yes
 endif
 

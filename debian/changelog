@@ -1,9 +1,9 @@
-texlive-bin (2020.20200313.54259-2) UNRELEASED; urgency=medium
+texlive-bin (2020.20200313.54259-2) experimental; urgency=medium
 
-  * Add --disable-luajithbtex for not $(LUAJIT_GOOD_ARCHS)
-    First part of Bug#953774.
+  [ Hilmar Preusse ]
+  * Add --disable-luajithbtex for not $(LUAJIT_GOOD_ARCHS) (Closes: #953774)
 
- -- Hilmar Preusse <hille42@web.de>  Sun, 15 Mar 2020 09:48:33 +0100
+ -- Norbert Preining <norbert@preining.info>  Mon, 16 Mar 2020 06:30:35 +0900
 
 texlive-bin (2020.20200313.54259-1) experimental; urgency=medium
 

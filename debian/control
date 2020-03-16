@@ -17,7 +17,7 @@ Build-Depends:
   libgmp-dev,
   libgraphite2-dev,
   libgs-dev,
-  libharfbuzz-dev (>= 0.9.18-3),
+  libharfbuzz-dev (>= 2.4),
   libicu-dev,
   libmpfr-dev,
   libncurses5-dev | libncurses-dev,

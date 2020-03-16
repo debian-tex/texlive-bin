@@ -1,3 +1,9 @@
+texlive-bin (2020.20200313.54259-3) UNRELEASED; urgency=medium
+
+  * Stephen Kitt: luaharfbuzz in TeX Live 2020 needs
+    HB_BUFFER_FLAG_DO_NOT_INSERT_DOTTED_CIRCLE which was added in 2.4.
+  * Add me to Uploaders
+
 texlive-bin (2020.20200313.54259-2) experimental; urgency=medium
 
   [ Hilmar Preusse ]

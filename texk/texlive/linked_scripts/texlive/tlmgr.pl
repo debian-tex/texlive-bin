@@ -1,12 +1,12 @@
 #!/usr/bin/env perl
-# $Id: tlmgr.pl 54118 2020-03-05 22:27:22Z karl $
+# $Id: tlmgr.pl 54446 2020-03-21 16:45:22Z karl $
 #
 # Copyright 2008-2020 Norbert Preining
 # This file is licensed under the GNU General Public License version 2
 # or any later version.
 
-my $svnrev = '$Revision: 54118 $';
-my $datrev = '$Date: 2020-03-05 23:27:22 +0100 (Thu, 05 Mar 2020) $';
+my $svnrev = '$Revision: 54446 $';
+my $datrev = '$Date: 2020-03-21 17:45:22 +0100 (Sat, 21 Mar 2020) $';
 my $tlmgrrevision;
 my $tlmgrversion;
 my $prg;
@@ -649,6 +649,8 @@ for the full story.\n";
     debug("Cannot open package log file for appending: $packagelogfile\n");
     debug("Will not log package installation/removal/update for this run\n");
     $packagelogfile = "";
+  } else {
+    debug("appending to package log file: $packagelogfile\n");
   }
 
   $loadmediasrcerror = "Cannot load TeX Live database from ";
@@ -813,6 +815,7 @@ sub do_cmd_and_check {
   # tlmgr front ends (MacOSX's TeX Live Utility) can read it
   # and show it to the user before the possibly long delay.
   info("running $cmd ...\n");
+  logpackage("running $cmd");
   my ($out, $ret);
   if ($opts{"dry-run"}) {
     $ret = $F_OK;
@@ -826,13 +829,22 @@ sub do_cmd_and_check {
   } else {
     ($out, $ret) = TeXLive::TLUtils::run_cmd("$cmd 2>&1");
   }
+  # Although it is quite verbose to report all the output from every
+  # fmtutil (especially) run, it's the only way to know what's normal
+  # when something fails. Prefix each line to make them easy to see
+  # (and filter out/in).
+  (my $prefixed_out = $out) =~ s/^/(cmd)/gm;
+  $prefixed_out =~ s/\n+$//; # trailing newlines don't seem interesting
+  my $outmsg = "output:\n$prefixed_out\n--end of output of $cmd.\n";
   if ($ret == $F_OK) {
     info("done running $cmd.\n");
-    ddebug("--output of $cmd:\n$out\n--end of output of $cmd.");
+    logpackage("success, $outmsg");
+    ddebug("$cmd $outmsg");
     return ($F_OK);
   } else {
     info("\n");
     tlwarn("$prg: $cmd failed (status $ret), output:\n$out\n");
+    logpackage("error, status: $ret, $outmsg");
     return ($F_ERROR);
   }
 }
@@ -2833,7 +2845,8 @@ sub action_update {
           " collection, not auto-installing it!\n");
         next;
       } else {
-        tlwarn("\n$prg: $pkg mentioned, but neither new nor forcibly removed\n");
+        tlwarn("\n$prg: $pkg mentioned, but neither new nor forcibly removed");
+        tlwarn("\n$prg: perhaps try tlmgr search or tlmgr info.\n");
         next;
       }
       # install new packages
@@ -3517,7 +3530,7 @@ sub action_update {
   }
 
   # infra update and tlmgr restart on w32 is done by the updater batch script
-  if (win32() && !$opts{"list"} && @critical) {
+  if (win32() && $opts{'self'} && !$opts{"list"} && @critical) {
     info("$prg: Preparing TeX Live infrastructure update...\n");
     for my $f (@infra_files_to_be_removed) {
       debug("file scheduled for removal $f\n");
@@ -5197,9 +5210,12 @@ sub uninstall_texlive {
     return ($F_ERROR);
   }
   return if !check_on_writable();
+
+  init_local_db(0);
   my $force = defined($opts{"force"}) ? $opts{"force"} : 0;
   if (!$force) {
-    print("If you answer yes here the whole TeX Live installation will be removed!\n");
+    print("If you answer yes here the whole TeX Live installation here,\n",
+          "under ", $localtlpdb->root, ", will be removed!\n");
     print "Remove TeX Live (y/N): ";
     my $yesno = <STDIN>;
     if ($yesno !~ m/^y(es)?$/i) {
@@ -5208,13 +5224,12 @@ sub uninstall_texlive {
     }
   }
   print ("Ok, removing the whole installation:\n");
-  init_local_db();
   TeXLive::TLUtils::remove_symlinks($localtlpdb->root,
     $localtlpdb->platform(),
     $localtlpdb->option("sys_bin"),
     $localtlpdb->option("sys_man"),
     $localtlpdb->option("sys_info"));
-  # now do remove the rest
+  # now remove the rest
   system("rm", "-rf", "$Master/texmf-dist");
   system("rm", "-rf", "$Master/texmf-doc");
   system("rm", "-rf", "$Master/texmf-var");
@@ -5222,15 +5237,17 @@ sub uninstall_texlive {
   system("rm", "-rf", "$Master/bin");
   system("rm", "-rf", "$Master/readme-html.dir");
   system("rm", "-rf", "$Master/readme-txt.dir");
-  for my $f (qw/doc.html index.html LICENSE.CTAN LICENSE.TL README
-                README.usergroups release-texlive.txt texmf.cnf/) {
+  for my $f (qw/doc.html index.html install-tl 
+                LICENSE.CTAN LICENSE.TL README README.usergroups
+                release-texlive.txt texmf.cnf texmfcnf.lua/) {
     system("rm", "-f", "$Master/$f");
   }
   if (-d "$Master/temp") {
     system("rmdir", "--ignore-fail-on-non-empty", "$Master/temp");
   }
   unlink("$Master/install-tl.log");
-  # should we do that????
+  # if they want removal, give them removal. Hopefully they know how to
+  # regenerate any changed config files.
   system("rm", "-rf", "$Master/texmf-config");
   system("rmdir", "--ignore-fail-on-non-empty", "$Master");
 }
@@ -6687,9 +6704,6 @@ sub action_shell {
 # 1             : TLPDB initialized and support programs must work
 # 2             : not even TLPDB needs to be found
 # if we cannot read tlpdb, die if arg SHOULD_I_DIE is true.
-#
-# if an argument is given and is true init_local_db will die if
-# setting up of programs failed.
 #
 sub init_local_db {
   my ($should_i_die) = @_;
@@ -10009,7 +10023,7 @@ This script and its documentation were written for the TeX Live
 distribution (L<https://tug.org/texlive>) and both are licensed under the
 GNU General Public License Version 2 or later.
 
-$Id: tlmgr.pl 54118 2020-03-05 22:27:22Z karl $
+$Id: tlmgr.pl 54446 2020-03-21 16:45:22Z karl $
 =cut
 
 # test HTML version: pod2html --cachedir=/tmp tlmgr.pl >/tmp/tlmgr.html

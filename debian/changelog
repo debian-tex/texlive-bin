@@ -1,4 +1,4 @@
-texlive-bin (2020.20200313.54259-3) UNRELEASED; urgency=medium
+texlive-bin (2020.20200327.54578-1) experimental; urgency=medium
 
   [ Stephen Kitt ]
   * luaharfbuzz in TeX Live 2020 needs
@@ -7,7 +7,10 @@ texlive-bin (2020.20200313.54259-3) UNRELEASED; urgency=medium
   [ Hilmar Preusse ]
   * Add me to Uploaders
 
- -- Norbert Preining <norbert@preining.info>  Tue, 17 Mar 2020 07:19:04 +0900
+  [ Norbert Preining ]
+  * New upstream version 2020.20200327.54578 - sources of TeX Live 2020 DVD
+
+ -- Norbert Preining <norbert@preining.info>  Fri, 27 Mar 2020 18:04:20 +0900
 
 texlive-bin (2020.20200313.54259-2) experimental; urgency=medium
 

@@ -1,3 +1,9 @@
+texlive-bin (2020.20200327.54578-2) unstable; urgency=medium
+
+  * TeX Live 2020
+
+ -- Norbert Preining <norbert@preining.info>  Mon, 30 Mar 2020 09:01:24 +0900
+
 texlive-bin (2020.20200327.54578-1) experimental; urgency=medium
 
   [ Stephen Kitt ]

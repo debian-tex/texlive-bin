@@ -61,9 +61,9 @@ Depends: libptexenc1 (>= ${source:Version}),
   ${shlibs:Depends}, ${misc:Depends},
   tex-common (>= 6), perl, dpkg (>= 1.15.4) | install-info
 Recommends: texlive-base, dvisvgm
-Replaces: texlive-metapost (<< 2010), texlive-base (<< 2010), ptex-bin, mendexk, jmpost, luatex (<< 2014), musixtex (<< 1:1.20.ctan20151216-3), pmx (<< 2.7.0.ctan20150301-3), m-tx (<< 0.61.ctan20151217-2), gregorio (<= 2.3-1), tex4ht (<< 20160814), texlive-lang-japanese (<< 2017)
+Replaces: texlive-metapost (<< 2010), texlive-base (<< 2010), ptex-bin, mendexk, jmpost, luatex (<< 2014), musixtex (<< 1:1.20.ctan20151216-3), pmx (<< 2.7.0.ctan20150301-3), m-tx (<< 0.61.ctan20151217-2), gregorio (<= 2.3-1), tex4ht (<< 20160814), texlive-lang-japanese (<< 2017), texlive-extra-utils (<< 2020.20200329)
 Conflicts: mendexk, makejvf, jmpost
-Breaks: texlive-base (<< 2020), jtex-bin, multex-bin, luatex (<< 2014), tex-common (<< 6), musixtex (<< 1:1.20.ctan20151216-3), pmx (<< 2.7.0.ctan20150301-3), m-tx (<< 0.61.ctan20151217-2), gregorio (<= 2.3-1), context (<< 2016), tex4ht (<< 20160814),
+Breaks: texlive-base (<< 2020), jtex-bin, multex-bin, luatex (<< 2014), tex-common (<< 6), musixtex (<< 1:1.20.ctan20151216-3), pmx (<< 2.7.0.ctan20150301-3), m-tx (<< 0.61.ctan20151217-2), gregorio (<= 2.3-1), context (<< 2016), tex4ht (<< 20160814), texlive-extra-utils (<< 2020.20200329)
   texlive-htmlxml (<< 2016.20160829),
 Provides: texlive-base-bin, makejvf, mendexk, jmpost, luatex
 Description: Binaries for TeX Live

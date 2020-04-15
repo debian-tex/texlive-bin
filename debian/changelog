@@ -1,11 +1,11 @@
-texlive-bin (2020.20200327.54578-3) UNRELEASED; urgency=medium
+texlive-bin (2020.20200327.54578-3) unstable; urgency=medium
 
   * Add Conflict w/ texlive-extra-utils (<< 2020.20200329).
     (Closes: #956587)
   * Avoid massive parallel builds on powerpc, ppc64, sparc64. Limit
     to -j8. This hopefully Closes: #956605 .
 
- -- Hilmar Preusse <hille42@web.de>  Mon, 13 Apr 2020 23:06:17 +0200
+ -- Hilmar Preusse <hille42@web.de>  Wed, 15 Apr 2020 21:38:34 +0200
 
 texlive-bin (2020.20200327.54578-2) unstable; urgency=medium
 

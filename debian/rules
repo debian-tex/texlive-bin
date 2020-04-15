@@ -60,6 +60,14 @@ ifeq ($(DEB_HOST_ARCH), armhf)
   export CFLAGS += -marm
 endif
 
+# Avoid massive parallel builds, the build will fails else.
+# #956605.
+# 
+NO_MASSIVE_PARALLEL_BUILD := powerpc ppc64 sparc64
+
+ifeq ($(DEB_HOST_ARCH), $(NO_MASSIVE_PARALLEL_BUILD))
+  MAKEFLAGS += -j8
+endif
 
 # warning: if the --with autoreconf is removed then
 # the patch debian/patches/debian-no-linked-scripts

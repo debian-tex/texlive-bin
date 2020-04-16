@@ -21,7 +21,6 @@ LUAJIT_GOOD_ARCHS := amd64 armel armhf hurd-i386 i386 kfreebsd-amd64 kfreebsd-i3
 
 include /usr/share/dpkg/architecture.mk
 
-
 ifeq ($(DEB_HOST_ARCH), alpha)
   export LDFLAGS = -Wl,--no-relax
 endif
@@ -65,7 +64,7 @@ endif
 # 
 NO_MASSIVE_PARALLEL_BUILD := powerpc ppc64 sparc64
 
-ifeq ($(DEB_HOST_ARCH), $(NO_MASSIVE_PARALLEL_BUILD))
+ifneq (,$(filter $(NO_MASSIVE_PARALLEL_BUILD), $(DEB_HOST_ARCH)))
   MAKEFLAGS += -j8
 endif
 

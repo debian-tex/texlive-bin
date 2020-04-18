@@ -1,3 +1,9 @@
+texlive-bin (2020.20200327.54578-5) UNRELEASED; urgency=medium
+
+  * Replace "DEB_BUILD_OPTIONS=parallel=8" by "dh $@ ... --max-parallel=8".
+
+ -- Hilmar Preusse <hille42@web.de>  Sat, 18 Apr 2020 23:29:09 +0200
+
 texlive-bin (2020.20200327.54578-4) unstable; urgency=medium
 
   * Add Conflict w/ texlive-luatex (<< 2020.20200329).

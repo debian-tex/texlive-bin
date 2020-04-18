@@ -1,11 +1,11 @@
-texlive-bin (2020.20200327.54578-4) UNRELEASED; urgency=medium
+texlive-bin (2020.20200327.54578-4) unstable; urgency=medium
 
   * Add Conflict w/ texlive-luatex (<< 2020.20200329).
     (Closes: #956884)
   * Avoid massive parallel builds on powerpc, ppc64, sparc64. Limit
     to -j8 (2nd try). This hopefully (Closes: #956605).
 
- -- Hilmar Preusse <hille42@web.de>  Thu, 16 Apr 2020 14:56:16 +0200
+ -- Hilmar Preusse <hille42@web.de>  Sat, 18 Apr 2020 07:38:25 +0200
 
 texlive-bin (2020.20200327.54578-3) unstable; urgency=medium
 

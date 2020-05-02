@@ -1,3 +1,9 @@
+Description: Fix issues in dvi2tty manual page
+Author: Bjarni Ingi Gislason <bjarniig@rhi.hi.is>
+Last-Update: 2020-05-24
+Debian-Bug: #958728
+Forwarded: https://github.com/mirakels/dvi2tty/pull/2
+
 Index: texlive-bin/texk/dvi2tty/dvi2tty-src/dvi2tty.1
 ===================================================================
 --- texlive-bin.orig/texk/dvi2tty/dvi2tty-src/dvi2tty.1

@@ -3,6 +3,7 @@ texlive-bin (2020.20200327.54578-5) UNRELEASED; urgency=medium
   * Replace "DEB_BUILD_OPTIONS=parallel=8" by "dh $@ ... --max-parallel=8".
   * Add patch dvi2tty_man.diff to fix errors in manual page of dvi2tty.
     (Closes: #958728)
+  * Change Maintainer field to "Debian TeX Task Force".
 
  -- Hilmar Preusse <hille42@web.de>  Sat, 18 Apr 2020 23:29:09 +0200
 

@@ -21,4 +21,4 @@ enforce that the version of libkpathsea matches the program's version."
 A new redesigned libkpathsea, which is really a shared lib, is on his TODO
 list, but he can't say when it will be released.
 
- -- Frank Küster <frank@debian.org>, Wed Aug 24 12:54:11 2005
+ -- Frank KÃ¼ster <frank@debian.org>, Wed Aug 24 12:54:11 2005

@@ -128,7 +128,7 @@ Section: libdevel
 Architecture: any
 Multi-Arch: same
 Depends: ${misc:Depends}, libsynctex2 (= ${binary:Version})
-Description: Tex Live: SyncTeX parser library (development part)
+Description: TeX Live: SyncTeX parser library (development part)
  This package contains the static library and header files for the SyncTex
  parser library.
 
@@ -146,7 +146,7 @@ Section: libdevel
 Architecture: any
 Multi-Arch: same
 Depends: ${misc:Depends}, libtexlua53 (= ${binary:Version})
-Description: Tex Live: Lua 5.3, modified for use with LuaTeX (development part)
+Description: TeX Live: Lua 5.3, modified for use with LuaTeX (development part)
  This package contains the static library and header files for the texlua
  library.
 

@@ -39,6 +39,7 @@ Build-Depends:
   texlive-binaries <cross>,
   time,
   zlib1g-dev | libz-dev
+Rules-Requires-Root: no
 Standards-Version: 4.2.1
 Homepage: https://www.tug.org/texlive/
 Vcs-Git: https://github.com/debian-tex/texlive-bin.git

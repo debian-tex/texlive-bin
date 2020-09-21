@@ -19,10 +19,10 @@ texlive-binaries binary: no-manual-page usr/bin/luajithbtex
 #texlive-binaries binary: no-manual-page usr/bin/pbibtex
 #texlive-binaries binary: no-manual-page usr/bin/pdvitomp
 #texlive-binaries binary: no-manual-page usr/bin/pdvitype
-#texlive-binaries binary: no-manual-page usr/bin/pmpost
-#texlive-binaries binary: no-manual-page usr/bin/r-mpost
-#texlive-binaries binary: no-manual-page usr/bin/r-pmpost
-#texlive-binaries binary: no-manual-page usr/bin/r-upmpost
+texlive-binaries binary: no-manual-page usr/bin/pmpost
+texlive-binaries binary: no-manual-page usr/bin/r-mpost
+texlive-binaries binary: no-manual-page usr/bin/r-pmpost
+texlive-binaries binary: no-manual-page usr/bin/r-upmpost
 #texlive-binaries binary: no-manual-page usr/bin/t4ht
 #texlive-binaries binary: no-manual-page usr/bin/tex4ht
 #texlive-binaries binary: no-manual-page usr/bin/texluajit
@@ -31,7 +31,7 @@ texlive-binaries binary: no-manual-page usr/bin/luajithbtex
 #texlive-binaries binary: no-manual-page usr/bin/updvitomp
 #texlive-binaries binary: no-manual-page usr/bin/updvitype
 texlive-binaries binary: no-manual-page usr/bin/upmendex
-#texlive-binaries binary: no-manual-page usr/bin/upmpost
+texlive-binaries binary: no-manual-page usr/bin/upmpost
 #texlive-binaries binary: no-manual-page usr/bin/wofm2opl
 #texlive-binaries binary: no-manual-page usr/bin/wopl2ofm
 #texlive-binaries binary: no-manual-page usr/bin/wovf2ovp

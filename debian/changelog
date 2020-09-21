@@ -9,6 +9,8 @@ texlive-bin (2020.20200327.54578-5) UNRELEASED; urgency=medium
     - W: national-encoding (two files)
     - P: silent-on-rules-requiring-root
     - W: mismatched-override embedded-library
+    - W groff-message usr/share/man/man1/detex.1.gz 76: warning:
+      can't find special character '..'
     - Override "W: no-manual-page" (in case the page is provided form a
       different package).
 

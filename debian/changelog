@@ -8,6 +8,9 @@ texlive-bin (2020.20200327.54578-5) UNRELEASED; urgency=medium
     - I: capitalization-error-in-description-synopsis Tex TeX
     - W: national-encoding (two files)
     - P: silent-on-rules-requiring-root
+    - W: mismatched-override embedded-library
+    - Override "W: no-manual-page" (in case the page is provided form a
+      different package).
 
  -- Hilmar Preusse <hille42@web.de>  Sat, 18 Apr 2020 23:29:09 +0200
 

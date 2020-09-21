@@ -165,6 +165,6 @@ Section: libdevel
 Architecture: amd64 armel armhf hurd-i386 i386 kfreebsd-amd64 kfreebsd-i386 powerpc
 Multi-Arch: same
 Depends: ${misc:Depends}, libtexluajit2 (= ${binary:Version})
-Description: Tex Live: LuaJIT, modified for use with LuaJITTeX (development part)
+Description: TeX Live: LuaJIT, modified for use with LuaJITTeX (development part)
  This package contains the static library and header files for the texluajit
  library.

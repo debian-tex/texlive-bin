@@ -19,3 +19,4 @@ mp.w_epoch.patch
 #sparc64-fix-alignment.patch
 dvi2tty_man.diff
 detex_man.diff
+axohelp_man.diff

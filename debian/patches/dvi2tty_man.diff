@@ -6,9 +6,9 @@ Forwarded: https://github.com/mirakels/dvi2tty/pull/2
 
 Index: texlive-bin/texk/dvi2tty/dvi2tty-src/dvi2tty.1
 ===================================================================
---- texlive-bin.orig/texk/dvi2tty/dvi2tty-src/dvi2tty.1
-+++ texlive-bin/texk/dvi2tty/dvi2tty-src/dvi2tty.1
-@@ -25,19 +25,19 @@ representation of documents is naturally
+--- texlive-bin.orig/texk/dvi2tty/dvi2tty-src/dvi2tty.1	2020-09-22 22:43:00.747827109 +0200
++++ texlive-bin/texk/dvi2tty/dvi2tty-src/dvi2tty.1	2020-09-22 22:46:08.654841938 +0200
+@@ -25,19 +25,19 @@
  In principle Font Changes are totally ignored, but
  .I dvi2tty
  recognizes
@@ -33,7 +33,7 @@ Index: texlive-bin/texk/dvi2tty/dvi2tty-src/dvi2tty.1
  in the first two columns.
  .PP
  Options may be specified in the environment variable DVI2TTY.
-@@ -52,11 +52,11 @@ Write output to file ``file''.
+@@ -52,11 +52,11 @@
  .TP
  .B \-p list
  Print the pages chosen by list.
@@ -47,7 +47,7 @@ Index: texlive-bin/texk/dvi2tty/dvi2tty-src/dvi2tty.1
  .TP
  .B \-P list
  Like \-p except that page numbers refer to
-@@ -66,7 +66,7 @@ Negative numbers don't make a lot of sen
+@@ -66,7 +66,7 @@
  .B \-w n
  Specify terminal width
  .I n.
@@ -56,7 +56,16 @@ Index: texlive-bin/texk/dvi2tty/dvi2tty-src/dvi2tty.1
  Default is 80. If your terminal has the
  ability to display in 132 columns it might
  be a good idea to use \-w132 and toggle the
-@@ -83,7 +83,7 @@ This may be the default on some systems
+@@ -74,7 +74,7 @@
+ probably look somewhat better.
+ .TP
+ .B \-v
+-Specify height of lines. Default value 450000. Allows to adjust linespacing.
++Specify height of lines. Default value 450000. Allows one to adjust linespacing.
+ .TP
+ .B \-q
+ Don't pipe the output through a pager.
+@@ -83,7 +83,7 @@
  .TP
  .B \-e n
  This option can be used to influence the spacing between words.
@@ -65,7 +74,7 @@ Index: texlive-bin/texk/dvi2tty/dvi2tty-src/dvi2tty.1
  between words becomes less, with a positive value it becomes more.
  \-e\-11 seems to worked well.
  .TP
-@@ -100,14 +100,14 @@ This overrides the $PAGER and the defaul
+@@ -100,14 +100,14 @@
  .TP
  .B \-Fprog
  Use ``prog'' as program to pipe output into. Can be used to choose an
@@ -83,7 +92,7 @@ Index: texlive-bin/texk/dvi2tty/dvi2tty-src/dvi2tty.1
  accented characters are output without the accent sign.
  .TP
  .B \-l
-@@ -115,18 +115,18 @@ Mark page breaks with the two-character
+@@ -115,18 +115,18 @@
  to mark them with a form-feed character.
  .TP
  .B \-c
@@ -107,7 +116,7 @@ Index: texlive-bin/texk/dvi2tty/dvi2tty-src/dvi2tty.1
  .TP
  .B \-J
  Auto detect NTT JTeX, ASCII pTeX, and upTeX dvi format.
-@@ -148,14 +148,13 @@ denotes EUC-JP, Shift_JIS, ISO-2022-JP,
+@@ -148,18 +148,17 @@
  Print the name of fonts when switching to it (and ending it). The delim
  argument is used to delimit the fontname.
  .SH FILES
@@ -127,3 +136,8 @@ Index: texlive-bin/texk/dvi2tty/dvi2tty-src/dvi2tty.1
  .SH "SEE ALSO"
  TeX, dvi2ps
  .SH AUTHOR
+-Original Pascal verion: Svante Lindahl, Royal Institute of Technology, Stockholm
++Original Pascal version: Svante Lindahl, Royal Institute of Technology, Stockholm
+ .br
+ Improved C version: Marcel Mol
+ .br

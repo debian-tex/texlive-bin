@@ -40,3 +40,4 @@ texlive-binaries binary: no-manual-page usr/bin/upmpost
 #texlive-binaries binary: no-manual-page usr/bin/wovf2ovp
 #texlive-binaries binary: no-manual-page usr/bin/wovp2ovf
 #texlive-binaries binary: no-manual-page usr/bin/xdvi-xaw
+texlive-binaries: spare-manual-page usr/share/man/man1/cweb.1.gz

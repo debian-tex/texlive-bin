@@ -11,9 +11,10 @@ texlive-binaries binary: no-manual-page usr/bin/etex
 #texlive-binaries binary: no-manual-page usr/bin/gregorio
 texlive-binaries binary: no-manual-page usr/bin/luajithbtex
 #texlive-binaries binary: no-manual-page usr/bin/mflua
-#texlive-binaries binary: no-manual-page usr/bin/mflua-nowin
-#texlive-binaries binary: no-manual-page usr/bin/mfluajit
-#texlive-binaries binary: no-manual-page usr/bin/mfluajit-nowin
+# #970746
+texlive-binaries binary: no-manual-page usr/bin/mflua-nowin
+texlive-binaries binary: no-manual-page usr/bin/mfluajit
+texlive-binaries binary: no-manual-page usr/bin/mfluajit-nowin
 #texlive-binaries binary: no-manual-page usr/bin/mfplain
 #texlive-binaries binary: no-manual-page usr/bin/omfonts
 #texlive-binaries binary: no-manual-page usr/bin/pbibtex

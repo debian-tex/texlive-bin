@@ -1,0 +1,42 @@
+Building an orig tarball for texlive-bin
+========================================
+
+Building a orig tarball for texlive-bin requires either a
+svn checkout[1] of the upstream texlive sources or a clone
+of the git-svn mirror[2].
+
+The partial git-svn mirror of only the source directory at
+github[3] might work, too, but is untested.
+
+Assume that the sources are in $TLSOURCE, the script
+debian/make-orig-tar can be used to build the orig tarball.
+
+Expected arguments are:
+* -svn as first argument if it is a svn checkout (default to
+  git clone)
+* the $TLSOURCE
+
+That is, when a git clone is in $TLSOURCE, a call
+	bash make-orig-tar $TLSOURCE
+should suffice. If this is a subversion checkout, then
+	bash make-orig-tar -svn $TLSOURCE
+
+The default for $TLSOURCE is
+	~/Development/TeX/texlive.git/Build/source
+which is where it is on my computer ;-)
+
+
+The generated tar ball will have a version number consisting
+of the TL release year, and a timestamp, followed by the 
+subversion revision id:
+
+	YYYY.yyyymmdd.ssss
+
+where YYYY is the TeX Live release year. yyyymmdd is the
+date stamp when the checkout was made, and ssss the subversion
+revision info.
+
+**WARNING** this number is NOT automatically determined but
+hard-coded in make-orig-tar, and needs to be updated for each
+new release year.
+

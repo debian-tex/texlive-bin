@@ -40,3 +40,4 @@ revision info.
 hard-coded in make-orig-tar, and needs to be updated for each
 new release year.
 
+[1] https://tug.org/texlive/svn/

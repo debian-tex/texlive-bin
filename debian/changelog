@@ -1,3 +1,10 @@
+texlive-bin (2020.20200327.54578-6) UNRELEASED; urgency=medium
+
+  * Reduce B-D (Closes: #979607)
+    Thanks to Helmut Grohne for finding the minimal set.
+
+ -- Norbert Preining <norbert@preining.info>  Sat, 16 Jan 2021 14:25:34 +0900
+
 texlive-bin (2020.20200327.54578-5) unstable; urgency=medium
 
   * Replace "DEB_BUILD_OPTIONS=parallel=8" by "dh $@ ... --max-parallel=8".

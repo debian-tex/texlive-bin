@@ -5,6 +5,8 @@ debian-remove-unneeded-x-libs-linking
 # from here on upstream patches
 #disable-seetex-stdin-tests
 debian-SDE-docs-in-tex-etex-manpage
+debian-t4ht-correct-expansion
+debian-dvisvgm-fix-missing-libs
 fix-maxpathlen-hurd
 # disabled for now
 #poppler-0.64
@@ -13,8 +15,6 @@ dv2dt_man.patch
 gftodvi_man.patch
 # patches from upstream
 silence-synctex-warning
-t4ht-correct-expansion
-dvisvgm-fix-missing-libs
 mp.w_epoch.patch
 #sparc64-fix-alignment.patch
 dvi2tty_man.diff

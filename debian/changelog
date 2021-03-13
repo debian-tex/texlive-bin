@@ -1,3 +1,10 @@
+texlive-bin (2020.20200327.54578-7) unstable; urgency=medium
+
+  * Backport several security fixes for shell escape exploits in
+    xdvi, luatex, general write18 implementation.
+
+ -- Norbert Preining <norbert@preining.info>  Sat, 13 Mar 2021 09:31:55 +0900
+
 texlive-bin (2020.20200327.54578-6) unstable; urgency=medium
 
   * Reduce B-D (Closes: #979607)

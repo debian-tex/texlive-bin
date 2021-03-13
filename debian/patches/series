@@ -20,3 +20,6 @@ mp.w_epoch.patch
 dvi2tty_man.diff
 detex_man.diff
 axohelp_man.diff
+upstream-xdvi-shell-escape
+upstream-svn58283-disable-pipe-write18
+upstream-svn58292-various-luatex-sec-fixes

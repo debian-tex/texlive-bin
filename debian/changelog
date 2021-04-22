@@ -1,3 +1,18 @@
+texlive-bin (2020.20200327.54578-8) UNRELEASED; urgency=medium
+
+  * Remove constraints unnecessary since stretch:
+    + Build-Depends: Drop versioned constraint on autoconf, libtool and m4.
+    + texlive-binaries: Drop versioned constraint on dpkg and tex-common in
+      Depends.
+    + texlive-binaries: Drop versioned constraint on m-tx, musixtex, pmx, tex4ht
+      and texlive-base in Replaces.
+    + texlive-binaries: Drop versioned constraint on context, m-tx, musixtex,
+      pmx, tex-common and tex4ht in Breaks.
+    + libkpathsea6: Drop versioned constraint on texlive-base in Breaks.
+    + libptexenc1: Drop versioned constraint on texlive-base in Breaks.
+
+ -- Debian Janitor <janitor@jelmer.uk>  Thu, 22 Apr 2021 16:29:38 -0000
+
 texlive-bin (2020.20200327.54578-7) unstable; urgency=medium
 
   * Backport several security fixes for shell escape exploits in

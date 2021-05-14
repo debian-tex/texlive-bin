@@ -5,7 +5,7 @@ Maintainer: Debian TeX Task Force <debian-tex-maint@lists.debian.org>
 Uploaders: Norbert Preining <norbert@preining.info>,
 	Hilmar Preusse <hille42@web.de>
 Build-Depends:
-  autoconf (>= 2.69),
+  autoconf,
   automake (>= 1:1.13.1),
   bison,
   debhelper-compat (= 12),
@@ -23,11 +23,11 @@ Build-Depends:
   libpixman-1-dev (>= 0.32.4),
   libpng-dev,
   libteckit-dev,
-  libtool (>= 2.4.2),
+  libtool,
   libxaw7-dev,
   libxi-dev,
   libzzip-dev (>= 0.12),
-  m4 (>= 1.4.16),
+  m4,
   texlive-binaries <cross>,
   zlib1g-dev | libz-dev
 Rules-Requires-Root: no
@@ -51,11 +51,11 @@ Depends: libptexenc1 (>= ${source:Version}),
   libtexluajit2 (<< ${source:Version}.1~) [amd64 armel armhf hurd-i386 i386 kfreebsd-amd64 kfreebsd-i386 powerpc],
   t1utils,
   ${shlibs:Depends}, ${misc:Depends},
-  tex-common (>= 6), perl, dpkg (>= 1.15.4) | install-info
+  tex-common, perl, dpkg | install-info
 Recommends: texlive-base, dvisvgm
-Replaces: texlive-metapost (<< 2010), texlive-base (<< 2010), ptex-bin, mendexk, jmpost, luatex (<< 2014), musixtex (<< 1:1.20.ctan20151216-3), pmx (<< 2.7.0.ctan20150301-3), m-tx (<< 0.61.ctan20151217-2), gregorio (<= 2.3-1), tex4ht (<< 20160814), texlive-lang-japanese (<< 2017), texlive-extra-utils (<< 2020.20200329), texlive-luatex (<< 2020.20200329)
+Replaces: texlive-metapost (<< 2010), ptex-bin, mendexk, jmpost, luatex (<< 2014), gregorio (<= 2.3-1), texlive-lang-japanese (<< 2017), texlive-extra-utils (<< 2020.20200329), texlive-luatex (<< 2020.20200329)
 Conflicts: mendexk, makejvf, jmpost
-Breaks: texlive-base (<< 2020), jtex-bin, multex-bin, luatex (<< 2014), tex-common (<< 6), musixtex (<< 1:1.20.ctan20151216-3), pmx (<< 2.7.0.ctan20150301-3), m-tx (<< 0.61.ctan20151217-2), gregorio (<= 2.3-1), context (<< 2016), tex4ht (<< 20160814), texlive-htmlxml (<< 2016.20160829), texlive-extra-utils (<< 2020.20200329), texlive-luatex (<< 2020.20200329)
+Breaks: texlive-base (<< 2020), jtex-bin, multex-bin, luatex (<< 2014), gregorio (<= 2.3-1), texlive-htmlxml (<< 2016.20160829), texlive-extra-utils (<< 2020.20200329), texlive-luatex (<< 2020.20200329)
 Provides: texlive-base-bin, makejvf, mendexk, jmpost, luatex
 Description: Binaries for TeX Live
  This package contains all the binaries of TeX Live packages.
@@ -70,7 +70,7 @@ Architecture: any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends}, ${shlibs:Depends}
-Breaks: texlive-binaries (<< 2014), texlive-base (<< 2014)
+Breaks: texlive-binaries (<< 2014)
 Description: TeX Live: path search library for TeX (runtime part)
  This package contains the runtime part of the Kpathsea[rch] library,
  which implements generic path searching, configuration, and
@@ -92,7 +92,7 @@ Architecture: any
 Multi-Arch: same
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Pre-Depends: ${misc:Pre-Depends}
-Breaks: texlive-binaries (<< 2014), texlive-base (<< 2014)
+Breaks: texlive-binaries (<< 2014)
 Description: TeX Live: pTeX encoding library
  library for encoding support in pTeX, a Japanese TeX engine.
 

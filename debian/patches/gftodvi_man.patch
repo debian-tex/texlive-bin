@@ -1,19 +1,10 @@
 ---
- texk/web2c/man/gftodvi.man |   22 +++++++++++-----------
- 1 file changed, 11 insertions(+), 11 deletions(-)
+ texk/web2c/man/gftodvi.man |   12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
---- texlive-bin.orig/texk/web2c/man/gftodvi.man
-+++ texlive-bin/texk/web2c/man/gftodvi.man
-@@ -17,7 +17,7 @@
- gftodvi \- make proof sheets from generic font files
- .SH SYNOPSIS
- .B gftodvi
--.RB [ \-overflow-label-offset=\fIreal\fP ]
-+.RB [ \-overflow-label-offset=\fI\,real\/\fP ]
- .RB [ \-verbose ]
- .I gf_file_name
- .\"=====================================================================
-@@ -34,7 +34,7 @@ program converts a generic font
+--- a/texk/web2c/man/gftodvi.man
++++ b/texk/web2c/man/gftodvi.man
+@@ -28,7 +28,7 @@ program converts a generic font
  file output by, for example,
  .BR mf (1),
  to a device independent (DVI) file (that can then be typeset using the same
@@ -22,7 +13,7 @@
  .I gf
  file will appear one per page, with labels, titles, and annotations
  as specified in Appendix H (Hardcopy Proofs) of
-@@ -45,11 +45,11 @@ uses other fonts in addition to the main
+@@ -39,11 +39,11 @@ uses other fonts in addition to the main
  .I gf
  file.
  A `gray' font is used to typeset the
@@ -37,8 +28,8 @@
  font is used to typeset diagonal lines, which
  otherwise have to be simulated using horizontal and vertical rules.
  The default gray, title, and label fonts are
-@@ -94,12 +94,12 @@ The
- on the command line must be complete.  Because
+@@ -88,12 +88,12 @@ The
+ on the command line must be complete. Because
  the resolution is part of the extension, it would not make
  sense to append a default extension as is done with \*(TX or
 -DVI-reading software. The output file name uses the same
@@ -52,33 +43,3 @@
  .I cmr10.2602gf
  would become
  .IR cmr10.dvi .
-@@ -125,7 +125,7 @@ looks for
- .I gf_file_name
- using the
- environment variable GFFONTS.  If that is not set, it uses the variable
--TEXFONTS. If that is not set, it uses the system default.
-+TEXFONTS.  If that is not set, it uses the system default.
- .PP
- See
- .BR tex (1)
-@@ -143,17 +143,17 @@ The \*(MF sources.
- .BR tex (1),
- .BR mf (1).
- .br
--Donald E. Knuth,
-+Donald E.\& Knuth,
- .I "The \*(MFbook"
- (Volume C of
- .IR "Computers and Typesetting" ),
- Addison-Wesley, 1986, ISBN 0-201-13445-4.
- .br
--Donald E. Knuth et al.,
-+Donald E.\& Knuth et al.,
- .IR \*(MFware .
- .\"=====================================================================
- .SH AUTHORS
--Donald E. Knuth wrote the program. It was published as part of the
-+Donald E.\& Knuth wrote the program.  It was published as part of the
- .I \*(MFware
- technical report, available from the \*(TX Users Group.
- Paul Richards ported it to Unix.

@@ -7,19 +7,8 @@ debian-remove-unneeded-x-libs-linking
 debian-SDE-docs-in-tex-etex-manpage
 debian-t4ht-correct-expansion
 debian-dvisvgm-fix-missing-libs
-fix-maxpathlen-hurd
 # disabled for now
 #poppler-0.64
 # to be sent upstream at some point
-dv2dt_man.patch
 gftodvi_man.patch
-# patches from upstream
-silence-synctex-warning
-mp.w_epoch.patch
 #sparc64-fix-alignment.patch
-dvi2tty_man.diff
-detex_man.diff
-axohelp_man.diff
-upstream-xdvi-shell-escape
-upstream-svn58283-disable-pipe-write18
-upstream-svn58292-various-luatex-sec-fixes

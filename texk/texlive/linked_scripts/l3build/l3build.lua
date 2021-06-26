@@ -2,7 +2,7 @@
 
 --[[
 
-File l3build.lua Copyright (C) 2014-2020 The LaTeX3 Project
+File l3build.lua Copyright (C) 2014-2020 The LaTeX Project
 
 It may be distributed and/or modified under the conditions of the
 LaTeX Project Public License (LPPL), either version 1.3c of this
@@ -25,7 +25,7 @@ for those people who are interested.
 --]]
 
 -- Version information
-release_date = "2020-03-25"
+release_date = "2021-05-06"
 
 -- File operations are aided by the LuaFileSystem module
 local lfs = require("lfs")
@@ -79,18 +79,12 @@ elseif options["target"] == "version" then
   exit(0)
 end
 
--- Allow main function to be disabled 'higher up'
-main = main or stdmain
-
--- Load configuration file if running as a script
-if match(arg[0], "l3build$") or match(arg[0], "l3build%.lua$") then
-  -- Look for some configuration details
-  if fileexists("build.lua") then
-    dofile("build.lua")
-  else
-    print("Error: Cannot find configuration build.lua")
-    exit(1)
-  end
+-- Look for some configuration details
+if fileexists("build.lua") then
+  dofile("build.lua")
+else
+  print("Error: Cannot find configuration build.lua")
+  exit(1)
 end
 
 -- Load standard settings for variables:
@@ -107,6 +101,7 @@ testsuppdir   = escapepath(testsuppdir)
 builddir      = escapepath(builddir)
 distribdir    = escapepath(distribdir)
 localdir      = escapepath(localdir)
+resultdir     = escapepath(resultdir)
 testdir       = escapepath(testdir)
 typesetdir    = escapepath(typesetdir)
 unpackdir     = escapepath(unpackdir)
@@ -119,7 +114,7 @@ if options["epoch"] then
   forcecheckepoch = true
   forcedocepoch   = true
 end
-normalise_epoch()
+epoch = normalise_epoch(epoch)
 
 -- Sanity check
 check_engines()

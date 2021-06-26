@@ -29,6 +29,16 @@ with LuaTeX; if not, see <http://www.gnu.org/licenses/>.
 
 */
 
+void pdf_out_link_state(PDF pdf, halfword p)
+{
+    if (pdf_link_state(p) >= 0 && pdf_link_state(p) <= 1) {
+        pdf->link_state = pdf_link_state(p);
+    } else {
+        /* ignores so one can use them for whatever purpose */
+    }
+}
+
+
 void push_link_level(PDF pdf, halfword p)
 {
     if (pdf->link_stack_ptr >= pdf_max_link_level)
@@ -96,7 +106,16 @@ void end_link(PDF pdf, halfword p)
                     pdf_ann_right(q) = pos.h + pdf_link_margin;
                     break;
                 case dir_TRT:
-                    pdf_ann_left(q) = pos.h - pdf_link_margin;
+                    /*tex 
+                       In version 1.13.0 the test for swapping was moved
+                       to the moment we write the rectangle, but it did not
+                       consider this case.
+                    */ 
+                    if (pdf_ann_left(q)<pdf_ann_right(q)) {
+                      pdf_ann_left(q) = pos.h - pdf_link_margin;
+                    } else {
+                      pdf_ann_right(q) = pos.h - pdf_link_margin;
+                    } 
                     break;
                 case dir_LTL:
                 case dir_RTT:

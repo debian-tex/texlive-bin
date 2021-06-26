@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-#   latexindent.pl, version 3.8, 2020-03-21
+#   latexindent.pl, version 3.10, 2021-06-19
 #
 #	This program is free software: you can redistribute it and/or modify
 #	it under the terms of the GNU General Public License as published by
@@ -62,15 +62,6 @@ GetOptions (
 if($switches{readLocalSettings} and scalar(@ARGV) < 1) {
     push(@ARGV,$switches{readLocalSettings});
     $switches{readLocalSettings} = '';
-}
-
-# default value of readLocalSettings
-#
-#       latexindent -l myfile.tex
-#
-# means that we wish to use localSettings.yaml
-if(defined($switches{readLocalSettings}) and ($switches{readLocalSettings} eq '')){
-    $switches{readLocalSettings} = 'localSettings.yaml';
 }
 
 # allow STDIN as input, if a filename is not present

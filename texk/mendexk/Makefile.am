@@ -20,6 +20,7 @@ mendex_SOURCES = \
 	ktable.h \
 	main.c \
 	mendex.h \
+	version.h \
 	pageread.c \
 	qsort.c \
 	qsort.h \
@@ -56,6 +57,8 @@ EXTRA_DIST += $(TESTS)
 
 ## tests/mendex.test
 EXTRA_DIST += tests/foo.idx tests/foo.ind \
-	tests/uni.idx tests/uni.dict tests/uni.ist tests/uni.ind
-DISTCLEANFILES = foo.* uni.*
+	tests/uni.idx tests/uni.dict tests/uni.ist tests/uni.ind \
+	tests/pprec0.ist tests/pprec1.ist tests/pprec2.ist tests/pprecA.idx \
+	tests/pprecA-0.ind tests/pprecA-1.ind tests/pprecA-2.ind
+DISTCLEANFILES = foo.* uni.* pprec*.*
 

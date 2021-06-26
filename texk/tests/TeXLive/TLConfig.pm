@@ -1,11 +1,12 @@
+# $Id: TLConfig.pm 59225 2021-05-16 17:41:12Z karl $
 # TeXLive::TLConfig.pm - module exporting configuration values
-# Copyright 2007-2020 Norbert Preining
+# Copyright 2007-2021 Norbert Preining
 # This file is licensed under the GNU General Public License version 2
 # or any later version.
 
 package TeXLive::TLConfig;
 
-my $svnrev = '$Revision: 54123 $';
+my $svnrev = '$Revision: 59225 $';
 my $_modulerevision = ($svnrev =~ m/: ([0-9]+) /) ? $1 : "unknown";
 sub module_revision { return $_modulerevision; }
 
@@ -34,6 +35,7 @@ BEGIN {
     $BlockSize
     $Archive
     $TeXLiveServerURL
+    $TeXLiveServerURLRegexp
     $TeXLiveServerPath
     $TeXLiveURL
     @CriticalPackagesList
@@ -58,7 +60,7 @@ BEGIN {
 
 # the year of our release, will be used in the location of the
 # network packages, and in menu names, and other places.
-$ReleaseYear = 2020;
+$ReleaseYear = 2021;
 
 # users can upgrade from this year to the current year; might be the
 # same as the release year, or any number of releases earlier.
@@ -100,7 +102,8 @@ our $MaxLWPErrors = 5;
 our $MaxLWPReinitCount = 10;
 
 our $Archive = "archive";
-our $TeXLiveServerURL = "http://mirror.ctan.org";
+our $TeXLiveServerURL = "https://mirror.ctan.org";
+our $TeXLiveServerURLRegexp = 'https?://mirror\.ctan\.org';
 # from 2009 on we try to put them all into tlnet directly without any
 # release year since we hope that we can switch over to 2010 on the fly
 # our $TeXLiveServerPath = "systems/texlive/tlnet/$ReleaseYear";
@@ -122,9 +125,10 @@ if ($^O =~ /^MSWin/i) {
 our @AcceptedFallbackDownloaders = qw/curl wget/;
 our %FallbackDownloaderProgram = ( 'wget' => 'wget', 'curl' => 'curl');
 our %FallbackDownloaderArgs = (
-  'curl' => ['--user-agent', 'texlive/curl', '--retry', '4', '--retry-delay', '5',
-             '--fail', '--location',
-             '--connect-timeout', "$NetworkTimeout", '--silent', '--output'],
+  'curl' => ['--user-agent', 'texlive/curl',
+             '--retry', '4', '--retry-delay', '4',
+             '--connect-timeout', "$NetworkTimeout", 
+             '--fail', '--location', '--silent', '--output'],
   'wget' => ['--user-agent=texlive/wget', '--tries=4',
              "--timeout=$NetworkTimeout", '-q', '-O'],
 );
@@ -273,7 +277,7 @@ our $ChecksumExtension = "sha512";
 
 =head1 NAME
 
-C<TeXLive::TLConfig> -- TeX Live Configuration module
+C<TeXLive::TLConfig> -- TeX Live configuration parameters
 
 =head1 SYNOPSIS
 
@@ -284,12 +288,12 @@ C<TeXLive::TLConfig> -- TeX Live Configuration module
 The L<TeXLive::TLConfig> module contains definitions of variables 
 configuring all of TeX Live.
 
-=over 4
-
-=head1 EXPORTED VARIABLES
+=head2 EXPORTED VARIABLES
 
 All of the following variables are pulled into the callers namespace,
 i.e., are declared with C<EXPORT> (and C<EXPORT_OK>).
+
+=over 4
 
 =item C<@TeXLive::TLConfig::MetaCategories>
 
@@ -340,10 +344,11 @@ The assumed block size, currently 4k.
 These values specify where to find packages.
 
 =item C<$TeXLive::TLConfig::TeXLiveServerURL>
+=item C<$TeXLive::TLConfig::TeXLiveServerURLRegexp>
 =item C<$TeXLive::TLConfig::TeXLiveServerPath>
 
 C<TeXLiveURL> is concatenated from these values, with a string between.
-The defaults are respectively, C<http://mirror.ctan.org> and
+The defaults are respectively, C<https://mirror.ctan.org> and
 C<systems/texlive/tlnet/>.
 
 =item C<@TeXLive::TLConfig::CriticalPackagesList>
@@ -372,7 +377,7 @@ C<Master/tlpkg/doc/>.
 =head1 AUTHORS AND COPYRIGHT
 
 This script and its documentation were written for the TeX Live
-distribution (L<http://tug.org/texlive>) and both are licensed under the
+distribution (L<https://tug.org/texlive>) and both are licensed under the
 GNU General Public License Version 2 or later.
 
 =cut

@@ -1,5 +1,6 @@
-texlive-bin (2020.20200327.54578-8) UNRELEASED; urgency=medium
+texlive-bin (2021.20210626.59705-1) UNRELEASED; urgency=medium
 
+  [ Debian Janitor ]
   * Remove constraints unnecessary since stretch:
     + Build-Depends: Drop versioned constraint on autoconf, libtool and m4.
     + texlive-binaries: Drop versioned constraint on dpkg and tex-common in
@@ -11,7 +12,10 @@ texlive-bin (2020.20200327.54578-8) UNRELEASED; urgency=medium
     + libkpathsea6: Drop versioned constraint on texlive-base in Breaks.
     + libptexenc1: Drop versioned constraint on texlive-base in Breaks.
 
- -- Debian Janitor <janitor@jelmer.uk>  Thu, 22 Apr 2021 16:29:38 -0000
+  [ Norbert Preining ]
+  * New upstream TeX Live 2021
+
+ -- Norbert Preining <norbert@preining.info>  Sat, 26 Jun 2021 17:08:07 +0900
 
 texlive-bin (2020.20200327.54578-7) unstable; urgency=medium
 

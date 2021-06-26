@@ -61,7 +61,10 @@
 % (2018-04-14) HK  pTeX p3.8.1 Bug fix for discontinuous KINSOKU table.
 % (2019-02-03) HK  pTeX p3.8.2 Change \inhibitglue, add \disinhibitglue.
 % (2019-10-14) HY  pTeX p3.8.3 Allow getting \kansujichar.
-%
+% (2021-02-18) HK  pTeX p3.9.0 Add \ifjfont and \iftfont (in 2020-02-06, by HY),
+%                  Bug fix for getting \kansujichar (in 2020-02-09 = TL20),
+%                  based on TeX 3.141592653 (for TL21).
+% (2021-06-25) HY  pTeX p3.9.1 Various fixes
 
 @x
 % Here is TeX material that gets inserted after \input webmac
@@ -75,11 +78,11 @@
 @d banner_k==TeX_banner_k
 @y
 @d pTeX_version=3
-@d pTeX_minor_version=8
-@d pTeX_revision==".3"
-@d pTeX_version_string=='-p3.8.3' {current \pTeX\ version}
+@d pTeX_minor_version=9
+@d pTeX_revision==".1"
+@d pTeX_version_string=='-p3.9.1' {current \pTeX\ version}
 @#
-@d pTeX_banner=='This is pTeX, Version 3.14159265',pTeX_version_string
+@d pTeX_banner=='This is pTeX, Version 3.141592653',pTeX_version_string
 @d pTeX_banner_k==pTeX_banner
   {printed when \pTeX\ starts}
 @#
@@ -793,7 +796,7 @@ kern_node,math_node,penalty_node: begin r:=get_node(small_node_size);
 @d hskip=26 {horizontal glue ( \.{\\hskip}, \.{\\hfil}, etc.~)}
 @d vskip=27 {vertical glue ( \.{\\vskip}, \.{\\vfil}, etc.~)}
 @d mskip=28 {math glue ( \.{\\mskip} )}
-@d kern=29 {fixed space ( \.{\\kern})}
+@d kern=29 {fixed space ( \.{\\kern} )}
 @d mkern=30 {math kern ( \.{\\mkern} )}
 @d leader_ship=31 {use a box ( \.{\\shipout}, \.{\\leaders}, etc.~)}
 @d halign=32 {horizontal table alignment ( \.{\\halign} )}
@@ -804,7 +807,7 @@ kern_node,math_node,penalty_node: begin r:=get_node(small_node_size);
 @d hskip=remove_item+1 {horizontal glue ( \.{\\hskip}, \.{\\hfil}, etc.~)}
 @d vskip=hskip+1 {vertical glue ( \.{\\vskip}, \.{\\vfil}, etc.~)}
 @d mskip=vskip+1 {math glue ( \.{\\mskip} )}
-@d kern=mskip+1 {fixed space ( \.{\\kern})}
+@d kern=mskip+1 {fixed space ( \.{\\kern} )}
 @d mkern=kern+1 {math kern ( \.{\\mkern} )}
 @d leader_ship=mkern+1 {use a box ( \.{\\shipout}, \.{\\leaders}, etc.~)}
 @d halign=leader_ship+1 {horizontal table alignment ( \.{\\halign} )}
@@ -1247,10 +1250,27 @@ if n<math_code_base then
     begin print_esc("xspcode"); print_int(n-auto_xsp_code_base);
     end
   else if n<kinsoku_base then
-    begin print("(inhibitxspcode table) "); print_int(n-inhibit_xsp_code_base);
+    begin print("inhibitxspcode table "); print_int(n-inhibit_xsp_code_base);
+      print(", type=");
+      case eq_type(n) of
+        0: print("both");   { |inhibit_both| }
+        1: print("before"); { |inhibit_previous| }
+        2: print("after");  { |inhibit_after| }
+        3: print("none");   { |inhibit_none| }
+        4: print("unused"); { |inhibit_unused| }
+      end; {there are no other cases}
+      print(", code");
     end
   else if n<kansuji_base then
-    begin print("(kinsoku table) "); print_int(n-kinsoku_base);
+    begin print("kinsoku table "); print_int(n-kinsoku_base);
+      print(", type=");
+      case eq_type(n) of
+        0: print("no");
+        1: print("pre");    { |pre_break_penalty_code| }
+        2: print("post");   { |post_break_penalty_code| }
+        3: print("unused"); { |kinsoku_unused_code| }
+      end; {there are no other cases}
+      print(", code");
     end
   else if n<lc_code_base then
     begin print_esc("kansujichar"); print_int(n-kansuji_base);
@@ -1270,15 +1290,6 @@ if n<math_code_base then
 @d holding_inserts_code=53 {do not remove insertion nodes from \.{\\box255}}
 @d error_context_lines_code=54 {maximum intermediate line pairs shown}
 @d tex_int_pars=55 {total number of \TeX's integer parameters}
-@#
-@d web2c_int_base=tex_int_pars {base for web2c's integer parameters}
-@d char_sub_def_min_code=web2c_int_base {smallest value in the charsubdef list}
-@d char_sub_def_max_code=web2c_int_base+1 {largest value in the charsubdef list}
-@d tracing_char_sub_def_code=web2c_int_base+2 {traces changes to a charsubdef def}
-@d web2c_int_pars=web2c_int_base+3 {total number of web2c's integer parameters}
-@#
-@d int_pars=web2c_int_pars {total number of integer parameters}
-@d count_base=int_base+int_pars {256 user \.{\\count} registers}
 @y
 @d cur_fam_code=44 {current family}
 @d cur_jfam_code=45 {current kanji family}
@@ -1297,11 +1308,7 @@ if n<math_code_base then
 @d text_baseline_shift_factor_code=57
 @d script_baseline_shift_factor_code=58
 @d scriptscript_baseline_shift_factor_code=59
-@d char_sub_def_min_code=60 {smallest value in the charsubdef list}
-@d char_sub_def_max_code=61 {largest value in the charsubdef list}
-@d tracing_char_sub_def_code=62 {traces changes to a charsubdef def}
-@d int_pars=63 {total number of integer parameters}
-@d count_base=int_base+int_pars {256 user \.{\\count} registers}
+@d tex_int_pars=60 {total number of \TeX's integer parameters}
 @z
 
 @x [17.236] l.5167 - pTeX: cur_jfam, |jchr_widow_penalty|
@@ -1423,7 +1430,10 @@ end;
 tats
 @y
 else if n<kinsoku_penalty_base then @<Show equivalent |n|, in region 6@>
-else if n<=eqtb_size then print("kinsoku")
+else if n<=eqtb_size then begin
+  print("kinsoku table "); print_int(n-kinsoku_penalty_base);
+  print(", penalty="); print_int(eqtb[n].int);
+  end
 else print_char("?"); {this can't happen either}
 end;
 tats
@@ -2553,7 +2563,7 @@ else begin
   end
 @z
 
-@x [28.502] l.10138 - pTeX: ifx : Test character : KANJI character
+@x [28.502] l.10138 - pTeX: if[cat] : Test character : KANJI character
 if (cur_cmd>active_char)or(cur_chr>255) then {not a character}
   begin m:=relax; n:=256;
   end
@@ -2565,7 +2575,7 @@ if (cur_cmd>active_char)or(cur_chr>255) then
   end;
 @y
 if (cur_cmd=kanji)or(cur_cmd=kana)or(cur_cmd=other_kchar) then
-  begin n:=cur_chr; m:=kcat_code(kcatcodekey(n));
+  begin m:=cur_cmd; n:=cur_chr;
   end
 else if (cur_cmd>active_char)or(cur_chr>255) then
   begin m:=relax; n:=max_cjk_val;
@@ -2574,8 +2584,8 @@ else  begin m:=cur_cmd; n:=cur_chr;
   end;
 get_x_token_or_active_char;
 if (cur_cmd=kanji)or(cur_cmd=kana)or(cur_cmd=other_kchar) then
-  begin cur_cmd:=kcat_code(kcatcodekey(cur_chr));
-  end
+  begin cur_cmd:=cur_cmd;
+  end {dummy}
 else if (cur_cmd>active_char)or(cur_chr>255) then
   begin cur_cmd:=relax; cur_chr:=max_cjk_val;
   end;
@@ -3357,10 +3367,20 @@ endcases;
 @z
 
 @x [33.647] l.13515 - pTeX: cur_kanji_skip, cur_xkanji_skip, last_disp
-@< Glob...@>=
+@ If the global variable |adjust_tail| is non-null, the |hpack| routine
+also removes all occurrences of |ins_node|, |mark_node|, and |adjust_node|
+items and appends the resulting material onto the list that ends at
+location |adjust_tail|.
+
+@<Glob...@>=
 @!adjust_tail:pointer; {tail of adjustment list}
 @y
-@< Glob...@>=
+@ If the global variable |adjust_tail| is non-null, the |hpack| routine
+also removes all occurrences of |ins_node|, |mark_node|, and |adjust_node|
+items and appends the resulting material onto the list that ends at
+location |adjust_tail|.
+
+@<Glob...@>=
 @!adjust_tail:pointer; {tail of adjustment list}
 @!last_disp:scaled; {displacement at end of list}
 @!cur_kanji_skip:pointer;
@@ -3754,7 +3774,7 @@ else  begin if (qo(cur_c)>=font_bc[cur_f])and(qo(cur_c)<=font_ec[cur_f]) then
   else cur_i:=null_character;
   if not(char_exists(cur_i)) then
     begin char_warning(cur_f,qo(cur_c));
-    math_type(a):=empty;
+    math_type(a):=empty; cur_i:=null_character;
     end;
   end;
 @y
@@ -3765,7 +3785,7 @@ else  begin if font_dir[cur_f]<>dir_default then
   else cur_i:=null_character;
   if not(char_exists(cur_i)) then
     begin char_warning(cur_f,qo(cur_c));
-    math_type(a):=empty;
+    math_type(a):=empty; cur_i:=null_character;
     end;
   end;
 @z
@@ -4186,10 +4206,10 @@ first_use:=true; chain:=false;
 delete_glue_ref(cur_kanji_skip); delete_glue_ref(cur_xkanji_skip);
 cur_kanji_skip:=space_ptr(head); cur_xkanji_skip:=xspace_ptr(head);
 add_glue_ref(cur_kanji_skip); add_glue_ref(cur_xkanji_skip);
-link(temp_head):=link(head);
 if not is_char_node(tail)and(type(tail)=disp_node) then
   begin free_node(tail,small_node_size); tail:=prev_node; link(tail):=null
   end;
+link(temp_head):=link(head);
 if is_char_node(tail) then tail_append(new_penalty(inf_penalty))
 else if type(tail)<>glue_node then tail_append(new_penalty(inf_penalty))
 @z
@@ -4534,7 +4554,7 @@ loop@+  begin if is_char_node(s) then
       end else c:=qo(character(s));
     end
   else if type(s)=disp_node then goto continue
-  else if (type(s)=penalty_node)and(not subtype(s)=normal) then goto continue
+  else if (type(s)=penalty_node)and(subtype(s)<>normal) then goto continue
 @z
 
 @x [40.899] l.18248 - pTeX: disp_node
@@ -5275,7 +5295,10 @@ mode:=hmode; space_factor:=1000; set_cur_lang; clang:=cur_lang;
   begin if head=tail then pop_nest {null paragraphs are ignored}
   else line_break(widow_penalty);
 @y
-  begin if head=tail then pop_nest {null paragraphs are ignored}
+  begin if (link(head)=tail)and(not is_char_node(tail)and(type(tail)=disp_node)) then
+    begin free_node(tail,small_node_size); tail:=head; link(head):=null; end;
+    { |disp_node|-only paragraphs are ignored }
+  if head=tail then pop_nest {null paragraphs are ignored}
   else begin adjust_hlist(head,true); line_break(widow_penalty)
        end;
 @z
@@ -5733,6 +5756,11 @@ direction:=-abs(direction);
 @x [48.1145] l.22435 - pTeX: Call adjust_hlist at begin of display
 else  begin line_break(display_widow_penalty);@/
 @y
+else if (link(head)=tail)and(not is_char_node(tail)and(type(tail)=disp_node)) then
+  begin free_node(tail,small_node_size); tail:=head; link(head):=null;
+  pop_nest; w:=-max_dimen;
+  end
+  { |disp_node|-only paragraphs are ignored }
 else  begin adjust_hlist(head,true); line_break(display_widow_penalty);@/
 @z
 
@@ -6108,13 +6136,12 @@ def_code: begin
     print_int(n);
     if m=0 then
       begin help1("I'm going to use 0 instead of that illegal code value.");@/
-      error;
+      error; cur_val:=0;
       end
     else
       begin help1("I'm going to use 16 instead of that illegal code value.");@/
-      error;
+      error; cur_val:=16;
       end;
-    cur_val:=m;
   end;
   if p<math_code_base then define(p,data,cur_val)
   else if p<del_code_base then define(p,data,hi(cur_val))
@@ -6187,18 +6214,18 @@ if (t<cs_token_flag+single_base)and(not check_kanji(t)) then
 @z
 
 @x [49.1291] l.24467 - pTeX: show_mode
-@d show_lists=3 { \.{\\showlists} }
+@d show_lists_code=3 { \.{\\showlists} }
 @y
-@d show_lists=3 { \.{\\showlists} }
+@d show_lists_code=3 { \.{\\showlists} }
 @d show_mode=4 { \.{\\showmode} }
 @z
 
 @x [49.1291] l.24476 - pTeX: show_mode
-primitive("showlists",xray,show_lists);
-@!@:show_lists_}{\.{\\showlists} primitive@>
+primitive("showlists",xray,show_lists_code);
+@!@:show_lists_code_}{\.{\\showlists} primitive@>
 @y
-primitive("showlists",xray,show_lists);
-@!@:show_lists_}{\.{\\showlists} primitive@>
+primitive("showlists",xray,show_lists_code);
+@!@:show_lists_code_}{\.{\\showlists} primitive@>
 primitive("showmode",xray,show_mode);
 @!@:show_mode_}{\.{\\showmode} primitive@>
 @z
@@ -6323,14 +6350,60 @@ undump_things(char_base[null_font], font_ptr+1-null_font);
   ctype_base[null_font]:=0; char_base[null_font]:=0; width_base[null_font]:=0;
 @z
 
-@x [53.????] do_extension, inhibit_glue_flag
-begin case cur_chr of
-open_node:@<Implement \.{\\openout}@>;
+@x [53.????] new_write_whatsit, inhibit_glue_flag
+write_stream(tail):=cur_val;
+end;
 @y
-begin inhibit_glue_flag:=false;
-case cur_chr of
-open_node:@<Implement \.{\\openout}@>;
+write_stream(tail):=cur_val;
+inhibit_glue_flag:=false;
+end;
 @z
+
+@x [53.????] Implement \special, inhibit_glue_flag
+@<Implement \.{\\special}@>=
+begin new_whatsit(special_node,write_node_size); write_stream(tail):=null;
+p:=scan_toks(false,true); write_tokens(tail):=def_ref;
+end
+@y
+@<Implement \.{\\special}@>=
+begin new_whatsit(special_node,write_node_size); write_stream(tail):=null;
+p:=scan_toks(false,true); write_tokens(tail):=def_ref;
+inhibit_glue_flag:=false;
+end
+@z
+
+@x [53.????] Implement \immediate, inhibit_glue_flag
+  begin p:=tail; do_extension; {append a whatsit node}
+  out_what(tail); {do the action immediately}
+  flush_node_list(tail); tail:=p; link(p):=null;
+  end
+@y
+  begin k:=inhibit_glue_flag;
+  p:=tail; do_extension; {append a whatsit node}
+  out_what(tail); {do the action immediately}
+  flush_node_list(tail); tail:=p; link(p):=null;
+  inhibit_glue_flag:=k;
+  end
+@z
+
+@x [53.????] fix_language, inhibit_glue_flag
+if l<>clang then
+  begin new_whatsit(language_node,small_node_size);
+@y
+if l<>clang then
+  begin inhibit_glue_flag:=false;
+  new_whatsit(language_node,small_node_size);
+@z
+
+@x [53.????] set_language, inhibit_glue_flag
+if abs(mode)<>hmode then report_illegal_case
+else begin new_whatsit(language_node,small_node_size);
+@y
+if abs(mode)<>hmode then report_illegal_case
+else begin inhibit_glue_flag:=false;
+  new_whatsit(language_node,small_node_size);
+@z
+
 
 @x [53.1376] l.26309 - pTeX:
 @<Glob...@> =
@@ -6530,19 +6603,23 @@ assign_inhibit_xsp_code: print_esc("inhibitxspcode");
 @ @<Declare procedures needed in |scan_something_internal|@>=
 function get_inhibit_pos(c:KANJI_code; n:small_number):pointer;
 label done, done1;
-var p,s:pointer;
-begin s:=calc_pos(c); p:=s;
+var p,pp,s:pointer;
+begin s:=calc_pos(c); p:=s; pp:=no_entry;
 if n=new_pos then
   begin repeat
-  if (inhibit_xsp_type(p)=inhibit_unused)or(inhibit_xsp_code(p)=0)
-    or(inhibit_xsp_code(p)=c) then goto done;
+  if inhibit_xsp_code(p)=c then goto done;  { found, update there }
+  if inhibit_xsp_code(p)=0 then             { no further scan needed }
+    begin if pp<>no_entry then p:=pp; goto done; end;
+  if inhibit_xsp_type(p)=inhibit_unused then
+    if pp=no_entry then pp:=p; { save the nearest unused hash }
   incr(p); if p>255 then p:=0;
-  until s=p; p:=no_entry;
+  until s=p;
+  p:=pp;
   end
 else
   begin repeat
-  if inhibit_xsp_code(p)=0 then goto done1
-  else if (inhibit_xsp_type(p)<>inhibit_unused)and(inhibit_xsp_code(p)=c) then goto done;
+  if inhibit_xsp_code(p)=0 then goto done1;
+  if inhibit_xsp_code(p)=c then goto done;
   incr(p); if p>255 then p:=0;
   until s=p;
 done1: p:=no_entry;
@@ -6577,6 +6654,7 @@ end;
 begin scan_int; q:=get_inhibit_pos(tokanji(cur_val),cur_pos);
 cur_val_level:=int_val; cur_val:=inhibit_none;
 if q<>no_entry then cur_val:=inhibit_xsp_type(q);
+if cur_val>inhibit_none then cur_val:=inhibit_none;
 end
 
 @ The \.{\\prebreakpenalty} is used to specified amount of penalties inserted
@@ -6602,8 +6680,8 @@ assign_kinsoku: case chr_code of
 @ @<Declare procedures needed in |scan_something_internal|@>=
 function get_kinsoku_pos(c:KANJI_code; n:small_number):pointer;
 label done, done1;
-var p,s:pointer;
-begin s:=calc_pos(c); p:=s;
+var p,pp,s:pointer;
+begin s:=calc_pos(c); p:=s; pp:=no_entry;
 @!debug
 print_ln; print("c:="); print_int(c); print(", p:="); print_int(s);
 if p+kinsoku_base<0 then
@@ -6612,16 +6690,19 @@ if p+kinsoku_base<0 then
 gubed
 if n=new_pos then
   begin repeat
-  if (kinsoku_type(p)=0)or(kinsoku_type(p)=kinsoku_unused_code)
-    or(kinsoku_code(p)=c) then goto done;
+  if kinsoku_code(p)=c then goto done;  { found, update there }
+  if kinsoku_type(p)=0 then             { no further scan needed }
+    begin if pp<>no_entry then p:=pp; goto done; end;
+  if kinsoku_type(p)=kinsoku_unused_code then
+    if pp=no_entry then pp:=p; { save the nearest unused hash }
   incr(p); if p>255 then p:=0;
   until s=p;
-  p:=no_entry;
+  p:=pp;
   end
 else
   begin repeat
-  if kinsoku_type(p)=0 then goto done1
-  else if (kinsoku_type(p)<>kinsoku_unused_code)and(kinsoku_code(p)=c) then goto done;
+  if kinsoku_type(p)=0 then goto done1;
+  if kinsoku_code(p)=c then goto done;
   incr(p); if p>255 then p:=0;
   until s=p;
 done1: p:=no_entry;

@@ -665,7 +665,7 @@ void read_pdf_info(image_dict * idict)
         then have to changed drastically anyway.
     */
     pdf_major_version_found = ppdoc_version_number(pdfe,&pdf_minor_version_found);
-    if ((100 * pdf_major_version_found + pdf_major_version_found) > (100 * img_pdfmajorversion(idict) + img_pdfminorversion(idict))) {
+    if ((100 * pdf_major_version_found + pdf_minor_version_found) > (100 * img_pdfmajorversion(idict) + img_pdfminorversion(idict))) {
         const char *msg = "PDF inclusion: found PDF version '%d.%d', but at most version '%d.%d' allowed";
         if (img_errorlevel(idict) > 0) {
             formatted_error("pdf inclusion",msg, pdf_major_version_found, pdf_minor_version_found, img_pdfmajorversion(idict), img_pdfminorversion(idict));
@@ -868,7 +868,7 @@ void write_epdf(PDF pdf, image_dict * idict, int suppress_optional_info)
         copy selected items in Page dictionary
     */
     for (i = 0; pagedictkeys[i] != NULL; i++) {
-        obj = ppdict_rget_obj(pageDict, pagedictkeys[i]);
+        obj = ppdict_get_obj(pageDict, pagedictkeys[i]);
         if (obj != NULL) {
             pdf_add_name(pdf, pagedictkeys[i]);
             /*

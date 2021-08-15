@@ -1,5 +1,5 @@
 # sources are available in the very same directory where
 # the .js files are
-texlive-bin source: source-is-missing texk/web2c/luatexdir/luapplib/doc/_build/html/_static/css3-mediaqueries.js line length is 14939 characters (>512)
-texlive-bin source: source-is-missing texk/web2c/luatexdir/luapplib/doc/_build/html/_static/jquery.js line length is 32033 characters (>512)
-texlive-bin source: source-is-missing texk/web2c/luatexdir/luapplib/doc/_build/html/_static/underscore.js line length is 519 characters (>512)
+texlive-bin source: source-is-missing libs/pplib/pplib-src/doc/_build/html/_static/css3-mediaqueries.js line length is 14939 characters (>512)
+texlive-bin source: source-is-missing libs/pplib/pplib-src/doc/_build/html/_static/jquery.js line length is 32033 characters (>512)
+texlive-bin source: source-is-missing libs/pplib/pplib-src/doc/_build/html/_static/underscore.js line length is 519 characters (>512)

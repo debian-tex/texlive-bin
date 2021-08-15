@@ -14,6 +14,7 @@ texlive-bin (2021.20210626.59705-1) UNRELEASED; urgency=medium
 
   [ Norbert Preining ]
   * New upstream TeX Live 2021
+  * Update lintian override
 
  -- Norbert Preining <norbert@preining.info>  Sat, 26 Jun 2021 17:08:07 +0900
 

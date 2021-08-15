@@ -1,4 +1,4 @@
-texlive-bin (2021.20210626.59705-1) UNRELEASED; urgency=medium
+texlive-bin (2021.20210626.59705-1) unstable; urgency=medium
 
   [ Debian Janitor ]
   * Remove constraints unnecessary since stretch:
@@ -16,7 +16,7 @@ texlive-bin (2021.20210626.59705-1) UNRELEASED; urgency=medium
   * New upstream TeX Live 2021
   * Update lintian override
 
- -- Norbert Preining <norbert@preining.info>  Sat, 26 Jun 2021 17:08:07 +0900
+ -- Norbert Preining <norbert@preining.info>  Sun, 15 Aug 2021 22:38:02 +0900
 
 texlive-bin (2020.20200327.54578-7) unstable; urgency=medium
 

@@ -6,7 +6,7 @@ debian-remove-unneeded-x-libs-linking
 #disable-seetex-stdin-tests
 debian-SDE-docs-in-tex-etex-manpage
 debian-t4ht-correct-expansion
-debian-dvisvgm-fix-missing-libs
+#debian-dvisvgm-fix-missing-libs
 # disabled for now
 #poppler-0.64
 # to be sent upstream at some point

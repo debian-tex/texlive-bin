@@ -49,9 +49,8 @@ Depends: libptexenc1 (>= ${source:Version}),
   libtexlua53 (<< ${source:Version}.1~),
   libtexluajit2 (>= ${source:Version}) [amd64 armel armhf hurd-i386 i386 kfreebsd-amd64 kfreebsd-i386 powerpc],
   libtexluajit2 (<< ${source:Version}.1~) [amd64 armel armhf hurd-i386 i386 kfreebsd-amd64 kfreebsd-i386 powerpc],
-  t1utils,
-  ${shlibs:Depends}, ${misc:Depends},
-  tex-common, perl:any, dpkg | install-info
+  t1utils, tex-common, perl:any,
+  ${shlibs:Depends}, ${misc:Depends}
 Recommends: texlive-base, dvisvgm
 Replaces: texlive-metapost (<< 2010), ptex-bin, mendexk, jmpost, luatex (<< 2014), gregorio (<= 2.3-1), texlive-lang-japanese (<< 2017), texlive-extra-utils (<< 2020.20200329), texlive-luatex (<< 2020.20200329)
 Conflicts: mendexk, makejvf, jmpost

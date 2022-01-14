@@ -1,9 +1,12 @@
-#!/bin/sh -e
+#!/bin/sh
 # texlive-binaries postinst, created 2009 by Norbert Preining
 # probably not copyrightable as it looks now, but anyway the code maybe 
 # freely copied, distributed and/or modified
 
 # deactivate the xdvi.bin alternative
+
+set -e
+
 case "$1" in 
   upgrade)
     ;;

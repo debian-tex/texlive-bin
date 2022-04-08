@@ -41,3 +41,5 @@ hard-coded in make-orig-tar, and needs to be updated for each
 new release year.
 
 [1] https://tug.org/texlive/svn/
+[2] https://git.texlive.info/texlive/
+[3] https://github.com/TeX-Live/texlive-source

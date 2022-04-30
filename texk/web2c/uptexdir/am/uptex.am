@@ -1,6 +1,7 @@
+## $Id: uptex.am 61784 2022-01-29 10:40:22Z hironobu $
 ## texk/web2c/uptexdir/am/uptex.am: Makefile fragment for upTeX.
 ##
-## Copyright 2016-2021 Karl Berry <tex-live@tug.org>
+## Copyright 2016-2022 Karl Berry <tex-live@tug.org>
 ## Copyright 2011-2015 Peter Breitenlohner <tex-live@tug.org>
 ## You may freely use, modify and/or distribute this file.
 
@@ -52,9 +53,9 @@ uptex-pool.c: uptex.pool uptexd.h $(makecpool_stamp)
 
 # Tangling upTeX
 uptex.p uptex.pool: uptex-tangle
-	@$(texmf_tangle) uptex uptex
+	$(texmf_tangle) uptex uptex
 uptex-tangle: tangle$(EXEEXT) uptex.web uptex.ch tangle-sh
-	@$(texmf_tangle) uptex uptex
+	$(texmf_tangle) uptex uptex
 
 # Extract uptex version
 $(srcdir)/uptexdir/uptex_version.h: @MAINTAINER_MODE_TRUE@ uptexdir/uptex-m.ch
@@ -68,6 +69,7 @@ uptex_web_srcs = \
 	tex.web \
 	tex.ch \
 	tracingstacklevels.ch \
+	partoken.ch \
 	zlib-fmt.ch
 
 # Generate uptex.ch
@@ -170,7 +172,8 @@ upweb_tests = \
 	uptexdir/yokotate.test \
 	uptexdir/newjfm.test \
 	uptexdir/uparse.test \
-	uptexdir/gkhuge.test
+	uptexdir/gkhuge.test \
+	uptexdir/upkcat.test
 uptexdir/upbibtex.log: upbibtex$(EXEEXT)
 uptexdir/updvitype.log: updvitype$(EXEEXT)
 uptexdir/uppltotf.log: uppltotf$(EXEEXT)
@@ -226,3 +229,4 @@ uptrip-clean:
 
 DISTCLEANFILES += uptrip.diffs
 
+# (end of uptex.am)

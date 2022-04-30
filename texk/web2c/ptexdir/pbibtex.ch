@@ -19,13 +19,23 @@
 % 10/30/92      last update for JBibTeX 0.31 for bug fix by Shouichi Matsui
 % 11/02/94      Version 0.32 for use with web2c 6.1, by Takafumi Sakurai
 %
+% 2002          Version 0.33 add kanji option by ASCII Corporation
+%
 % 2009          pTeXenc, pbibtex N. Tsuchimura
+% 2010          Version 0.99d of BibTeX for TeX Live
+%
+% 2022-02-08    Version 0.34 by H. Yamashita
+%   * Avoid breaking BBL lines at white space after a Japanese character, to
+%     preserve spacing within BIB entry for subsequent pTeX line-end operations.
+% 2022-02-20    Still version 0.34 by H. Yamashita (-> TL'22 version)
+%   * Improve substring$ to truncate at least one character when trying to
+%     start counting from the middle byte of the first or last Japanese character.
 
 @x [0] only print chnages
 \def\title{\BibTeX\ }
 @y
 \let\maybe=\iffalse
-\def\title{J\BibTeX\ 0.33 Changes for C Version \BibTeX\ }
+\def\title{J\BibTeX\ 0.34 Changes for C Version \BibTeX\ }
 @z
 
 @x
@@ -35,7 +45,7 @@
 @y
  \def\titlepage{F}
  \centerline{\:\titlefont The {\:\ttitlefont J\BibTeX} preprocessor}
- \vskip 15pt \centerline{(Version 0.33 based on C Version \BibTeX 0.99d---\today)} \vfill}
+ \vskip 15pt \centerline{(Version 0.99d-j0.34---\today)} \vfill}
 @z
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -46,7 +56,7 @@
 @d banner=='This is BibTeX, Version 0.99d' {printed when the program starts}
 @y
 @d my_name=='pbibtex'
-@d banner=='This is pBibTeX, Version 0.99d-j0.33'
+@d banner=='This is pBibTeX, Version 0.99d-j0.34'
   {printed when the program starts}
 @z
 
@@ -231,6 +241,25 @@ parse_arguments;
 @y
 init_kanji;
 parse_arguments;
+@z
+
+% pBibTeX: do not break at |white_space| after Japanese characters (2022-02-08 j0.34)
+@x "Break that line"
+while ((lex_class[out_buf[out_buf_ptr]] <> white_space) and
+                                        (out_buf_ptr >= min_print_line)) do
+    decr(out_buf_ptr);
+@y
+while (((lex_class[out_buf[out_buf_ptr]] <> white_space) or
+       (out_buf[out_buf_ptr-1] > 127)) and (out_buf_ptr >= min_print_line)) do
+    decr(out_buf_ptr);
+@z
+@x "Break that unbreakably long line"
+    if (lex_class[out_buf[out_buf_ptr]] <> white_space) then
+        incr(out_buf_ptr)
+@y
+    if (lex_class[out_buf[out_buf_ptr]] <> white_space) or
+      (out_buf[out_buf_ptr-1] > 127) then
+        incr(out_buf_ptr)
 @z
 
 @x Changes for JBibTeX by Shouichi Matsui [332]
@@ -443,10 +472,20 @@ begin
 procedure x_substring;
 label exit;
 var tps,tpe:pool_pointer; {temporary pointer}
+@!pop_lit2_saved: integer;
 begin
 @z
 
-@x Changes for JBibTeX by Shouichi Matsui [438]
+@x
+@<Form the appropriate substring@>=
+begin
+@y
+@<Form the appropriate substring@>=
+begin
+pop_lit2_saved := pop_lit2; {save before negate}
+@z
+
+@x Changes for JBibTeX by Shouichi Matsui [438] + fix (2022-02-20 j0.34)
 str_room(sp_end - sp_ptr);
 while (sp_ptr < sp_end) do                      {shift the substring}
     begin
@@ -456,27 +495,29 @@ while (sp_ptr < sp_end) do                      {shift the substring}
 @y
 { 2 bytes Kanji code break check }
 tps:=str_start[pop_lit3];
-while (tps < sp_ptr) do begin
-    if str_pool[tps] > 127
-    then tps := tps + 2
-    else incr(tps);
-end;
 tpe:=tps;
-while (tpe < sp_end) do begin
-    if str_pool[tpe] > 127
-    then tpe := tpe+2
-    else incr(tpe);
+while tpe < str_start[pop_lit3+1] do begin
+    if str_pool[tpe] > 127 then begin
+        if str_start[pop_lit3+1] < tpe+2 then
+            break;
+        tpe := tpe + 2;
+        end
+    else begin
+        if str_start[pop_lit3+1] < tpe+1 then
+            break;
+        tpe := tpe + 1;
+        end;
+    if tpe<=sp_ptr then
+        tps := tpe;
+    if sp_end<=tpe then break;
 end;
-if tps<>sp_ptr then begin
-    if tps>str_start[pop_lit3]
-    then decr(sp_ptr)
-    else incr(sp_ptr);
-end;
-if tpe<>sp_end then begin
-    if tpe<str_start[pop_lit3+1]
-    then incr(sp_end)
-    else decr(sp_end);
-end;
+if (pop_lit2_saved > 1) and (tps = str_start[pop_lit3])
+    then tps := tps + 2; {truncate at least one}
+if (pop_lit2_saved < -1) and (tpe = str_start[pop_lit3+1])
+    then tpe := tpe - 2; {truncate at least one}
+if tps > tpe then tpe := tps;
+sp_ptr := tps;
+sp_end := tpe;
 
 str_room(sp_end - sp_ptr);
 while (sp_ptr < sp_end) do                      {shift the substring}

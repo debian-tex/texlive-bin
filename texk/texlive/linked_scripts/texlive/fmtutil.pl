@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-# $Id: fmtutil.pl 59207 2021-05-15 13:58:40Z preining $
+# $Id: fmtutil.pl 60154 2021-08-03 21:55:56Z karl $
 # fmtutil - utility to maintain format files.
 # (Maintained in TeX Live:Master/texmf-dist/scripts/texlive.)
 # 
@@ -8,7 +8,7 @@
 # or any later version.
 #
 # History:
-# Original shell script (C) 2001 Thomas Esser, public domain
+# Original shell script 2001 Thomas Esser, public domain
 
 my $TEXMFROOT;
 
@@ -24,11 +24,11 @@ BEGIN {
   TeX::Update->import();
 }
 
-my $svnid = '$Id: fmtutil.pl 59207 2021-05-15 13:58:40Z preining $';
-my $lastchdate = '$Date: 2021-05-15 15:58:40 +0200 (Sat, 15 May 2021) $';
+my $svnid = '$Id: fmtutil.pl 60154 2021-08-03 21:55:56Z karl $';
+my $lastchdate = '$Date: 2021-08-03 23:55:56 +0200 (Tue, 03 Aug 2021) $';
 $lastchdate =~ s/^\$Date:\s*//;
 $lastchdate =~ s/ \(.*$//;
-my $svnrev = '$Revision: 59207 $';
+my $svnrev = '$Revision: 60154 $';
 $svnrev =~ s/^\$Revision:\s*//;
 $svnrev =~ s/\s*\$$//;
 my $version = "r$svnrev ($lastchdate)";
@@ -36,7 +36,6 @@ my $version = "r$svnrev ($lastchdate)";
 use strict;
 use Getopt::Long qw(:config no_autoabbrev ignore_case_always);
 use File::Basename;
-use File::Copy;
 use File::Spec;
 use Cwd;
 
@@ -62,6 +61,7 @@ my @deferred_stdout;
 # $::opt_verbosity = 3; # manually enable debugging
 
 my $first_time_creation_in_usermode = 0;
+my $first_time_usermode_warning = 1; # give lengthy warning if warranted?
 
 my $DRYRUN = "";
 my $STATUS_FH;
@@ -238,14 +238,22 @@ sub main {
 
   $DRYRUN = "echo " if ($opts{'dry-run'});
 
-  if ($opts{'status-file'}) {
-    open $STATUS_FH, '>>', $opts{'status-file'}
-      || printf STDERR "Cannot open status-file: $opts{'status-file'}\nWill not write status information!\n";
+  if ($opts{'status-file'} && ! $opts{'dry-run'}) {
+    if (! open($STATUS_FH, '>>', $opts{'status-file'})) {
+      print_error("cannot open status file >>$opts{'status-file'}: $!\n");
+      print_error("not writing status information!\n");
+    }
   }
   
+  # get the config/var trees we will use.
   ($texmfconfig, $texmfvar)
     = TeXLive::TLUtils::setup_sys_user_mode($prg, \%opts,
                        $TEXMFCONFIG, $TEXMFSYSCONFIG, $TEXMFVAR, $TEXMFSYSVAR);
+  
+  # if we are using the sys tree, we don't want to give the usermode warning.
+  if ($texmfvar eq $TEXMFSYSVAR) {
+    $first_time_usermode_warning = 0;
+  }
 
   determine_config_files("fmtutil.cnf");
   my $changes_config_file = $alldata->{'changes_config'};
@@ -339,7 +347,8 @@ sub main {
   }
 
   if ($STATUS_FH) {
-    close($STATUS_FH) || print STDERR "Cannot close fh for $opts{'status-file'}.\n";
+    close($STATUS_FH)
+    || print_error("cannot close $opts{'status-file'}: $!\n");
   }
 
   unless ($opts{'nohash'}) {
@@ -433,12 +442,14 @@ sub callback_build_formats {
   #
   # for formats that load other formats (e.g., jadetex loads latex.fmt),
   # add the current directory to TEXFORMATS, too.  Currently unnecessary
-  # for MFBASES and MPMEMS.
+  # for MFBASES.
   $ENV{'TEXFORMATS'} ||= "";
   $ENV{'TEXFORMATS'} = "$tmpdir$sep$ENV{TEXFORMATS}";
 
-  # switch to temporary directory for format generation
-  $opts{"dry-run"} || chdir($tmpdir)
+  # switch to temporary directory for format generation; on the other hand,
+  # for -n, the tmpdir won't exist, but we don't want to find a spurious
+  # tex.fmt in the cwd. Probably won't be such things in /.
+  chdir($opts{"dry-run"} ? "/" : $tmpdir)
   || die "Cannot change to directory $tmpdir: $!";
   
   # we rebuild formats in two rounds:
@@ -516,7 +527,8 @@ sub callback_build_formats {
   # In case of user mode and formats rebuilt, warn that these formats
   # will shadow future updates. Can be suppressed with --quiet which
   # does not show print_info output
-  if ($opts{'user'} && $suc && $first_time_creation_in_usermode) {
+  if ($opts{'user'} && $suc && $first_time_creation_in_usermode
+      && $first_time_usermode_warning) {
     print_info("
 *************************************************************
 *                                                           *
@@ -736,7 +748,7 @@ sub rebuild_one_format {
     if ($poolfile && -f $poolfile) {
       print_verbose("attempting to create localized format "
                     . "using pool=$pool and tcx=$tcx.\n");
-      File::Copy::copy($poolfile, "$eng.pool");
+      TeXLive::TLUtils::copy("-f", $poolfile, "$eng.pool");
       $tcxflag = "-translate-file=$tcx" if ($tcx);
       $localpool = 1;
     }
@@ -773,63 +785,72 @@ sub rebuild_one_format {
                   . "$prgswitch $texargs";
   print_verbose("running \`$cmdline' ...\n");
 
-  {
-    my $texpool = $ENV{'TEXPOOL'};
-    if ($localpool) {
-      $ENV{'TEXPOOL'} = cwd() . $sep . ($texpool ? $texpool : "");
-    }
+  my $texpool = $ENV{'TEXPOOL'};
+  if ($localpool) {
+    $ENV{'TEXPOOL'} = cwd() . $sep . ($texpool ? $texpool : "");
+  }
 
-    # in mktexfmtMode we must redirect *all* output to stderr
-    $cmdline .= " >&2" if $mktexfmtMode;
-    $cmdline .= " <$nul";
-    my $retval = system("$DRYRUN$cmdline");
-    
-    # report error if it failed.
-    if ($retval != 0) {
-      $retval /= 256 if ($retval > 0);
-      print_deferred_error("running \`$cmdline' return status: $retval\n");
-    }
+  # in mktexfmtMode we must redirect *all* output to stderr
+  $cmdline .= " >&2" if $mktexfmtMode;
+  $cmdline .= " <$nul";
+  my $retval = system("$DRYRUN$cmdline");
 
-    # Copy the log file after the program is run, so that the log file
-    # is available to inspect even on failure. So we need the dest dir tree.
-    TeXLive::TLUtils::mkdirhier($destdir) if ! $opts{"dry-run"};
-    #
+  # report error if it failed.
+  if ($retval != 0) {
+    $retval /= 256 if ($retval > 0);
+    print_deferred_error("running \`$cmdline' return status: $retval\n");
+  }
+
+  # Copy the log file after the program is run, so that the log file
+  # is available to inspect even on failure. So we need the dest dir tree.
+  TeXLive::TLUtils::mkdirhier($destdir) if ! $opts{"dry-run"};
+  #
+  if ($opts{"dry-run"}) {
+    print_info("would copy log file to: $destdir/$logfile\n");
+  } else {
     # Here and in the following we use copy instead of move
     # to make sure that in SElinux enabled cases the rules of
     # the destination directory are applied.
     # See https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=900580
-    if (File::Copy::copy($logfile, "$destdir/$logfile")) {
+    # 
+    if (TeXLive::TLUtils::copy("-f", $logfile, "$destdir/$logfile")) {
       print_info("log file copied to: $destdir/$logfile\n");
     } else {
-      print_deferred_error("cannot copy log $logfile to: $destdir\n")
-        unless $opts{"dry-run"};
-    }
-
-    # original shell script did *not* check the return value
-    # we keep this behavior, but add an option --strict that
-    # errors out on all failures.
-    if ($retval != 0 && $opts{'strict'}) {
-      print_deferred_error("returning error due to option --strict\n");
-      return $FMT_FAILURE;
-    }
-
-    if ($localpool) {
-      if ($texpool) {
-        $ENV{'TEXPOOL'} = $texpool;
-      } else {
-        delete $ENV{'TEXPOOL'};
-      }
+      print_deferred_error("failed to copy log $logfile to: $destdir\n");
     }
   }
 
+  # original shell script did *not* check the return value
+  # we keep this behavior, but add an option --strict that
+  # errors out on all failures.
+  if ($retval != 0 && $opts{'strict'}) {
+    print_deferred_error("returning error due to option --strict\n");
+    return $FMT_FAILURE;
+  }
+
+  if ($localpool) {
+    if ($texpool) {
+      $ENV{'TEXPOOL'} = $texpool;
+    } else {
+      delete $ENV{'TEXPOOL'};
+    }
+  }
+
+  # if this was a dry run, we don't expect anything to have been
+  # created, so there's nothing to inspect or copy. Call it good.
+  if ($opts{"dry-run"}) {
+    print_info("dry run, so returning success: $fmtfile\n");
+    return $FMT_SUCCESS;
+  }
+
   # check and install of fmt and log files
-  if (! -f $fmtfile) {
-    print_deferred_error("\`$cmdline' failed (no $fmtfile)\n");
+  if (! -s $fmtfile) {
+    print_deferred_error("no (or empty) $fmtfile made by: $cmdline\n");
     return $FMT_FAILURE;
   }
 
   if (! -f $logfile) {
-    print_deferred_error("no log file generated for $fmt/$eng, strange\n");
+    print_deferred_error("no log file generated for: $fmt/$eng\n");
     return $FMT_FAILURE;
   }
 
@@ -846,7 +867,7 @@ sub rebuild_one_format {
     # package dependencies for each format.  Unfortunately omega-based
     # engines gratuitiously changed the extension from .fls to .ofl.
     my $recfile = $fmt . ($fmt =~ m/^(aleph|lamed)$/ ? ".ofl" : ".fls");
-    if (!File::Copy::copy($recfile, "$destdir/$recfile")) {
+    if (! TeXLive::TLUtils::copy("-f", $recfile, "$destdir/$recfile")) {
       print_deferred_error("cannot copy recorder $recfile to: $destdir\n");
     }
   }
@@ -856,39 +877,38 @@ sub rebuild_one_format {
   # we check whether the next command **would** create a new file,
   # and if it succeeded, we set the actual flag.
   my $possibly_warn = ($opts{'user'} && ! -r $destfile);
-  if (File::Copy::copy($fmtfile, $destfile )) {
+  if (TeXLive::TLUtils::copy("-f", $fmtfile, $destfile)) {
     print_info("$destfile installed.\n");
     $first_time_creation_in_usermode = $possibly_warn;
     #
     # original fmtutil.sh did some magic trick for mplib-luatex.mem
-    #
     # nowadays no mplib mem is created and all files loaded
     # so we comment and do not convert this
     #
-    # As a special special case, we create mplib-luatex.mem for use by
-    # the mplib embedded in luatex if it doesn't already exist.  (We
-    # never update it if it does exist.)
-    #
-    # This is used by the luamplib package.  This way, an expert user
-    # who wants to try a new version of luatex (hence with a new
-    # version of mplib) can manually update mplib-luatex.mem without
-    # having to tamper with mpost itself.
-    #
-    #  if test "x$format" = xmpost && test "x$engine" = xmpost; then
-    #    mplib_mem_name=mplib-luatex.mem
-    #    mplib_mem_file=$fulldestdir/$mplib_mem_name
-    #    if test \! -f $mplib_mem_file; then
-    #      verboseMsg "$progname: copying $destfile to $mplib_mem_file"
-    #      if cp "$destfile" "$mplib_mem_file" </dev/null; then
-    #        mktexupd "$fulldestdir" "$mplib_mem_name"
-    #      else
-    #        # failure to copy merits failure handling: e.g., full file system.
-    #        log_failure "cp $destfile $mplib_mem_file failed."
-    #      fi
-    #    else
-    #      verboseMsg "$progname: $mplib_mem_file already exists, not updating."
-    #    fi
-    #  fi
+    ## As a special special case, we create mplib-luatex.mem for use by
+    ## the mplib embedded in luatex if it doesn't already exist.  (We
+    ## never update it if it does exist.)
+    ##
+    ## This is used by the luamplib package.  This way, an expert user
+    ## who wants to try a new version of luatex (hence with a new
+    ## version of mplib) can manually update mplib-luatex.mem without
+    ## having to tamper with mpost itself.
+    ##
+    ##  if test "x$format" = xmpost && test "x$engine" = xmpost; then
+    ##    mplib_mem_name=mplib-luatex.mem
+    ##    mplib_mem_file=$fulldestdir/$mplib_mem_name
+    ##    if test \! -f $mplib_mem_file; then
+    ##      verboseMsg "$progname: copying $destfile to $mplib_mem_file"
+    ##      if cp "$destfile" "$mplib_mem_file" </dev/null; then
+    ##        mktexupd "$fulldestdir" "$mplib_mem_name"
+    ##      else
+    ##        ## failure to copy merits failure handling: e.g., full file system.
+    ##        log_failure "cp $destfile $mplib_mem_file failed."
+    ##      fi
+    ##    else
+    ##      verboseMsg "$progname: $mplib_mem_file already exists, not updating."
+    ##    fi
+    ##  fi
 
     if ($mktexfmtMode && $mktexfmtFirst) {
       print "$destfile\n";
@@ -1245,7 +1265,7 @@ sub determine_config_files {
 # returns 1 if actually saved due to changes
 sub save_fmtutil {
   my $fn = shift;
-  return if $opts{'dry-run'};
+  return 0 if $opts{'dry-run'};
   my %fmtf = %{$alldata->{'fmtutil'}{$fn}};
   if ($fmtf{'changed'}) {
     TeXLive::TLUtils::mkdirhier(dirname($fn));

@@ -1,6 +1,6 @@
 # This file is part of CWEB.
 # It is distributed WITHOUT ANY WARRANTY, express or implied.
-# Version 4.4 --- June 2021
+# Version 4.7 --- February 2022
 
 # Copyright (C) 1987,1990,1993,2000 Silvio Levy and Donald E. Knuth
 
@@ -50,7 +50,7 @@ TCHANGES=
 WCHANGES=
 
 # We keep debugging info around, for fun, but most users don't need it
-CFLAGS = -g
+CFLAGS = -g # -Wall -Wextra -Wimplicit-fallthrough=2 # check compiler warnings
 #CFLAGS = -O
 LINKFLAGS = -g
 #LINKFLAGS = -s # for smaller (stripped) executables on many UNIX systems
@@ -64,9 +64,11 @@ CP= /bin/cp
 
 # uncomment the second line if you use pdftex to bypass .dvi files
 # uncomment the third line if you use xetex to bypass .dvi files
+# uncomment the forth line if you use hitex for HINT output
 PDFTEX = dvipdfm
 #PDFTEX = pdftex
 #PDFTEX = xetex
+#PDFTEX = hitex
 
 ##########  You shouldn't have to change anything after this point #######
 
@@ -78,7 +80,7 @@ ALL =  common.w ctangle.w cweave.w prod.w \
 	cwebman.tex cwebmac.tex comm-vms.ch ctang-vms.ch \
 	cweav-vms.ch comm-man.ch ctang-man.ch cweav-man.ch \
 	comm-pc.ch ctang-pc.ch cweav-pc.ch comm-amiga.ch \
-        comm-bs.ch ctang-bs.ch cweav-bs.ch makefile.bs \
+	comm-bs.ch ctang-bs.ch cweav-bs.ch makefile.bs \
 	comm-ql.ch ctang-ql.ch cweav-ql.ch readme.ql \
 	comm-w32.ch ctang-w32.ch cweav-w32.ch \
 	comm-os2.ch comm-mac.ch cweb.1 cweb.el c++lib.w iso_types.w
@@ -108,6 +110,7 @@ ALL =  common.w ctangle.w cweave.w prod.w \
 	 dvipdfm ) tex "\let\pdf+ \input $*"; dvipdfm $* ;; \
 	 pdftex ) pdftex $* ;; \
 	 xetex ) xetex $* ;; \
+	 hitex ) hitex $* ;; \
 	esac
 
 all: ctangle cweave
@@ -163,7 +166,7 @@ fullmanual: usermanual $(SOURCES) comm-man.ch ctang-man.ch cweav-man.ch
 # be sure to leave ctangle.c and common.c for bootstrapping
 clean:
 	$(RM) -f -r *~ *.o common.tex cweave.tex cweave.c ctangle.tex \
-	  *.log *.dvi *.toc *.idx *.scn *.pdf core cweave ctangle
+	  *.log *.dvi *.toc *.idx *.scn *.pdf *.hnt core cweave ctangle
 
 install: all
 	- mkdir $(DESTDIR)

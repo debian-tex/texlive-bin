@@ -1,3 +1,63 @@
+2022-03-21  Karl Berry  <karl@tug.org>
+
+	* TL'22 release.
+
+2022-02-27  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+
+	* dvipdfmx-upjf.test, Makefile.{am,in},
+	tests/Makefile_upjf,
+	tests/upjf-g00.{opl,ofm}, tests/upjv-g00.{opl,ofm}:
+	Add a new test for pTeX & OFM FONTDIR.
+
+2022-02-24  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+
+	* dvipdfmx-upjf.test, Makefile.{am,in},
+	tests/Makefile_upjf, tests/upjv{,-r,-g}.tfm,
+	tests/upjf.{tex,dvi,map}, tests/upjv_{full,omit}.vf,
+	tests/UPJF-UTF16-V:
+	Add a new test for upTeX vertical writing.
+
+2021-11-17  Akira Kakuto  <kakuto@jcom.zaq.ne.jp>
+
+	* spc_dvips.c: Realize PSTricks on XeTeX without -dNOSAFER,
+	in the way described in
+	https://tug.org/pipermail/dvipdfmx/2021-November/000308.html
+	* configure.ac: version 20211117.
+
+2021-11-12  Karl Berry  <karl@freefriends.org>
+
+	* dvipdfmx.c (show_usage): mention -i.
+	Change bug report line to CTAN package page, for more information.
+
+2021-11-03  Naveen M K  <naveen521kk@gmail.com>
+
+	* Makefile.am (install-exec-hook) [WIN32]: install via libtool,
+	so as to install the real program, not just the libtool wrapper.
+	Found for msys2.
+	https://tug.org/pipermail/dvipdfmx/2021-October/000301.html
+
+2021-10-29  Marcel Fabian Kr\"uger  <tex@2krueger.de>
+
+	* cidtype0.c: Fix a bug that dvipdfmx segfaults when embedding
+	a CFF based OpenType font which does not contain a private
+	dictionary.
+	* configure.ac: version 20211029.
+
+2021-10-16  Akira Kakuto  <kakuto@jcom.zaq.ne.jp>
+
+	* dvipdfmx.c: Fix a bug that the -r option was not effective,
+	as reported in
+	https://tug.org/pipermail/dvipdfmx/2021-September/000296.html.
+	* configure.ac: version 20211016.
+
+2021-09-26  Akira Kakuto  <kakuto@jcom.zaq.ne.jp>
+	* pdfdev.c: Remove all my changes on 2021-03-04 and 2021-03-05
+	which were completely wrong.
+	* pkfont.c: Before calling kpse_find_glyph(ident, ...), remove
+	a suffix .pfb from the ident, if the suffix exists, because the
+	suffix prevents mktexpk to work right.
+	* configure.ac: version 20210926.
+
 2021-06-09  Shunsaku Hirata  <shunsaku.hirata74@gmail.com>
 
 	* pdfencoding.c: Replace the changes made on 2021-06-02. The

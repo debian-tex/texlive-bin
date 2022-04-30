@@ -1,5 +1,5 @@
 #! /bin/sh -vx
-# $Id$
+# $Id: dvidvi.test 57800 2021-02-19 16:45:39Z karl $
 # Copyright 2017-2021 Karl Berry <tex-live@tug.org>
 # Copyright 2011 Peter Breitenlohner <tex-live@tug.org>
 # You may freely use, modify and/or distribute this file.

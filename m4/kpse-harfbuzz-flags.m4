@@ -1,4 +1,4 @@
-# $Id$
+# $Id: kpse-harfbuzz-flags.m4 51470 2019-06-26 16:09:52Z karl $
 # Public macros for the TeX Live (TL) tree.
 # Copyright 2015-2019 Karl Berry <tex-live@tug.org>
 # Copyright 2012-2015 Peter Breitenlohner <tex-live@tug.org>

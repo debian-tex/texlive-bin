@@ -1,4 +1,4 @@
-## $Id$
+## $Id: Makefile.am 51585 2019-07-08 22:23:38Z karl $
 ## Makefile.am for the TeX Live subdirectory utils/lacheck/
 ##
 ## Copyright 2015-2019 Karl Berry <tex-live@tug.org>

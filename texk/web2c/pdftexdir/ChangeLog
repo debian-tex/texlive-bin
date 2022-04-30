@@ -1,3 +1,76 @@
+2022-03-21  Karl Berry  <karl@tug.org>
+
+	* TL'22 release.
+
+2022-01-10  Karl Berry  <karl@freefriends.org>
+
+	* am/pdftex.am: do not silence tangle-sh.
+
+2021-11-07  Andreas Scherer  <https://ascherer.github.io>
+
+	* pdftex.web: Use WEB meta-comment for stale code.
+
+2021-11-05  Karl Berry  <karl@freefriends.org>
+
+        * pdftex_version.h,
+        * pdftex.web (pdftex_revision, pdftex_version_string):
+        version [1.40.]24 for TL'22, in advance, for structured dest test.
+
+2021-11-04  Marcel Kr\"uger  <tex@2krueger.de>
+
+	* pdftex.web: Implement support for PDF 2.0 structure destinations.
+
+2021-09-25  Karl Berry  <karl@freefriends.org>
+
+	* pdftex.web: always call pdf_warning with prepend_nl true,
+	to avoid warnings showing up in the midst of the output, e.g., from:
+        '\pdfoutput=1 \noindent \pdfstartlink goto num 99\pdfendlink'
+
+	This might cause a blank line, but doing the test as in print_nl
+	to check if we are already at the beginning of the terminal line
+	seems too intrusive at this late date, affecting other messages.
+
+2021-09-03  Thanh Han The  <hanthethanh@gmail.com>
+
+	* pdftex.web (prev_tail): new global.
+	(tail_append): maintain it.
+	(insert_before_tail): new macro.
+	(If |tmp_k1| is not null...): insert auto-kern before a
+	null discretionary inserted by |wrapup| (i.e., explicit hyphen)
+	if appropriate. Report (2) from Robert Schlicht.
+	https://mailman.ntg.nl/pipermail/ntg-pdftex/2021-August/004338.html
+	
+2021-09-03  Thanh Han The  <hanthethanh@gmail.com>
+
+	* pdftex.web (append_discretionary): insert autokern
+	(\pdfprependkern/pdfappendkern) after
+	hyphen char inserted by hyphenation. Report (3) from Robert Schlicht.
+	https://mailman.ntg.nl/pipermail/ntg-pdftex/2021-August/004338.html
+
+2021-08-21  Thanh Han The  <hanthethanh@gmail.com>
+
+	* pdftex.web (cp_skipable): make autokerns "skipable", so character
+	protrusion works with chars having autokern
+	(\pdfprependkern/\pdfappendkern). Report (1) and patch from
+	Robert Schlicht,
+	https://mailman.ntg.nl/pipermail/ntg-pdftex/2021-August/004338.html
+
+2021-07-13  Hironobu Yamashita  <h.y.acetaminophen@gmail.com>
+
+	* regex/regexec.c: Avoid MSVC compiler error.
+	-> error C2059: syntax error: ':'
+	MSVC does not allow empty expression for ternary
+	conditional operator (?:) which is a GNU C extension.
+	https://gcc.gnu.org/onlinedocs/gcc/Conditionals.html
+	https://stackoverflow.com/questions/3319075/
+
+2021-02-17  Karl Berry  <karl@tug.org>
+
+        * NEWS,
+        * pdftex_version.h,
+        * pdftex.web (pdftex_revision, pdftex_version_string):
+        version [1.40.]23 for post-TL21 fmt fix.
+	
 2021-01-04  Thanh Han The  <hanthethanh@gmail.com>
 
 	* pdftex.web (letter_space_font): use explicit \fontdimen6 (quad)

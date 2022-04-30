@@ -1,4 +1,4 @@
-## $Id$
+## $Id: Makefile.am 43617 2017-03-27 18:00:45Z karl $
 ## Makefile.am for the TeX Live subdirectory utils/pmx/
 ##
 ## Copyright 2017 Karl Berry <tex-live@tug.org>

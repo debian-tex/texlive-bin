@@ -1,4 +1,4 @@
-## $Id$
+## $Id: Makefile.am 43567 2017-03-21 17:43:10Z karl $
 ## Proxy Makefile.am to build LuaJIT for TeX Live.
 ##
 ## Copyright 2017 Karl Berry<tex-live@tug.org>

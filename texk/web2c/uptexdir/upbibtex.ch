@@ -1,9 +1,9 @@
 @x
 @d my_name=='pbibtex'
-@d banner=='This is pBibTeX, Version 0.99d-j0.33'
+@d banner=='This is pBibTeX, Version 0.99d-j0.34'
 @y
 @d my_name=='upbibtex'
-@d banner=='This is upBibTeX, Version 0.99d-j0.33-u1.27'
+@d banner=='This is upBibTeX, Version 0.99d-j0.34-u1.28'
 @z
 
 @x
@@ -232,42 +232,58 @@ var i:0..last_text_char;    {this is the first one declared}
 @z
 
 @x
-{ 2 bytes Kanji code break check }
-tps:=str_start[pop_lit3];
-while (tps < sp_ptr) do begin
-    if str_pool[tps] > 127
-    then tps := tps + 2
-    else incr(tps);
-end;
-tpe:=tps;
-while (tpe < sp_end) do begin
-    if str_pool[tpe] > 127
-    then tpe := tpe+2
-    else incr(tpe);
-end;
-if tps<>sp_ptr then begin
-    if tps>str_start[pop_lit3]
-    then decr(sp_ptr)
-    else incr(sp_ptr);
-end;
-if tpe<>sp_end then begin
-    if tpe<str_start[pop_lit3+1]
-    then incr(sp_end)
-    else decr(sp_end);
-end;
+@!pop_lit2_saved: integer;
 @y
-{ |2..4| bytes Kanji code break check }
+@!pop_lit2_saved,@!mbl_tpe: integer;
+@z
+
+@x
+{ 2 bytes Kanji code break check }
 tps:=str_start[pop_lit3];
 tpe:=tps;
 while tpe < str_start[pop_lit3+1] do begin
-    if multibytelen(str_pool[tpe])<0
-        or (str_start[pop_lit3+1] < tpe+multibytelen(str_pool[tpe])) then
-        break;
-    tpe := tpe + multibytelen(str_pool[tpe]);
+    if str_pool[tpe] > 127 then begin
+        if str_start[pop_lit3+1] < tpe+2 then
+            break;
+        tpe := tpe + 2;
+        end
+    else begin
+        if str_start[pop_lit3+1] < tpe+1 then
+            break;
+        tpe := tpe + 1;
+        end;
     if tpe<=sp_ptr then
         tps := tpe;
     if sp_end<=tpe then break;
 end;
+if (pop_lit2_saved > 1) and (tps = str_start[pop_lit3])
+    then tps := tps + 2; {truncate at least one}
+if (pop_lit2_saved < -1) and (tpe = str_start[pop_lit3+1])
+    then tpe := tpe - 2; {truncate at least one}
+if tps > tpe then tpe := tps;
+sp_ptr := tps;
+sp_end := tpe;
+@y
+{ |2..4| bytes Kanji code break check }
+tps:=str_start[pop_lit3];
+tpe:=tps;
+mbl_tpe:=0;
+while tpe < str_start[pop_lit3+1] do begin
+    if multibytelen(str_pool[tpe])<0 {just in case}
+        or (str_start[pop_lit3+1] < tpe+multibytelen(str_pool[tpe])) then
+        break;
+    mbl_tpe := multibytelen(str_pool[tpe]);
+    tpe := tpe + mbl_tpe;
+    if tpe<=sp_ptr then
+        tps := tpe;
+    if sp_end<=tpe then break;
+end;
+if (pop_lit2_saved > 1) and (tps = str_start[pop_lit3]) then
+    if multibytelen(str_pool[tps])>=0 then {just in case}
+        tps := tps + multibytelen(str_pool[tps]); {truncate at least one}
+if (pop_lit2_saved < -1) and (tpe = str_start[pop_lit3+1]) then
+    tpe := tpe - mbl_tpe; {truncate at least one}
+if tps > tpe then tpe := tps;
 sp_ptr := tps;
 sp_end := tpe;
 @z
@@ -378,25 +394,25 @@ function is_char_kanji_upbibtex(@!c:integer):boolean;
 label exit;
 var k:integer;
 begin
-  { based on upTeX-1.26 kcatcode status: 16,17,19->true / 15,18->false }
+  { based on upTeX-1.28 kcatcode status: 16,17,19->true / 15,18->false }
   is_char_kanji_upbibtex := true;
   if (is_internalUPTEX) then begin { should be in sync with |kcat_code| of uptex-m.ch }
     k := kcatcodekey(c);
-    if k=@"24 then return { Hangul Jamo }
-    else if (k>=@"67)and(k<=@"69) then return { CJK Radicals Supplement .. Ideographic Description Characters }
-    else if (k>=@"6B)and(k<=@"6C) then return { Hiragana, Katakana }
-    else if k=@"6D then return { Bopomofo }
-    else if k=@"6E then return { Hangul Compatibility Jamo }
-    else if (k>=@"6F)and(k<=@"71) then return { Kanbun .. CJK Strokes }
-    else if k=@"72 then return { Katakana Phonetic Extensions }
-    else if k=@"75 then return { CJK Unified Ideographs Extension A }
-    else if k=@"77 then return { CJK Unified Ideographs }
-    else if k=@"87 then return { Hangul Jamo Extended-A }
-    else if k=@"92 then return { Hangul Syllables }
-    else if k=@"93 then return { Hangul Jamo Extended-B }
-    else if k=@"98 then return { CJK Compatibility Ideographs }
-    else if (k>=@"103)and(k<=@"105) then return { Kana Supplement .. Small Kana Extension }
-    else if (k>=@"129)and(k<=@"12F) then return { CJK Unified Ideographs Extension B .. G }
+    if k=@"25 then return { Hangul Jamo }
+    else if (k>=@"68)and(k<=@"6A) then return { CJK Radicals Supplement .. Ideographic Description Characters }
+    else if (k>=@"6C)and(k<=@"6D) then return { Hiragana, Katakana }
+    else if k=@"6E then return { Bopomofo }
+    else if k=@"6F then return { Hangul Compatibility Jamo }
+    else if (k>=@"70)and(k<=@"72) then return { Kanbun .. CJK Strokes }
+    else if k=@"73 then return { Katakana Phonetic Extensions }
+    else if k=@"76 then return { CJK Unified Ideographs Extension A }
+    else if k=@"78 then return { CJK Unified Ideographs }
+    else if k=@"88 then return { Hangul Jamo Extended-A }
+    else if k=@"93 then return { Hangul Syllables }
+    else if k=@"94 then return { Hangul Jamo Extended-B }
+    else if k=@"99 then return { CJK Compatibility Ideographs }
+    else if (k>=@"10A)and(k<=@"10D) then return { Kana Extended-B .. Small Kana Extension }
+    else if (k>=@"135)and(k<=@"13B) then return { CJK Unified Ideographs Extension B .. G }
     else if k=@"1FE then return { Fullwidth digit and latin alphabet }
     else if k=@"1FF then return; { Halfwidth katakana }
     end

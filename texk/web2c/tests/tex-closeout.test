@@ -1,5 +1,5 @@
 #! /bin/sh -vx
-# $Id$
+# $Id: tex-closeout.test 53155 2019-12-17 19:24:59Z karl $
 # Copyright 2019 Karl Berry <tex-live@tug.org>
 # You may freely use, modify and/or distribute this file.
 

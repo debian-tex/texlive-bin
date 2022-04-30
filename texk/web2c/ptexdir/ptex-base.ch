@@ -1,3 +1,4 @@
+% $Id: ptex-base.ch 62032 2022-02-15 13:56:05Z hironobu $
 % This is a change file for pTeX
 % By Sadayuki Tanaka and ASCII MEDIA WORKS.
 %
@@ -64,7 +65,12 @@
 % (2021-02-18) HK  pTeX p3.9.0 Add \ifjfont and \iftfont (in 2020-02-06, by HY),
 %                  Bug fix for getting \kansujichar (in 2020-02-09 = TL20),
 %                  based on TeX 3.141592653 (for TL21).
-% (2021-06-25) HY  pTeX p3.9.1 Various fixes
+% (2021-06-25) HY  pTeX p3.9.1 Various fixes.
+% (2021-06-20) HK  pTeX p3.10.0 Add \ucs and \toucs.
+% (2022-01-22) HK  pTeX p4.0.0 Distinguish 8-bit characters and Japanese characters
+%                  for better support of LaTeX3 (expl3).
+%                  Requires ptexenc version 1.4.0.
+%                  More details in TUGboat 41(2):329--334, 2020.
 
 @x
 % Here is TeX material that gets inserted after \input webmac
@@ -77,10 +83,10 @@
 @d banner==TeX_banner
 @d banner_k==TeX_banner_k
 @y
-@d pTeX_version=3
-@d pTeX_minor_version=9
-@d pTeX_revision==".1"
-@d pTeX_version_string=='-p3.9.1' {current \pTeX\ version}
+@d pTeX_version=4
+@d pTeX_minor_version=0
+@d pTeX_revision==".0"
+@d pTeX_version_string=='-p4.0.0' {current \pTeX\ version}
 @#
 @d pTeX_banner=='This is pTeX, Version 3.141592653',pTeX_version_string
 @d pTeX_banner_k==pTeX_banner
@@ -95,6 +101,21 @@
 @y
 @!ASCII_code=0..255; {eight-bit numbers}
 @!KANJI_code=0..65535; {sixteen-bit numbers}
+@!ext_ASCII_code=0..32768; { only use 0--511 }
+@z
+
+@x pTeX: xchr
+xchr: array [ASCII_code] of text_char;
+   { specifies conversion of output characters }
+@y
+xchr: array [ext_ASCII_code] of ext_ASCII_code;
+   { specifies conversion of output characters }
+@z
+
+@x pTeX: xchr
+for i:=@'177 to @'377 do xchr[i]:=i;
+@y
+for i:=@'177 to @'777 do xchr[i]:=i;
 @z
 
 @x [3.??] l.870 - pTeX:
@@ -112,6 +133,36 @@
 @ Kanji code handling.
 @z
 
+@x [3.??] pTeX
+@<Glob...@>=
+@!buffer:^ASCII_code; {lines of characters being read}
+@y
+In \pTeX, we use another array |buffer2[]| to indicate which byte
+is a part of a Japanese character.
+|buffer2[]| is initialized to zero in reading one line from a file
+(|input_ln|). |buffer2[i]| is set to one when |buffer[i]| is known
+to be a part of a Japanese character, in |get_next| routine.
+
+@<Glob...@>=
+@!buffer:^ASCII_code; {lines of characters being read}
+@!buffer2:^ASCII_code;
+@z
+
+@x [4]
+@!packed_ASCII_code = 0..255; {elements of |str_pool| array}
+@y
+@!packed_ASCII_code = 0..32768; {elements of |str_pool| array}
+  { 256..511 are used by Japanese characters }
+@z
+
+@x [4] pTeX: str_eq_buf
+while j<str_start[s+1] do
+  begin if so(str_pool[j])<>buffer[k] then
+@y
+while j<str_start[s+1] do
+  begin if so(str_pool[j])<>buffer2[k]*@"100+buffer[k] then
+@z
+
 @x [4.47] l.1325 - pTeX:
 @!init function get_strings_started:boolean; {initializes the string pool,
   but returns |false| if something goes wrong}
@@ -124,19 +175,11 @@ label done,exit;
 var k,@!l:KANJI_code; {small indices or counters}
 @z
 
-@x [4.49] l.1384 - pTeX:
-@<Character |k| cannot be printed@>=
-  (k<" ")or(k>"~")
-@y
-@<Character |k| cannot be printed@>=
-   not (ismultiprn(k) or xprn[k])
-@z
-
 @x [5.54] l.1514 - pTeX: Global variables
 @!trick_buf:array[0..ssup_error_line] of ASCII_code; {circular buffer for
   pseudoprinting}
 @y
-@!trick_buf:array[0..ssup_error_line] of ASCII_code; {circular buffer for
+@!trick_buf:array[0..ssup_error_line] of ext_ASCII_code; {circular buffer for
   pseudoprinting}
 @!trick_buf2:array[0..ssup_error_line] of 0..2; {pTeX: buffer for KANJI}
 @!kcode_pos: 0..2; {pTeX: denotes whether first byte or second byte of KANJI}
@@ -210,14 +253,16 @@ term_only: begin wterm(xchr[s]); incr(term_offset);
 no_print: do_nothing;
 pseudo: if tally<trick_count then trick_buf[tally mod error_line]:=s;
 @y
-procedure print_char(@!s:ASCII_code); {prints a single character}
+procedure print_char(@!s:ext_ASCII_code); {prints a single character}
 label exit; {label is not used but nonetheless kept (for other changes?)}
 begin if @<Character |s| is the current new-line character@> then
  if selector<pseudo then
   begin print_ln; return;
   end;
-if kcode_pos=1 then kcode_pos:=2
-else if iskanji1(xchr[s]) then
+if s>@"1FF then s:=s mod 256;
+if s<256 then kcode_pos:=0
+else if kcode_pos=1 then kcode_pos:=2
+else if iskanji1(xchr[s-256]) then
   begin kcode_pos:=1;
   if (selector=term_and_log)or(selector=log_only) then
     if file_offset>=max_print_line-1 then
@@ -297,6 +342,7 @@ else if s<256 then
       if selector<pseudo then
         begin print_ln; return;
         end;
+    if xprn[s] then begin print_char(s); return; end;
     nl:=new_line_char; new_line_char:=-1;
       {temporarily disable new-line character}
     j:=str_start[s];
@@ -310,6 +356,64 @@ while j<str_start[s+1] do
   begin print_char(so(str_pool[j])); incr(j);
   end;
 exit:end;
+@z
+
+@x
+procedure slow_print(@!s:integer); {prints string |s|}
+var j:pool_pointer; {current character code position}
+begin if (s>=str_ptr) or (s<256) then print(s)
+else begin j:=str_start[s];
+  while j<str_start[s+1] do
+    begin print(so(str_pool[j])); incr(j);
+    end;
+  end;
+end;
+@y
+procedure slow_print(@!s:integer); {prints string |s|}
+var j:pool_pointer; {current character code position}
+c:integer;
+begin if (s>=str_ptr) or (s<256) then print(s)
+else begin j:=str_start[s];
+  while j<str_start[s+1] do
+    begin c:=so(str_pool[j]);
+    if c>=@"100 then print_char(c) else print(c); incr(j);
+    end;
+  end;
+end;
+
+procedure slow_print_filename(@!s:integer);
+  {prints string |s| which represents filename, without code conversion}
+var i,j,l:pool_pointer; p:integer;
+begin if (s>=str_ptr) or (s<256) then print(s)
+else begin i:=str_start[s]; l:=str_start[s+1];
+  while i<l do begin
+    p:=multistrlenshort(str_pool, l, i);
+    if p<>1 then
+      begin for j:=i to i+p-1 do print_char(@"100+(so(str_pool[j]) mod @"100));
+      i:=i+p; end
+    else begin print(so(str_pool[i]) mod @"100); incr(i); end;
+    end;
+  end;
+end;
+
+procedure print_quoted(@!s:integer);
+  {prints string |s| which represents filename,
+   omitting quotes and with code conversion}
+var i,l:pool_pointer; j,p:integer;
+begin if s<>0 then begin
+  i:=str_start[s]; l:=str_start[s+1];
+  while i<l do begin
+    p:=multistrlenshort(str_pool, l, i);
+    if p<>1 then begin
+      for j:=i to i+p-1 do print_char(@"100+(so(str_pool[j]) mod @"100));
+      i:=i+p; end
+    else begin
+      if so(str_pool[i])<>"""" then print(so(str_pool[i]) mod @"100);
+      incr(i); end;
+    end;
+  end;
+end;
+
 @z
 
 @x [5.61] l.1656 - pTeX:
@@ -327,6 +431,28 @@ else
   wterm(' (');
   wterm(conststringcast(get_enc_string));
   wterm(')');
+@z
+
+@x pTeX: print_hex for "Invalid KANJI code" or "Invalid KANSUJI char" errors
+@ Old versions of \TeX\ needed a procedure called |print_ASCII| whose function
+@y
+@ Hexadecimal printing.
+
+@d print_hex_safe(#)==if #<0 then print_int(#) else print_hex(#)
+
+@ Old versions of \TeX\ needed a procedure called |print_ASCII| whose function
+@z
+
+@x [5.??] - pTeX: term_input
+@p procedure term_input; {gets a line from the terminal}
+@y
+@p procedure@?print_unread_buffer_with_ptenc; forward;@t\2@>@/
+procedure term_input; {gets a line from the terminal}
+@z
+@x [5.??] - pTeX: term_input
+if last<>first then for k:=first to last-1 do print(buffer[k]);
+@y
+if last<>first then print_unread_buffer_with_ptenc(first,last);
 @z
 
 @x
@@ -495,7 +621,7 @@ end;
 @d rule_node=3 {|type| of rule nodes}
 @z
 
-@x [10.140] l.3083 - pTeX: renumber ins_node, add ins_dirh field
+@x [10.140] l.3083 - pTeX: renumber ins_node, add ins_dir field
 @d ins_node=3 {|type| of insertion nodes}
 @d ins_node_size=5 {number of words to allocate for an insertion}
 @d float_cost(#)==mem[#+1].int {the |floating_penalty| to be used}
@@ -998,7 +1124,8 @@ kern_node,math_node,penalty_node: begin r:=get_node(small_node_size);
 @d set_interaction=hyph_data+1 {define level of interaction ( \.{\\batchmode}, etc.~)}
 @d set_auto_spacing=set_interaction+1 {set auto spacing mode
   ( \.{\\autospacing}, \.{\\noautospacing}, \.{\\autoxspacing}, \.{\\noautoxspacing} )}
-@d max_command=set_auto_spacing {the largest command code seen at |big_switch|}
+@d partoken_name=set_auto_spacing+1 {set |par_token| name}
+@d max_command=partoken_name {the largest command code seen at |big_switch|}
 @z
 
 @x [16.212] l.4437 - pTeX: last_jchr, direction, adjust direction
@@ -1027,7 +1154,7 @@ kern_node,math_node,penalty_node: begin r:=get_node(small_node_size);
 @d prev_disp==cur_list.pdisp_field {displacemant at |prev_node|}
 @d last_jchr==cur_list.last_jchr_field {final jchar node on current list}
 @d disp_called==cur_list.disp_called_field {is a |disp_node| present in the current list?}
-@d inhibit_glue_flag==cur_list.inhibit_glue_flag_field {is \.{inhibitglue} is specified at the current list?}
+@d inhibit_glue_flag==cur_list.inhibit_glue_flag_field {is \.{\\inhibitglue} specified at the current list?}
 @z
 
 @x [16.214] l.4464 - pTeX: prev_append: disp_node
@@ -1304,11 +1431,12 @@ if n<math_code_base then
 @d holding_inserts_code=54 {do not remove insertion nodes from \.{\\box255}}
 @d error_context_lines_code=55 {maximum intermediate line pairs shown}
 @d jchr_widow_penalty_code=56
-			{penalty for creating a widow KANJI character line}
+            {penalty for creating a widow KANJI character line}
 @d text_baseline_shift_factor_code=57
 @d script_baseline_shift_factor_code=58
 @d scriptscript_baseline_shift_factor_code=59
-@d tex_int_pars=60 {total number of \TeX's integer parameters}
+@d ptex_lineend_code=60
+@d tex_int_pars=61 {total number of \TeX's integer parameters}
 @z
 
 @x [17.236] l.5167 - pTeX: cur_jfam, |jchr_widow_penalty|
@@ -1322,6 +1450,7 @@ if n<math_code_base then
 @d text_baseline_shift_factor==int_par(text_baseline_shift_factor_code)
 @d script_baseline_shift_factor==int_par(script_baseline_shift_factor_code)
 @d scriptscript_baseline_shift_factor==int_par(scriptscript_baseline_shift_factor_code)
+@d ptex_lineend==int_par(ptex_lineend_code)
 @z
 
 @x [17.237] l.5244 - pTeX: cur_jfam_code, jchr_window_penalty_code
@@ -1333,6 +1462,7 @@ jchr_widow_penalty_code:print_esc("jcharwidowpenalty");
 text_baseline_shift_factor_code:print_esc("textbaselineshiftfactor");
 script_baseline_shift_factor_code:print_esc("scriptbaselineshiftfactor");
 scriptscript_baseline_shift_factor_code:print_esc("scriptscriptbaselineshiftfactor");
+ptex_lineend_code:print_esc("ptexlineendmode");
 @z
 
 @x [17.238] l.5365 - pTeX: cur_jfam_code, jchr_window_penalty_code
@@ -1351,6 +1481,8 @@ primitive("scriptbaselineshiftfactor",assign_int,int_base+script_baseline_shift_
 @!@:script_baseline_shift_factor}{\.{\\scriptbaselineshiftfactor} primitive@>
 primitive("scriptscriptbaselineshiftfactor",assign_int,int_base+scriptscript_baseline_shift_factor_code);@/
 @!@:scriptscript_baseline_shift_factor}{\.{\\scriptscriptbaselineshiftfactor} primitive@>
+primitive("ptexlineendmode",assign_int,int_base+ptex_lineend_code);@/
+@!@:ptex_lineend_mode_}{\.{\\ptexlineendmode} primitive@>
 @z
 
 @x [17.247] l.5490 - pTeX: kinsoku, t_baseline_shift, y_baseline_shift
@@ -1439,14 +1571,20 @@ end;
 tats
 @z
 
-@x [17.???] l.???? - pTeX multibyte control symbol
+@x [18] buffer2
+for k:=j to j+l-1 do append_char(buffer[k]);
+@y
+for k:=j to j+l-1 do append_char(buffer2[k]*@"100+buffer[k]);
+@z
+
+@x [18.???] l.???? - pTeX multibyte control symbol
 procedure print_cs(@!p:integer); {prints a purported control sequence}
 @y
 procedure print_cs(@!p:integer); {prints a purported control sequence}
 var j, l:pool_pointer; @!cat:0..max_char_code;
 @z
 
-@x
+@x [18.???]
 else  begin print_esc(text(p));
   print_char(" ");
   end;
@@ -1454,13 +1592,20 @@ else  begin print_esc(text(p));
 else  begin l:=text(p);
   print_esc(l); j:=str_start[l]; l:=str_start[l+1];
   if l>j+1 then begin
-    if l-j=multistrlen(ustringcast(str_pool), l, j) then
-      begin cat:=kcat_code(kcatcodekey(fromBUFF(ustringcast(str_pool), l, j)));
+    if (str_pool[j]>=@"100)and(l-j=multistrlenshort(str_pool, l, j)) then
+      begin cat:=kcat_code(kcatcodekey(fromBUFFshort(str_pool, l, j)));
       if (cat<>other_kchar) then print_char(" ");
       end
     else print_char(" "); end
   else print_char(" ");
   end;
+@z
+
+@x [18.???] pTeX: ensure buffer2[]=0 in primitive
+  for j:=0 to l-1 do buffer[j]:=so(str_pool[k+j]);
+@y
+  for j:=0 to l-1 do begin
+    buffer[j]:=Lo(so(str_pool[k+j])); buffer2[j]:=Hi(so(str_pool[k+j])); end;
 @z
 
 @x [18.265] l.5903 - pTeX: \jfont \tfont
@@ -1488,7 +1633,7 @@ def_tfont: print_esc("tfont");
   token that stands for a control sequence; is a multiple of~256, less~1}
 @y
 @d cs_token_flag==@"FFFF {amount added to the |eqtb| location in a
-token that stands for a control sequence; is a multiple of~256, less~1}
+  token that stands for a control sequence; is a multiple of~256, less~1}
 @z
 
 @x [20.293] l.6496 - pTeX: show_token_list
@@ -1551,7 +1696,22 @@ kanji,kana,other_kchar: begin print("kanji character ");
 1) |state=mid_line| is the normal state.\cr
 2) |state=mid_kanji| is like |mid_line|, and internal KANJI string.\cr
 3) |state=skip_blanks| is like |mid_line|, but blanks are ignored.\cr
-4) |state=new_line| is the state at the beginning of a line.\cr}}$$
+4) |state=skip_blanks_kanji| is like |mid_kanji|, but blanks are ignored.\cr
+5) |state=new_line| is the state at the beginning of a line.\cr}}$$
+@z
+
+@x
+ignored; after this case is processed, the next value of |state| will
+be |skip_blanks|.
+@y
+ignored; after this case is processed, the next value of |state| will
+be |skip_blanks|.
+
+If \.{\\ptexlineendmode} is odd, the |state| become |skip_blanks_kanji|
+after a control word which ends with a Japanese character. This is
+similar to |skip_blanks|, but the |state| will be |mid_kanji| after
+|skip_blanks_kanji+left_brace| and |skip_blanks_kanji+right_brace|,
+instead of |mid_line|.
 @z
 
 @x [22.303] l.6736 - pTeX: state mid_kanji
@@ -1562,7 +1722,9 @@ kanji,kana,other_kchar: begin print("kanji character ");
 @d mid_line=1 {|state| code when scanning a line of characters}
 @d mid_kanji=2+max_char_code {|state| code when scanning a line of characters}
 @d skip_blanks=3+max_char_code+max_char_code {|state| code when ignoring blanks}
-@d new_line=4+max_char_code+max_char_code+max_char_code
+@d skip_blanks_kanji=4+max_char_code+max_char_code+max_char_code
+   {|state| code when ignoring blanks}
+@d new_line=5+max_char_code+max_char_code+max_char_code+max_char_code
    {|state| code at start of line}
 @z
 
@@ -1599,7 +1761,7 @@ var old_setting:0..max_selector; {saved |selector| setting}
 @d set_trick_count==
   begin first_count:=tally;
   if (first_count>0)and(trick_buf2[(first_count-1)mod error_line]=1) then
-      incr(first_count);
+    incr(first_count);
   trick_count:=first_count+1+error_line-half_error_line;
   if trick_count<error_line then trick_count:=error_line;
   end
@@ -1619,6 +1781,27 @@ print_ln;
 for q:=1 to n do print_char(" "); {print |n| spaces to begin line~2}
 if m+n<=error_line then p:=first_count+m else p:=first_count+(error_line-n-3);
 if trick_buf2[(p-1) mod error_line]=1 then p:=p-1;
+@z
+
+@x pTeX: buffer
+if j>0 then for i:=start to j-1 do
+  begin if i=loc then set_trick_count;
+  print(buffer[i]);
+  end
+@y
+if j>0 then begin
+  i:=start;
+  if (loc<=j-1)and(start<=loc) then begin
+    for i:=start to loc-1 do
+      if buffer2[i]>0 then
+        print_char(@"100*buffer2[i]+buffer[i]) else print(buffer[i]);
+        set_trick_count; print_unread_buffer_with_ptenc(loc,j);
+    end
+  else
+    for i:=start to j-1 do
+      if buffer2[i]>0 then
+        print_char(@"100*buffer2[i]+buffer[i]) else print(buffer[i]);
+  end
 @z
 
 @x [22.319] l.7157 - pTeX: adjust kanji code token
@@ -1647,6 +1830,13 @@ else show_token_list(link(start),loc,100000); {avoid reference count}
 done1:
 @z
 
+@x [23.???] pTeX: init the input routines
+first:=buf_size; repeat buffer[first]:=0; decr(first); until first=0;
+@y
+first:=buf_size; repeat buffer[first]:=0; buffer2[first]:=0; decr(first); until first=0;
+@z
+
+
 @x [24.341] l.7479 - pTeX: set last_chr
 @!cat:0..max_char_code; {|cat_code(cur_chr)|, usually}
 @y
@@ -1668,6 +1858,8 @@ begin switch: if loc<=limit then {current line not yet finished}
     if multistrlen(ustringcast(buffer), limit+1, loc-1)=2 then
       begin cur_chr:=fromBUFF(ustringcast(buffer), limit+1, loc-1);
       cur_cmd:=kcat_code(kcatcodekey(cur_chr));
+      for l:=loc-1 to loc-2+multistrlen(ustringcast(buffer), limit+1, loc-1) do
+        buffer2[l]:=1;
       incr(loc);
       end
     else reswitch: cur_cmd:=cat_code(cur_chr);
@@ -1676,7 +1868,16 @@ begin switch: if loc<=limit then {current line not yet finished}
 @x [24.344] l.7535 - pTeX: ASCII-KANJI space handling
 @d any_state_plus(#) == mid_line+#,skip_blanks+#,new_line+#
 @y
-@d any_state_plus(#) == mid_line+#,mid_kanji+#,skip_blanks+#,new_line+#
+@d any_state_plus(#) ==
+  mid_line+#,mid_kanji+#,skip_blanks+#,skip_blanks_kanji+#,new_line+#
+@z
+
+@x
+@ @<Cases where character is ignored@>=
+any_state_plus(ignore),skip_blanks+spacer,new_line+spacer
+@y
+@ @<Cases where character is ignored@>=
+any_state_plus(ignore),skip_blanks+spacer,skip_blanks_kanji+spacer,new_line+spacer
 @z
 
 @x [24.347] l.7569 - pTeX: scaner
@@ -1708,20 +1909,34 @@ mid_kanji+spacer,mid_line+spacer:@<Enter |skip_blanks| state, emit a space@>;
 mid_line+car_ret:@<Finish line, emit a space@>;
 mid_kanji+car_ret: if skip_mode then @<Finish line, |goto switch|@>
   else @<Finish line, emit a space@>;
-skip_blanks+car_ret,any_state_plus(comment):
+skip_blanks+car_ret,skip_blanks_kanji+car_ret,any_state_plus(comment):
   @<Finish line, |goto switch|@>;
 new_line+car_ret:@<Finish line, emit a \.{\\par}@>;
-mid_line+left_brace,mid_kanji+left_brace: incr(align_state);
+mid_line+left_brace: incr(align_state);
+mid_kanji+left_brace: begin incr(align_state);
+  if ((ptex_lineend div 4) mod 2)=1 then state:=mid_line;
+  end;
 skip_blanks+left_brace,new_line+left_brace: begin
   state:=mid_line; incr(align_state);
   end;
-mid_line+right_brace,mid_kanji+right_brace: decr(align_state);
+skip_blanks_kanji+left_brace: begin
+  state:=mid_kanji; incr(align_state);
+  end;
+mid_line+right_brace: decr(align_state);
+mid_kanji+right_brace: begin decr(align_state);
+  if ((ptex_lineend div 4) mod 2)=1 then state:=mid_line;
+  end;
 skip_blanks+right_brace,new_line+right_brace: begin
   state:=mid_line; decr(align_state);
   end;
-add_delims_to(skip_blanks),add_delims_to(new_line),add_delims_to(mid_kanji):
+skip_blanks_kanji+right_brace: begin
+  state:=mid_kanji; decr(align_state);
+  end;
+add_delims_to(skip_blanks),add_delims_to(skip_blanks_kanji),
+add_delims_to(new_line),add_delims_to(mid_kanji):
   state:=mid_line;
-all_jcode(skip_blanks),all_jcode(new_line),all_jcode(mid_line):
+all_jcode(skip_blanks),all_jcode(skip_blanks_kanji),all_jcode(new_line),
+all_jcode(mid_line):
   state:=mid_kanji;
 
 @ @<Global...@>=
@@ -1756,13 +1971,21 @@ end
 begin if loc>limit then cur_cs:=null_cs {|state| is irrelevant in this case}
 else  begin k:=loc; cur_chr:=buffer[k]; incr(k);
   if multistrlen(ustringcast(buffer), limit+1, k-1)=2 then
-    begin cat:=kcat_code(kcatcodekey(fromBUFF(ustringcast(buffer), limit+1, k-1))); incr(k);
+    begin cat:=kcat_code(kcatcodekey(fromBUFF(ustringcast(buffer), limit+1, k-1)));
+    for l:=k-1 to k-2+multistrlen(ustringcast(buffer), limit+1, k-1) do
+      buffer2[l]:=1;
+    incr(k);
     end
   else cat:=cat_code(cur_chr);
 start_cs:
-  if (cat=letter)or(cat=kanji)or(cat=kana) then state:=skip_blanks
+  if cat=letter then state:=skip_blanks
+  else if (cat=kanji)or(cat=kana) then
+    begin if (ptex_lineend mod 2)=0 then state:=skip_blanks_kanji
+    else state:=skip_blanks end
   else if cat=spacer then state:=skip_blanks
-  else if cat=other_kchar then state:=mid_kanji
+  else if cat=other_kchar then
+    begin if ((ptex_lineend div 2) mod 2)=0 then state:=mid_kanji
+    else state:=mid_line end
   else state:=mid_line;
   if cat=other_kchar then
     begin cur_cs:=id_lookup(loc,k-loc); loc:=k; goto found;
@@ -1819,10 +2042,10 @@ begin if buffer[k]=cur_chr then @+if cat=sup_mark then @+if k<limit then
       end
     else if c<@'100 then buffer[k-1]:=c+@'100
     else buffer[k-1]:=c-@'100;
-    limit:=limit-d; first:=first-d;
+    buffer2[k-1]:=0; limit:=limit-d; first:=first-d;
     l:=k; cur_chr:=buffer[k-1]; cat:=cat_code(cur_chr);
     while l<=limit do
-      begin buffer[l]:=buffer[l+d]; incr(l);
+      begin buffer[l]:=buffer[l+d]; buffer2[l]:=buffer2[l+d]; incr(l);
       end;
     goto start_cs;
     end;
@@ -1845,7 +2068,13 @@ end
 @ @<Scan ahead in the buffer...@>=
 begin repeat cur_chr:=buffer[k]; incr(k);
   if multistrlen(ustringcast(buffer), limit+1, k-1)=2 then
-    begin cat:=kcat_code(kcatcodekey(fromBUFF(ustringcast(buffer), limit+1, k-1))); incr(k);
+    begin cat:=kcat_code(kcatcodekey(fromBUFF(ustringcast(buffer), limit+1, k-1)));
+    for l:=k-1 to k-2+multistrlen(ustringcast(buffer), limit+1, k-1) do
+      buffer2[l]:=1;
+    incr(k);
+    if (cat=kanji)or(cat=kana) then
+      begin if (ptex_lineend mod 2)=0 then state:=skip_blanks_kanji
+      else state:=skip_blanks end;
     end
   else cat:=cat_code(cur_chr);
   while (buffer[k]=cur_chr)and(cat=sup_mark)and(k<limit) do
@@ -1861,15 +2090,16 @@ begin repeat cur_chr:=buffer[k]; incr(k);
       else cur_chr:=c-@'100;
       cat:=cat_code(cur_chr);
       if (cat=letter)or(cat=sup_mark) then
-        begin buffer[k-1]:=cur_chr;
+        begin buffer[k-1]:=cur_chr; buffer2[k-1]:=0;
         limit:=limit-d; first:=first-d;
         l:=k;
         while l<=limit do
-          begin buffer[l]:=buffer[l+d]; incr(l);
+          begin buffer[l]:=buffer[l+d]; buffer2[l]:=buffer2[l+d]; incr(l);
           end;
         end;
       end;
     end;
+  if cat=letter then state:=skip_blanks;
 until not((cat=letter)or(cat=kanji)or(cat=kana))or(k>limit);
 {@@<If an expanded...@@>;}
 if not((cat=letter)or(cat=kanji)or(cat=kana)) then decr(k);
@@ -1938,6 +2168,23 @@ else  begin {we are done with this token list}
   end
 @z
 
+@x [24] pTeX: firm_up_the_line
+  if start<limit then for k:=start to limit-1 do print(buffer[k]);
+  first:=limit; prompt_input("=>"); {wait for user response}
+@.=>@>
+  if last>first then
+    begin for k:=first to last-1 do {move line down in buffer}
+      buffer[k+start-first]:=buffer[k];
+@y
+  if start<limit then for k:=start to limit-1 do
+    if buffer2[k]>0 then print_char(buffer[k]) else print(buffer[k]);
+  first:=limit; prompt_input("=>"); {wait for user response}
+@.=>@>
+  if last>first then
+    begin for k:=first to last-1 do {move line down in buffer}
+      begin buffer[k+start-first]:=buffer[k]; buffer2[k+start-first]:=buffer2[k]; end;
+@z
+
 @x [24.365] l.7935 - pTeX: get_token
 @p procedure get_token; {sets |cur_cmd|, |cur_chr|, |cur_tok|}
 begin no_new_control_sequence:=false; get_next; no_new_control_sequence:=true;
@@ -1969,6 +2216,12 @@ while p<>null do
     end;
   buffer[j]:=info(p) mod @'400; incr(j); p:=link(p);
   end;
+if j>first+1 then
+  begin no_new_control_sequence:=false; cur_cs:=id_lookup(first,j-first);
+  no_new_control_sequence:=true;
+  end
+else if j=first then cur_cs:=null_cs {the list is empty}
+else cur_cs:=single_base+buffer[first] {the list has length one}
 @y
 @ @<Look up the characters of list |r| in the hash table...@>=
 j:=first; p:=link(r);
@@ -1980,10 +2233,17 @@ while p<>null do
 @:TeX capacity exceeded buffer size}{\quad buffer size@>
     end;
   if check_kanji(info(p)) then {|wchar_token|}
-    begin buffer[j]:=Hi(info(p)); incr(j);
-    end;
+    begin buffer[j]:=Hi(info(p)); buffer2[j]:=1; incr(j); buffer2[j]:=1;
+    end
+  else buffer2[j]:=0;
   buffer[j]:=Lo(info(p)); incr(j); p:=link(p);
   end;
+if j>first+1 then
+  begin no_new_control_sequence:=false; cur_cs:=id_lookup(first,j-first);
+  no_new_control_sequence:=true;
+  end
+else if j=first then cur_cs:=null_cs {the list is empty}
+else cur_cs:=single_base+buffer[first] {the list has length one}
 @z
 
 @x [25.380] l.8221 - pTeX: get_x_token
@@ -2178,7 +2438,7 @@ if not is_char_node(tx) then
 @<Fetch an item in the current node...@>=
 @z
 
-@x pTeX: \ptexversion 
+@x pTeX: \ptexversion
   begin if cur_chr=input_line_no_code then cur_val:=line
   else cur_val:=last_badness; {|cur_chr=badness_code|}
 @y
@@ -2320,7 +2580,7 @@ if scan_keyword("em") then v:=(@<The em width for |cur_font|@>)
 else if scan_keyword("ex") then v:=(@<The x-height for |cur_font|@>)
 @.ex@>
 else if scan_keyword("zw") then @<The KANJI width for |cur_jfont|@>
-@.ze@>
+@.zw@>
 else if scan_keyword("zh") then @<The KANJI height for |cur_jfont|@>
 @.zh@>
 else goto not_found;
@@ -2350,8 +2610,8 @@ help6("Dimensions can be in units of em, ex, zw, zh, in, pt, pc,")@/
   if t=" " then t:=space_token
   else t:=other_token+t;
 @y
-  if multistrlen(ustringcast(str_pool), pool_ptr, k)=2 then
-    begin t:=fromBUFF(ustringcast(str_pool), pool_ptr, k); incr(k);
+  if t>=@"100 then
+    begin t:=fromBUFFshort(str_pool, pool_ptr, k); incr(k);
     end
   else if t=" " then t:=space_token
   else t:=other_token+t;
@@ -2375,8 +2635,10 @@ help6("Dimensions can be in units of em, ex, zw, zh, in, pt, pc,")@/
 @d sjis_code=7 {command code for \.{\\sjis}}
 @d jis_code=8 {command code for \.{\\jis}}
 @d kuten_code=9 {command code for \.{\\kuten}}
-@d ptex_revision_code=10 {command code for \.{\\ptexrevision}}
-@d ptex_convert_codes=11 {end of \pTeX's command codes}
+@d ucs_code=10 {command code for \.{\\ucs}}
+@d toucs_code=11 {command code for \.{\\toucs}}
+@d ptex_revision_code=12 {command code for \.{\\ptexrevision}}
+@d ptex_convert_codes=13 {end of \pTeX's command codes}
 @d job_name_code=ptex_convert_codes {command code for \.{\\jobname}}
 @z
 
@@ -2396,6 +2658,10 @@ primitive("jis",convert,jis_code);
 @!@:jis_}{\.{\\jis} primitive@>
 primitive("kuten",convert,kuten_code);
 @!@:kuten_}{\.{\\kuten} primitive@>
+primitive("ucs",convert,ucs_code);
+@!@:ucs_}{\.{\\ucs} primitive@>
+primitive("toucs",convert,toucs_code);
+@!@:toucs_}{\.{\\toucs} primitive@>
 primitive("ptexrevision",convert,ptex_revision_code);
 @!@:ptexrevision_}{\.{\\ptexrevision} primitive@>
 @z
@@ -2409,6 +2675,8 @@ primitive("ptexrevision",convert,ptex_revision_code);
   sjis_code:print_esc("sjis");
   jis_code:print_esc("jis");
   kuten_code:print_esc("kuten");
+  ucs_code:print_esc("ucs");
+  toucs_code:print_esc("toucs");
   ptex_revision_code:print_esc("ptexrevision");
 @z
 
@@ -2433,7 +2701,7 @@ string_code, meaning_code: begin save_scanner_status:=scanner_status;
 KANJI(cx):=0;
 case c of
 number_code,roman_numeral_code,
-kansuji_code,euc_code,sjis_code,jis_code,kuten_code: scan_int;
+kansuji_code,euc_code,sjis_code,jis_code,kuten_code,ucs_code,toucs_code: scan_int;
 ptex_revision_code: do_nothing;
 string_code, meaning_code: begin save_scanner_status:=scanner_status;
   scanner_status:=normal; get_token;
@@ -2455,10 +2723,18 @@ string_code:if cur_cs<>0 then sprint_cs(cur_cs)
 case c of
 number_code: print_int(cur_val);
 roman_numeral_code: print_roman_int(cur_val);
-jis_code:   print_int(fromJIS(cur_val));
-euc_code:   print_int(fromEUC(cur_val));
-sjis_code:  print_int(fromSJIS(cur_val));
-kuten_code: print_int(fromKUTEN(cur_val));
+jis_code:   begin cur_val:=fromJIS(cur_val);
+  if cur_val=0 then print_int(-1) else print_int(cur_val); end;
+euc_code:   begin cur_val:=fromEUC(cur_val);
+  if cur_val=0 then print_int(-1) else print_int(cur_val); end;
+sjis_code:  begin cur_val:=fromSJIS(cur_val);
+  if cur_val=0 then print_int(-1) else print_int(cur_val); end;
+kuten_code: begin cur_val:=fromKUTEN(cur_val);
+  if cur_val=0 then print_int(-1) else print_int(cur_val); end;
+ucs_code:   begin cur_val:=fromUCS(cur_val);
+  if cur_val=0 then print_int(-1) else print_int(cur_val); end;
+toucs_code: begin cur_val:=toUCS(cur_val);
+  if cur_val=0 then print_int(-1) else print_int(cur_val); end;
 ptex_revision_code: print(pTeX_revision);
 kansuji_code: print_kansuji(cur_val);
 string_code:if cur_cs<>0 then sprint_cs(cur_cs)
@@ -2622,6 +2898,71 @@ else  begin str_room(1); append_char(c); {contribute |c| to the current string}
 end;
 @z
 
+@x [29.518] - print_quoted in pTeX is already defined
+@d print_quoted(#) == {print string |#|, omitting quotes}
+if #<>0 then
+  for j:=str_start[#] to str_start[#+1]-1 do
+    if so(str_pool[j])<>"""" then
+      print(so(str_pool[j]))
+
+@y
+@z
+
+@x [29.519]
+@d append_to_name(#)==begin c:=#; if not (c="""") then begin incr(k);
+  if k<=file_name_size then name_of_file[k]:=xchr[c];
+  end end
+@y
+@d append_to_name_char(#)==begin incr(k);
+  if k<=file_name_size then name_of_file[k]:=xchr[#];
+  end
+
+@d append_to_name_hex(#)==if (#)<10 then append_to_name_char((#)+"0")
+  else append_to_name_char((#)-10+"a")
+
+@d append_to_name(#)==begin c:=#; if not (c="""") then append_to_name_char(c); end
+
+@d append_to_name_escape(#)==begin
+  if (#)>=@"100 then begin
+    c:=(#)-@"100;
+    append_to_name_char(c);
+  end else begin
+    c:=#;
+    if (c>=@"80) and (not isinternalUPTEX) and isterminalUTF8 then begin
+      append_to_name_char("^");
+      append_to_name_char("^");
+      append_to_name_hex(c div 16);
+      append_to_name_hex(c mod 16);
+    end else
+      append_to_name_char(c);
+  end
+end
+
+@d append_to_name_str_pool(#)==if not ((#)="""") then append_to_name_escape(#)
+@z
+
+@x l.10389
+name_of_file:= xmalloc_array (ASCII_code, length(a)+length(n)+length(e)+1);
+@y
+name_of_file:= xmalloc_array (ASCII_code, (length(a)+length(n)+length(e))*4+1);
+@z
+
+@x [29.519] pack_file_name
+for j:=str_start[a] to str_start[a+1]-1 do append_to_name(so(str_pool[j]));
+for j:=str_start[n] to str_start[n+1]-1 do append_to_name(so(str_pool[j]));
+for j:=str_start[e] to str_start[e+1]-1 do append_to_name(so(str_pool[j]));
+@y
+for j:=str_start[a] to str_start[a+1]-1 do append_to_name_str_pool(so(str_pool[j]));
+for j:=str_start[n] to str_start[n+1]-1 do append_to_name_str_pool(so(str_pool[j]));
+for j:=str_start[e] to str_start[e+1]-1 do append_to_name_str_pool(so(str_pool[j]));
+@z
+
+@x l.10444
+name_of_file := xmalloc_array (ASCII_code, n+(b-a+1)+format_ext_length+1);
+@y
+name_of_file := xmalloc_array (ASCII_code, (n+(b-a+1)+format_ext_length)*4+1);
+@z
+
 @x [29.526] l.10668 - pTeX: scan file name
 loop@+begin if (cur_cmd>other_char)or(cur_chr>255) then {not a character}
     begin back_input; goto done;
@@ -2640,8 +2981,8 @@ skip_mode:=false;
 loop@+begin
   if (cur_cmd=kanji)or(cur_cmd=kana)or(cur_cmd=other_kchar) then {is kanji}
     begin str_room(2);
-    append_char(Hi(cur_chr)); {kanji upper byte}
-    append_char(Lo(cur_chr)); {kanji lower byte}
+    append_char(@"100+Hi(cur_chr)); {kanji upper byte}
+    append_char(@"100+Lo(cur_chr)); {kanji lower byte}
     end
   else if (cur_cmd>other_char)or(cur_chr>255) then {not an alphabet}
     begin back_input; goto done;
@@ -2655,6 +2996,15 @@ loop@+begin
   end;
 done: end_name; name_in_progress:=false;
 skip_mode:=true;
+@z
+
+@x [29.???] open_log_file
+if buffer[l]=end_line_char then decr(l);
+for k:=1 to l do print(buffer[k]);
+print_ln; {now the transcript file contains the first line of input}
+@y
+if buffer[l]=end_line_char then decr(l); print_unread_buffer_with_ptenc(1,l+1);
+print_ln; {now the transcript file contains the first line of input}
 @z
 
 @x [29.536] l.10834 - pTeX:
@@ -2674,6 +3024,14 @@ else
   wlog(' (');
   wlog(conststringcast(get_enc_string));
   wlog(')');
+@z
+
+@x [29.???] pTeX - start_input
+print_char("("); incr(open_parens);
+slow_print(full_source_filename_stack[in_open]); update_terminal;
+@y
+print_char("("); incr(open_parens);
+slow_print_filename(full_source_filename_stack[in_open]); update_terminal;
 @z
 
 @x [30.560] l.10968 - pTeX:
@@ -3134,7 +3492,7 @@ continue:
       synch_h;
       end;
     p:=link(p);
-	jc:=toDVI(KANJI(info(p)));
+    jc:=toDVI(KANJI(info(p)));
     dvi_out(set2); dvi_out(Hi(jc)); dvi_out(Lo(jc));
     cur_h:=cur_h+char_width(f)(orig_char_info(f)(c)); {not |jc|}
     end;
@@ -3474,8 +3832,8 @@ if p<>null then
   hlist_node,vlist_node,dir_node,rule_node,unset_node:
     @<Incorporate box dimensions into the dimensions of
       the hbox that will contain~it@>;
-  ins_node,mark_node,adjust_node:
-    if adjust_tail<>null then @<Transfer node |p| to the adjustment list@>;
+  ins_node,mark_node,adjust_node: if adjust_tail<>null then
+    @<Transfer node |p| to the adjustment list@>;
   whatsit_node:@<Incorporate a whatsit node into an hbox@>;
   disp_node:disp:=disp_dimen(p);
 @z
@@ -3571,7 +3929,7 @@ internal kanji code number.
 @d math_kcode(#)==info(#+4) {the |kanji character| field of a noad}
 @d kcode_noad_nucleus(#)==#+3
 @d math_kcode_nucleus(#)==info(#+3)
-	{the |kanji character| field offset from nucleus}
+    {the |kanji character| field offset from nucleus}
 @#
 @d math_jchar=6
 @d math_text_jchar=7
@@ -3632,7 +3990,7 @@ begin print_esc("fam"); print_int(fam(p)); print_char(" ");
 print_ASCII(qo(character(p)));
 @y
 procedure print_fam_and_char(@!p:pointer;@!t:small_number);
-					{prints family and character}
+                    {prints family and character}
 var @!cx:KANJI_code; {temporary register for KANJI}
 begin print_esc("fam"); print_int(fam(p)); print_char(" ");
 if t=math_char then print_ASCII(qo(character(p)))
@@ -3716,9 +4074,9 @@ function shift_sub_exp_box(@!q:pointer):pointer;
         if box_dir(info(q))=dir_tate then d:=t_baseline_shift
         else d:=y_baseline_shift end
       else d:=y_baseline_shift;
-      if cur_style<script_style then 
+      if cur_style<script_style then
         d:=xn_over_d(d,text_baseline_shift_factor, 1000)
-      else if cur_style<script_script_style then 
+      else if cur_style<script_script_style then
         d:=xn_over_d(d,script_baseline_shift_factor, 1000)
       else
         d:=xn_over_d(d,scriptscript_baseline_shift_factor, 1000);
@@ -4313,7 +4671,7 @@ else  case type(s) of
   disp_node: do_nothing;
 @z
 
-@x [38.856] l.17467 - pTeX: print symbolic feasibe node
+@x [38.856] l.17467 - pTeX: print symbolic feasible node
 if cur_p=null then print_esc("par")
 else if type(cur_p)<>glue_node then
   begin if type(cur_p)=penalty_node then print_esc("penalty")
@@ -4998,9 +5356,9 @@ any_mode(make_box): begin_box(0);
 any_mode(make_box): begin_box(0);
 any_mode(chg_dir):
   begin  if cur_group<>align_group then
-    if mode=hmode then 
+    if mode=hmode then
       begin print_err("Improper `"); print_cmd_chr(cur_cmd,cur_chr);
-      print("'"); 
+      print("'");
       help2("You cannot change the direction in unrestricted")
       ("horizontal mode."); error;
       end
@@ -5056,7 +5414,7 @@ q:pointer;
     else  begin p:=new_noad;
       math_type(nucleus(p)):=sub_box;
 @y
-  else  begin if abs(mode)=hmode then 
+  else  begin if abs(mode)=hmode then
     begin space_factor:=1000; inhibit_glue_flag:=false; end
     else  begin p:=new_noad;
       math_type(nucleus(p)):=sub_exp_box;
@@ -5133,7 +5491,7 @@ q:=link(p);
 until q=tx; {found |r|$\to$|p|$\to$|q=tx|}
 q:=link(tx); link(p):=q; link(tx):=null;
 if q=null then tail:=p
-else if fd then {|r|$\to$|p=disp_node|$\to$|q=disp_node|} 
+else if fd then {|r|$\to$|p=disp_node|$\to$|q=disp_node|}
   begin prev_node:=r; prev_disp:=pdisp; link(p):=null; tail:=p;
   disp_dimen(p):=disp_dimen(q); free_node(q,small_node_size);
   end
@@ -5287,7 +5645,7 @@ mode:=hmode; space_factor:=1000; set_cur_lang; clang:=cur_lang;
 @x [47.???] indent_in_hmode: reset inhibit_glue_flag
   if abs(mode)=hmode then space_factor:=1000
 @y
-  if abs(mode)=hmode then 
+  if abs(mode)=hmode then
     begin space_factor:=1000; inhibit_glue_flag:=false; end
 @z
 
@@ -5313,8 +5671,6 @@ push_nest; mode:=-vmode; direction:=adjust_dir; prev_depth:=ignore_depth;
 @z
 
 @x [47.1100] l.21189 - pTeX: free box node, ins_dir
-insert_group: begin end_graf; q:=split_top_skip; add_glue_ref(q);
-  d:=split_max_depth; f:=floating_penalty; unsave; decr(save_ptr);
   {now |saved(0)| is the insertion number, or 255 for |vadjust|}
   p:=vpack(link(head),natural); pop_nest;
   if saved(0)<255 then
@@ -5332,8 +5688,6 @@ insert_group: begin end_graf; q:=split_top_skip; add_glue_ref(q);
   if nest_ptr=0 then build_page;
   end;
 @y
-insert_group: begin end_graf; q:=split_top_skip; add_glue_ref(q);
-  d:=split_max_depth; f:=floating_penalty; unsave; decr(save_ptr);
   {now |saved(0)| is the insertion number, or 255 for |vadjust|}
   p:=vpack(link(head),natural); set_box_dir(p)(direction); pop_nest;
   if saved(0)<255 then
@@ -5354,6 +5708,7 @@ insert_group: begin end_graf; q:=split_top_skip; add_glue_ref(q);
       end
     else  begin
       r:=get_node(small_node_size); type(r):=adjust_node;@/
+      subtype(r):=0; {the |subtype| is not used}
       adjust_ptr(r):=list_ptr(p); delete_glue_ref(q);
       if not is_char_node(tail)and(type(tail)=disp_node) then
         prev_append(r)
@@ -5564,14 +5919,14 @@ var c:integer; {hyphen character}
 begin tail_append(new_disc); inhibit_glue_flag:=false;
 @z
 
-@x pTeX: direction check in \discretionary 
+@x pTeX: direction check in \discretionary
 @!n:integer; {length of discretionary list}
 @y
 @!n:integer; {length of discretionary list}
 @!d:integer; {direction}
 @z
 
-@x pTeX: direction check in \discretionary 
+@x pTeX: direction check in \discretionary
 p:=link(head); pop_nest;
 case saved(-1) of
 0:pre_break(tail):=p;
@@ -5580,13 +5935,13 @@ case saved(-1) of
 p:=link(head); d:=abs(direction); pop_nest;
 case saved(-1) of
 0:if abs(direction)=d then pre_break(tail):=p
-  else begin 
+  else begin
     print_err("Direction Incompatible");
     help2("\discretionary's argument and outer hlist must have same direction.")@/
     ("I delete your first part."); error; pre_break(tail):=null; flush_node_list(p);
   end;
 1:if abs(direction)=d then post_break(tail):=p
-  else begin 
+  else begin
     print_err("Direction Incompatible");
     help2("\discretionary's argument and outer hlist must have same direction.")@/
     ("I delete your second part."); error; post_break(tail):=null; flush_node_list(p);
@@ -5599,7 +5954,7 @@ push_nest; mode:=-hmode; space_factor:=1000;
 push_nest; mode:=-hmode; space_factor:=1000; inhibit_glue_flag:=false;
 @z
 
-@x pTeX: direction check in \discretionary 
+@x pTeX: direction check in \discretionary
 else link(tail):=p;
 if n<=max_quarterword then replace_count(tail):=n
 @y
@@ -5610,7 +5965,7 @@ else if (n>0)and(abs(direction)<>d) then
   end
 else link(tail):=p;
 if n<=max_quarterword then replace_count(tail):=n
-@z 
+@z
 
 @x [47.1120] l.22119 - pTeX: discretionary with disp_node
 decr(save_ptr); return;
@@ -5814,7 +6169,7 @@ begin KANJI(cx):=0;
 restart: @<Get the next non-blank non-relax...@>;
 reswitch:case cur_cmd of
 letter,other_char,char_given:
-  if (is_char_ascii(cur_chr) or (cur_chr=256)) then begin
+  if is_char_ascii(cur_chr) then begin
     c:=ho(math_code(cur_chr));
     if c=@'100000 then
       begin @<Treat |cur_chr| as an active character@>;
@@ -5865,16 +6220,14 @@ mmode+char_num: begin scan_char_num; cur_chr:=cur_val;
 @y
 mmode+letter,mmode+other_char,mmode+char_given:
   if is_char_ascii(cur_chr) then
-    if cur_chr<128 then set_math_char(ho(math_code(cur_chr)))
-    else set_math_char(cur_chr)
+    set_math_char(ho(math_code(cur_chr)))
   else set_math_kchar(cur_chr);
 mmode+kanji,mmode+kana,mmode+other_kchar: begin
     cx:=cur_chr; set_math_kchar(KANJI(cx));
   end;
 mmode+char_num: begin scan_char_num; cur_chr:=cur_val;
   if is_char_ascii(cur_chr) then
-    if cur_chr<128 then set_math_char(ho(math_code(cur_chr)))
-    else set_math_char(cur_chr)
+    set_math_char(ho(math_code(cur_chr)))
   else set_math_kchar(cur_chr);
   end;
 @z
@@ -5910,13 +6263,11 @@ scan_math(nucleus(tail),kcode_noad(tail));
 @z
 
 @x [48.1164] l.22790 - pTeX: vcenter : dir
-vcenter_group: begin end_graf; unsave; save_ptr:=save_ptr-2;
   p:=vpack(link(head),saved(1),saved(0)); pop_nest;
   tail_append(new_noad); type(tail):=vcenter_noad;
   math_type(nucleus(tail)):=sub_box; info(nucleus(tail)):=p;
   end;
 @y
-vcenter_group: begin end_graf; unsave; save_ptr:=save_ptr-2;
   p:=vpack(link(head),saved(1),saved(0));
   set_box_dir(p)(direction); pop_nest;
   if abs(box_dir(p))<>abs(direction) then p:=new_dir_node(p,abs(direction));
@@ -6244,6 +6595,24 @@ show_code: @<Show the current meaning of a token, then |goto common_ending|@>;
 show_mode: @<Show the current japanese processing mode@>;
 @z
 
+@x dump
+@!format_engine: ^text_char;
+@y
+@!w: four_quarters; {four ASCII codes}
+@!format_engine: ^text_char;
+@z
+
+@x undump
+@!format_engine: ^text_char;
+@!dummy_xord: ASCII_code;
+@!dummy_xchr: text_char;
+@y
+@!w: four_quarters; {four ASCII codes}
+@!format_engine: ^text_char;
+@!dummy_xord: ASCII_code;
+@!dummy_xchr: ext_ASCII_code;
+@z
+
 @x
 libc_free(format_engine);@/
 @y
@@ -6256,6 +6625,28 @@ libc_free(format_engine);
 @y
 libc_free(format_engine);
 undump_kanji(fmt_file);
+@z
+
+@x
+dump_things(str_pool[0], pool_ptr);
+@y
+for k:=0 to str_ptr do dump_int(str_start[k]);
+k:=0;
+while k+4<pool_ptr do
+  begin dump_four_ASCII; k:=k+4;
+  end;
+k:=pool_ptr-4; dump_four_ASCII;
+@z
+
+@x
+undump_things(str_pool[0], pool_ptr);
+@y
+for k:=0 to str_ptr do undump(0)(pool_ptr)(str_start[k]);
+k:=0;
+while k+4<pool_ptr do
+  begin undump_four_ASCII; k:=k+4;
+  end;
+k:=pool_ptr-4; undump_four_ASCII;
 @z
 
 @x l.24982
@@ -6315,6 +6706,13 @@ undump_things(ctype_base[null_font], font_ptr+1-null_font);
 undump_things(char_base[null_font], font_ptr+1-null_font);
 @z
 
+@x
+  buffer:=xmalloc_array (ASCII_code, buf_size);
+@y
+  buffer:=xmalloc_array (ASCII_code, buf_size);
+  buffer2:=xmalloc_array (ASCII_code, buf_size);
+@z
+
 @x l.25363 - pTeX
   font_info:=xmalloc_array (fmemory_word, font_mem_size);
 @y
@@ -6372,6 +6770,40 @@ inhibit_glue_flag:=false;
 end
 @z
 
+@x [53.????] \write18{foo} (write_out in tex.ch)
+@!d:integer; {number of characters in incomplete current string}
+@y
+@!k:integer; {loop indices}
+@!d:integer; {number of characters in incomplete current string}
+@z
+
+@x [53.????] \write18{foo} (write_out in tex.ch)
+  for d:=0 to cur_length-1 do
+    begin {|print| gives up if passed |str_ptr|, so do it by hand.}
+    print(so(str_pool[str_start[str_ptr]+d])); {N.B.: not |print_char|}
+    end;
+@y
+  for d:=0 to cur_length-1 do
+    begin {|print| gives up if passed |str_ptr|, so do it by hand.}
+    if so(str_pool[str_start[str_ptr]+d])>=@"100 then
+    print_char(so(str_pool[str_start[str_ptr]+d]))
+    else print(so(str_pool[str_start[str_ptr]+d])); {N.B.: not |print_char|}
+    end;
+@z
+
+@x [53.????] ignore "flag bit" in str_pool for system(3)
+      runsystem_ret := runsystem(conststringcast(addressof(
+                                              str_pool[str_start[str_ptr]])));
+@y
+      if name_of_file then libc_free(name_of_file);
+      name_of_file := xmalloc(cur_length*4+1);
+      k := 0;
+      for d:=0 to cur_length-1 do
+        append_to_name_escape(str_pool[str_start[str_ptr]+d]); {do not remove quote}
+      name_of_file[k+1] := 0;
+      runsystem_ret := runsystem(conststringcast(name_of_file+1));
+@z
+
 @x [53.????] Implement \immediate, inhibit_glue_flag
   begin p:=tail; do_extension; {append a whatsit node}
   out_what(tail); {do the action immediately}
@@ -6404,7 +6836,6 @@ else begin inhibit_glue_flag:=false;
   new_whatsit(language_node,small_node_size);
 @z
 
-
 @x [53.1376] l.26309 - pTeX:
 @<Glob...@> =
 @!debug_format_file: boolean;
@@ -6414,6 +6845,31 @@ else begin inhibit_glue_flag:=false;
 
 @ @<Set init...@>=
 @!debug debug_format_file:=true; @+gubed;
+@z
+
+@x pTeX: xchr
+  if eight_bit_p then
+    for k:=0 to 255 do
+      xprn[k]:=1;
+end;
+@y
+  if eight_bit_p then
+    for k:=0 to 255 do
+      xprn[k]:=1;
+end;
+for k:=256 to 511 do xchr[k]:=k;
+@z
+
+@x [54/web2c.???] scan_file_name_braced
+  for i:=str_start[s] to str_start[s+1]-1 do
+    dummy := more_name(str_pool[i]); {add each read character to the current file name}
+@y
+  for i:=str_start[s] to str_start[s+1]-1 do
+    if str_pool[i]>=@"100 then
+      begin str_room(1); append_char(str_pool[i]);
+      end
+    else
+      dummy := more_name(str_pool[i]); {add each read character to the current file name}
 @z
 
 @x l.26984 - pTeX
@@ -6481,7 +6937,7 @@ set_kansuji_char:
 begin p:=cur_chr; scan_int; n:=cur_val; scan_optional_equals; scan_int;
 if not is_char_kanji(cur_val) then
   begin print_err("Invalid KANSUJI char (");
-  print_hex(cur_val); print_char(")");
+  print_hex_safe(cur_val); print_char(")");
 @.Invalid KANSUJI char@>
   help1("I'm skipping this control sequences.");@/
   error; return;
@@ -6519,8 +6975,8 @@ begin k:=0;
   until n=0;
   begin while k>0 do
     begin decr(k);
-	cx:=kansuji_char(dig[k]);
-	print_kanji(fromDVI(cx));
+    cx:=kansuji_char(dig[k]);
+    print_kanji(fromDVI(cx));
     end;
   end;
 end;
@@ -6635,7 +7091,7 @@ if is_char_kanji(n) then
   if (j<>no_entry)and(cur_val>inhibit_after) then
     begin if global or(cur_level=level_one) then cur_val:=inhibit_unused
       { remove the entry from inhibit table }
-	else cur_val:=inhibit_none; end
+    else cur_val:=inhibit_none; end
   else if j=no_entry then
     begin print_err("Inhibit table is full!!");
     help1("I'm skipping this control sequences.");@/
@@ -6643,7 +7099,7 @@ if is_char_kanji(n) then
   define(inhibit_xsp_code_base+j,cur_val,n);
   end
 else
-  begin print_err("Invalid KANJI code ("); print_hex(n); print_char(")");
+  begin print_err("Invalid KANJI code ("); print_hex_safe(n); print_char(")");
 @.Invalid KANJI code@>
   help1("I'm skipping this control sequences.");@/
   error; return;
@@ -6735,7 +7191,7 @@ else
   if p=pre_break_penalty_code then print("pre")
   else if p=post_break_penalty_code then print("post")
   else print_char("?");
-  print("breakpenalty ("); print_hex(n); print_char(")");
+  print("breakpenalty ("); print_hex_safe(n); print_char(")");
 @.Invalid KANJI code@>
   help1("I'm skipping this control sequences.");@/
   error; return;
@@ -6893,9 +7349,9 @@ while p<>null do
   ins_node,disp_node,mark_node,adjust_node,whatsit_node,penalty_node:
     do_nothing;
   math_node:
-    if (subtype(p)=before)or(subtype(p)=after) then 
+    if (subtype(p)=before)or(subtype(p)=after) then
       begin if find_first_char then
-        begin find_first_char:=false; first_char:=p; 
+        begin find_first_char:=false; first_char:=p;
         end;
         last_char:=p; flag:=true;
       end
@@ -6904,7 +7360,7 @@ while p<>null do
     if subtype(p)=acc_kern then
       begin p:=link(p);
         if is_char_node(p) then
-	  if font_dir[font(p)]<>dir_default then p:=link(p);
+          if font_dir[font(p)]<>dir_default then p:=link(p);
         p:=link(link(p));
         if find_first_char then
           begin find_first_char:=false; first_char:=p;
@@ -6999,7 +7455,7 @@ while p<>null do
           if is_char_node(t) then
             if font_dir[font(t)]<>dir_default then t:=link(t);
           p:=link(link(t));
-	  if font_dir[font(p)]<>dir_default then
+          if font_dir[font(p)]<>dir_default then
             begin p:=link(p); insert_skip:=after_wchar; end
           else  insert_skip:=after_schar;
           end
@@ -7099,7 +7555,7 @@ begin if (subtype(p)=before)and(insert_skip=after_wchar) then
   insert_skip:=no_skip;
   end
 else if subtype(p)=after then
-  begin ax:=qo("0"); 
+  begin ax:=qo("0");
   if auto_xsp_code(ax)>=2 then
     insert_skip:=after_schar else insert_skip:=no_skip;
   end
@@ -7336,8 +7792,8 @@ main_loop_j+1: space_factor:=1000;
     begin if not disp_called then
       begin prev_node:=tail; tail_append(get_node(small_node_size));
       type(tail):=disp_node; disp_dimen(tail):=0; disp_called:=true
-	  end;
-	fast_get_avail(main_p); font(main_p):=main_f; character(main_p):=cur_l;
+      end;
+    fast_get_avail(main_p); font(main_p):=main_f; character(main_p):=cur_l;
     link(tail):=main_p; tail:=main_p; last_jchr:=tail;
     fast_get_avail(main_p); info(main_p):=KANJI(cur_chr);
     link(tail):=main_p; tail:=main_p;
@@ -7378,7 +7834,7 @@ again_2:
 @#
 main_loop_j+3:
   if ins_kp=true then @<Insert |pre_break_penalty| of |cur_chr|@>;
-  if main_f<>null_font then 
+  if main_f<>null_font then
     begin @<Look ahead for glue or kerning@>;
     end
   else inhibit_glue_flag:=false;
@@ -7403,7 +7859,7 @@ else
   if disp<>0 or not disp_called then
     begin prev_node:=tail; tail_append(get_node(small_node_size));
     type(tail):=disp_node; disp_dimen(tail):=disp; prev_disp:=disp;
-	disp_called:=true
+    disp_called:=true
     end;
 end;
 
@@ -7422,7 +7878,7 @@ end;
 @ @<Look ahead for glue or kerning@>=
 cur_q:=tail;
 if inhibit_glue_flag<>true then
-  begin { print("IF");print_int(cur_l); }
+  begin
   if cur_l<qi(0) then cur_l:=qi(0) else inhibit_glue_flag:=false;
   if (tail=link(head))and(not is_char_node(tail))and(type(tail)=disp_node) then
     goto skip_loop
@@ -7470,7 +7926,7 @@ if inhibit_glue_flag<>true then
   end;
 end
 else
-  begin { print("IT");print_int(cur_l); }
+  begin
   if cur_l<qi(0) then cur_l:=qi(0) else inhibit_glue_flag:=false;
   end;
 skip_loop: do_nothing;
@@ -7478,8 +7934,8 @@ skip_loop: do_nothing;
 @ @<Basic printing...@>=
 procedure print_kanji(@!s:KANJI_code); {prints a single character}
 begin
-if s>255 then
-  begin print_char(Hi(s)); print_char(Lo(s));
+if s>@"FF then
+  begin print_char(@"100+Hi(s)); print_char(@"100+Lo(s));
   end else print_char(s);
 end;
 
@@ -7510,6 +7966,26 @@ else begin
   help3("You can change the direction of the page only when")
   ("the current page and recent contributions consist of only")
   ("marks and whatsits."); error;
+  end;
+end;
+
+@ This procedure is used in printing the second line in showing contexts.
+This part is not read by |get_next| yet, so we don't know which bytes
+are part of Japaense characters when the procedure is called.
+
+@<Basic printing...@>=
+procedure print_unread_buffer_with_ptenc(@!f, @!l: integer);
+{ print |buffer[f..l-1]| with code conversion }
+var @!i,@!j: pool_pointer; @!p: integer;
+begin
+  i:=f;
+  while i<l do begin
+    p:=multistrlen(ustringcast(buffer), l, i);
+    if p<>1 then
+      begin for j:=i to i+p-1 do
+        print_char(@"100+buffer[j]);
+      i:=i+p; end
+    else begin print(buffer[i]); incr(i); end;
   end;
 end;
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-# $Id$
+# $Id: bibtex-openout-test.pl 29118 2013-02-15 10:06:11Z peter $
 # Public domain.  Originally written 2010, Karl Berry.
 # Check that bibtex respects openout_any.
 

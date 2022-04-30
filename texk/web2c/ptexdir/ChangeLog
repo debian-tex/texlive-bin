@@ -1,3 +1,94 @@
+2022-03-21  Karl Berry  <karl@tug.org>
+
+	* TL'22 release.
+
+2022-02-20  Hironobu Yamashita  <h.y.acetaminophen@gmail.com>
+
+	* pbibtex.ch: Improve substring$ to truncate at least one
+	  character when trying to start counting from the middle
+	  byte of the first or last Japanese character.
+	  Still version j0.34.
+	  https://github.com/texjporg/tex-jp-build/issues/133
+
+2022-02-15  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* ptex-base.ch: Revised state after a control word which ends
+	  with a Japanese character. Starting from pTeX version p4.0.0,
+	  newline char after "a control word ending with a Japanese
+	  character + {}" is ignored. To emulate older behavior, a new
+	  primitive \ptexlineendmode is added.
+	  The new primitive is an internal integer which means:
+	   - When the least significant bit is set,
+	     a blank is generated when the line ends with
+	     "a control word ending with a Japanese character + {}".
+	   - When the second least significant bit is set,
+	     a blank is generated when the line ends with
+	     "a Japanese control symbol".
+	   - When the third least significant bit is set,
+	     a blank is generated when the line ends with
+	     "a Japanese character (which is not part of a CS) + {}".
+	  By setting \ptexlineendmode to the following values,
+	  old versions of pTeX can be restored:
+	   - p4.0.0 or later : default 0.
+	   - p3.8.2-3.10.0   : similar to 1.
+	   - p3.8.1 or older : similar to 3.
+	  More info: https://github.com/texjporg/tex-jp-build/issues/87
+
+2022-02-13  Hironobu Yamashita  <h.y.acetaminophen@gmail.com>
+
+	* ptex-base.ch: \write18 in '^^' format. (Thanks Yukimasa Morimi)
+	* pbibtex.ch: Do not break at white_space after Japanese
+	  characters. Version j0.34.
+	  https://github.com/texjporg/pbibtex-manual/issues/1
+
+2022-02-05  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* ptex-base.ch: Fix for \write18 with quotation.
+	  Convert non-Japanese non-ASCII bytes in name_of_file to
+	  "^^" format. (Thanks Yukimasa Morimi)
+	* ptex.defines: Add isinternalUPTEX and isterminalUTF8.
+
+2022-01-29  Hironobu Yamashita  <h.y.acetaminophen@gmail.com>
+
+	* ptex-base.ch: Fix \chardef code 256 in math.
+	  Fix \mathcode for 128--255 not working.
+	  https://github.com/texjporg/tex-jp-build/issues/129
+
+2022-01-27  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* ptex-base.ch: Fix a mistake and avoid compiler warnings.
+
+2022-01-22  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* ptex-base.ch: Change type of str_pool to unsigned short.
+	  We use only 0--511, and use flag 0x100 for Japanese char.
+	  More details in TUGboat 41(2):329--334, 2020.
+	* kanji.h: Adapt to arguments of input_line2() in ptexenc-1.4.0
+	  (for pBibTeX).
+	* ptex.defines: Add multistrlen{short,filename}, fromBUFFshort.
+	* ptex_version.h: Version p4.0.0.
+	* tests/filename_test.sh, tests/printkanji.tex: Added.
+	  https://github.com/texjporg/tex-jp-build/issues/81
+
+2022-01-10  Karl Berry  <karl@freefriends.org>
+
+	* am/ptex.am: do not silence tangle-sh.
+
+2021-07-01  Hironobu Yamashita  <h.y.acetaminophen@gmail.com>
+
+	* ptex-base.ch: Set subtype=0 for adjust_node.
+
+2021-06-29  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+	and Hironobu Yamashita  <h.y.acetaminophen@gmail.com>
+
+	* ptex-base.ch:
+	  - Bug fix: Wrap print_hex for negative value.
+	  - Change: Code conversion primitives return -1 for invalid.
+	  - Added: New primitives \ucs (from upTeX) and \toucs.
+	* ptex.defines: Add fromUCS() and toUCS().
+	* ptex_version.h: pTeX version p3.10.0.
+	https://github.com/texjporg/tex-jp-build/pull/121
+
 2021-06-25  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
 	and Hironobu Yamashita  <h.y.acetaminophen@gmail.com>
 

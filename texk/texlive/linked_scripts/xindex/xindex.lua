@@ -5,10 +5,12 @@
 -- REQUIREMENTS:  
 --       AUTHOR:  Herbert Voß
 --      LICENSE:  LPPL 1.3
+--
+-- $Id: xindex.lua 22 2022-02-11 12:18:15Z hvoss $
 -----------------------------------------------------------------------
 
         xindex = xindex or { }
- local version = 0.28
+ local version = 0.41
 xindex.version = version
 --xindex.self = "xindex"
 
@@ -30,12 +32,12 @@ Report bugs to
 kpse.set_program_name("luatex")
 
 local f = kpse.find_file("lualibs.lua")
-print ("filename "..f)
+--print ("filename "..f)
+
 require("lualibs")  -- all part of LuaTeX
 require('unicode')
 require('string')
 require("lpeg")
-
 
 local args = require ('xindex-lapp') [[
   parameter handling
@@ -46,13 +48,16 @@ local args = require ('xindex-lapp') [[
     -e,--escapechar (default ")
     -n,--noheadings 
     -a,--no_casesensitive
+    -b,--no_labels
+    -i,--ignoreSpace
     -o,--output (default "")
-    -l,--language (default en)
+    -k --checklang               same as * star for checking aux file
+    -l,--language (default en)   or * for detecting the language from the aux file
     -p,--prefix (default L)
     -u,--use_UCA
-    <input> (string)
+    -s,--use_stdin
+    <files...> (default stdin) .idx file(s)
 ]]
-
 
 --[[
     No -v flag, v is just { false }. not args.v[1] is true, so vlevel becomes 0.
@@ -73,6 +78,8 @@ if (luaVersion < "Lua 5.3") then
   os.exit()
 end
 
+useStdInput = args["use_stdin"]
+
 --local inspect = require 'inspect' 
 --print(inspect(args))
 
@@ -88,49 +95,75 @@ be no log file created.
 end
 ]]
 
+require('xindex-baselib')
 
---[[
-if not args["input"] then 
-  io.write ("Filename: ")
-  inFile = io.read()
-else
-  inFile = args["input"]
-end
-]]
-
-require('xindex-lib')
-
-inFile = args["input"]
-if not file_exists(inFile) then
-  if file_exists(inFile..".idx") then
-    inFile = inFile..".idx"
-  else
-    writeLog(2,"Inputfile "..inFile.." or "..inFile..".idx not found!\n",0)
-    os.exit()
+local nInFiles = #args.files
+if not useStdInput then
+  if vlevel == 3 then
+    print(tostring(nInFiles).." input file(s): ")
   end
-end  
+  inFiles = {}    --args.files as strings
+  for i = 1,nInFiles do
+    local file = args.files_name[i]
+    if not file_exists(file) then
+      if file_exists(file..".idx") then
+        inFiles[#inFiles+1] = file..".idx"
+      end
+    else
+      inFiles[#inFiles+1] = file
+    end
+    if vlevel == 3 then
+      print(file)
+    end
+  end  
+end
 
-local filename
-local logfilename
+-- print ("Check Logfile:")
+
+outfilename = ""
+logfilename = ""
+
 if args["output"] == '""' then
-  if inFile:sub(inFile:len()-3,inFile:len()) == ".idx" then 
-    filename = inFile:sub(1,inFile:len()-3).."ind"
-    logfilename = inFile:sub(1,inFile:len()-3).."ilg"
+  if not useStdInput then
+    if inFiles[1]:sub(inFiles[1]:len()-3,inFiles[1]:len()) == ".idx" then 
+      outfilename = inFiles[1]:sub(1,inFiles[1]:len()-3).."ind"
+      if nInFiles > 1 then
+        logfilename = "xindex.ilg"
+      else 
+        logfilename = inFiles[1]:sub(1,inFiles[1]:len()-3).."ilg"
+      end
+    else
+      outfilename = inFiles[1]..".ind"
+      if nInFiles > 1 then
+        logfilename = "xindex.ilg"
+      else 
+        logfilename = inFiles[1]..".ilg"
+      end
+    end
   else
-    filename = inFile..".ind"
-    logfilename = inFile..".ilg"
+    outfilename = "xindex.ind"
+    logfilename = "xindex.ilg"
   end
 else
-  filename = args.output
-  logfilename = filename:gsub('%p...','')..".ilg"
+  outfilename = args.output
+  if nInFiles > 1 or useStdInput then
+    logfilename = "xindex.ilg"
+  else 
+    logfilename = outfilename:gsub('%p...','')..".ilg"
+  end
 end
+
+
 
 logFile = io.open(logfilename,"w+")
+require('xindex-lib')
+
 writeLog(2,"xindex v."..version.." (c) Herbert Voß\n",-1)
 writeLog(1,"Verbose level = "..vlevel.."\n",1)
+writeLog(2,"Logfile:"..logfilename.."\n",1)
 
-writeLog(2,"Open outputfile "..filename,0)
-outFile = io.open(filename,"w+")
+writeLog(2,"Open outputfile "..outfilename,0)
+outFile = io.open(outfilename,"w+")
 writeLog(2," ... done\n",0)
 
 if vlevel > 0 then
@@ -144,7 +177,14 @@ if vlevel > 0 then
   writeLog(1,"---------- parameter ----------\n",1)
 end
 
-writeLog(2,"Using input file: "..inFile.."\n",0)
+-- writeLog(2,"Using input file: "..inFile.."\n",0)
+
+if args["ignoreSpace"] then
+  ignoreSpace = args["ignoreSpace"]
+else
+  ignoreSpace = false
+end
+writeLog(2,"ignore space for sorting: "..tostring(ignoreSpace).."\n",-1)
 
 labelPrefix = args.prefix
 writeLog(2,"Label prefix: "..labelPrefix.."\n",-1)
@@ -153,9 +193,14 @@ writeLog(2,"Loading common config file ".."xindex-cfg-common\n",1)
 Config_File_Common = kpse.find_file("xindex-cfg-common.lua") 
 cfg_common = require(Config_File_Common)
 
-local config_file = "xindex-"..args.config..".lua"
-writeLog(2,"Loading local config file "..config_file,0)
-Config_File = kpse.find_file(config_file) 
+local user_config_file = "xindex-"..args["config"]..".lua"
+print("Local config file is: "..user_config_file)
+writeLog(2,"Loading local config file "..user_config_file,0)
+if kpse.find_file(user_config_file) 
+  then Config_File = kpse.find_file(user_config_file) 
+  else print("Cannot find config file with kpse.find_file!!")
+end
+print("\nLocal KPSE config file is: "..Config_File.."\n")
 cfg = require(Config_File)
 writeLog(2," ... done\n",0)
 
@@ -170,14 +215,64 @@ escape_chars = { -- by default " is the escape char
   {esc_char..'"', '//escapedquote//',     '"'    },
   {esc_char..'@', '//escapedat//',        '@'    },
   {esc_char..'|', '//escapedvert//',      '|'    },
-  {esc_char..'!', '//scapedexcl//',       '!'    },
-  {esc_char..'(', '//escapedparenleft//', '('    },
-  {esc_char..')', '//escapedparenright//',')'    }
+  {esc_char..'!', '//escapedexcl//',       '!'    }
+--  {esc_char..'%(', '//escapedparenleft//', '('    },  -- ( must beescaped
+--  {esc_char..'%)', '//escapedparenright//',')'    }   -- )  "      "
 }
 
-language = "en" -- default language
+-- esc_char..'%( is not needed because it can only appear after |
 
-language = string.lower(args["language"]):sub(1, 2)
+outFile = io.open(outfilename,"w+")
+
+local aux_language = ""
+
+if args["checklang"] or (args["language"] == "*") then
+  writeLog(2,'Check language in aux file\n',0) 
+  -- \babel@aux{german}{}        package babel
+  -- \selectlanguage *[variant=german,spelling=new,]{german}   package polyglossia
+  local auxfile = inFiles[1]:split(".")[1]..".aux"
+  writeLog(2,auxfile.."\n",0) 
+  local auxlines = read_lines_from(auxfile)
+  for line = 1,#auxlines do
+    local str = auxlines[line]
+    if string.find(str, "selectlanguage") then        
+      str = str:match("{..+}$")   -- get last word {language}
+      aux_language = str:sub(2,(#str-1))
+      break
+    else
+      if string.find(str, "babel@aux{")  then        
+  --      print("Babel defunden: "..str)
+        str = str:match("{..+}$")   -- get last word {language}
+  --      print("Babel: "..str)
+        aux_language = str:sub(2,(#str-3))
+        break
+      end
+    end
+  end
+--  print(aux_language)
+  if #aux_language > 0 then
+--    print("find language")
+    for i,lang in pairs(indexheader) do
+      for j = 3,#lang do
+        if lang[j] == aux_language then
+          language = i
+        end
+      end
+    end
+  else
+    language = "en"
+  end
+  print("Detected language: "..language)
+else  
+  if args["language"] then
+    language = string.lower(args["language"]):sub(1, 2)
+  else
+    language = "en"
+  end
+end
+
+--print("Sprache:"..language)
+
 writeLog(2,"Language = "..language.."\n",1) 
 if (indexheader[language] == nil) then
   writeLog(2,'Corrected the unknown language "'..language..'" to "en"'.."\n",0) 
@@ -239,12 +334,19 @@ else
   writeLog(1,"Output with headings between different first letter\n",1)
 end
 
-writeLog(2,"Open outputfile "..filename,0)
-outFile = io.open(filename,"w+")
+no_labels = args["no_labels"]
+if no_headings then
+  writeLog(1,"Index without labels\n",1)
+else
+  writeLog(1,"Index with labels\n",1)
+end
+
+writeLog(2,"Open outputfile "..outfilename,0)
+outFile = io.open(outfilename,"w+")
 writeLog(2,"... done\n",0)
 
-
 writeLog(1,"Starting base file ... \n",2)
+
 BaseRunFile = kpse.find_file("xindex-base.lua") 
 dofile(BaseRunFile)
 

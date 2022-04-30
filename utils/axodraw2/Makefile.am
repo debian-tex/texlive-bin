@@ -1,4 +1,4 @@
-## $Id$
+## $Id: Makefile.am 46590 2018-02-10 23:30:32Z karl $
 ## Makefile.am for axohelp (in TeX Live)
 ##
 ## Copyright (C) 2018 John Collins

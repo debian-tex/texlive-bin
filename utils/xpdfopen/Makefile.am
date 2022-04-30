@@ -1,4 +1,4 @@
-## $Id$
+## $Id: Makefile.am 48168 2018-07-09 17:00:10Z karl $
 ## Makefile.am for the TeX Live subdirectory utils/xpdfopen/
 ##
 ## Copyright 2017-2018 Karl Berry <tex-live@tug.org>

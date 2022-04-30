@@ -35,9 +35,9 @@
 @z
 
 @x
-\def\title{CWEAVE (Version 4.4)}
+\def\title{CWEAVE (Version 4.7)}
 @y
-\def\title{CTWILL (Version 4.4 [\TeX~Live])}
+\def\title{CTWILL (Version 4.7 [\TeX~Live])}
 @z
 
 @x
@@ -47,9 +47,9 @@
 @z
 
 @x
-  \centerline{(Version 4.4)}
+  \centerline{(Version 4.7)}
 @y
-  \centerline{(Version 4.4 [\TeX~Live])}
+  \centerline{(Version 4.7 [\TeX~Live])}
 @z
 
 @x
@@ -76,7 +76,7 @@ Crusius, and others who have contributed improvements.
 The ``banner line'' defined here should be changed whenever \.{CWEAVE}
 is modified.
 
-@d banner "This is CWEAVE (Version 4.4)"
+@d banner "This is CWEAVE (Version 4.7)"
 @y
 This is the \.{CTWILL} program by D. E. Knuth, based
 on \.{CWEAVE} by Silvio Levy and D.~E. Knuth. It is also based on
@@ -84,7 +84,7 @@ on \.{CWEAVE} by Silvio Levy and D.~E. Knuth. It is also based on
 Volumes B and~D of {\sl Computers {\char`\&} Typesetting\/} in 1985.
 \.{CTWILL} was hacked together hastily in June, 1992, to generate pages for
 Knuth's book about the Stanford GraphBase, and updated even more hastily
-in March, 1993 to generate final copy for that book.  The main idea was to
+in March, 1993, to generate final copy for that book.  The main idea was to
 extend \.{CWEAVE} so that ``mini-indexes'' could appear.
 No time was available to make \.{CTWILL} into a refined or complete system,
 nor even to fully update the program documentation below. Subsequent changes
@@ -93,14 +93,14 @@ can be found in Knuth's article ``Mini-indexes for literate programs,''
 reprinted in {\sl Digital Typography\/} (1999), 225--245.
 
 A kind of ``user manual'' for \.{CTWILL} can be found in the appendix
-{\bf 271.~Mogrify \.{CWEAVE} into \.{CTWILL}} and beyond, together
-with additional material specific to \.{CTWILL}. % FIXME
+\X271:Mogrify \.{CWEAVE} into \.{CTWILL}\X~and beyond, together with
+additional material specific to \.{CTWILL}. % FIXME
 Until then, \.{CWEAVE}'s sequence of sections will be preserved.
 
 The ``banner line'' defined here should be changed whenever \.{CTWILL} is
 modified. The version number parallels the corresponding version of \.{CWEAVE}.
 
-@d banner "This is CTWILL, Version 4.4"
+@d banner "This is CTWILL, Version 4.7"
   /* will be extended by the \TeX~Live |versionstring| */
 @z
 
@@ -123,8 +123,8 @@ modified. The version number parallels the corresponding version of \.{CWEAVE}.
 @z
 
 @x
-@d max_refs 20000 /* number of cross-references; must be less than 65536 */
-@d max_scraps 2000 /* number of tokens in \CEE/ texts being parsed */
+@d max_refs 30000 /* number of cross-references; must be less than 65536 */
+@d max_scraps 5000 /* number of tokens in \CEE/ texts being parsed */
 @y
 @d max_refs 65535 /* number of cross-references; must be less than 65536 */
 @d max_scraps 5000 /* number of tokens in \CEE/ texts being parsed */
@@ -146,9 +146,9 @@ turned on during the first phase---NOT!
 @z
 
 @x
-@d max_toks 20000 /* number of symbols in \CEE/ texts being parsed;
+@d max_toks 30000 /* number of symbols in \CEE/ texts being parsed;
   must be less than 65536 */
-@d max_texts 4000 /* number of phrases in \CEE/ texts being parsed;
+@d max_texts 8000 /* number of phrases in \CEE/ texts being parsed;
   must be less than 10240 */
 @y
 @d max_toks 65535 /* number of symbols in \CEE/ texts being parsed;
@@ -473,7 +473,7 @@ tricky way so that the first line of the output file will be
 
 @<Start \TEX/...@>=
 out_ptr=out_buf+1; out_line=1; active_file=tex_file;
-*out_ptr='c'; tex_printf("\\input cwebma");
+tex_printf("\\input cwebma"); *out_ptr='c';
 @y
 @ In particular, the |finish_line| procedure is called near the very
 beginning of phase two. We initialize the output variables in a slightly
@@ -492,10 +492,11 @@ debugging mini-index entries.
 @d proofing flags['P']
 
 @<Start \TEX/...@>=
-out_ptr=out_buf+1; out_line=1; active_file=tex_file; *out_ptr='c';
+out_ptr=out_buf+1; out_line=1; active_file=tex_file;
 tex_puts("\\input ");
 tex_printf(use_language);
 tex_puts(proofing?"ctproofma":"ctwima");
+*out_ptr='c';
 @z
 
 @x
@@ -670,15 +671,14 @@ static token_pointer tok_loc; /* where the first identifier appears */
 @x
 @<Cases for |exp|@>=
 if (cat1==lbrace || cat1==int_like || cat1==decl) {
-  make_underlined(pp); big_app(dindent); big_app1(pp);
+  make_underlined(pp); big_app1(pp); big_app(dindent);
   reduce(pp,1,fn_decl,0,1);
 }
 @y
 @<Cases for |exp|@>=
 if(cat1==lbrace || cat1==int_like || cat1==decl) {
-  make_underlined(pp);
-  make_ministring(0);
-  if (indent_param_decl) big_app(dindent); big_app1(pp);
+  make_underlined(pp); make_ministring(pp); big_app1(pp);
+  if (indent_param_decl) big_app(dindent);
   reduce(pp,1,fn_decl,0,1);
 }
 @z
@@ -688,9 +688,8 @@ if(cat1==lbrace || cat1==int_like || cat1==decl) {
 @y
   make_underlined (pp);
   if (tok_loc>operator_found) {
-    name_pointer cn=((*tok_loc)%id_flag)+name_dir;
     strcpy(ministring_buf,"label");
-    new_meaning(cn);
+    new_meaning(((*tok_loc)%id_flag)+name_dir);
   }
   squash(pp,2,tag,-1,7);
 @z
@@ -711,7 +710,7 @@ else if ((cat1==binop||cat1==colon) && cat2==exp && (cat3==comma ||
   squash(pp,3,decl_head,-1,36);
 else if (cat1==cast) squash(pp,2,decl_head,-1,37);
 else if (cat1==lbrace || cat1==int_like || cat1==decl) {
-  big_app(dindent); big_app1(pp); reduce(pp,1,fn_decl,0,38);
+  big_app(dindent); squash(pp,1,fn_decl,0,38);
 }
 else if (cat1==semi) squash(pp,2,decl,-1,39);
 @y
@@ -724,8 +723,7 @@ else if (cat1==ubinop) {
   reduce(pp,2,decl_head,-1,34);
 }
 else if (cat1==exp && cat2!=lpar && cat2!=lbrack && cat2!=exp && cat2!=cast) {
-  make_underlined(pp+1);
-  make_ministring(1);
+  make_underlined(pp+1); make_ministring(pp+1);
   squash(pp,2,decl_head,-1,35);
 }
 else if ((cat1==binop||cat1==colon) && cat2==exp && (cat3==comma ||
@@ -733,8 +731,8 @@ else if ((cat1==binop||cat1==colon) && cat2==exp && (cat3==comma ||
   squash(pp,3,decl_head,-1,36);
 else if (cat1==cast) squash(pp,2,decl_head,-1,37);
 else if (cat1==lbrace || cat1==int_like || cat1==decl) {
-  if (indent_param_decl) big_app(dindent); big_app1(pp);
-  reduce(pp,1,fn_decl,0,38);
+  if (indent_param_decl) big_app(dindent);
+  squash(pp,1,fn_decl,0,38);
 }
 else if (cat1==semi) squash(pp,2,decl,-1,39);
 @z
@@ -761,8 +759,7 @@ else if (cat1==stmt || cat1==function) {
 @x
     make_underlined(pp+1); make_reserved(pp+1);
 @y
-    make_underlined(pp+1); make_reserved(pp+1);
-    make_ministring(1);
+    make_underlined(pp+1); make_reserved(pp+1); make_ministring(pp+1);
 @z
 
 @x
@@ -796,6 +793,15 @@ else if (cat1==stmt) {
 @z
 
 @x
+  big_app1_insert(pp, (cat1==function || cat1==decl) ? big_force :
+     force_lines ? force : break_space); reduce(pp,2,cat1,-1,76);
+@y
+  big_app1_insert(pp, (cat1==function || cat1==decl) ? @|
+     ( order_decl_stmt ? big_force : force ) : @|
+     ( force_lines ? force : break_space ) ); reduce(pp,2,cat1,-1,76);
+@z
+
+@x
 if (cat1==define_like) make_underlined(pp+2);
 @y
 if (cat1==define_like) { /* \#\&{define} is analogous to \&{extern} */
@@ -808,11 +814,11 @@ if (cat1==define_like) { /* \#\&{define} is analogous to \&{extern} */
 @z
 
 @x
-if (cat1==prelangle) squash(pp+1,1,langle,1,100);
-else squash(pp,1,exp,-2,101);
+if (cat1==prelangle) reduce(pp+1,0,langle,1,100);
+else reduce(pp,0,exp,-2,101);
 @y
-if (cat1==prelangle) squash(pp+1,1,langle,1,121);
-else squash(pp,1,exp,-2,122);
+if (cat1==prelangle) reduce(pp+1,0,langle,1,121);
+else reduce(pp,0,exp,-2,122);
 @z
 
 @x
@@ -824,7 +830,7 @@ else squash(pp,1,exp,-2,122);
 @x
 @ @<Cases for |typedef_like|@>=
 if ((cat1==int_like || cat1==cast) && (cat2==comma || cat2==semi))
-  squash(pp+1,1,exp,-1,115);
+  reduce(pp+1,0,exp,-1,115);
 else if (cat1==int_like) {
   big_app1_insert(pp,' '); reduce(pp,2,typedef_like,0,116);
 }
@@ -849,15 +855,14 @@ less friendly to \CPLUSPLUS/ but good enough for me.
 @<Cases for |typedef_like|@>=
 if (cat1==decl_head) {
   if ((cat2==exp&&cat3!=lpar&&cat3!=exp)||cat2==int_like) {
-    make_underlined(pp+2); make_reserved(pp+2);
-    make_ministring(2);
-    big_app2(pp+1); reduce(pp+1,2,decl_head,0,200);
+    make_underlined(pp+2); make_reserved(pp+2); make_ministring(pp+2);
+    squash(pp+1,2,decl_head,0,200);
   }
   else if (cat2==semi) {
     big_app1(pp); big_app(' '); big_app2(pp+1); reduce(pp,3,decl,-1,201);
   }
 } else if (cat1==int_like && cat2==raw_int &&
-    (cat3==semi || cat3==comma)) squash(pp+2,1,exp,1,202);
+    (cat3==semi || cat3==comma)) reduce(pp+2,0,exp,1,202);
 @z
 
 @x
@@ -879,9 +884,9 @@ if (cat1==decl_head) {
 @z
 
 @x
-  printf("\nIrreducible scrap sequence in section %d:",section_count);
+  printf("\nIrreducible scrap sequence in section %d:",(int)section_count);
 @y
-  printf(_("\nIrreducible scrap sequence in section %d:"),section_count);
+  printf(_("\nIrreducible scrap sequence in section %d:"),(int)section_count);
 @z
 
 @x
@@ -904,9 +909,9 @@ if (cat1==decl_head) {
 @z
 
 @x
-        else err_print("! Double @@ should be used in strings");
+      else err_print("! Double @@ should be used in strings");
 @y
-        else err_print(_("! Double @@ should be used in strings"));
+      else err_print(_("! Double @@ should be used in strings"));
 @z
 
 @x
@@ -1094,8 +1099,10 @@ flush_buffer(out_ptr,false,false);
 @z
 
 @x
+        } @=/* otherwise fall through */@>@;
       default: err_print("! Improper macro definition"); break;
 @y
+        } @=/* otherwise fall through */@>@;
       default: err_print(_("! Improper macro definition")); break;
 @z
 
@@ -1152,7 +1159,6 @@ if (no_xref) {
   finish_line();
   out_str("\\end");
 @.\\end@>
-  active_file=tex_file;
 }
 @z
 
@@ -1189,8 +1195,8 @@ if (no_xref) {
 @y
 @.\\end@>
 }
-finish_line(); fclose(active_file); active_file=NULL;
-@<Update the result when it has changed@>@;
+finish_line(); fclose(active_file); active_file=tex_file=NULL;
+if (check_for_change) @<Update the result when it has changed@>@;
 @z
 
 @x
@@ -1284,49 +1290,49 @@ out_name(cur_name,proofing);
 @x
   puts("\nMemory usage statistics:");
 @.Memory usage statistics:@>
-  printf("%ld names (out of %ld)\n",
+  printf("%td names (out of %ld)\n",
             (ptrdiff_t)(name_ptr-name_dir),(long)max_names);
-  printf("%ld cross-references (out of %ld)\n",
+  printf("%td cross-references (out of %ld)\n",
             (ptrdiff_t)(xref_ptr-xmem),(long)max_refs);
-  printf("%ld bytes (out of %ld)\n",
+  printf("%td bytes (out of %ld)\n",
             (ptrdiff_t)(byte_ptr-byte_mem),(long)max_bytes);
   puts("Parsing:");
-  printf("%ld scraps (out of %ld)\n",
+  printf("%td scraps (out of %ld)\n",
             (ptrdiff_t)(max_scr_ptr-scrap_info),(long)max_scraps);
-  printf("%ld texts (out of %ld)\n",
+  printf("%td texts (out of %ld)\n",
             (ptrdiff_t)(max_text_ptr-tok_start),(long)max_texts);
-  printf("%ld tokens (out of %ld)\n",
+  printf("%td tokens (out of %ld)\n",
             (ptrdiff_t)(max_tok_ptr-tok_mem),(long)max_toks);
-  printf("%ld levels (out of %ld)\n",
+  printf("%td levels (out of %ld)\n",
             (ptrdiff_t)(max_stack_ptr-stack),(long)stack_size);
   puts("Sorting:");
-  printf("%ld levels (out of %ld)\n",
+  printf("%td levels (out of %ld)\n",
             (ptrdiff_t)(max_sort_ptr-scrap_info),(long)max_scraps);
 @y
   puts(_("\nMemory usage statistics:"));
 @.Memory usage statistics:@>
-  printf(_("%ld names (out of %ld)\n"),
+  printf(_("%td names (out of %ld)\n"),
             (ptrdiff_t)(name_ptr-name_dir),(long)max_names);
-  printf(_("%ld cross-references (out of %ld)\n"),
+  printf(_("%td cross-references (out of %ld)\n"),
             (ptrdiff_t)(xref_ptr-xmem),(long)max_refs);
-  printf(_("%ld bytes (out of %ld)\n"),
+  printf(_("%td bytes (out of %ld)\n"),
             (ptrdiff_t)(byte_ptr-byte_mem),(long)max_bytes);
-  printf(_("%ld temp meanings (out of %ld)\n"),
+  printf(_("%td temp meanings (out of %ld)\n"),
             (ptrdiff_t)(max_temp_meaning_ptr-temp_meaning_stack),
             (long)max_meanings);
-  printf(_("%ld titles (out of %ld)\n"),
+  printf(_("%td titles (out of %ld)\n"),
             (ptrdiff_t)(title_code_ptr-title_code),(long)max_titles);
   puts(_("Parsing:"));
-  printf(_("%ld scraps (out of %ld)\n"),
+  printf(_("%td scraps (out of %ld)\n"),
             (ptrdiff_t)(max_scr_ptr-scrap_info),(long)max_scraps);
-  printf(_("%ld texts (out of %ld)\n"),
+  printf(_("%td texts (out of %ld)\n"),
             (ptrdiff_t)(max_text_ptr-tok_start),(long)max_texts);
-  printf(_("%ld tokens (out of %ld)\n"),
+  printf(_("%td tokens (out of %ld)\n"),
             (ptrdiff_t)(max_tok_ptr-tok_mem),(long)max_toks);
-  printf(_("%ld levels (out of %ld)\n"),
+  printf(_("%td levels (out of %ld)\n"),
             (ptrdiff_t)(max_stack_ptr-stack),(long)stack_size);
   puts(_("Sorting:"));
-  printf(_("%ld levels (out of %ld)\n"),
+  printf(_("%td levels (out of %ld)\n"),
             (ptrdiff_t)(max_sort_ptr-scrap_info),(long)max_scraps);
 @z
 
@@ -1665,38 +1671,35 @@ catch14: return *(*(p+1)-1)=='9'; /* was production 14 used? */
 @ @<Predec...@>=@+static boolean app_supp(text_pointer);
 
 @q Section 142->284. @>
-@ The trickiest part of \.{CTWILL} is the procedure |make_ministring(l)|,
-which tries to figure out a symbolic form of definition after
-|make_underlined(pp+l)| has been called. We rely heavily on the
-existing productions, which force the translated texts to have a
+@ The trickiest part of \.{CTWILL} is the procedure |make_ministring(pp+l)|,
+with offset $l\in\{0,1,2\}$, which tries to figure out a symbolic form of
+definition after |make_underlined(pp+l)| has been called. We rely heavily
+on the existing productions, which force the translated texts to have a
 structure that's decodable even though the underlying |cat| and |mathness|
 codes have disappeared.
 
 @c static void
-make_ministring(
-  int l) /* 0, 1, or 2 */
+make_ministring(scrap_pointer p)
 {
-  name_pointer cn;
   if (tok_loc<=operator_found) return;
-  cn=((*tok_loc)%id_flag)+name_dir;
   @<Append the type of the declaree; |return| if it begins with \&{extern}@>@;
-  null_scrap.mathness=(((pp+l)->mathness)%4)*5; big_app1(&null_scrap);
+  null_scrap.mathness=((p->mathness)%4)*5; big_app1(&null_scrap);
     /* now we're ready for the mathness that follows (I think);
        (without the mod 4 times 5, comments posed a problem,
        namely in cases like |int a(b,c)| followed by comment) */
-  ident_seen=false;@+app_supp((pp+l)->trans);
+  ident_seen=false;@+app_supp(p->trans);
   null_scrap.mathness=10; big_app1(&null_scrap);
    /* now |cur_mathness==no_math| */
   ms_mode=true; ministring_ptr=ministring_buf;
-  if (l==2) *ministring_ptr++='=';
+  if (p==pp+2) *ministring_ptr++='=';
   make_output(); /* translate the current text into a ministring */
   tok_ptr=*(--text_ptr); /* delete that text */
-  new_meaning(cn);
+  new_meaning(((*tok_loc)%id_flag)+name_dir);
   cur_mathness=maybe_math; /* restore it */
 }
 
 @q Section 285. @>
-@ @<Predec...@>=@+static void make_ministring(int);
+@ @<Predec...@>=@+static void make_ministring(scrap_pointer);
 
 @q Section 43->286. @>
 @ @<Private...@>=
@@ -1713,15 +1716,15 @@ its current meaning, but we do suppress mini-index entries to its
 current meaning in other sections.
 
 @<Append the type of the declaree; |return| if it begins with \&{extern}@>=
-if (l==0) { app(int_loc+res_flag); app(' '); cur_mathness=no_math; }
+if (p==pp) { app(int_loc+res_flag); app(' '); cur_mathness=no_math; }
 else {
-  text_pointer q=(pp+l-1)->trans, r;
+  text_pointer q=(p-1)->trans, r;
   token t;
   int ast_count=0; /* asterisks preceding the expression */
   boolean non_ast_seen=false; /* have we seen a non-asterisk? */
   while (true) {
     if (*(q+1)==*q+1) {
-      r=q;@+break; /* e.g. \&{struct}; we're doing production 45 or 46 */
+      r=q;@+break; /* e.g., \&{struct}; we're doing production 45 or 46 */
     }
     if (**q<tok_flag) confusion(_("find type"));
     r=**q-tok_flag+tok_start;
@@ -1979,15 +1982,16 @@ a function block.
 @<Set init...@>=
 order_decl_stmt=true;
 
-@* Output file update.  Most \CEE/ projects are controlled by a
-\.{Makefile} that automatically takes care of the temporal dependecies
-between the different source modules.  It is suitable that \.{CWEB} doesn't
-create new output for all existing files, when there are only changes to
-some of them. Thus the \.{make} process will only recompile those modules
-where necessary. The idea and basic implementation of this mechanism can
-be found in the program \.{NUWEB} by Preston Briggs, to whom credit is due.
+@* Output file update. Most \CEE/ projects are controlled by a \.{Makefile}
+that automatically takes care of the temporal dependecies between the different
+source modules. It may be convenient that \.{CWEB} doesn't create new output
+for all existing files, when there are only changes to some of them. Thus the
+\.{make} process will only recompile those modules where necessary. You can
+activate this feature with the `\.{+c}' command-line option. The idea and basic
+implementation of this mechanism can be found in the program \.{NUWEB} by
+Preston Briggs, to whom credit is due.
 
-@<Update the result...@>=
+@<Update the result...@>= {
 if((tex_file=fopen(tex_file_name,"r"))!=NULL) {
   boolean comparison=false;
 
@@ -1995,7 +1999,7 @@ if((tex_file=fopen(tex_file_name,"r"))!=NULL) {
     fatal(_("! Cannot open output file "),check_file_name);
 @.Cannot open output file@>
 
-  if (check_for_change) @<Compare the temporary output...@>@;
+  @<Compare the temporary output...@>@;
 
   fclose(tex_file); tex_file=NULL;
   fclose(check_file); check_file=NULL;
@@ -2005,6 +2009,7 @@ if((tex_file=fopen(tex_file_name,"r"))!=NULL) {
   rename(check_file_name,tex_file_name); /* This was the first run */
 
 strcpy(check_file_name,""); /* We want to get rid of the temporary file */
+}
 
 @ We hope that this runs fast on most systems.
 

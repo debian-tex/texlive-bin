@@ -1,5 +1,5 @@
 #! /bin/sh -vx
-# $Id$
+# $Id: sample.test 56177 2020-08-25 11:35:11Z hironobu $
 # Copyright 2017-2020 Karl Berry <tex-live@tug.org>
 # Copyright 2010-2013 Peter Breitenlohner <tex-live@tug.org>
 # You may freely use, modify and/or distribute this file.

@@ -2,7 +2,7 @@
 ** SVGOptimizer.cpp                                                     **
 **                                                                      **
 ** This file is part of dvisvgm -- a fast DVI to SVG converter          **
-** Copyright (C) 2005-2021 Martin Gieseking <martin.gieseking@uos.de>   **
+** Copyright (C) 2005-2022 Martin Gieseking <martin.gieseking@uos.de>   **
 **                                                                      **
 ** This program is free software; you can redistribute it and/or        **
 ** modify it under the terms of the GNU General Public License as       **
@@ -25,6 +25,7 @@
 #include "../SVGTree.hpp"
 
 #include "AttributeExtractor.hpp"
+#include "ClipPathReassigner.hpp"
 #include "GroupCollapser.hpp"
 #include "RedundantElementRemover.hpp"
 #include "TextSimplifier.hpp"
@@ -42,7 +43,8 @@ SVGOptimizer::SVGOptimizer (SVGTree *svg) : _svg(svg) {
 	_moduleEntries.emplace_back(ModuleEntry("simplify-transform", util::make_unique<TransformSimplifier>()));
 	_moduleEntries.emplace_back(ModuleEntry("group-attributes", util::make_unique<AttributeExtractor>()));
 	_moduleEntries.emplace_back(ModuleEntry("collapse-groups", util::make_unique<GroupCollapser>()));
-	_moduleEntries.emplace_back(ModuleEntry("remove-clippath", util::make_unique<RedundantElementRemover>()));
+	_moduleEntries.emplace_back(ModuleEntry("remove-clippaths", util::make_unique<RedundantElementRemover>()));
+	_moduleEntries.emplace_back(ModuleEntry("reassign-clippaths", util::make_unique<ClipPathReassigner>()));
 }
 
 
@@ -51,15 +53,21 @@ void SVGOptimizer::execute () {
 		return;
 	if (MODULE_SEQUENCE.empty())
 		MODULE_SEQUENCE = "remove-clippath"; // default behaviour of previous dvisvgm releases
-	if (MODULE_SEQUENCE == "all") {
-		for (const auto &entry : _moduleEntries)
-			entry.module->execute(_svg->defsNode(), _svg->pageNode());
-	}
 	else {
-		vector<string> names = util::split(MODULE_SEQUENCE, ",");
-		for (const string &name : names) {
-			if (OptimizerModule *module = getModule(name))
-				module->execute(_svg->defsNode(), _svg->pageNode());
+		if (MODULE_SEQUENCE == "all") {
+			for (const auto &entry: _moduleEntries)
+				entry.module->execute(_svg->defsNode(), _svg->pageNode());
+		}
+		else {
+			vector<string> names = util::split(MODULE_SEQUENCE, ",");
+			auto it = find_if(names.begin(), names.end(), [](const string &name) {
+				return name == "simplify-transform";
+			});
+			GroupCollapser::COMBINE_TRANSFORMS = (it != names.end());
+			for (const string &name: names) {
+				if (OptimizerModule *module = getModule(name))
+					module->execute(_svg->defsNode(), _svg->pageNode());
+			}
 		}
 	}
 }

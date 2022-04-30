@@ -1,4 +1,4 @@
-% $Id$
+% $Id: char-warning-eptex.ch 55874 2020-07-19 15:42:51Z karl $
 % Public domain. See ../pdftexdir/char-warning-pdftex.ch for info.
 
 @x [30] If \tracinglostchars > 2, then promote full errors.

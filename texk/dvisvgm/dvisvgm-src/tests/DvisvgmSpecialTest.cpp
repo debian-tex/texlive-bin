@@ -2,7 +2,7 @@
 ** DvisvgmSpecialTest.cpp                                               **
 **                                                                      **
 ** This file is part of dvisvgm -- a fast DVI to SVG converter          **
-** Copyright (C) 2005-2021 Martin Gieseking <martin.gieseking@uos.de>   **
+** Copyright (C) 2005-2022 Martin Gieseking <martin.gieseking@uos.de>   **
 **                                                                      **
 ** This program is free software; you can redistribute it and/or        **
 ** modify it under the terms of the GNU General Public License as       **
@@ -47,8 +47,8 @@ class DvisvgmSpecialTest : public ::testing::Test {
 				double getY () const override                 {return 14;}
 				bool defsEquals (const string &str) const     {return defsString() == str;}
 				bool pageEquals (const string &str) const     {return pageString() == str;}
-				bool bboxEquals (const string &str) const     {return bbox.toSVGViewBox() == str;}
-				string bboxString () const                    {return bbox.toSVGViewBox();}
+				bool bboxEquals (const string &str) const     {return bbox.svgViewBoxString() == str;}
+				string bboxString () const                    {return bbox.svgViewBoxString();}
 				string defsString () const                    {return toString(svgTree().defsNode());}
 				string pageString () const                    {return toString(svgTree().pageNode());}
 

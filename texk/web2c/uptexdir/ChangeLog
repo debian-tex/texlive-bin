@@ -1,3 +1,58 @@
+2022-03-21  Karl Berry  <karl@tug.org>
+
+	* TL'22 release.
+
+2022-02-20  Hironobu Yamashita  <h.y.acetaminophen@gmail.com>
+
+	* upbibtex.ch: Adapt to pbibtex.ch.
+	  https://github.com/texjporg/tex-jp-build/issues/133
+
+2022-02-15  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* uptex-m.ch: Adapt to ptex-base.ch.
+	  More info: https://github.com/texjporg/tex-jp-build/issues/87
+
+2022-02-13  Hironobu Yamashita  <h.y.acetaminophen@gmail.com>
+
+	* upbibtex.ch: Adapt to pbibtex.ch (version number).
+
+2022-02-05  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* uptex.defines: Add isterminalUTF8.
+
+2022-01-29  Hironobu Yamashita  <h.y.acetaminophen@gmail.com>
+
+	* uptex-m.ch: Adapt to ptex-base.ch fixes.
+
+2022-01-23  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+
+	* uptex-m.ch, upbibtex.ch, updvitype.ch, uppltotf.ch, uptftopl.ch,
+	uptex_version.h: upTeX version u1.28.
+	* uptex-m.ch, upbibtex.ch, kanji.c:
+	Update reference of Unicode blocks to
+	"Blocks-14.0.0.txt Date: 2021-01-22, 23:29:00 GMT [KW]".
+	* COPYRIGHT, COPYRIGHT.ja:
+	Update copyright year.
+	* upkcat.test, tests/kcat.tex, tests/upkcat.txt: Add a new test.
+
+2022-01-22  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* uptex-m.ch: Change type of str_pool to unsigned short.
+	  We use only 0--511, and use flag 0x100 for Japanese char.
+	  More details in TUGboat 41(2):329--334, 2020.
+	* kanji.h: Adapt to arguments of input_line2() in ptexenc-1.4.0
+	  (for upBibTeX).
+	* uptex.defines: Add multistrlen{short,filename}, fromBUFFshort.
+
+2022-01-10  Karl Berry  <karl@freefriends.org>
+
+	* am/uptex.am: do not silence tangle-sh.
+
+2021-06-29  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* uptex-m.ch: Adapt to pTeX p3.10.0.
+	* uptex.defines: Add toUCS().
+
 2021-06-25  Hironobu Yamashita  <h.y.acetaminophen@gmail.com>
 
 	* uptex—m.ch: Adapt to ptex-base.ch for no re-eval.

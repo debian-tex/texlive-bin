@@ -2,7 +2,7 @@
 % This program by Silvio Levy and Donald E. Knuth
 % is based on a program by Knuth.
 % It is distributed WITHOUT ANY WARRANTY, express or implied.
-% Version 4.4 --- June 2021 (works also with later versions)
+% Version 4.7 --- February 2022 (works also with later versions)
 
 % Copyright (C) 1987,1990,1993 Silvio Levy and Donald E. Knuth
 
@@ -12,8 +12,8 @@
 
 % Permission is granted to copy and distribute modified versions of this
 % document under the conditions for verbatim copying, provided that the
-% entire resulting derived work is distributed under the terms of a
-% permission notice identical to this one.
+% entire resulting derived work is given a different name and distributed
+% under the terms of a permission notice identical to this one.
 
 % Amendments to 'common.h' resulting in this updated version were created
 % by numerous collaborators over the course of many years.
@@ -46,8 +46,8 @@ extern int phase; /* which phase are we in? */
 #include <stdbool.h> /* definition of |@!bool|, |@!true| and |@!false| */
 #include <stddef.h> /* definition of |@!ptrdiff_t| */
 #include <stdint.h> /* definition of |@!uint8_t| and |@!uint16_t| */
-#include <stdlib.h> /* definition of |@!getenv| and |@!exit| */
 #include <stdio.h> /* definition of |@!printf| and friends */
+#include <stdlib.h> /* definition of |@!getenv| and |@!exit| */
 #include <string.h> /* definition of |@!strlen|, |@!strcmp| and so on */
 
 @ Code related to the character set:
@@ -78,12 +78,12 @@ extern char *id_first; /* where the current identifier begins in the buffer */
 extern char *id_loc; /* just after the current identifier in the buffer */
 
 @ Code related to input routines:
-@d xisalpha(c) (isalpha((eight_bits)(c))&&((eight_bits)(c)<0200))
-@d xisdigit(c) (isdigit((eight_bits)(c))&&((eight_bits)(c)<0200))
-@d xisspace(c) (isspace((eight_bits)(c))&&((eight_bits)(c)<0200))
-@d xislower(c) (islower((eight_bits)(c))&&((eight_bits)(c)<0200))
-@d xisupper(c) (isupper((eight_bits)(c))&&((eight_bits)(c)<0200))
-@d xisxdigit(c) (isxdigit((eight_bits)(c))&&((eight_bits)(c)<0200))
+@d xisalpha(c) (isalpha((int)(c))&&((eight_bits)(c)<0200))
+@d xisdigit(c) (isdigit((int)(c))&&((eight_bits)(c)<0200))
+@d xisspace(c) (isspace((int)(c))&&((eight_bits)(c)<0200))
+@d xislower(c) (islower((int)(c))&&((eight_bits)(c)<0200))
+@d xisupper(c) (isupper((int)(c))&&((eight_bits)(c)<0200))
+@d xisxdigit(c) (isxdigit((int)(c))&&((eight_bits)(c)<0200))
 @d isxalpha(c) ((c)=='_' || (c)=='$')
   /* non-alpha characters allowed in identifier */
 @d ishigh(c) ((eight_bits)(c)>0177)
@@ -165,7 +165,7 @@ extern hash_pointer h; /* index into hash-head array */
 
 @ @<Predecl...@>=
 extern boolean names_match(name_pointer,const char *,size_t,eight_bits);@/
-extern name_pointer id_lookup(const char *,const char *,char);
+extern name_pointer id_lookup(const char *,const char *,eight_bits);
    /* looks up a string in the identifier table */
 extern name_pointer section_lookup(char *,char *,boolean); /* finds section name */
 extern void init_node(name_pointer);@/
@@ -226,17 +226,16 @@ extern FILE *active_file; /* currently active file for \.{CWEAVE} output */
 extern void common_init(void);@/
 extern void print_stats(void);
 
-@ The following parameters were sufficient in the original \.{WEB} to
-handle \TEX/, so they should be sufficient for most applications of
-\.{CWEB}.
+@ The following parameters are sufficient to handle \TEX/ (converted to
+\.{CWEB}), so they should be sufficient for most applications of \.{CWEB}.
 
-@d buf_size 100 /* maximum length of input line, plus one */
+@d buf_size 200 /* maximum length of input line, plus one */
 @d longest_name 10000 /* file names, section names, and section texts
    shouldn't be longer than this */
 @d long_buf_size (buf_size+longest_name) /* for \.{CWEAVE} */
-@d max_bytes 90000 /* the number of bytes in identifiers,
+@d max_bytes 100000 /* the number of bytes in identifiers,
   index entries, and section names; must be less than $2^{24}$ */
-@d max_names 4000 /* number of identifiers, strings, section names;
+@d max_names 5000 /* number of identifiers, strings, section names;
   must be less than 10240 */
 @d max_sections 2000 /* greater than the total number of sections */
 

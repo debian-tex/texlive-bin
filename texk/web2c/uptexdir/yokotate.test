@@ -1,5 +1,5 @@
 #! /bin/sh -vx
-# $Id$
+# $Id: yokotate.test 46400 2018-01-21 05:26:27Z hironobu $
 # Copyright 2017 Karl Berry <tex-live@tug.org>
 # Copyright 2013 Peter Breitenlohner <tex-live@tug.org>
 # You may freely use, modify and/or distribute this file.

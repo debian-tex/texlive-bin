@@ -1,5 +1,5 @@
 #! /bin/sh -vx
-# $Id$
+# $Id: dtl.test 57559 2021-01-30 06:34:55Z takuji $
 # Copyright 2017 Karl Berry <tex-live@tug.org>
 # Copyright 2009 Peter Breitenlohner <tex-live@tug.org>
 # You may freely use, modify and/or distribute this file.

@@ -1,3 +1,135 @@
+2022-03-21  Karl Berry  <karl@tug.org>
+
+	* TL'22 release.
+
+2022-03-07  Hironobu Yamashita  <h.y.acetaminophen@gmail.com>
+
+	* fwrite.c: output to file instead of accumulating too much.
+	https://github.com/texjporg/tex-jp-build/issues/137
+
+2022-01-18  Karl Berry  <karl@freefriends.org>
+
+	* COPYRIGHT,
+	* main.c: 2022.
+
+2021-11-20  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+
+	* version 1.00  Stable version.
+	* configure.ac: Bump version.
+	* {,ex}var.h, fwrite.c, styfile.c:
+	Add options "script_preamble" and "script_postamble"
+	in style file.
+	* sort.c: Add Latin Extended-F and -G.
+	Add U_FORMAT_CHAR to is_type_mark_or_punct().
+	* mendex.h, var.h, convert.c, fwrite.c, sort.c, styfile.c:
+	Supports Arabic, Hebrew scripts (experimental).
+	* upmendex.ja.txt:
+	Update document.
+
+2021-10-24  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+
+	* version 0.60  Beta version.
+	* configure.ac: Bump version.
+	* Makefile.am, convert.c, fwrite.c, sort.c,
+	{,ex}kana.h, ktable.h, mendex.h:
+	Enhance procedure of classifying characters:
+	Newly classifies by character type of
+	General Category in Unicode Script Property.
+	https://github.com/t-tk/upmendex-package/issues/8
+
+2021-09-19  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+
+	* fread.c:
+	Modify heuristic detection of page number types.
+	* tests/upmendex.test, tests/range.idx, tests/range[123].ind,
+	tests/pprecB.idx, tests/pprec[34].ist, tests/pprecB-[034].ind:
+	Update tests.
+
+2021-09-18  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+
+	* fread.c, fwrite.c, sort.c, mendex.h, {,ex}var.h:
+	Extend levels of page numbers from 3 to 10
+	for compatibility with makeindex.
+	Fix a bug of page ranges with multi-level page numbers.
+	* fread.c:
+	Strict check for "page_precedence" and "page_compositor" in style file.
+	* fwrite.c:
+	Do not break lines before "delim_n".
+	* tests/upmendex.test, tests/range.idx, tests/range[123].{ist,ind},
+	removed tests/rangetwo.*:
+	Update tests.
+
+2021-09-05  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+
+	* fwrite.c:
+	Support I-Y ordering in Lithuanian.
+
+2021-09-04  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+
+	* version 0.59  Beta version.
+	* configure.ac: Bump version.
+	* fwrite.c, styfile.c, {,ex}var.h:
+	Support output order of symbols and numbers separately
+	when "symbol_flag" is 2 in style file.
+	* sort.c:
+	Accept combination of "icu_locale" and "icu_rules" in style file.
+	If simultaneously specified, collation rules specified by "icu_rules" are
+	added on collation rules specified by "icu_locale".
+	* tests/upmendex.test, tests/rule.{idx,ind}, tests/locale2.ist,
+	tests/{locale1,attri1,locale2-rule}.ind:
+	Add a new test and update conventional tests.
+
+2021-08-29  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+
+	* styfile.c:
+	Strict check for "icu_attributes" in style file.
+	* sort.c:
+	Strict check for "character_order" in style file.
+	* fwrite.c:
+	Fix a bug when "symbol_flag" is 0.
+	* tests/upmendex.test, tests/attr1.{ist,ind},
+	tests/locale1.ind, tests/rule.{idx,ind}:
+	Add a new test and update conventional tests.
+
+2021-08-28  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+
+	* styfile.c:
+	Add a alias "headings_flag" of the keyword "heading_flag"
+	in style file for compatibility with makeindex.
+	Warn if specifier in style file is unknown.
+
+2021-08-26  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+
+	* sort.c:
+	Initialize a variable.
+	* tests/upmendex.test, tests/locale1.{ist,ind}:
+	Add a new test for "icu_locale".
+
+2021-08-25  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+
+	* sort.c:
+	Initialize a string. Check malformed input for "icu_rules".
+	* tests/upmendex.test, tests/rule[34].ist:
+	Add new tests.
+
+2021-08-23  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+
+	* tests/upmendex.test, tests/rule[12].ist, tests/rule.{idx,ind}:
+	Add new tests for the keyword "icu_rules" in style file.
+
+2021-08-08  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+
+	* version 0.58  Beta version.
+	* configure.ac: Bump version.
+	* main.c, convert.c, fwrite.c, sort.c, styfile.c, mendex.h, {,ex}kana.h, {,ex}var.h:
+	Supports Devanagari, Thai scripts (experimental).
+	Add keywords "devanagari_head", "thai_head" to style file.
+	Add a keyword "hangul_head" to style file, let "tumumja" deprecated.
+	* styfile.c:
+	Add an option "numeric-ordering" to the keyword "icu_attributes" in style file.
+	* upmendex.ja.txt:
+	Update document.
+
 2021-06-19  Karl Berry  <karl@freefriends.org>
 
 	* configure.ac: pthread doc update; also needed in bibtexu (q.v.).
@@ -77,7 +209,7 @@
 
 2020-05-01  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
 
-	* main.c, version.h, Makefile.{am.in}: Add bug report addresses
+	* main.c, version.h, Makefile.am: Add bug report addresses
 	on command line help.
 	* convert.c: Tune buffer sizes to avoid tool warnings.
 

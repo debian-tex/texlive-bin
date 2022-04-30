@@ -1,5 +1,5 @@
 #!/bin/sh -vx
-# $Id$
+# $Id: cnfnull.test 53454 2020-01-19 17:04:02Z karl $
 # Copyright 2020 Karl Berry <tex-live@tug.org>
 # You may freely use, modify and/or distribute this file.
 # 

@@ -3,7 +3,6 @@
 # be used for compilation.
 texlive-binaries: embedded-library poppler usr/bin/pdftex
 texlive-binaries: embedded-library poppler usr/bin/pdftosrc
-texlive-binaries: embedded-library poppler usr/bin/xetex
 texlive-binaries: no-manual-page usr/bin/etex
 #texlive-binaries: no-manual-page usr/bin/gregorio
 texlive-binaries: no-manual-page usr/bin/luajithbtex

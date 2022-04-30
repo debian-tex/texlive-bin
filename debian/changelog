@@ -1,4 +1,6 @@
-texlive-bin (2021.20210626.59705-2) UNRELEASED; urgency=medium
+texlive-bin (2022.20220321.62855-1) UNRELEASED; urgency=medium
+
+  * New upstream TeX Live 2022.
 
   * Replace Dep: perl by "perl:any" (Closes: #968906).
   * Much lintian stuff, have a look at "git log" for details.

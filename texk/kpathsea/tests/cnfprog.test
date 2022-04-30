@@ -1,5 +1,5 @@
 #!/bin/sh -vx
-# $Id$
+# $Id: cnfprog.test 51875 2019-08-13 22:43:09Z karl $
 # Copyright 2019 Karl Berry <tex-live@tug.org>
 # You may freely use, modify and/or distribute this file.
 # Test strange program name qualifiers which should give warnings.

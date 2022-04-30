@@ -1,5 +1,5 @@
 #! /bin/sh -vx
-# $Id$
+# $Id: makejvf.test 54693 2020-04-12 00:47:52Z takuji $
 # Copyright 2017-2018 Karl Berry <tex-live@tug.org>
 # Copyright 2010-2013 Peter Breitenlohner <tex-live@tug.org>
 # You may freely use, modify and/or distribute this file.

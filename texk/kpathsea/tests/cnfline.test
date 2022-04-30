@@ -1,5 +1,5 @@
 #!/bin/sh -vx
-# $Id$
+# $Id: cnfline.test 58227 2021-03-08 18:40:56Z karl $
 # Copyright 2019 Karl Berry <tex-live@tug.org>
 # You may freely use, modify and/or distribute this file.
 

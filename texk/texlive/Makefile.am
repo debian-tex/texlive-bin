@@ -1,4 +1,4 @@
-## $Id$
+## $Id: Makefile.am 53614 2020-01-31 18:59:27Z karl $
 ## Makefile.am for the TeX Live subdirectory texk/texlive/
 ##
 ## Copyright 2015-2020 Karl Berry <tex-live@tug.org>

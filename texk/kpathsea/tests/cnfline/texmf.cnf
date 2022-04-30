@@ -1,4 +1,4 @@
-# $Id$
+# $Id: texmf.cnf 58227 2021-03-08 18:40:56Z karl $
 # Public domain. This tiny texmf.cnf is for kpathsea/tests/cnfline.test. 
 maxpr=100
 

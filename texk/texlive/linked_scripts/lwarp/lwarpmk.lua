@@ -1,8 +1,8 @@
 #!/usr/bin/env texlua
 
--- Copyright 2016-2021 Brian Dunn
+-- Copyright 2016-2022 Brian Dunn
 
-printversion = "v0.898"
+printversion = "v0.904a"
 requiredconfversion = "2" -- also at *lwarpmk.conf
 
 function printhelp ()
@@ -66,7 +66,9 @@ function splitfile (destfile,sourcefile)
 -- Split one large sourcefile into a number of files,
 -- starting with destfile.
 -- The file is split at each occurance of <!--|Start file|newfilename|*
+-- If lwarp is in use, sets usinglwarp.
 --
+usinglwarp = false ;
 print ("lwarpmk: Splitting " .. sourcefile .. " into " .. destfile) ;
 local sfile = io.open(sourcefile)
 io.output(destfile)
@@ -76,11 +78,23 @@ if ( (i~= nil) and (copen == "<!--") and (cstart == "Start file")) then
     -- split the file
     io.output(newfilename) ;
 else
+if ( (i~= nil) and (copen == "<!--") and (cstart == "Using lwarp")) then
+    -- verified the use of \usepackage{lwarp}
+    usinglwarp = true ;
+else
     -- not a splitpoint
     io.write (line .. "\n") ;
-end
+end end
 end -- do
 io.close(sfile)
+if ( usinglwarp == false ) then
+    print ("lwarpmk: ===")
+    print ("lwarpmk: \\usepackage{lwarp} was not detected.")
+    print ("lwarpmk: The HTML output will not be correct.")
+    print ("lwarpmk: Ensured that \\usepackage{lwarp} is enabled,")
+    print ("lwarpmk: then lwarpmk print and lwarpmk html again.")
+    print ("lwarpmk: ===")
+end
 end -- function
 
 function cvalueerror ( line, linenum , cvalue )
@@ -369,8 +383,15 @@ function pdftohtml ()
 -- Convert to text:
 print ("lwarpmk: Converting " .. sourcename
     .."_html.pdf to " .. sourcename .. "_html.html")
-os.execute("pdftotext  -enc " .. pdftotextenc .. "  -nopgbrk  -layout "
+err = os.execute("pdftotext  -enc " .. pdftotextenc .. "  -nopgbrk  -layout "
     .. sourcename .. "_html.pdf " .. sourcename .. "_html.html")
+if ( err ~= 0 ) then
+    print ("lwarpmk: ===")
+    print ("lwarpmk: Ensure that the Poppler utilities are installed." )
+    print ("lwarpmk: See the Lwarp manual: `Installing additional utilities'." )
+    print ("lwarpmk: ===")
+    os.exit(1)
+end
 -- Split the result into individual HTML files:
 splitfile (homehtmlfilename .. ".html" , sourcename .. "_html.html")
 end

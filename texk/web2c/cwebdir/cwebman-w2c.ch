@@ -18,7 +18,7 @@
 
 @x
 \input cwebmac
-\acrofalse\pdffalse\pdftexfalse
+\acrofalse\pdffalse\pdftexfalse\hintfalse\acrohintfalse
 @y
 \input cwebmac
 @z
@@ -93,17 +93,17 @@
 @z
 
 @x
-\def\runninghead{{\tentt CWEB} USER MANUAL (VERSION 4.4)}
+\def\runninghead{{\tentt CWEB} USER MANUAL (VERSION 4.7)}
 @y
 \def\Kpathsea/{{\mc KPATHSEA\spacefactor1000}}
-\def\runninghead{{\tentt CWEB} USER MANUAL (Version 4.4 [\TeX~Live])}
+\def\runninghead{{\tentt CWEB} USER MANUAL (Version 4.7 [\TeX~Live])}
 @z
 
 @x
-\vskip 18pt\centerline{(Version 4.4 --- June 2021)}
+\vskip 18pt\centerline{(Version 4.7 --- February 2022)}
 @y
-\vskip 18pt\centerline{(Version 4.4 --- June 2021)%
-\footnote*{This document describes the extended \.{CWEB} (Version 4.4 [\TeX~Live]).}}
+\vskip 18pt\centerline{(Version 4.7 --- February 2022)%
+\footnote*{This document describes the extended \.{CWEB} (Version 4.7 [\TeX~Live]).}}
 @z
 
 @x
@@ -144,7 +144,7 @@ it cannot find them in the current directory.
 it cannot find them in the current directory.%
 \cwebfootnote{\acrofalse In this extended implementation, if an \.{@i}nclude
 file can not be found in the current directory, \.{CWEB} will use the
-conventions of the \Kpathsea/ library as outlined in section~\X91:File lookup
+conventions of the \Kpathsea/ library as outlined in section~\X93:File lookup
 with \Kpathsea/\X~of \pdfURL{appendix~D}{common-changes.pdf} to look for it.
 % FIXME
 (This is true for any other input or change file lookup.)}
@@ -169,11 +169,10 @@ options are currently implemented:%
 \cwebfootnote{This extended version of \.{CWEB} adds the following options
 to the list:
 \hfil\smallskip
-\option c Overwrite output files with temporary output only if changes occur.
-(On by default.)
+\option c Check temporary output files for changes.  (Off by default.)
 \hfil\vskip\normallineskip
 \option d Set the debugging variable \\{kpathsea\_debug} to the numeric
-value $N\in[0,127]$ of this option.  See section~93 % FIXME
+value $N\in[0,127]$ of this option.  See section~95 % FIXME
 of \pdfURL{appendix~D}{common-changes.pdf} for details.
 \hfil\vskip\normallineskip
 \option i Indent parameters in function declarations.  (On by default;
@@ -221,10 +220,10 @@ Sometimes things don't work as smoothly, and you get a bunch of
 the program sources at \.{ftp://ftp.cs.stanford.edu/pub/ctwill}.
 @y
 the program sources at
-\pdfURL{\.{ftp://ftp.cs.stanford.edu/pub/ctwill}}%
-          {ftp://ftp.cs.stanford.edu/pub/ctwill}.%
-\cwebfootnote{\TeX~Live comes with an up-to-date \.{ctwill} executable -- and
-its associated helpers -- out of the box.}
+\pdfURL{\.{http://ftp.cs.stanford.edu/pub/ctwill}}%
+          {http://ftp.cs.stanford.edu/pub/ctwill}.%
+\cwebfootnote{\TeX~Live comes with an up-to-date
+\.{ctwill} executable -- and its associated helpers -- out of the box.}
 @z
 
 @x
@@ -314,9 +313,9 @@ And here's what the same excerpt looks like when typeset.
 @z
 
 @x
-  \.{ { }\\vskip 15pt \\centerline\{(Version 4.4)\}{ }\\vfill\}}\cr}$$
+  \.{ { }\\vskip 15pt \\centerline\{(Version 4.7)\}{ }\\vfill\}}\cr}$$
 @y
-  \.{ { }\\vskip 15pt \\centerline\{(Version 4.4)\}{ }\\vfill\}}\cr}$$
+  \.{ { }\\vskip 15pt \\centerline\{(Version 4.7)\}{ }\\vfill\}}\cr}$$
 @z
 
 @x

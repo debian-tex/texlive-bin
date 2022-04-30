@@ -1,4 +1,4 @@
-% $Id$
+% $Id: enctex2.ch 57736 2021-02-13 23:02:37Z karl $
 % enctex2.ch: bulk of the encTeX implementation, common to all engines
 % supporting encTeX.
 

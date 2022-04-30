@@ -17,15 +17,15 @@
 @q Please send comments, suggestions, etc. to tex-k@@tug.org.            @>
 
 @x
-\def\title{CTANGLE (Version 4.4)}
+\def\title{CTANGLE (Version 4.7)}
 @y
-\def\title{CTANGLE (Version 4.4 [\TeX~Live])}
+\def\title{CTANGLE (Version 4.7 [\TeX~Live])}
 @z
 
 @x
-  \centerline{(Version 4.4)}
+  \centerline{(Version 4.7)}
 @y
-  \centerline{(Version 4.4 [\TeX~Live])}
+  \centerline{(Version 4.7 [\TeX~Live])}
 @z
 
 @x
@@ -41,9 +41,9 @@
 @z
 
 @x
-@d banner "This is CTANGLE (Version 4.4)"
+@d banner "This is CTANGLE (Version 4.7)"
 @y
-@d banner "This is CTANGLE, Version 4.4"
+@d banner "This is CTANGLE, Version 4.7"
   /* will be extended by the \TeX~Live |versionstring| */
 @z
 
@@ -60,7 +60,7 @@
 @z
 
 @x
-@ @d max_texts 2500 /* number of replacement texts, must be less than 10240 */
+@ @d max_texts 4000 /* number of replacement texts, must be less than 10240 */
 @d max_toks 270000 /* number of bytes in compressed \CEE/ code */
 @y
 @ @d max_texts 10239 /* number of replacement texts, must be less than 10240 */
@@ -136,29 +136,36 @@ for (an_output_file=end_output_files; an_output_file>cur_out_file;) {
 }
 @y
 @<Write all the named output files@>=
-fclose(C_file); C_file=NULL;
-@<Update the primary result when it has changed@>@;
+if (check_for_change) {
+  fclose(C_file); C_file=NULL;
+  @<Update the primary result when it has changed@>@;
+}
 for (an_output_file=end_output_files; an_output_file>cur_out_file;) {
-    an_output_file--;
-    sprint_section_name(output_file_name,*an_output_file);
-    if ((C_file=fopen(output_file_name,"a"))==NULL)
+  an_output_file--;
+  sprint_section_name(output_file_name,*an_output_file);
+  if (check_for_change) @<Open the intermediate output file@>@;
+  else {
+    fclose(C_file);
+    if ((C_file=fopen(output_file_name,"wb"))==NULL)
       fatal(_("! Cannot open output file "),output_file_name);
 @.Cannot open output file@>
-    else fclose(C_file); /* Test accessability */
-    if((C_file=fopen(check_file_name,"wb"))==NULL)
-      fatal(_("! Cannot open output file "),check_file_name);
-    if (show_progress) { printf("\n(%s)",output_file_name); update_terminal; }
-    cur_line=1;
-    stack_ptr=stack+1;
-    cur_name=*an_output_file;
-    cur_repl=(text_pointer)cur_name->equiv;
-    cur_byte=cur_repl->tok_start;
-    cur_end=(cur_repl+1)->tok_start;
-    while (stack_ptr > stack) get_output();
-    flush_buffer(); fclose(C_file); C_file=NULL;
+  }
+  if (show_progress) { printf("\n(%s)",output_file_name); update_terminal; }
+  cur_line=1;
+  stack_ptr=stack+1;
+  cur_name=*an_output_file;
+  cur_repl=(text_pointer)cur_name->equiv;
+  cur_byte=cur_repl->tok_start;
+  cur_end=(cur_repl+1)->tok_start;
+  while (stack_ptr > stack) get_output();
+  flush_buffer();
+  if (check_for_change) {
+    fclose(C_file); C_file=NULL;
     @<Update the secondary results when they have changed@>@;
+  }
 }
-strcpy(check_file_name,""); /* We want to get rid of the temporary file */
+if (check_for_change)
+  strcpy(check_file_name,""); /* We want to get rid of the temporary file */
 @z
 
 @x
@@ -252,9 +259,15 @@ if (loc>=limit) err_print(_("! Verbatim string didn't end"));
 @z
 
 @x
-@d app_repl(c) {if (tok_ptr==tok_mem_end) overflow("token"); *(tok_ptr++)=c;}
+@d app_repl(c) {
+  if (tok_ptr==tok_mem_end) overflow("token");
+  else *(tok_ptr++)=(eight_bits)c;
+}
 @y
-@d app_repl(c) {if (tok_ptr==tok_mem_end) overflow(_("token")); *(tok_ptr++)=c;}
+@d app_repl(c) {
+  if (tok_ptr==tok_mem_end) overflow(_("token"));
+  else *(tok_ptr++)=(eight_bits)c;
+}
 @z
 
 @x
@@ -306,8 +319,10 @@ case output_defs_code: if (t!=section_name) err_print(_("! Misplaced @@h"));
 @z
 
 @x
+          } @=/* otherwise fall through */@>@;
         default: err_print("! Double @@ should be used in limbo");
 @y
+          } @=/* otherwise fall through */@>@;
         default: err_print(_("! Double @@ should be used in limbo"));
 @z
 
@@ -325,22 +340,22 @@ case output_defs_code: if (t!=section_name) err_print(_("! Misplaced @@h"));
 
 @x
   puts("\nMemory usage statistics:");
-  printf("%ld names (out of %ld)\n",
+  printf("%td names (out of %ld)\n",
           (ptrdiff_t)(name_ptr-name_dir),(long)max_names);
-  printf("%ld replacement texts (out of %ld)\n",
+  printf("%td replacement texts (out of %ld)\n",
           (ptrdiff_t)(text_ptr-text_info),(long)max_texts);
-  printf("%ld bytes (out of %ld)\n",
+  printf("%td bytes (out of %ld)\n",
           (ptrdiff_t)(byte_ptr-byte_mem),(long)max_bytes);
-  printf("%ld tokens (out of %ld)\n",
+  printf("%td tokens (out of %ld)\n",
 @y
   puts(_("\nMemory usage statistics:"));
-  printf(_("%ld names (out of %ld)\n"),
+  printf(_("%td names (out of %ld)\n"),
           (ptrdiff_t)(name_ptr-name_dir),(long)max_names);
-  printf(_("%ld replacement texts (out of %ld)\n"),
+  printf(_("%td replacement texts (out of %ld)\n"),
           (ptrdiff_t)(text_ptr-text_info),(long)max_texts);
-  printf(_("%ld bytes (out of %ld)\n"),
+  printf(_("%td bytes (out of %ld)\n"),
           (ptrdiff_t)(byte_ptr-byte_mem),(long)max_bytes);
-  printf(_("%ld tokens (out of %ld)\n"),
+  printf(_("%td tokens (out of %ld)\n"),
 @z
 
 @x
@@ -353,15 +368,25 @@ course of a quarter century.
 Care has been taken to keep the original section numbering intact, so this new
 material should nicely integrate with the original ``\&{104.~Index}.''
 
-@* Output file update.  Most \CEE/ projects are controlled by a
-\.{Makefile} that automatically takes care of the temporal dependecies
-between the different source modules.  It is suitable that \.{CWEB} doesn't
-create new output for all existing files, when there are only changes to
-some of them. Thus the \.{make} process will only recompile those modules
-where necessary. The idea and basic implementation of this mechanism can
-be found in the program \.{NUWEB} by Preston Briggs, to whom credit is due.
+@* Output file update. Most \CEE/ projects are controlled by a \.{Makefile}
+that automatically takes care of the temporal dependecies between the different
+source modules. It may be convenient that \.{CWEB} doesn't create new output
+for all existing files, when there are only changes to some of them. Thus the
+\.{make} process will only recompile those modules where necessary. You can
+activate this feature with the `\.{+c}' command-line option. The idea and basic
+implementation of this mechanism can be found in the program \.{NUWEB} by
+Preston Briggs, to whom credit is due.
 
-@<Update the primary result...@>=
+@<Open the intermediate output file@>= {
+  if ((C_file=fopen(output_file_name,"a"))==NULL)
+    fatal(_("! Cannot open output file "),output_file_name);
+@.Cannot open output file@>
+  else fclose(C_file); /* Test accessability */
+  if((C_file=fopen(check_file_name,"wb"))==NULL)
+    fatal(_("! Cannot open output file "),check_file_name);
+}
+
+@ @<Update the primary result...@>=
 if((C_file=fopen(C_file_name,"r"))!=NULL) {
   @<Set up the comparison of temporary output@>@;
   @<Create the primary output depending on the comparison@>@;
@@ -375,7 +400,7 @@ if((C_file=fopen(C_file_name,"r"))!=NULL) {
     fatal(_("! Cannot open output file "),check_file_name);
 @.Cannot open output file@>
 
-  if (check_for_change) @<Compare the temporary output...@>@;
+  @<Compare the temporary output...@>@;
 
   fclose(C_file); C_file=NULL;
   fclose(check_file); check_file=NULL;

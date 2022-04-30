@@ -31,6 +31,8 @@ texlive-extra/texconfig-dialog.sh
 texlive-extra/texconfig-sys.sh
 texlive-extra/texconfig.sh
 texlive-extra/texlinks.sh
+texlive-extra/xetex-unsafe.sh
+texlive-extra/xelatex-unsafe.sh
 texosquery/texosquery.sh
 texosquery/texosquery-jre5.sh
 texosquery/texosquery-jre8.sh
@@ -51,6 +53,7 @@ bundledoc/arlatex
 bundledoc/bundledoc
 cachepic/cachepic.tlu
 checkcites/checkcites.lua
+citation-style-language/citeproc.lua
 chklref/chklref.pl
 cjk-gs-integrate/cjk-gs-integrate.pl
 clojure-pamphlet/pamphletangler
@@ -107,6 +110,7 @@ lilyglyphs/lily-glyph-commands.py
 lilyglyphs/lily-image-commands.py
 lilyglyphs/lily-rebuild-pdfs.py
 ltximg/ltximg.pl
+luafindfont/luafindfont.lua
 luaotfload/luaotfload-tool.lua
 lwarp/lwarpmk.lua
 m-tx/m-tx.lua
@@ -121,6 +125,7 @@ mkpic/mkpic
 multibibliography/multibibliography.pl
 musixtex/musixflx.lua
 musixtex/musixtex.lua
+optexcount/optexcount
 pax/pdfannotextractor.pl
 pdfcrop/pdfcrop.pl
 pdflatexpicscale/pdflatexpicscale.pl
@@ -170,6 +175,8 @@ texlive/updmap.pl
 texlive-extra/e2pall.pl
 texliveonfly/texliveonfly.py
 texloganalyser/texloganalyser
+texlogfilter/texlogfilter
+texlogsieve/texlogsieve
 texplate/texplate.sh
 thumbpdf/thumbpdf.pl
 tlcockpit/tlcockpit.sh

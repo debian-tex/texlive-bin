@@ -179,6 +179,7 @@ int main(int argc, char **argv)
 
 #ifdef WIN32
     set_enc_string ("sjis", "default");
+    _setmode (fileno(stdout), _O_BINARY);
 #else
     set_enc_string (NULL, "default");
 #endif
@@ -203,7 +204,11 @@ int main(int argc, char **argv)
 #endif
 
     if (outputtofile) {                     /* open the outfile, if needed   */
+#if defined(MSDOS) || defined(WIN32)
+        if ((output = fopen(OUTfilename, "wb")) == NULL)
+#else
         if ((output = fopen(OUTfilename, "w")) == NULL)
+#endif
             errorexit(filcr);
 #if defined(THINK_C)
         else
@@ -746,6 +751,8 @@ void errorexit(int errorcode)
         case  pipcr : fprintf(stderr, "Cannot create pipe to pager\n");
                       break;
 #endif
+        case  bdfnt : fprintf(stderr, "Fail to get font information\n");
+                      break;
         default     : fprintf(stderr, "Unkown error code\n");
                       break;
     };

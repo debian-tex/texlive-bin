@@ -2,7 +2,7 @@
 
 \def\tangref{3} % where the main explanation of CTANGLing is given
 \input cwebmac
-\acrofalse\pdffalse\pdftexfalse
+\acrofalse\pdffalse\pdftexfalse\hintfalse\acrohintfalse
 \def\page{\box255 } \normalbottom
 \parskip 0pt plus 1pt
 \def\RA{\char'31 } % right arrow
@@ -35,7 +35,7 @@
 
 \def\lheader{\mainfont\the\pageno\hfill\sc\runninghead\hfill}
 \def\rheader{\hfill\sc\runninghead\hfill\mainfont\the\pageno}
-\def\runninghead{{\tentt CWEB} USER MANUAL (VERSION 4.4)}
+\def\runninghead{{\tentt CWEB} USER MANUAL (VERSION 4.7)}
 
 % This verbatim mode assumes that ! marks are !! in the text being copied.
 \def\verbatim{\begingroup
@@ -49,7 +49,7 @@
 \null\vfill
 \centerline{\titlefont The {\ttitlefont CWEB} System of
     Structured Documentation}
-\vskip 18pt\centerline{(Version 4.4 --- June 2021)}
+\vskip 18pt\centerline{(Version 4.7 --- February 2022)}
 \vskip 24pt
 \centerline{\authorfont Donald E. Knuth and Silvio Levy}
 \vfill
@@ -476,15 +476,15 @@ respectively, to it; in \CEE/ the constant should be preceded by \.0
 or \.{0x}.  In \.{CWEB} it seems reasonable to let each convention hold
 in its respective realm; so in \CEE/ text you get $40_8$ by typing
 `\.{040}', which \.{CTANGLE} faithfully copies into the \CEE/ file (for
-the compiler's benefit) and which \.{CWEAVE} prints as $\T{\~40/}$.
+the compiler's benefit) and which \.{CWEAVE} prints as $\T{\~40}$.
 Similarly, \.{CWEAVE} prints the hexadecimal \CEE/ constant `\.{0x20}'
-as \T{\^20/}. The use of italic font for octal digits and typewriter font
+as \T{\^20}. The use of italic font for octal digits and typewriter font
 for hexadecimal digits makes the meaning of such constants clearer in
 a document. For consistency, then, you should type `\.{|040|}' or
 `\.{|0x20|}' in the \TEX/ part of the section.
 
 And if you type a binary constant like `\.{0b00101010}', \.{CWEAVE} prints
-it as $\T{\\00101010/}$. In all numeric literals you may add \.' separators
+it as $\T{\\00101010}$. In all numeric literals you may add \.' separators
 for improved readability.
 
 \section Control codes.
@@ -763,11 +763,11 @@ and so on. When such characters occur in identifiers, \.{CTANGLE} must replace
 them by standard ASCII alphanumeric characters or
 \.{\_}, in order to generate legal \CEE/ code.  It does this by means
 of a transliteration table, which by default associates the string
-\.{Xab} to the character with ASCII code \T{\^/}$ab$ (where $a$ and $b$ are
+\.{Xab} to the character with ASCII code \T{\^}$ab$ (where $a$ and $b$ are
 hexadecimal digits, and $a\ge8$).  By placing the
 construction \.{@l\ ab\ newstring} in limbo, you are telling
 \.{CTANGLE} to replace this character by \.{newstring} instead.
-For example, the ISO Latin-1 code for the letter `\"u' is \T{\^FC/}
+For example, the ISO Latin-1 code for the letter `\"u' is \T{\^FC}
 (or \.{'\char`\\374'}),
 and \.{CTANGLE} will normally change this code to the
 three-character sequence \.{XFC} if it
@@ -889,8 +889,8 @@ the change file can have any number of lines that do not begin with
 matching purposes.
 
 \more This dual-input feature is useful when working with a master \.{CWEB}
-file that has been received from elsewhere (e.g., \.{tangle.w} or
-\.{weave.w} or \.{tex.web}), when changes are desirable to customize the
+file that has been received from elsewhere (e.g., \.{ctangle.w} or
+\.{cweave.w} or \.{ctex.w}), when changes are desirable to customize the
 program for your local computer system. You will be able to debug your
 system-dependent changes without clobbering the master web file; and once
 your changes are working, you will be able to incorporate them readily
@@ -1166,6 +1166,11 @@ saying `\.{pdftex}~\.{cob}'.
 And a third way to create PDF output from \.{CWEB} input is to say
 `\.{xetex}~\.{cob}'.
 
+Similar output for ``smart'' devices can be created with Martin Ruckert's
+Hi\TeX\ and its dynamic \.{HINT} format; just say `\.{hitex}~\.{cob}'.
+\.{HINT} files can be viewed with the \.{hintview} program, which is available
+for {\mc GNU}/Linux, {\mc MS}~Windows, and Android.
+
 A more elaborate system called \.{CTWILL}, which extends the usual cross
 references of \.{CWEAVE} by preparing links from the uses of identifiers
 to their definitions, is also available---provided that you are willing
@@ -1241,7 +1246,7 @@ while(true) {
   if (!!input_ln(change_file)) return;
   if (limit<buffer+2) continue;
   if (buffer[0]!!='@@') continue;
-  if (xisupper(buffer[1])) buffer[1]=tolower((eight_bits)buffer[1]);
+  if (xisupper(buffer[1])) buffer[1]=tolower((int)buffer[1]);
   if (buffer[1]=='x') break;
   if (buffer[1]=='y' || buffer[1]=='z' || buffer[1]=='i') {
     loc=buffer+2;
@@ -1293,7 +1298,7 @@ change_line++;
 if(!!input_ln(change_file))return;
 if(limit<buffer+2)continue;
 if(buffer[0]!!='@')continue;
-if(xisupper(buffer[1]))buffer[1]= tolower((eight_bits)buffer[1]);
+if(xisupper(buffer[1]))buffer[1]= tolower((int)buffer[1]);
 if(buffer[1]=='x')break;
 if(buffer[1]=='y'||buffer[1]=='z'||buffer[1]=='i'){
 loc= buffer+2;
@@ -1385,7 +1390,7 @@ ${}\\{change\_line}\PP;{}$\6
 \&{if} ${}(\\{buffer}[\T{0}]\I\.{'@'}){}$\1\5
 \&{continue};\2\6
 \&{if} (\\{xisupper}(\\{buffer}[\T{1}]))\1\5
-${}\\{buffer}[\T{1}]\K\\{tolower}{}$((\&{eight\_bits}) \\{buffer}[\T{1}]);\2\6
+${}\\{buffer}[\T{1}]\K\\{tolower}{}$((\&{int}) \\{buffer}[\T{1}]);\2\6
 \&{if} ${}(\\{buffer}[\T{1}]\E\.{'x'}){}$\1\5
 \&{break};\2\6
 \&{if} ${}(\\{buffer}[\T{1}]\E\.{'y'}\V\\{buffer}[\T{1}]\E\.{'z'}\V\\{buffer}[%
@@ -1592,7 +1597,7 @@ $$\lpile{\.{\\def\\topofcontents\{\\null\\vfill}\cr
   \.{ { }\\titlefalse \% include headline on the contents page}\cr
   \.{ { }\\def\\rheader\{\\mainfont The \{\\tt CWEAVE\}{ }processor\\hfil\}}\cr
   \.{ { }\\centerline\{\\titlefont The \{\\ttitlefont CWEAVE\}{ }processor\}}\cr
-  \.{ { }\\vskip 15pt \\centerline\{(Version 4.4)\}{ }\\vfill\}}\cr}$$
+  \.{ { }\\vskip 15pt \\centerline\{(Version 4.7)\}{ }\\vfill\}}\cr}$$
 Redefining \.{\\rheader}, which is the headline for right-hand pages,
 suffices in this case to put the desired information at the top of the
 contents page.
@@ -1600,8 +1605,8 @@ contents page.
 \point 9. Data for the table of contents is written to a file that
 is read after the indexes have been \TEX/ed; there's one line of data
 for every starred section. The file \.{common.toc} might look like this:
-$$\lpile{\.{\\ZZ \{Introduction\}\{0\}\{1\}\{28\}\{\}}\cr
-  \.{\\ZZ \{The character set\}\{2\}\{5\}\{29\}\{\}}\cr}$$
+$$\lpile{\.{\\ZZ \{Introduction\}\{0\}\{1\}\{29\}\{\}}\cr
+  \.{\\ZZ \{The character set\}\{1\}\{21\}\{35\}\{\}}\cr}$$
 and so on. The \.{\\topofcontents} macro could
 redefine \.{\\ZZ} so that the information appears in any desired format.
 (See also point~19 below.)

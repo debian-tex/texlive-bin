@@ -1,3 +1,27 @@
+2022-03-21  Karl Berry  <karl@tug.org>
+
+	* TL'22 release.
+
+2021-02-17  Karl Berry  <karl@tug.org>
+
+        * NEWS,
+        * xetex_version.h,
+        * xetex.web (xetex_revision, xetex_version_string):
+        version 0.999994 for TL22.
+
+2022-01-10  Karl Berry  <karl@freefriends.org>
+
+	* am/xetex.am: do not silence tangle-sh.
+
+2021-07-26  Hironobu Yamashita  <h.y.acetaminophen@gmail.com>
+
+	* xetex.web: Avoid an error
+	    ! TeX capacity exceeded, sorry [primitive size=500].
+	after applying partoken.ch.
+	  - prim_size increased from 500 to 2100.
+	  - prim_prime increased from 431 to 1777.
+	Both values are based on pdftex.web.
+
 2021-03-23  Karl Berry  <karl@tug.org>
 
 	* TL'21.

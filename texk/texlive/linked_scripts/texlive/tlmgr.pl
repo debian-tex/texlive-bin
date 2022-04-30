@@ -1,12 +1,14 @@
 #!/usr/bin/env perl
-# $Id: tlmgr.pl 59637 2021-06-19 15:17:38Z karl $
+# $Id: tlmgr.pl 62273 2022-02-28 08:52:17Z preining $
 #
-# Copyright 2008-2021 Norbert Preining
+# Copyright 2008-2022 Norbert Preining
 # This file is licensed under the GNU General Public License version 2
 # or any later version.
 
-my $svnrev = '$Revision: 59637 $';
-my $datrev = '$Date: 2021-06-19 17:17:38 +0200 (Sat, 19 Jun 2021) $';
+use strict; use warnings;
+
+my $svnrev = '$Revision: 62273 $';
+my $datrev = '$Date: 2022-02-28 09:52:17 +0100 (Mon, 28 Feb 2022) $';
 my $tlmgrrevision;
 my $tlmgrversion;
 my $prg;
@@ -63,7 +65,7 @@ BEGIN {
   }
   if (-r "$bindir/$kpsewhichname") {
     # if not in bootstrapping mode => kpsewhich exists, so use it to get $Master
-    chomp($Master = `kpsewhich -var-value=SELFAUTOPARENT`);
+    chomp($Master = `kpsewhich -var-value=TEXMFROOT`);
   }
 
   # if we have no directory in which to find our modules,
@@ -85,7 +87,6 @@ use File::Find;
 use File::Spec;
 use Pod::Usage;
 use Getopt::Long qw(:config no_autoabbrev permute);
-use strict;
 
 use TeXLive::TLConfig;
 use TeXLive::TLPDB;
@@ -1658,7 +1659,15 @@ sub action_info {
   } elsif ($opts{'data'}) {
     # output format is changed to csv with " as quotes
     # we need to determine the fields
-    @datafields = split(',', $opts{'data'});
+    #
+    # Try to work around stupidiy in Windows where "," is interpreted in
+    # powershell (and cmd?)
+    # We optionally split at ":"
+    if ($opts{'data'} =~ m/:/) {
+      @datafields = split(':', $opts{'data'});
+    } else {
+      @datafields = split(',', $opts{'data'});
+    }
     # check for correctness of data fields and whether remote is necessary
     my $load_remote = 0;
     for my $d (@datafields) {
@@ -4297,7 +4306,7 @@ sub show_one_package_detail {
         $binsize += $binsz{$a} if defined($binsz{$a});
         my $atlp = $tlpdb->get_package($tlp->name . ".$a");
         if (!$atlp) {
-          tlwarn("$prg: cannot find depending package" . $tlp->name . ".$a\n");
+          tlwarn("$prg: cannot find depending package " . $tlp->name . ".$a\n");
           return($F_WARNING);
         }
         my %abinsz = %{$atlp->binsize};
@@ -6465,7 +6474,7 @@ sub texconfig_conf_mimic {
   }
   info("=========================== active config files ==========================\n");
   for my $m (sort(qw/fmtutil.cnf config.ps mktex.cnf pdftexconfig.tex/)) {
-    info(sprintf("%-17s %s", "$m:", `kpsewhich $m`));
+    info(sprintf("%-17s %s", "$m:", `kpsewhich $m` || "(not found!)\n"));
   }
   for my $m (qw/texmf.cnf updmap.cfg/) {
     for my $f (`kpsewhich -all $m`) {
@@ -8480,8 +8489,8 @@ C<--only-installed> and C<--only-remote> cannot both be specified.
 
 =item B<--data C<item1,item2,...>>
 
-If the option C<--data> is given, its argument must be a comma separated
-list of field names from: C<name>, C<category>, C<localrev>,
+If the option C<--data> is given, its argument must be a comma or colon 
+separated list of field names from: C<name>, C<category>, C<localrev>,
 C<remoterev>, C<shortdesc>, C<longdesc>, C<installed>, C<size>,
 C<relocatable>, C<depends>, C<cat-version>, C<cat-date>, C<cat-license>,
 plus various C<cat-contact-*> fields (see below).
@@ -9450,32 +9459,32 @@ The allowed keys are:
 
 =over 4
 
-=item C<auto-remove>, value 0 or 1 (default 1), same as command-line
+=item C<auto-remove => 0 or 1 (default 1), same as command-line
 option.
 
-=item C<gui-expertmode>, value 0 or 1 (default 1).
+=item C<gui-expertmode => 0 or 1 (default 1).
 This switches between the full GUI and a simplified GUI with only the
 most common settings.
 
-=item C<gui-lang> I<llcode>, with a language code value as with the
+=item C<gui-lang => I<llcode>, with a language code value as with the
 command-line option.
 
-=item C<no-checksums>, value 0 or 1 (default 0, see below).
+=item C<no-checksums => 0 or 1 (default 0, see below).
 
-=item C<persistent-downloads>, value 0 or 1 (default 1), same as
+=item C<persistent-downloads => 0 or 1 (default 1), same as
 command-line option.
 
-=item C<require-verification>, value 0 or 1 (default 0), same as
+=item C<require-verification => 0 or 1 (default 0), same as
 command-line option.
 
-=item C<tkfontscale>, value any float.
-Controls the scaling of fonts in the Tk based frontends.
+=item C<tkfontscale => I<floating-point number> (default 1.0);
+scaling factor for fonts in the Tk-based frontends.
 
-=item C<update-exclude>, value: comma-separated list of packages
-(no space allowed). Same as the command line option C<--exclude>
-for the action C<update>.
+=item C<update-exclude => I<comma-separated list of packages>
+(no spaces allowed). Same as the command line option C<--exclude>
+for the C<update> action.
 
-=item C<verify-downloads>, value 0 or 1 (default 1), same as
+=item C<verify-downloads => 0 or 1 (default 1), same as
 command-line option.
 
 =back
@@ -9484,32 +9493,29 @@ The system-wide config file can contain one additional key:
 
 =over 4
 
-=item C<allowed-actions> I<action1> [,I<action>,...]
-The value is a comma-separated list of C<tlmgr> actions which are
-allowed to be executed when C<tlmgr> is invoked in system mode (that is,
-without C<--usermode>).
-
-This allows distributors to include the C<tlmgr> in their packaging, but
-allow only a restricted set of actions that do not interfere with their
-distro package manager.  For native TeX Live installations, it doesn't
-make sense to set this.
+=item C<allowed-actions => I<action1>[,I<action2>,...]
+The value is a comma-separated list (no spaces) of C<tlmgr> actions
+which are allowed to be executed when C<tlmgr> is invoked in system mode
+(that is, without C<--usermode>). This allows distributors to include
+C<tlmgr> in their packaging, but allow only a restricted set of actions
+that do not interfere with their distro package manager. For native TeX
+Live installations, it doesn't make sense to set this.
 
 =back
 
-The C<no-checksums> key needs more explanation.  By default, package
-checksums computed and stored on the server (in the TLPDB) are compared
-to checksums computed locally after downloading.  C<no-checksums>
-disables this process.
-
-The checksum algorithm is SHA-512.  Your system must have one of (looked
-for in this order) the Perl C<Digest::SHA> module, the C<openssl>
-program (L<https://openssl.org>), the C<sha512sum> program (from GNU
-Coreutils, L<https://www.gnu.org/software/coreutils>), or finally the
-C<shasum> program (just to support old Macs).  If none of these are
-available, a warning is issued and C<tlmgr> proceeds without checking
-checksums.  (Incidentally, other SHA implementations, such as the pure
-Perl and pure Lua modules, are much too slow to be usable in our
-context.)  C<no-checksums> avoids the warning.
+Finally, the C<no-checksums> key needs more explanation. By default,
+package checksums computed and stored on the server (in the TLPDB) are
+compared to checksums computed locally after downloading.
+C<no-checksums> disables this process. The checksum algorithm is
+SHA-512. Your system must have one of (looked for in this order) the
+Perl C<Digest::SHA> module, the C<openssl> program
+(L<https://openssl.org>), the C<sha512sum> program (from GNU Coreutils,
+L<https://www.gnu.org/software/coreutils>), or finally the C<shasum>
+program (just to support old Macs). If none of these are available, a
+warning is issued and C<tlmgr> proceeds without checking checksums.
+C<no-checksums> avoids the warning. (Incidentally, other SHA
+implementations, such as the pure Perl and pure Lua modules, are much
+too slow to be usable in our context.)
 
 =head1 CRYPTOGRAPHIC VERIFICATION
 
@@ -9644,7 +9650,6 @@ just as in normal mode.
 
 In user mode, these actions operate only on the user tree's
 configuration files and/or C<texlive.tlpdb>.
-creates configuration files in user tree
 
 =head1 MULTIPLE REPOSITORIES
 
@@ -10231,7 +10236,7 @@ This script and its documentation were written for the TeX Live
 distribution (L<https://tug.org/texlive>) and both are licensed under the
 GNU General Public License Version 2 or later.
 
-$Id: tlmgr.pl 59637 2021-06-19 15:17:38Z karl $
+$Id: tlmgr.pl 62273 2022-02-28 08:52:17Z preining $
 =cut
 
 # test HTML version: pod2html --cachedir=/tmp tlmgr.pl >/tmp/tlmgr.html

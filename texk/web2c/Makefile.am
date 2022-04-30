@@ -1,7 +1,7 @@
-## $Id$
+## $Id: Makefile.am 61986 2022-02-12 18:02:57Z lscarso $
 ## Makefile.am for the TeX Live subdirectory texk/web2c/.
 ##
-## Copyright 2017-2021 Karl Berry <tex-live@tug.org>
+## Copyright 2017-2022 Karl Berry <tex-live@tug.org>
 ## Copyright 2009-2015 Peter Breitenlohner <tex-live@tug.org>
 ## You may freely use, modify and/or distribute this file.
 ##
@@ -78,8 +78,32 @@ web2c/stamp-web2c: $(web2c_common) ${srcdir}/web2c/*.[chly]
 web2c/stamp-makecpool: $(web2c_common) ${srcdir}/web2c/makecpool.c
 	cd web2c && $(MAKE) $(AM_MAKEFLAGS) stamp-makecpool
 
-# Rebuild $(proglib)
-$(proglib): ${srcdir}/lib/*.c
+# Rebuild $(proglib). We have to list all the sources,
+# not use *.c, because texmfmp.c is not part of lib.a.
+# Otherwise make will think that lib.a will need to be remade when
+# texmfmp.c is changed, even though it doesn't. The result is that we
+# will see the ctangle calls for every cweb program, since ctangleboot
+# depends on lib.a, but isn't getting remade. So this ad hoc variable is
+# a copy of lib_a_SOURCES in lib/Makefile.am, with "${srcdir}/lib/" prepended.
+proglib_sources = \
+	${srcdir}/lib/basechsuffix.c \
+	${srcdir}/lib/chartostring.c \
+	${srcdir}/lib/coredump.c \
+	${srcdir}/lib/eofeoln.c \
+	${srcdir}/lib/fprintreal.c \
+	${srcdir}/lib/inputint.c \
+	${srcdir}/lib/input2int.c \
+	${srcdir}/lib/lib.h \
+	${srcdir}/lib/main.c \
+	${srcdir}/lib/openclose.c \
+	${srcdir}/lib/printversion.c \
+	${srcdir}/lib/setupvar.c \
+	${srcdir}/lib/uexit.c \
+	${srcdir}/lib/usage.c \
+	${srcdir}/lib/version.c \
+	${srcdir}/lib/zround.c
+
+$(proglib): $(proglib_sources)
 	cd lib && $(MAKE) $(AM_MAKEFLAGS) lib.a
 ## Rebuild libkpathsea
 @KPATHSEA_RULE@
@@ -221,9 +245,12 @@ include $(srcdir)/am/texmf.am
 ## MFLua
 include $(srcdir)/mfluadir/am/mflua.am
 include $(srcdir)/mfluadir/am/mfluaotfcc.am
+include $(srcdir)/mfluadir/am/mfluapotrace.am
+include $(srcdir)/mfluadir/am/mflualpeg.am
 
 ## MFLuaJIT
 include $(srcdir)/mfluajitdir/am/mfluajit.am
+include $(srcdir)/mfluajitdir/am/mfluajitlpeg.am
 
 ## MetaPost
 include $(srcdir)/mplibdir/am/mplib.am
@@ -250,6 +277,9 @@ include $(srcdir)/uptexdir/am/uptex.am
 ## e-upTeX
 include $(srcdir)/euptexdir/am/euptex.am
 
+## hiTeX
+include $(srcdir)/hitexdir/am/hitex.am
+
 ## pdfTeX
 include $(srcdir)/pdftexdir/am/libpdftex.am
 include $(srcdir)/pdftexdir/am/pdftex.am
@@ -265,11 +295,8 @@ include $(srcdir)/luatexdir/am/libluatex.am
 include $(srcdir)/luatexdir/am/luaffi.am
 include $(srcdir)/luatexdir/am/luatex.am
 
-
 ## luahbTeX
 include $(srcdir)/luatexdir/am/luaharfbuzz.am
-
-
 
 ## XeTeX
 include $(srcdir)/xetexdir/am/xetex.am

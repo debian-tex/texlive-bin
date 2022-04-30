@@ -1,20 +1,23 @@
-## $Id$
+## $Id: Makefile.am 61780 2022-01-28 22:36:18Z karl $
 ## Makefile.am for the TeX Live subdirectory texk/texlive/linked_scripts/
 ##
-## Copyright 2016-2020 Karl Berry <tex-live@tug.org>
+## Copyright 2016-2022 Karl Berry <tex-live@tug.org>
 ## Copyright 2009-2015 Peter Breitenlohner <tex-live@tug.org>
 ## You may freely use, modify and/or distribute this file.
 ##
 ## TeX Live's extra scripts.
 
-## Build lists of scripts.
-##
+# Build lists of scripts.
 scripts-list: Makefile
 	@echo "Create $@"
 	@echo "texmf_scripts='" >$@
 	@for f in $(nobase_dist_texmf_scripts_SCRIPTS); do echo "$$f"; done >>$@
 	@echo "'" >>$@
 	cmp -s $(srcdir)/scripts.lst $@ || cp -f $@ $(srcdir)/scripts.lst
+
+# Hard to remember the target name different from final file name.
+scripts-lst:
+	$(MAKE) scripts-list
 
 if MAINTAINER_MODE
 all-local: scripts-list
@@ -87,6 +90,8 @@ texmf_shell_scripts = \
 	texlive-extra/texconfig-sys.sh \
 	texlive-extra/texconfig.sh \
 	texlive-extra/texlinks.sh \
+	texlive-extra/xetex-unsafe.sh \
+	texlive-extra/xelatex-unsafe.sh \
 	texosquery/texosquery.sh \
 	texosquery/texosquery-jre5.sh \
 	texosquery/texosquery-jre8.sh \
@@ -109,6 +114,7 @@ texmf_other_scripts = \
 	bundledoc/bundledoc \
 	cachepic/cachepic.tlu \
 	checkcites/checkcites.lua \
+	citation-style-language/citeproc.lua \
 	chklref/chklref.pl \
 	cjk-gs-integrate/cjk-gs-integrate.pl \
 	clojure-pamphlet/pamphletangler \
@@ -165,6 +171,7 @@ texmf_other_scripts = \
 	lilyglyphs/lily-image-commands.py \
 	lilyglyphs/lily-rebuild-pdfs.py \
 	ltximg/ltximg.pl \
+	luafindfont/luafindfont.lua \
 	luaotfload/luaotfload-tool.lua \
 	lwarp/lwarpmk.lua \
 	m-tx/m-tx.lua \
@@ -179,6 +186,7 @@ texmf_other_scripts = \
 	multibibliography/multibibliography.pl \
 	musixtex/musixflx.lua \
 	musixtex/musixtex.lua \
+	optexcount/optexcount \
 	pax/pdfannotextractor.pl \
 	pdfcrop/pdfcrop.pl \
 	pdflatexpicscale/pdflatexpicscale.pl \
@@ -228,6 +236,8 @@ texmf_other_scripts = \
 	texlive-extra/e2pall.pl \
 	texliveonfly/texliveonfly.py \
 	texloganalyser/texloganalyser \
+	texlogfilter/texlogfilter \
+	texlogsieve/texlogsieve \
 	texplate/texplate.sh \
 	thumbpdf/thumbpdf.pl \
 	tlcockpit/tlcockpit.sh \

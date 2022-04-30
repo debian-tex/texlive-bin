@@ -17,15 +17,15 @@
 @q Please send comments, suggestions, etc. to tex-k@@tug.org.            @>
 
 @x
-\def\title{CWEAVE (Version 4.4)}
+\def\title{CWEAVE (Version 4.7)}
 @y
-\def\title{CWEAVE (Version 4.4 [\TeX~Live])}
+\def\title{CWEAVE (Version 4.7 [\TeX~Live])}
 @z
 
 @x
-  \centerline{(Version 4.4)}
+  \centerline{(Version 4.7)}
 @y
-  \centerline{(Version 4.4 [\TeX~Live])}
+  \centerline{(Version 4.7 [\TeX~Live])}
 @z
 
 @x
@@ -41,9 +41,9 @@
 @z
 
 @x
-@d banner "This is CWEAVE (Version 4.4)"
+@d banner "This is CWEAVE (Version 4.7)"
 @y
-@d banner "This is CWEAVE, Version 4.4"
+@d banner "This is CWEAVE, Version 4.7"
   /* will be extended by the \TeX~Live |versionstring| */
 @z
 
@@ -60,8 +60,8 @@
 @z
 
 @x
-@d max_refs 20000 /* number of cross-references; must be less than 65536 */
-@d max_scraps 2000 /* number of tokens in \CEE/ texts being parsed */
+@d max_refs 30000 /* number of cross-references; must be less than 65536 */
+@d max_scraps 5000 /* number of tokens in \CEE/ texts being parsed */
 @y
 @d max_refs 65535 /* number of cross-references; must be less than 65536 */
 @d max_scraps 5000 /* number of tokens in \CEE/ texts being parsed */
@@ -74,9 +74,9 @@
 @z
 
 @x
-@d max_toks 20000 /* number of symbols in \CEE/ texts being parsed;
+@d max_toks 30000 /* number of symbols in \CEE/ texts being parsed;
   must be less than 65536 */
-@d max_texts 4000 /* number of phrases in \CEE/ texts being parsed;
+@d max_texts 8000 /* number of phrases in \CEE/ texts being parsed;
   must be less than 10240 */
 @y
 @d max_toks 65535 /* number of symbols in \CEE/ texts being parsed;
@@ -199,7 +199,7 @@ tricky way so that the first line of the output file will be
 
 @<Start \TEX/...@>=
 out_ptr=out_buf+1; out_line=1; active_file=tex_file;
-*out_ptr='c'; tex_printf("\\input cwebma");
+tex_printf("\\input cwebma"); *out_ptr='c';
 @y
 @ In particular, the |finish_line| procedure is called near the very
 beginning of phase two. We initialize the output variables in a slightly
@@ -213,10 +213,11 @@ Without this option the first line of the output file will be
 `\.{\\input cwebmac}'.
 
 @<Start \TEX/...@>=
-out_ptr=out_buf+1; out_line=1; active_file=tex_file; *out_ptr='c';
+out_ptr=out_buf+1; out_line=1; active_file=tex_file;
 tex_puts("\\input ");
 tex_printf(use_language);
 tex_puts("cwebma");
+*out_ptr='c';
 @z
 
 @x
@@ -268,6 +269,12 @@ tex_puts("cwebma");
 @z
 
 @x
+@i prod.w
+@y
+@i prod-cweave.w
+@z
+
+@x
 @d inner_tok_flag (5*id_flag) /* signifies a token list in `\pb' */
 
 @c
@@ -302,13 +309,13 @@ print_text( /* prints a token list for debugging; not used in |main| */
 @x
 @<Cases for |exp|@>=
 if (cat1==lbrace || cat1==int_like || cat1==decl) {
-  make_underlined(pp); big_app(dindent); big_app1(pp);
+  make_underlined(pp); big_app1(pp); big_app(dindent);
   reduce(pp,1,fn_decl,0,1);
 }
 @y
 @<Cases for |exp|@>=
 if(cat1==lbrace || cat1==int_like || cat1==decl) {
-  make_underlined(pp); if (indent_param_decl) big_app(dindent); big_app1(pp);
+  make_underlined(pp); big_app1(pp); if (indent_param_decl) big_app(dindent);
   reduce(pp,1,fn_decl,0,1);
 }
 @z
@@ -329,7 +336,7 @@ else if ((cat1==binop||cat1==colon) && cat2==exp && (cat3==comma ||
   squash(pp,3,decl_head,-1,36);
 else if (cat1==cast) squash(pp,2,decl_head,-1,37);
 else if (cat1==lbrace || cat1==int_like || cat1==decl) {
-  big_app(dindent); big_app1(pp); reduce(pp,1,fn_decl,0,38);
+  big_app(dindent); squash(pp,1,fn_decl,0,38);
 }
 else if (cat1==semi) squash(pp,2,decl,-1,39);
 @y
@@ -349,8 +356,8 @@ else if ((cat1==binop||cat1==colon) && cat2==exp && (cat3==comma ||
   squash(pp,3,decl_head,-1,36);
 else if (cat1==cast) squash(pp,2,decl_head,-1,37);
 else if (cat1==lbrace || cat1==int_like || cat1==decl) {
-  if (indent_param_decl) big_app(dindent); big_app1(pp);
-  reduce(pp,1,fn_decl,0,38);
+  if (indent_param_decl) big_app(dindent);
+  squash(pp,1,fn_decl,0,38);
 }
 else if (cat1==semi) squash(pp,2,decl,-1,39);
 @z
@@ -405,6 +412,15 @@ else if (cat1==stmt) {
 @z
 
 @x
+  big_app1_insert(pp, (cat1==function || cat1==decl) ? big_force :
+     force_lines ? force : break_space); reduce(pp,2,cat1,-1,76);
+@y
+  big_app1_insert(pp, (cat1==function || cat1==decl) ? @|
+     ( order_decl_stmt ? big_force : force ) : @|
+     ( force_lines ? force : break_space ) ); reduce(pp,2,cat1,-1,76);
+@z
+
+@x
     overflow("token");
 @y
     overflow(_("token"));
@@ -423,9 +439,9 @@ else if (cat1==stmt) {
 @z
 
 @x
-  printf("\nIrreducible scrap sequence in section %d:",section_count);
+  printf("\nIrreducible scrap sequence in section %d:",(int)section_count);
 @y
-  printf(_("\nIrreducible scrap sequence in section %d:"),section_count);
+  printf(_("\nIrreducible scrap sequence in section %d:"),(int)section_count);
 @z
 
 @x
@@ -441,9 +457,9 @@ else if (cat1==stmt) {
 @z
 
 @x
-        else err_print("! Double @@ should be used in strings");
+      else err_print("! Double @@ should be used in strings");
 @y
-        else err_print(_("! Double @@ should be used in strings"));
+      else err_print(_("! Double @@ should be used in strings"));
 @z
 
 @x
@@ -507,8 +523,10 @@ if (show_progress) fputs(_("\nWriting the output file..."),stdout);
 @z
 
 @x
+        } @=/* otherwise fall through */@>@;
       default: err_print("! Improper macro definition"); break;
 @y
+        } @=/* otherwise fall through */@>@;
       default: err_print(_("! Improper macro definition")); break;
 @z
 
@@ -542,7 +560,6 @@ if (no_xref) {
   finish_line();
   out_str("\\end");
 @.\\end@>
-  active_file=tex_file;
 }
 @z
 
@@ -572,8 +589,8 @@ if (no_xref) {
 @y
 @.\\end@>
 }
-finish_line(); fclose(active_file); active_file=NULL;
-@<Update the result when it has changed@>@;
+finish_line(); fclose(active_file); active_file=tex_file=NULL;
+if (check_for_change) @<Update the result when it has changed@>@;
 @z
 
 @x
@@ -591,44 +608,44 @@ finish_line(); fclose(active_file); active_file=NULL;
 @x
   puts("\nMemory usage statistics:");
 @.Memory usage statistics:@>
-  printf("%ld names (out of %ld)\n",
+  printf("%td names (out of %ld)\n",
             (ptrdiff_t)(name_ptr-name_dir),(long)max_names);
-  printf("%ld cross-references (out of %ld)\n",
+  printf("%td cross-references (out of %ld)\n",
             (ptrdiff_t)(xref_ptr-xmem),(long)max_refs);
-  printf("%ld bytes (out of %ld)\n",
+  printf("%td bytes (out of %ld)\n",
             (ptrdiff_t)(byte_ptr-byte_mem),(long)max_bytes);
   puts("Parsing:");
-  printf("%ld scraps (out of %ld)\n",
+  printf("%td scraps (out of %ld)\n",
             (ptrdiff_t)(max_scr_ptr-scrap_info),(long)max_scraps);
-  printf("%ld texts (out of %ld)\n",
+  printf("%td texts (out of %ld)\n",
             (ptrdiff_t)(max_text_ptr-tok_start),(long)max_texts);
-  printf("%ld tokens (out of %ld)\n",
+  printf("%td tokens (out of %ld)\n",
             (ptrdiff_t)(max_tok_ptr-tok_mem),(long)max_toks);
-  printf("%ld levels (out of %ld)\n",
+  printf("%td levels (out of %ld)\n",
             (ptrdiff_t)(max_stack_ptr-stack),(long)stack_size);
   puts("Sorting:");
-  printf("%ld levels (out of %ld)\n",
+  printf("%td levels (out of %ld)\n",
             (ptrdiff_t)(max_sort_ptr-scrap_info),(long)max_scraps);
 @y
   puts(_("\nMemory usage statistics:"));
 @.Memory usage statistics:@>
-  printf(_("%ld names (out of %ld)\n"),
+  printf(_("%td names (out of %ld)\n"),
             (ptrdiff_t)(name_ptr-name_dir),(long)max_names);
-  printf(_("%ld cross-references (out of %ld)\n"),
+  printf(_("%td cross-references (out of %ld)\n"),
             (ptrdiff_t)(xref_ptr-xmem),(long)max_refs);
-  printf(_("%ld bytes (out of %ld)\n"),
+  printf(_("%td bytes (out of %ld)\n"),
             (ptrdiff_t)(byte_ptr-byte_mem),(long)max_bytes);
   puts(_("Parsing:"));
-  printf(_("%ld scraps (out of %ld)\n"),
+  printf(_("%td scraps (out of %ld)\n"),
             (ptrdiff_t)(max_scr_ptr-scrap_info),(long)max_scraps);
-  printf(_("%ld texts (out of %ld)\n"),
+  printf(_("%td texts (out of %ld)\n"),
             (ptrdiff_t)(max_text_ptr-tok_start),(long)max_texts);
-  printf(_("%ld tokens (out of %ld)\n"),
+  printf(_("%td tokens (out of %ld)\n"),
             (ptrdiff_t)(max_tok_ptr-tok_mem),(long)max_toks);
-  printf(_("%ld levels (out of %ld)\n"),
+  printf(_("%td levels (out of %ld)\n"),
             (ptrdiff_t)(max_stack_ptr-stack),(long)stack_size);
   puts(_("Sorting:"));
-  printf(_("%ld levels (out of %ld)\n"),
+  printf(_("%td levels (out of %ld)\n"),
             (ptrdiff_t)(max_sort_ptr-scrap_info),(long)max_scraps);
 @z
 
@@ -662,15 +679,16 @@ a function block.
 @<Set init...@>=
 order_decl_stmt=true;
 
-@* Output file update.  Most \CEE/ projects are controlled by a
-\.{Makefile} that automatically takes care of the temporal dependecies
-between the different source modules.  It is suitable that \.{CWEB} doesn't
-create new output for all existing files, when there are only changes to
-some of them. Thus the \.{make} process will only recompile those modules
-where necessary. The idea and basic implementation of this mechanism can
-be found in the program \.{NUWEB} by Preston Briggs, to whom credit is due.
+@* Output file update. Most \CEE/ projects are controlled by a \.{Makefile}
+that automatically takes care of the temporal dependecies between the different
+source modules. It may be convenient that \.{CWEB} doesn't create new output
+for all existing files, when there are only changes to some of them. Thus the
+\.{make} process will only recompile those modules where necessary. You can
+activate this feature with the `\.{+c}' command-line option. The idea and basic
+implementation of this mechanism can be found in the program \.{NUWEB} by
+Preston Briggs, to whom credit is due.
 
-@<Update the result...@>=
+@<Update the result...@>= {
 if((tex_file=fopen(tex_file_name,"r"))!=NULL) {
   boolean comparison=false;
 
@@ -678,7 +696,7 @@ if((tex_file=fopen(tex_file_name,"r"))!=NULL) {
     fatal(_("! Cannot open output file "),check_file_name);
 @.Cannot open output file@>
 
-  if (check_for_change) @<Compare the temporary output...@>@;
+  @<Compare the temporary output...@>@;
 
   fclose(tex_file); tex_file=NULL;
   fclose(check_file); check_file=NULL;
@@ -688,6 +706,7 @@ if((tex_file=fopen(tex_file_name,"r"))!=NULL) {
   rename(check_file_name,tex_file_name); /* This was the first run */
 
 strcpy(check_file_name,""); /* We want to get rid of the temporary file */
+}
 
 @ We hope that this runs fast on most systems.
 

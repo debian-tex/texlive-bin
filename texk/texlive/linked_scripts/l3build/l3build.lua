@@ -2,7 +2,7 @@
 
 --[[
 
-File l3build.lua Copyright (C) 2014-2020 The LaTeX Project
+File l3build.lua Copyright (C) 2014-2022 The LaTeX Project
 
 It may be distributed and/or modified under the conditions of the
 LaTeX Project Public License (LPPL), either version 1.3c of this
@@ -25,7 +25,7 @@ for those people who are interested.
 --]]
 
 -- Version information
-release_date = "2021-05-06"
+release_date = "2022-03-15"
 
 -- File operations are aided by the LuaFileSystem module
 local lfs = require("lfs")
@@ -43,6 +43,8 @@ local print            = print
 local select           = select
 local tonumber         = tonumber
 local exit             = os.exit
+local open             = io.open
+local stdout           = io.stdout
 
 -- l3build setup and functions
 kpse.set_program_name("kpsewhich")
@@ -131,14 +133,13 @@ else
   checkconfigs = options["config"] or checkconfigs
 end
 
-if options["target"] == "check" then
-  if #checkconfigs > 1 then
+if #checkconfigs > 1 then
+  if options["target"] == "check" or options["target"] == "bundlecheck" then
     local errorlevel = 0
-    local opts = options
     local failed = { }
     for i = 1, #checkconfigs do
-      opts["config"] = {checkconfigs[i]}
-      errorlevel = call({"."}, "check", opts)
+      options["config"] = {checkconfigs[i]}
+      errorlevel = call({"."}, "check", options)
       if errorlevel ~= 0 then
         if options["halt-on-error"] then
           exit(1)
@@ -160,17 +161,53 @@ if options["target"] == "check" then
         end
         print("")
       end
+      if options["show-saves"] then
+        local savecmds, recheckcmds = "", ""
+        for _,config in ipairs(failed) do
+          local testdir = testdir
+          if config ~= "build" then
+            testdir = testdir .. "-" .. config
+          end
+          local f = open(testdir .. "/.savecommands")
+          if not f then
+            print("Error: Cannot find save commands for configuration " ..
+              config)
+            exit(2)
+          end
+          for line in f:lines() do
+             if line == "" then break end
+             savecmds = savecmds .. "  " .. line .. "\n"
+          end
+          for line in f:lines() do
+             recheckcmds = recheckcmds .. "  " .. line .. "\n"
+          end
+          f:close()
+        end
+        print"To regenerate the test files, run\n"
+        print(savecmds)
+        if recheckcmds ~= "" then
+          print"To detect engine specific differences, run after that\n"
+          print(recheckcmds)
+        end
+      end
       exit(1)
     else
       -- Avoid running the 'main' set of tests twice
       exit(0)
     end
+  elseif options["target"] == "clean" then
+    local failure
+    for i = 1, #checkconfigs do
+      options["config"] = {checkconfigs[i]}
+      failure = 0 ~= call({"."}, "clean", options) or failure
+    end
+    exit(failure and 1 or 0)
   end
 end
 if #checkconfigs == 1 and
    checkconfigs[1] ~= "build" and
    (options["target"] == "check" or options["target"] == "save" or options["target"] == "clean") then
-   local config = "./" .. gsub(checkconfigs[1],".lua$","") .. ".lua"
+   local config = "./" .. gsub(checkconfigs[1],"%.lua$","") .. ".lua"
    if fileexists(config) then
      local savedtestfiledir = testfiledir
      dofile(config)

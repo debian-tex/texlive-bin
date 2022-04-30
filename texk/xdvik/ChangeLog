@@ -1,3 +1,33 @@
+2022-02-13  Paul Vojta  <vojta@math.berkeley.edu>
+
+	* dvi-init.c (make_backup_fp): call new try_dup, and existing
+	try_fdopen, before fseek.
+	* util.c (try_dup): define new fn.
+	* util.h (try_dup): declare it.
+	This resolves xdvi crashing under MacOS after hitting `R' in some
+	situations (the preceding change did as well, in a clunkier way).
+	https://tug.org/pipermail/tlbuild/2022q1/005140.html ff.
+
+2022-02-01  John Hawkinson  <jhawk@alum.mit.edu>
+
+	* dvi-init.c (make_backup_fp): check returns from fseeks,
+	disable useTempFp if failure. Posted at
+	https://tug.org/pipermail/tlbuild/2022q1/005129.html
+
+2022-01-31  Karl Berry  <karl@freefriends.org>
+
+	* dvi-init.c (file_exists_p): check for failed fstat.
+	Found by John Hawkinson, tlbuild 30 Jan 2022 22:42:23.	
+	https://tug.org/pipermail/tlbuild/2022q1/005105.html
+
+	* xdvi.1.in: add 262144=find and 524288=files.
+	Found by John Hawkinson, tlbuild 30 Jan 2022 23:11:10.
+
+2022-01-26  Karl Berry  <karl@freefriends.org>
+
+	* gui/print-log.h (info): don't declare unintended `info' variable
+	with type. From Evan Miller, tex-k 26 Jan 2022 10:55:35.
+
 2021-03-14  Karl Berry  <karl@freefriends.org>
 
 	* string-utils.c (shell_escape_string): escape other shell

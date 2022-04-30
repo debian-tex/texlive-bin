@@ -2,7 +2,7 @@
 % This program by Silvio Levy and Donald E. Knuth
 % is based on a program by Knuth.
 % It is distributed WITHOUT ANY WARRANTY, express or implied.
-% Version 4.4 --- June 2021 (works also with later versions)
+% Version 4.7 --- February 2022 (works also with later versions)
 
 % Copyright (C) 1987,1990,1993 Silvio Levy and Donald E. Knuth
 
@@ -12,8 +12,8 @@
 
 % Permission is granted to copy and distribute modified versions of this
 % document under the conditions for verbatim copying, provided that the
-% entire resulting derived work is distributed under the terms of a
-% permission notice identical to this one.
+% entire resulting derived work is given a different name and distributed
+% under the terms of a permission notice identical to this one.
 
 % Amendments to 'common.h' resulting in this updated version were created
 % by numerous collaborators over the course of many years.
@@ -30,8 +30,8 @@ First comes general stuff:
 @i iso_types.w
 
 
+@s boolean bool
 @<Common code...@>=
-typedef bool boolean;
 typedef uint8_t eight_bits;
 typedef uint16_t sixteen_bits;
 typedef enum {
@@ -45,10 +45,21 @@ are placed in the context of the `|_|'~macro.  This is just a shortcut for the
 `|@!gettext|' function from the ``GNU~gettext utilities.'' For systems that do
 not have this library installed, we wrap things for neutral behavior without
 internationalization.
+For backward compatibility with pre-{\mc ANSI} compilers, we replace the
+``standard'' header file `\.{stdbool.h}' with the
+{\mc KPATHSEA\spacefactor1000} interface `\.{simpletypes.h}'.
 
 @d _(s) gettext(s)
 
 @<Include files@>=
+#include <ctype.h> /* definition of |@!isalpha|, |@!isdigit| and so on */
+#include <kpathsea/simpletypes.h> /* |@!boolean|, |@!true| and |@!false| */
+#include <stddef.h> /* definition of |@!ptrdiff_t| */
+#include <stdint.h> /* definition of |@!uint8_t| and |@!uint16_t| */
+#include <stdio.h> /* definition of |@!printf| and friends */
+#include <stdlib.h> /* definition of |@!getenv| and |@!exit| */
+#include <string.h> /* definition of |@!strlen|, |@!strcmp| and so on */
+@#
 #ifndef HAVE_GETTEXT
 #define HAVE_GETTEXT 0
 #endif
@@ -58,14 +69,6 @@ internationalization.
 #else
 #define gettext(a) a
 #endif
-@#
-#include <ctype.h> /* definition of |@!isalpha|, |@!isdigit| and so on */
-#include <stdbool.h> /* definition of |@!bool|, |@!true| and |@!false| */
-#include <stddef.h> /* definition of |@!ptrdiff_t| */
-#include <stdint.h> /* definition of |@!uint8_t| and |@!uint16_t| */
-#include <stdlib.h> /* definition of |@!getenv| and |@!exit| */
-#include <stdio.h> /* definition of |@!printf| and friends */
-#include <string.h> /* definition of |@!strlen|, |@!strcmp| and so on */
 
 @ Code related to the character set:
 @^ASCII code dependencies@>
@@ -95,12 +98,12 @@ extern char *id_first; /* where the current identifier begins in the buffer */
 extern char *id_loc; /* just after the current identifier in the buffer */
 
 @ Code related to input routines:
-@d xisalpha(c) (isalpha((eight_bits)(c))&&((eight_bits)(c)<0200))
-@d xisdigit(c) (isdigit((eight_bits)(c))&&((eight_bits)(c)<0200))
-@d xisspace(c) (isspace((eight_bits)(c))&&((eight_bits)(c)<0200))
-@d xislower(c) (islower((eight_bits)(c))&&((eight_bits)(c)<0200))
-@d xisupper(c) (isupper((eight_bits)(c))&&((eight_bits)(c)<0200))
-@d xisxdigit(c) (isxdigit((eight_bits)(c))&&((eight_bits)(c)<0200))
+@d xisalpha(c) (isalpha((int)(c))&&((eight_bits)(c)<0200))
+@d xisdigit(c) (isdigit((int)(c))&&((eight_bits)(c)<0200))
+@d xisspace(c) (isspace((int)(c))&&((eight_bits)(c)<0200))
+@d xislower(c) (islower((int)(c))&&((eight_bits)(c)<0200))
+@d xisupper(c) (isupper((int)(c))&&((eight_bits)(c)<0200))
+@d xisxdigit(c) (isxdigit((int)(c))&&((eight_bits)(c)<0200))
 @d isxalpha(c) ((c)=='_' || (c)=='$')
   /* non-alpha characters allowed in identifier */
 @d ishigh(c) ((eight_bits)(c)>0177)
@@ -183,7 +186,7 @@ extern hash_pointer h; /* index into hash-head array */
 
 @ @<Predecl...@>=
 extern boolean names_match(name_pointer,const char *,size_t,eight_bits);@/
-extern name_pointer id_lookup(const char *,const char *,char);
+extern name_pointer id_lookup(const char *,const char *,eight_bits);
    /* looks up a string in the identifier table */
 extern name_pointer section_lookup(char *,char *,boolean); /* finds section name */
 extern void init_node(name_pointer);@/
@@ -248,9 +251,8 @@ extern void common_init(void);@/
 extern void print_stats(void);@/
 extern void cb_show_banner(void);
 
-@ The following parameters were sufficient in the original \.{WEB} to
-handle \TEX/, so they should be sufficient for most applications of
-\.{CWEB}.
+@ The following parameters are sufficient to handle \TEX/ (converted to
+\.{CWEB}), so they should be sufficient for most applications of \.{CWEB}.
 
 @d buf_size 1000 /* maximum length of input line, plus one */
 @d longest_name 10000 /* file names, section names, and section texts

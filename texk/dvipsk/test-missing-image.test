@@ -1,5 +1,5 @@
 #! /bin/sh -vx
-# $Id$
+# $Id: test-missing-image.test 57697 2021-02-10 02:02:05Z karl $
 # Public domain. Test that dvips exits with bad status when there is a
 # missing image file.
 # 

@@ -1,11 +1,11 @@
-texlive-bin (2022.20220321.62855-1) UNRELEASED; urgency=medium
+texlive-bin (2022.20220321.62855-1) experimental; urgency=medium
 
-  * New upstream TeX Live 2022.
+  * New upstream TeX Live 2022, upload to experimental.
 
   * Replace Dep: perl by "perl:any" (Closes: #968906).
   * Much lintian stuff, have a look at "git log" for details.
 
- -- Hilmar Preusse <hille42@web.de>  Tue, 14 Dec 2021 20:41:47 +0100
+ -- Hilmar Preusse <hille42@web.de>  Mon, 02 May 2022 12:19:19 +0200
 
 texlive-bin (2021.20210626.59705-1) unstable; urgency=medium
 

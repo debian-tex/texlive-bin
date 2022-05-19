@@ -210,7 +210,7 @@ override_dh_installdocs:
 	dh_installdocs -plibsynctex2 -plibsynctex-dev \
 		texk/web2c/synctexdir/README.txt	\
 		texk/web2c/synctexdir/synctex_parser_readme.txt
-	#dh_installdocs -plibtexlua53 -plibtexlua53-dev \
+	#dh_installdocs -plibtexlua53-5 -plibtexlua-dev \
 	#	NOTHING TO INSTALL
 ifeq ($(WITHLUAJIT), yes)
 	dh_installdocs -plibtexluajit2 -plibtexluajit-dev
@@ -224,7 +224,7 @@ override_dh_installchangelogs:
 		texk/ptexenc/ChangeLog
 	dh_installchangelogs -plibsynctex2 -plibsynctex-dev \
 		texk/web2c/synctexdir/ChangeLog
-	dh_installchangelogs -plibtexlua53 -plibtexlua53-dev \
+	dh_installchangelogs -plibtexlua53-5 -plibtexlua-dev \
 		libs/lua53/TLpatches/ChangeLog
 ifeq ($(WITHLUAJIT), yes)
 	dh_installchangelogs -plibtexluajit2 -plibtexluajit-dev \
@@ -245,7 +245,7 @@ override_dh_makeshlibs:
 	dh_makeshlibs -plibkpathsea6
 	dh_makeshlibs -plibptexenc1
 	dh_makeshlibs -plibsynctex2
-	dh_makeshlibs -plibtexlua53
+	dh_makeshlibs -plibtexlua53-5
 ifeq ($(WITHLUAJIT), yes)
 	dh_makeshlibs -plibtexluajit2
 endif
@@ -253,7 +253,7 @@ endif
 SHLIBDEPS = -l debian/libkpathsea6/usr/lib/* \
 		-l debian/libptexenc1/usr/lib/* \
 		-l debian/libsynctex2/usr/lib/* \
-		-l debian/libtexlua53/usr/lib/*
+		-l debian/libtexlua53-5/usr/lib/*
 
 ifeq ($(WITHLUAJIT), yes)
 	SHLIBDEPS += -l debian/libtexluajit2/usr/lib/*

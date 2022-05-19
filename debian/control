@@ -45,8 +45,8 @@ Depends: libptexenc1 (>= ${source:Version}),
   libkpathsea6 (<< ${source:Version}.1~),
   libsynctex2 (>= ${source:Version}),
   libsynctex2 (<< ${source:Version}.1~),
-  libtexlua53 (>= ${source:Version}),
-  libtexlua53 (<< ${source:Version}.1~),
+  libtexlua53-5 (>= ${source:Version}),
+  libtexlua53-5 (<< ${source:Version}.1~),
   libtexluajit2 (>= ${source:Version}) [amd64 armel armhf hurd-i386 i386 kfreebsd-amd64 kfreebsd-i386 powerpc],
   libtexluajit2 (<< ${source:Version}.1~) [amd64 armel armhf hurd-i386 i386 kfreebsd-amd64 kfreebsd-i386 powerpc],
   t1utils, tex-common, perl:any,
@@ -124,19 +124,37 @@ Description: TeX Live: SyncTeX parser library (development part)
  parser library.
 
 Package: libtexlua53
+Section: oldlibs
+Architecture: all
+Depends: libtexlua53-5, ${misc:Depends}
+Description: transitional package (lib)
+ This is a transitional package (lib). It can safely be removed.
+
+Package: libtexlua53-5
 Section: libs
 Architecture: any
 Multi-Arch: same
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Pre-Depends: ${misc:Pre-Depends}
+Replaces: libtexlua53 (<< 2022.20220321.62855-2~)
+Breaks: libtexlua53 (<< 2022.20220321.62855-2~)
 Description: TeX Live: Lua 5.3, modified for use with LuaTeX
  The Lua 5.3 library as used within LuaTeX.
 
 Package: libtexlua53-dev
+Section: oldlibs
+Architecture: all
+Depends: libtexlua-dev, ${misc:Depends}
+Description: transitional package (dev)
+ This is a transitional package (dev). It can safely be removed.
+
+Package: libtexlua-dev
 Section: libdevel
 Architecture: any
 Multi-Arch: same
-Depends: ${misc:Depends}, libtexlua53 (= ${binary:Version})
+Depends: ${misc:Depends}, libtexlua53-5 (= ${binary:Version})
+Replaces: libtexlua53-dev (<< 2022.20220321.62855-2~)
+Breaks: libtexlua53-dev (<< 2022.20220321.62855-2~)
 Description: TeX Live: Lua 5.3, modified for use with LuaTeX (development part)
  This package contains the static library and header files for the texlua
  library.

@@ -2,15 +2,12 @@ debian-use-xdvi-bin
 debian-builtin-searchpath
 debian-no-tl-scripts
 debian-remove-unneeded-x-libs-linking
-# from here on upstream patches
-#disable-seetex-stdin-tests
 debian-SDE-docs-in-tex-etex-manpage
 debian-t4ht-correct-expansion
-#debian-dvisvgm-fix-missing-libs
-# disabled for now
-#poppler-0.64
+# from here on upstream patches
+#disable-seetex-stdin-tests
 # to be sent upstream at some point
 gftodvi_man.patch
-#sparc64-fix-alignment.patch
 spelling_in_manual_pages
 b20034c3cf23f813a70cb60de8e1761a443f5fbf.patch
+#spelling_in_binaries

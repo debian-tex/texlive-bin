@@ -13,3 +13,4 @@ debian-t4ht-correct-expansion
 gftodvi_man.patch
 #sparc64-fix-alignment.patch
 spelling_in_manual_pages
+b20034c3cf23f813a70cb60de8e1761a443f5fbf.patch

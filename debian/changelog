@@ -1,5 +1,7 @@
 texlive-bin (2022.20220321.62855-2) UNRELEASED; urgency=medium
 
+  * Upgrade xpdf code to 4.04 to solve CVE-2021-27548
+    (Closes: #1011333).
   * Lintian:
     - Remove obsolete: source-is-missing
     - Add (in general): very-long-line-length-in-source-file

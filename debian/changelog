@@ -12,7 +12,7 @@ texlive-bin (2022.20220321.62855-2) experimental; urgency=medium
     - W: bad-whatis-entry usr/share/man/man1/xml2pmx.1.gz
     - W: wrong-manual-section usr/share/man/man1/axohelp.1.gz:1 1 != 1.4
 
- -- Hilmar Preusse <hille42@web.de>  Sat, 21 May 2022 00:40:57 +0200
+ -- Hilmar Preusse <hille42@web.de>  Sun, 22 May 2022 23:34:38 +0200
 
 texlive-bin (2022.20220321.62855-1) experimental; urgency=medium
 

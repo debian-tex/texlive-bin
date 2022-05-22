@@ -9,6 +9,8 @@ texlive-bin (2022.20220321.62855-2) experimental; urgency=medium
     - W: libtexlua53: package-name-doesnt-match-sonames libtexlua53-5
       renamed: libtexlua53-dev -> libtexlua-dev.
       renamed: libtexlua53 -> libtexlua53-5
+    - W: bad-whatis-entry usr/share/man/man1/xml2pmx.1.gz
+    - W: wrong-manual-section usr/share/man/man1/axohelp.1.gz:1 1 != 1.4
 
  -- Hilmar Preusse <hille42@web.de>  Sat, 21 May 2022 00:40:57 +0200
 

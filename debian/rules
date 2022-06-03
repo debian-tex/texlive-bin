@@ -91,6 +91,7 @@ override_dh_autoreconf:
 # leave it as is for now and see what else pops up
 #	--disable-largefile			\
 
+#override_dh_auto_configure-arch:
 override_dh_auto_configure:
 	# we have to make sure that the mendex test case that is added
 	# by a patch is executable, same for pdftexdir - stupid dpkg-source
@@ -146,10 +147,11 @@ override_dh_auto_configure:
 	# permissions
 	chmod ugo+x utils/lacheck/test-def.test
 
+#override_dh_auto_install-arch:
 override_dh_auto_install:
 	dh_auto_install -- DESTDIR=$(CURDIR)/debian/tmp
 
-override_dh_install:
+override_dh_install-arch:
 	# remove .la files which we do not install, so that dh_install
 	# can work with --fail-missing
 	rm -f debian/tmp/usr/lib/*.la debian/tmp/usr/lib/*/*.la
@@ -159,6 +161,8 @@ override_dh_install:
 	 	debian/tmp/usr/include/$(DEB_HOST_MULTIARCH)/kpathsea/
 	dh_install --sourcedir=$(CURDIR)/debian/tmp
 	dh_missing --sourcedir=$(CURDIR)/debian/tmp --fail-missing
+
+execute_after_dh_install-arch:
 	# replace xdvi wrapper shell script with perl variant to
 	# allow for opening of gz etc files
 	rm debian/texlive-binaries/usr/bin/xdvi
@@ -199,6 +203,7 @@ override_dh_install:
 	done ; if [ $$err = 1 ] ; then exit 1 ; fi
 
 
+#override_dh_installdocs-arch:
 override_dh_installdocs:
 	dh_installdocs
 	dh_installdocs -plibptexenc1 -plibptexenc-dev \

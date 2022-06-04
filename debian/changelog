@@ -1,8 +1,8 @@
 texlive-bin (2022.20220321.62855-4) unstable; urgency=medium
 
-  * Separate "install arch" from "install indep" target (Closes: #1012018).
+  * Separate "indep" and "arch" in d/rules better (Closes: #1012018).
 
- -- Hilmar Preusse <hille42@web.de>  Fri, 03 Jun 2022 23:59:44 +0200
+ -- Hilmar Preusse <hille42@web.de>  Sat, 04 Jun 2022 23:44:11 +0200
 
 texlive-bin (2022.20220321.62855-3) unstable; urgency=low
 

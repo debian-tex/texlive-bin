@@ -68,8 +68,11 @@ endif
 
 #
 # we use TL provided reautoconf script as it has some built-in magic
-override_dh_autoreconf:
+override_dh_autoreconf-arch:
 	dh_autoreconf ./reautoconf
+
+override_dh_autoreconf-indep:
+	# Nothing to do here
 
 # this was used before, but I am not sure whether the -as-needed is necessary
 #	dh_autoreconf --as-needed
@@ -91,14 +94,13 @@ override_dh_autoreconf:
 # leave it as is for now and see what else pops up
 #	--disable-largefile			\
 
-#override_dh_auto_configure-arch:
-override_dh_auto_configure:
+override_dh_auto_configure-arch:
 	# we have to make sure that the mendex test case that is added
 	# by a patch is executable, same for pdftexdir - stupid dpkg-source
 	chmod 0755 texk/mendexk/tests/mendex.test
 	chmod 0755 texk/web2c/pdftexdir/expanded.test
 	# run out configure script
-	dh_auto_configure -- -C --prefix=/usr 	\
+	dh_auto_configure -- -C --prefix=/usr	\
 	--datarootdir=/usr/share/texlive	\
 	--disable-native-texlive-build		\
 	--disable-missing			\
@@ -122,7 +124,7 @@ override_dh_auto_configure:
 	--with-system-libpng			\
 	--with-system-gd			\
 	--with-system-cairo 			\
-	--with-system-teckit	\
+	--with-system-teckit			\
 	--with-x				\
 	--with-mf-x-toolkit			\
 	--with-xdvi-x-toolkit=xaw		\
@@ -147,9 +149,14 @@ override_dh_auto_configure:
 	# permissions
 	chmod ugo+x utils/lacheck/test-def.test
 
-#override_dh_auto_install-arch:
-override_dh_auto_install:
+override_dh_auto_configure-indep:
+	# Nothing to do here
+
+override_dh_auto_install-arch:
 	dh_auto_install -- DESTDIR=$(CURDIR)/debian/tmp
+
+override_dh_auto_install-indep:
+	# Nothing to do here
 
 override_dh_install-arch:
 	# remove .la files which we do not install, so that dh_install
@@ -202,9 +209,7 @@ execute_after_dh_install-arch:
 	  fi ; \
 	done ; if [ $$err = 1 ] ; then exit 1 ; fi
 
-
-#override_dh_installdocs-arch:
-override_dh_installdocs:
+override_dh_installdocs-arch:
 	dh_installdocs
 	dh_installdocs -plibptexenc1 -plibptexenc-dev \
 		texk/ptexenc/COPYRIGHT texk/ptexenc/README
@@ -215,11 +220,12 @@ override_dh_installdocs:
 	dh_installdocs -plibsynctex2 -plibsynctex-dev \
 		texk/web2c/synctexdir/README.txt	\
 		texk/web2c/synctexdir/synctex_parser_readme.txt
-	#dh_installdocs -plibtexlua53-5 -plibtexlua-dev \
-	#	NOTHING TO INSTALL
 ifeq ($(WITHLUAJIT), yes)
 	dh_installdocs -plibtexluajit2 -plibtexluajit-dev
 endif
+
+override_dh_installdocs-indep:
+	dh_installdocs -plibtexlua53 -plibtexlua53-dev
 
 override_dh_installchangelogs:
 	dh_installchangelogs

@@ -5,10 +5,11 @@ Maintainer: Debian TeX Task Force <debian-tex-maint@lists.debian.org>
 Uploaders: Norbert Preining <norbert@preining.info>,
 	Hilmar Preusse <hille42@web.de>
 Build-Depends:
+  debhelper-compat (= 13)
+Build-Depends-Arch:
   autoconf,
   automake (>= 1:1.13.1),
   bison,
-  debhelper-compat (= 13),
   flex,
   libbrotli-dev,
   libcairo2-dev,

@@ -1,6 +1,17 @@
 texlive-bin (2022.20220321.62855-5) UNRELEASED; urgency=medium
 
+  [ Hilmar Preusse ]
   * Add bug script and bug control file for texlive-binaries.
+
+  [ Debian Janitor ]
+  * Remove constraints unnecessary since buster (oldstable):
+    + Build-Depends-Arch: Drop versioned constraint on automake, libpixman-1-dev
+      and libzzip-dev.
+    + texlive-binaries: Drop versioned constraint on texlive-lang-japanese and
+      texlive-metapost in Replaces.
+    + texlive-binaries: Drop versioned constraint on texlive-htmlxml in Breaks.
+    + libkpathsea6: Drop versioned constraint on texlive-binaries in Breaks.
+    + libptexenc1: Drop versioned constraint on texlive-binaries in Breaks.
 
  -- Hilmar Preusse <hille42@web.de>  Mon, 06 Jun 2022 22:24:51 +0200
 

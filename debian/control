@@ -8,7 +8,7 @@ Build-Depends:
   debhelper-compat (= 13)
 Build-Depends-Arch:
   autoconf,
-  automake (>= 1:1.13.1),
+  automake,
   bison,
   flex,
   libbrotli-dev,
@@ -21,13 +21,13 @@ Build-Depends-Arch:
   libicu-dev,
   libmpfr-dev,
   libpaper-dev,
-  libpixman-1-dev (>= 0.32.4),
+  libpixman-1-dev,
   libpng-dev,
   libteckit-dev,
   libtool,
   libxaw7-dev,
   libxi-dev,
-  libzzip-dev (>= 0.12),
+  libzzip-dev,
   m4,
   texlive-binaries <cross>,
   zlib1g-dev | libz-dev
@@ -53,9 +53,9 @@ Depends: libptexenc1 (>= ${source:Version}),
   t1utils, tex-common, perl:any,
   ${shlibs:Depends}, ${misc:Depends}
 Recommends: texlive-base, dvisvgm
-Replaces: texlive-metapost (<< 2010), ptex-bin, mendexk, jmpost, luatex (<< 2014), gregorio (<= 2.3-1), texlive-lang-japanese (<< 2017), texlive-extra-utils (<< 2020.20200329), texlive-luatex (<< 2020.20200329)
+Replaces: ptex-bin, mendexk, jmpost, luatex (<< 2014), gregorio (<= 2.3-1), texlive-extra-utils (<< 2020.20200329), texlive-luatex (<< 2020.20200329)
 Conflicts: mendexk, makejvf, jmpost
-Breaks: texlive-base (<< 2021), luatex (<< 2014), gregorio (<= 2.3-1), texlive-htmlxml (<< 2016.20160829), texlive-extra-utils (<< 2020.20200329), texlive-luatex (<< 2020.20200329)
+Breaks: texlive-base (<< 2021), luatex (<< 2014), gregorio (<= 2.3-1), texlive-extra-utils (<< 2020.20200329), texlive-luatex (<< 2020.20200329)
 Provides: texlive-base-bin, makejvf, mendexk, jmpost, luatex
 Description: Binaries for TeX Live
  This package contains all the binaries of TeX Live packages.
@@ -70,7 +70,6 @@ Architecture: any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends}, ${shlibs:Depends}
-Breaks: texlive-binaries (<< 2014)
 Description: TeX Live: path search library for TeX (runtime part)
  This package contains the runtime part of the Kpathsea[rch] library,
  which implements generic path searching, configuration, and
@@ -92,7 +91,6 @@ Architecture: any
 Multi-Arch: same
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Pre-Depends: ${misc:Pre-Depends}
-Breaks: texlive-binaries (<< 2014)
 Description: TeX Live: pTeX encoding library
  library for encoding support in pTeX, a Japanese TeX engine.
 

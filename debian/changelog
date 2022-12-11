@@ -2,6 +2,8 @@ texlive-bin (2022.20220321.62855-5) UNRELEASED; urgency=medium
 
   [ Hilmar Preusse ]
   * Add bug script and bug control file for texlive-binaries.
+  * Add Dep on sse2-support, to make sure luatex works
+    correctly (Closes: #1023007).
 
   [ Debian Janitor ]
   * Remove constraints unnecessary since buster (oldstable):

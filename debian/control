@@ -50,6 +50,7 @@ Depends: libptexenc1 (>= ${source:Version}),
   libtexlua53-5 (<< ${source:Version}.1~),
   libtexluajit2 (>= ${source:Version}) [amd64 armel armhf hurd-i386 i386 kfreebsd-amd64 kfreebsd-i386 powerpc],
   libtexluajit2 (<< ${source:Version}.1~) [amd64 armel armhf hurd-i386 i386 kfreebsd-amd64 kfreebsd-i386 powerpc],
+  sse2-support [i386],
   t1utils, tex-common, perl:any,
   ${shlibs:Depends}, ${misc:Depends}
 Recommends: texlive-base, dvisvgm

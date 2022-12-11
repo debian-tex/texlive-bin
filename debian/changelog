@@ -1,4 +1,4 @@
-texlive-bin (2022.20220321.62855-5) UNRELEASED; urgency=medium
+texlive-bin (2022.20220321.62855-5) unstable; urgency=medium
 
   [ Hilmar Preusse ]
   * Add bug script and bug control file for texlive-binaries.
@@ -15,7 +15,7 @@ texlive-bin (2022.20220321.62855-5) UNRELEASED; urgency=medium
     + libkpathsea6: Drop versioned constraint on texlive-binaries in Breaks.
     + libptexenc1: Drop versioned constraint on texlive-binaries in Breaks.
 
- -- Hilmar Preusse <hille42@web.de>  Mon, 06 Jun 2022 22:24:51 +0200
+ -- Hilmar Preusse <hille42@web.de>  Sun, 11 Dec 2022 09:33:59 +0100
 
 texlive-bin (2022.20220321.62855-4) unstable; urgency=medium
 

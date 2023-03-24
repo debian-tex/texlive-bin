@@ -1,3 +1,16 @@
+texlive-bin (2023.20230311.66589-1) UNRELEASED; urgency=medium
+
+  * New upstream snapshot made for TL 2023.
+    - Remove sources of dvisvgm from orig.tar.xz, we don't build
+      it anyways.
+    - Refresh / Disable patches.
+  * Fix BD:
+    - Add libpotrace-dev
+    - Replace libfontconfig1-dev by libfontconfig-dev
+  * Fix / Add Lintian Overrides.
+
+ -- Hilmar Preusse <hille42@web.de>  Wed, 22 Mar 2023 11:28:12 +0100
+
 texlive-bin (2022.20220321.62855-5) unstable; urgency=medium
 
   [ Hilmar Preusse ]

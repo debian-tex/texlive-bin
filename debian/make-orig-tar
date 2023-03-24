@@ -14,7 +14,7 @@ else
     svnroot=~/Development/TeX/texlive-svn/Build/source
   fi
 fi
-baseyear=2020
+baseyear=2023
 
 cmd="svn info"
 if [ $gitmode = 1 ] ; then
@@ -45,6 +45,7 @@ cp -a $svnroot $verstr
 rm -rf $verstr/inst
 rm -rf $verstr/Work
 # packaged separately:
+rm -rf $verstr/texk/dvisvgm
 rm -rf $verstr/utils/biber
 rm -rf $verstr/utils/asymptote
 rm -rf $verstr/utils/xindy
@@ -92,6 +93,10 @@ rm -rf $verstr/texk/web2c/luatexdir/luapplib/html
 # remove VCS traces
 find $verstr -name \.svn -exec rm -rf '{}' \;
 find $verstr -name \.git -exec rm -rf '{}' \;
+find $verstr -name \.gitattributes -exec rm -rf '{}' \;
+find $verstr -name \.gitignore -exec rm -rf '{}' \;
+find $verstr -name \.gitmodules -exec rm -rf '{}' \;
+find $verstr -name \.github -exec rm -rf '{}' \;
 find $verstr -name autom4te.cache -exec rm -rf '{}' \;
 
 echo "packing up"

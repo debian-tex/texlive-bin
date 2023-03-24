@@ -3,8 +3,8 @@ adjust built-in search paths for kpathsea library to Debian standard
  texk/kpathsea/texmf.cnf |   46 ++++++++++++----------------------------------
  1 file changed, 12 insertions(+), 34 deletions(-)
 
---- texlive-bin-2022.20220321.62855.orig/texk/kpathsea/texmf.cnf
-+++ texlive-bin-2022.20220321.62855/texk/kpathsea/texmf.cnf
+--- texlive-bin-2023.20230311.66589.orig/texk/kpathsea/texmf.cnf
++++ texlive-bin-2023.20230311.66589/texk/kpathsea/texmf.cnf
 @@ -62,20 +62,23 @@
  TEXMFROOT = $SELFAUTOPARENT
  
@@ -60,7 +60,7 @@ adjust built-in search paths for kpathsea library to Debian standard
  
  % On some systems, there will be a system tree which contains all the font
  % files that may be created as well as the formats.  For example
-@@ -565,33 +568,8 @@
+@@ -569,33 +572,8 @@
  % since we don't want to scatter ../'s throughout the value.  Hence we
  % explicitly list every directory.  Arguably more understandable anyway.
  %

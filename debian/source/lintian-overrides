@@ -1,6 +1,11 @@
 # sources are available in the very same directory where
 # the .js files are
-texlive-bin source: source-is-missing libs/pplib/pplib-src/doc/_build/html/_static/css3-mediaqueries.js
-texlive-bin source: source-is-missing libs/pplib/pplib-src/doc/_build/html/_static/jquery.js
-texlive-bin source: source-is-missing libs/pplib/pplib-src/doc/_build/html/_static/underscore.js
+texlive-bin source: source-is-missing [libs/pplib/pplib-src/doc/_build/html/_static/css3-mediaqueries.js]
+texlive-bin source: source-is-missing [libs/pplib/pplib-src/doc/_build/html/_static/jquery.js]
+texlive-bin source: source-is-missing [libs/pplib/pplib-src/doc/_build/html/_static/underscore.js]
+texlive-bin source: source-is-missing [libs/pplib/pplib-src/doc/_build/html/ppapi-1.x.html]
+texlive-bin source: source-is-missing [libs/pplib/pplib-src/doc/_build/html/ppapi-2.x.html]
+texlive-bin source: source-is-missing [libs/pplib/pplib-src/doc/_build/html/ppapi.html]
+texlive-bin source: source-is-missing [libs/pplib/pplib-src/doc/_build/html/ppcode.html]
+texlive-bin source: source-is-missing [libs/pplib/pplib-src/doc/_build/html/searchindex.js]
 texlive-bin source: very-long-line-length-in-source-file

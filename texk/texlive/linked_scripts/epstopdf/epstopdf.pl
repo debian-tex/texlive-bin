@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-# $Id: epstopdf.pl 48681 2018-09-16 23:03:58Z karl $
+# $Id: epstopdf.pl 66407 2023-03-06 23:44:49Z karl $
 # (Copyright lines below.)
 #
 # Redistribution and use in source and binary forms, with or without
@@ -35,7 +35,15 @@
 #
 # emacs-page
 #
-my $ver = "2.28";
+my $ver = "2.31";
+#  2023/03/06 v2.31 (Karl Berry)
+#    * disallow --nosafer in restricted mode.
+#    * disallow output to pipes in restricted mode.
+#    Report from nikolay.ermishkin to tlsecurity.
+#  2022/09/05 v2.30 (Siep Kroonenberg)
+#    * still use gswin32c if gswin64c.exe not on PATH.
+#  2022/08/29 v2.29 (Karl Berry)
+#    * use gswin64c.exe on 64-bit Windows.
 #  2018/09/17 v2.28 (Karl Berry)
 #    * -dCompatibilityLevel=1.5 by default, since gs9.25 switched to 1.7.
 #  2017/09/14 v2.27 (Karl Berry)
@@ -189,9 +197,9 @@ my $ver = "2.28";
 ### emacs-page
 ### program identification
 my $program = "epstopdf";
-my $ident = '($Id: epstopdf.pl 48681 2018-09-16 23:03:58Z karl $)' . " $ver";
+my $ident = '($Id: epstopdf.pl 66407 2023-03-06 23:44:49Z karl $)' . " $ver";
 my $copyright = <<END_COPYRIGHT ;
-Copyright 2009-2018 Karl Berry et al.
+Copyright 2009-2023 Karl Berry et al.
 Copyright 2002-2009 Gerben Wierda et al.
 Copyright 1998-2001 Sebastian Rahtz et al.
 License RBSD: Revised BSD <http://www.xfree86.org/3.3.6/COPYRIGHT2.html#5>
@@ -204,7 +212,22 @@ my $on_windows = $^O =~ /^(MSWin|msys$)/;
 my $on_windows_or_cygwin = $on_windows || $^O eq "cygwin";
 
 ### ghostscript command name
-my $GS = $on_windows ? "gswin32c" : "gs";
+my $GS = "gs";
+if ($on_windows) {
+  $GS = "gswin32c";
+  if ($ENV{"PROCESSOR_ARCHITECTURE"} eq "AMD64"
+      || $ENV{"PROCESSOR_ARCHITEW6432"} eq "AMD64") {
+    # prefer gswin64c.exe if on search path.
+    my @pdirs = split(/;/, $ENV{"PATH"});
+    foreach $d (@pdirs) {
+      $d = substr ($d, 1, -1) if (substr ($d,1,1) eq '"');
+      if (-f $d . "/gswin64c.exe") {
+        $GS = "gswin64c";
+        last;
+      }
+    }
+  }
+}
 
 ### restricted mode
 my $restricted = 0;
@@ -479,7 +502,9 @@ if ($restricted && $on_windows) {
   my $mydirname = dirname $0;
   # $mydirname is the location of the Perl script
   $kpsewhich = "$mydirname/../../../bin/win32/$kpsewhich";
+  debug "Restricted Windows kpsewhich: $kpsewhich";
   $GS = "$mydirname/../../../tlpkg/tlgs/bin/$GS";
+  debug "Restricted Windows gs: $GS";
 }
 debug "kpsewhich command: $kpsewhich";
 
@@ -492,7 +517,8 @@ sub safe_name {
   $option = '-safe-out-name' if $mode eq 'out';
   error "Unknown check mode in safe_name(): $mode" unless $option;
   my @args = ($kpsewhich, '-progname', 'repstopdf', $option, $name);
-  my $bad = system {$args[0]} @args;
+  debug "Checking safe_name with: @args";
+  my $bad = system { $args[0] } @args;
   return ! $bad;
 }
 
@@ -549,10 +575,21 @@ if ($::opt_gscmd) {
   }
 }
 
+### option (no)safer
+my $gs_opt_safer = "-dSAFER";
+if (! $::opt_safer) {
+  if ($restricted) {
+    error "Option forbidden in restricted mode: --nosafer";
+  } else {
+    debug "Switching from $gs_opt_safer to -dNOSAFER";
+    $gs_opt_safer = "--nosafer";
+  }
+}
+
 ### start building GS command line for the pipe
 my @GS = ($GS);
 push @GS, '-q' if $::opt_quiet;
-push @GS, $::opt_safer ? '-dSAFER' : '-dNOSAFER';
+push @GS, $gs_opt_safer;
 push @GS, '-dNOPAUSE';
 push @GS, '-dBATCH';
 push @GS, '-dCompatibilityLevel=1.5';
@@ -589,7 +626,13 @@ if (! $OutputFilename) {
     $OutputFilename = "-";
   }
 }
-$OutputFilename =~ s/%/%%/g; # we will do the escaping for gs
+#
+# gs -sOutputFilename opens pipes itself if the string starts with
+# %pipe or |. Disallow this in restricted mode.
+if ($restricted && $OutputFilename =~ /^(%pipe|\|)/) {
+    error "Output to pipe forbidden in restricted mode: $OutputFilename";
+}
+$OutputFilename =~ s/%/%%/g; # stop gs interpretation of % characters
 debug "Output filename:", $OutputFilename;
 push @GS, "-sOutputFile=$OutputFilename";
 
@@ -717,6 +760,7 @@ else {
   debug "No Ghostscript: opening $OutputFilename";
   if ($OutputFilename eq "-") {
     $OUT = *STDOUT;
+    $outname = "-";
   } else {
     open($OUT, '>', $OutputFilename)
     || error ("Cannot write \"$OutputFilename\": $!");
@@ -775,7 +819,7 @@ if ($buflen > 0) {
       debug "  No checksum";
     }
     else {
-      debug "  checksum: $checksum";
+      debug "  Checksum: $checksum";
       my $cs = 0;
       map { $cs ^= $_ } unpack('n14', $header);
       if ($cs != $checksum) {

@@ -2,7 +2,7 @@
 
 -- Copyright 2016-2022 Brian Dunn
 
-printversion = "v0.904a"
+printversion = "v0.911"
 requiredconfversion = "2" -- also at *lwarpmk.conf
 
 function printhelp ()
@@ -515,7 +515,7 @@ executecheckerror (
         imagesdirectory .. dirslash .."lateximagetemp-%d" .. ".pdf" ..
         seqname ..
     -- Crop the image:
-    "pdfcrop  --hires  " .. imagesdirectory .. dirslash .. "lateximagetemp-" ..
+    "pdfcrop  --hires  --margins \"0 1 0 0\"  " .. imagesdirectory .. dirslash .. "lateximagetemp-" ..
         lwimgpage .. ".pdf " ..
         imagesdirectory .. dirslash .. lwimgname .. ".pdf" ..
         seqname ..

@@ -1,3 +1,28 @@
+2023-03-09  Karl Berry  <karl@tug.org>
+
+	* TL'23 release.
+
+2022-10-27  Martin Ruckert <ruckert@cs.hm.edu>
+
+	* documentation and typograhic improvements
+	* changing the keyword prefered to preferred
+	* rewriting the scan_file_name function to comply with TeX Live
+	  Eliminating the special file name buffer and reverting to the
+	  traditional use of the string pool.
+	* initializing hlog early to allow for early HINT format errors
+
+2022-06-04  Martin Ruckert <ruckert@cs.hm.edu>
+
+	* documentation and typograhic improvements
+	* replacing float/unfloat by unfix/fix to eliminate the float macro
+	* replacing continue by resume to eliminate continue macro
+	* fixing use of hpos in HPUTCONTENT after reallocation
+
+2022-04-11  Martin Ruckert <ruckert@cs.hm.edu>
+
+	* eliminating string as a anlias fro char* in hitex.w
+	* adding an optional gtk open file dialog to hintview
+	* replacing texture2D (deprecated) by texture in the FragementShader of hintview
 2022-03-21  Karl Berry  <karl@tug.org>
 
 	* TL'22 release.

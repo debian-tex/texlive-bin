@@ -1,13 +1,13 @@
 #!/usr/bin/env texlua
-
+--
 -----------------------------------------------------------------------
 --         FILE:  luafindfont.lua
 --  DESCRIPTION:  search for fonts in the database
 -- REQUIREMENTS:  luatex v.0.80 or later; packages lualibs, xindex-lapp
---       AUTHOR:  Herbert Voß  (C) 2021-11-27
+--       AUTHOR:  Herbert Voß  (C) 2022-09-02
 -----------------------------------------------------------------------
         luafindfont = luafindfont or { }
-   local version = 0.06
+      local version = 0.11
 luafindfont.version = version
 
 --[[
@@ -34,6 +34,7 @@ kpse.set_program_name("luatex")
 local f = kpse.find_file("lualibs.lua")
 
 require("lualibs")  -- all part of LuaTeX
+
 --require("luafindfont-utflib")
 
 if #arg == 0 then
@@ -42,12 +43,14 @@ if #arg == 0 then
 end
 
 local args_verbose = 0
-local args_nosymbolixnames = 0
+local args_nosymbolicnames = false
 local args_otfinfo = 0
 local args_info = 0
+local args_xetex = 0
 local args_max_string = 90
 
-local otfinfo_arg
+local otfinfo_arg = ""
+local mtxrun = 0
 local fontNo = 0
 
 local i = 1
@@ -61,15 +64,24 @@ while i <= #arg do
     parameter handling
     -h,--help
     -n,--nosymbolicnames
+      ,--no-symbolic-names
     -o,--otfinfo (default 0)
     -i,--info (default 0)
+    -I,--Info (default 0)
+    -x, --xetex 
     -v, --verbose
+    -V, --version
     -m,--max_string (default 90)
     <font> (string)  ]])
+  elseif arg[i] == "-V" or arg[i] == "--version" then
+    print("version "..version)
+    os.exit()
   elseif arg[i] == "-v" or arg[i] == "--verbose" then
     args_verbose = 1
-  elseif arg[i] == "-n" or arg[i] == "--nosymbolicnames" then
-    args_nosymbolicnames = 1
+  elseif (arg[i] == "-n") or (arg[i] == "--nosymbolicnames") or (arg[i] == "--no-symbolic-names") then
+    args_nosymbolicnames = true
+  elseif arg[i] == "-x" or arg[i] == "--xetex" then
+    args_xetex = 1
   elseif arg[i] == "-o" or arg[i] == "--otfinfo" then
     local o_arg = arg[i+1]
     otfinfo_arg = "i"
@@ -92,6 +104,15 @@ while i <= #arg do
       print("Option -i needs a following fontnumber!")
       args_info = 0
     end
+  elseif arg[i] == "-I" or arg[i] == "--Info" then
+    mtxrun = 1
+    local I_arg = arg[i+1]
+    fontNo = tonumber(I_arg)
+    if not fontNo then
+      print("Option -I needs a following fontnumber!")
+      fontNo = 0
+    end
+    i = i + 1
   elseif arg[i] == "-m" or arg[i] == "--max_string" then
     local string_len = tonumber(arg[i+1])
     if string_len then
@@ -107,25 +128,43 @@ while i <= #arg do
   i = i + 1
 end
 
+local vlevel = args_verbose
+
+function logprint(str)
+  if vlevel > 0 then print(str) end
+end
+
+if vlevel > 0 then
+  print("Parameter:")
+  print("  args_verbose = "..args_verbose)
+  print("  args_nosymbolicnames = "..tostring(args_nosymbolicnames))
+  print("  args_xetex = "..args_xetex)
+  print("  otfinfo_arg = "..otfinfo_arg)
+  print("  fontNo = "..fontNo)
+  print("  args_max_string = "..args_max_string)
+end
+  
 if not args_font then
   print("No fontname given, will close ...")
   os.exit()
 end
 
-local vlevel = args_verbose
 --local otfinfo = args_otfinfo
 local info = args_info
+local Info = args_Info
 local noSymbolicNames = args_nosymbolicnames
 local maxStrLength = args_max_string
 local font_str = args_font:lower():gsub("%s+", ""):split("&")
 if #font_str == 1 then font_str[2] = "" end
 
 local luaVersion = _VERSION
-print("We are using "..luaVersion)
-if font_str[2] ~= "" then
-  print('Looking for font \"'..font_str[1]..' & '..font_str[2]..'\"')
-else
-  print('Looking for font \"'..font_str[1]..'\"')
+if vlevel > 0 then 
+  print("We are using "..luaVersion)
+  if font_str[2] ~= "" then
+     print('Looking for font \"'..font_str[1]..' & '..font_str[2]..'\"')
+  else 
+     print('Looking for font \"'..font_str[1]..'\"')
+  end
 end
 
 function getFileParts(fullpath,part)
@@ -135,30 +174,39 @@ function getFileParts(fullpath,part)
   else return file end
 end
 
+-- for fileparts see also file fontloader-l-file.lua in /luaotfload
+
 function getFileLocation()
   local cachepaths = kpse.expand_var('$TEXMFCACHE') or ""
   if cachepaths == "" or cachepaths == "$TEXMFCACHE" then
     cachepaths = kpse.expand_var('$TEXMFVAR') or ""
   end
-  if vlevel > 0 then print("cachepaths: ",cachepaths) end
+  logprint("cachepaths: "..cachepaths)
   if cachepaths == "" then
     print("umghhh ....")
     print("No cache path found ... ")
     return ""
   end  
-  if os.type == "windows" then
+  local windows = (os.type == "windows")
+  if windows then logprint ("System: Windows")
+             else logprint ("System: macOS or Linux")
+  end
+  if windows then
     paths = string.split(cachepaths,";")
   else
     paths = string.split(cachepaths,":")
   end
-  if vlevel > 0 then print ("Pathes: ", paths[1], paths[2]) end
+  logprint ("Paths: [1]"..paths[1])
+  if #paths > 1 then
+    logprint("       [2]"..paths[2])
+  end
   local file = paths[1].."/luatex-cache/generic/names" 
-  if vlevel > 0 then print("try: ",file) end
+  logprint("try path: "..file)
   local f,err = io.open (file.."/test.tmp", "w") 
   if not f and #paths > 1 then
-    if vlevel > 0 then print("first path has no file, I'll try the second one ...") end
+    logprint("first path has no file, I'll try the second one, if exists ...")
     file = paths[2].."/luatex-cache/generic/names"
-  if vlevel > 0 then print("try: ",file) end
+    logprint("try path: "..file)
     f,err = io.open (file.."/test.tmp", "w") 
     if not f then
       print("Error getting file location: \n",err)
@@ -174,39 +222,50 @@ function getFileLocation()
 end
 
 function readBinaryOrZippedFile(file)
-  print("Check for file "..file)
+  logprint("Check for file "..file..".luc.gz")
+  local f,err = io.open (file..".luc.gz", "rb") 
+  if f then
+    logprint("Found a zipped binary data file ... ") 
+    local chunk = gzip.decompress(f:read"*all")
+    f:close()
+    local func = load (chunk, "b")
+    str = func()
+    return str
+  end
+  logprint("There is no zipped binary data file ... ") 
+  logprint("Check for unzipped file "..file..".luc")
   local f,err = io.open (file..".luc", "rb") 
-  if not f then
-    if vlevel > 0 then print("There is no binary data file ... ") end
-    f,err = io.open (file..".lua.gz", "r") 
-    if not f then
-      if vlevel > 0 then print("There is no gzipped data file ... ") end
-      f,err = io.open (file..".lua", "r") 
-      if not f then
-        if vlevel > 0 then print("There is no data file ... ") end
-        print("Error reading file: ",err)
-        return nil
-      else
-        if vlevel > 0 then print("Found a normal data file ... ") end
-        local str = dofile(f)
-        f:close()
-        return str
-      end
-    else  
-      if vlevel > 0 then print("Found a gzipped data file ... ") end
-      local str = f:read("*all")
-      local str2 = loadstring(gzip.decompress(str))
-      str = str2()
-      f:close()
-      return str
-    end
-  else
-    if vlevel > 0 then print("Found a binary data file ... ") end
+  if f then
+    logprint("Found a binary data file ... ") 
     local chunk = f:read"*all"
     f:close()
     local func = load (chunk, "b")
     str = func()
     return str
+  end
+  logprint("There is no binary data file ... ") 
+  logprint("Check for zipped file "..file..".lua.gz")
+  f,err = io.open (file..".lua.gz", "rb") 
+  if f then
+    logprint("Found a gzipped data file ... ")
+    local str = f:read("*all")
+    local str2 = loadstring(gzip.decompress(str))
+    str = str2()
+    f:close()
+    return str
+  end
+  logprint("There is no gzipped data file ... ") 
+  logprint("Check for file "..file..".lua")
+  f,err = io.open (file..".lua", "r") 
+  if f then
+    logprint("Found a normal data file ... ")
+    local str = dofile(f)
+    f:close()
+    return str
+  else
+    logprint("There is no data file ... ")
+    print("Error reading file: ",err)
+    return nil
   end
 end
 
@@ -219,7 +278,6 @@ function compareEntries(f1, f2)
     return false
   end
 end
-
 
 local fontData = {}
 local fontListFile = getFileLocation()
@@ -238,7 +296,7 @@ fontData = readBinaryOrZippedFile(fontListFile)
 
 if not fontData then   
   print("umghhh ....")
-  print("It does not work! I'll give it up ... :-(")
+  print("It does not work! I cannote find the base data file ... I'll give it up ... :-(")
   os.exit()
 end
 
@@ -282,10 +340,11 @@ fontDataMap = newFontDataMap
 
 local j = 1
 local fontList = {}
+-- now calculate the longest string for all colums
 local l_max = {1, 1, 1}
 for i, v in ipairs(fontDataMap) do 
   if v["familyname"] then
-      if (string.find (v["familyname"]:lower(), font_str[1], 1, true)  and string.find (v["basename"]:lower(), font_str[2], 1, true) ) or (font_str == "*") then
+      if (string.find (v["familyname"]:lower(), font_str[1], 1, true)  and string.find (v["basename"]:lower(), font_str[2], 1, true) ) or (font_str[1] == "*") then
 --	print(string.format("%2d. %30s %20s  %50s",j,v["basename"],v["familyname"],v["fullpath"])) 
         fontList[#fontList+1] = v
         local fullpath = getFileParts(v["fullpath"],"path")  -- strip file name
@@ -303,31 +362,55 @@ end
 if l_max[3] > maxStrLength then l_max[3] = maxStrLength end
 
 local minChars = 26
-local Fontname = "Fontname"
+local Fontname = "Filename"
 local Path = "Path"
-local SymbolicName = "Symbolic Name"
+local SymbolicName = "Symbolic name"
 local lfdNr = "No."
+
 if (font_str ~= "*") and not noSymbolicNames then
-    print(string.format("%4s %"..l_max[1].."s %"..l_max[2].."s  %"..l_max[3].."s",lfdNr,Fontname,SymbolicName,Path)) 
+  if args_xetex > 0 then
+    print(string.format("%5s %"..l_max[1].."s %"..l_max[2].."s  %"..l_max[3].."s".."%4s",lfdNr,Fontname,SymbolicName,Path,"X")) 
+  else      
+    print(string.format("%5s %"..l_max[1].."s %"..l_max[2].."s  %"..l_max[3].."s",lfdNr,Fontname,SymbolicName,Path)) 
+  end
+else
+  if args_xetex > 0 then
+    print(string.format("%5s %"..l_max[1].."s  %"..l_max[3].."s".."%4s",lfdNr,Fontname,Path,"X")) 
   else
-    print(string.format("%4s %"..l_max[1].."s  %"..l_max[3].."s",lfdNr,Fontname,Path)) 
+    print(string.format("%5s %"..l_max[1].."s  %"..l_max[3].."s",lfdNr,Fontname,Path)) 
+  end
 end
 
+local kpsewhich = "0" -- test if font is present for xetex
 for i, v in ipairs(fontList) do
   local path = getFileParts(v["fullpath"],"path")
   if string.len(path) > l_max[3] then
     path = string.sub (path, 1, minChars).."..."..string.sub (path, string.len(path)-maxStrLength+minChars+4)    
   end
-  if (font_str ~= "*") and not noSymbolicNames then
-    print(string.format("%4d. %"..l_max[1].."s %"..l_max[2].."s  %"..l_max[3].."s",i,v["basename"],v["familyname"],path)) 
+  local exrun = io.popen("kpsewhich "..v["basename"],'r')
+  if string.len(exrun:read('*all')) > 0 then
+    kpsewhich = "1"
   else
-    print(string.format("%4d. %"..l_max[1].."s  %"..l_max[3].."s",i,v["basename"],path)) 
+    kpsewhich = "0"
+  end
+  if (font_str ~= "*") and not noSymbolicNames then
+    if args_xetex > 0 then
+      print(string.format("%4d. %"..l_max[1].."s %"..l_max[2].."s  %"..l_max[3].."s".." %3s",i,v["basename"],v["familyname"],path,kpsewhich)) 
+    else
+      print(string.format("%4d. %"..l_max[1].."s %"..l_max[2].."s  %"..l_max[3].."s",i,v["basename"],v["familyname"],path)) 
+    end
+  else
+    if args_xetex > 0 then
+      print(string.format("%4d. %"..l_max[1].."s  %"..l_max[3].."s".." %3s",i,v["basename"],path,kpsewhich)) 
+    else    
+      print(string.format("%4d. %"..l_max[1].."s  %"..l_max[3].."s",i,v["basename"],path)) 
+    end
   end
 end
 
-if fontNo > 0 then
+if fontNo > 0 and mtxrun == 0 then
   print()
-  print("Run otfinfo -"..otfinfo_arg..": "..fontNo)
+  print("Running otfinfo -"..otfinfo_arg.." on font no."..fontNo)
   local font = fontList[fontNo]["fullpath"]
   print("otfinfo -"..otfinfo_arg.." \""..font.."\"")
   local exrun = io.popen("otfinfo -"..otfinfo_arg.." \""..font.."\"", 'r') -- ".." font may have spaces
@@ -366,6 +449,19 @@ if info > 0 then
     end
   end
 end
+
+if mtxrun > 0 then
+  print()
+  print("Running mtxrun on font no."..fontNo)
+--  local font = fontList[fontNo]["fullpath"]
+  local font = fontList[fontNo]["basename"]
+  print("mtxrun --script fonts --list --info --file \""..font.."\"")
+  local exrun = io.popen("mtxrun --script fonts --list --info --file \""..font.."\"", 'r') -- ".." font may have spaces
+  local output = exrun:read('*all')
+  print(output)
+  exrun:close()
+end
+
 --print(require 'xindex-pretty'.dump(fontData["families"]["system"]["otf"])) --["families"]["system"]["otf"]))
 
 

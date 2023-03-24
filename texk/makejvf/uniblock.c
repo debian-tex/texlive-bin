@@ -16,8 +16,8 @@ struct ublock {
 /*
  References:
  [1] http://www.unicode.org/Public/UNIDATA/Blocks.txt
-        Blocks-14.0.0.txt
-        Date: 2021-01-22, 23:29:00 GMT [KW]
+        Blocks-15.0.0.txt
+        Date: 2022-01-28, 20:58:00 GMT [KW]
  [2] CMap files
      https://github.com/adobe-type-tools/cmap-resources/
      Adobe-CNS1-7/                  Adobe-CNS1-7 materials
@@ -25,7 +25,7 @@ struct ublock {
      Adobe-GB1-5/                   Adobe-GB1-5 materials
         cid2code.txt (Version 12/05/2017)
      Adobe-Japan1-7/                Adobe-Japan1-7 materials
-        cid2code.txt (Version 07/30/2019)
+        cid2code.txt (Version 05/18/2022)
      Adobe-Korea1-2/                Adobe-Korea1-2 materials
         cid2code.txt (Version 01/31/2012)
  Following code points are omitted from ENTRY_J:
@@ -35,6 +35,7 @@ struct ublock {
    Latin Extended-D           U+A7B5      Latin Small Letter Beta   15909
    Latin Extended-E           U+AB53      Latin Small Letter Chi    15911
    Geometric Shapes Extended  U+1F79C     Diamond Target            12244
+   CJK Unified Ideographs Extension H   U+31350     ---             19130
 */
 
 static struct ublock ublock_data[] = {
@@ -247,6 +248,7 @@ static struct ublock ublock_data[] = {
   {0x10D00, 0x10D3F, ENTRY_NO  , 0}, /* Hanifi Rohingya */
   {0x10E60, 0x10E7F, ENTRY_NO  , 0}, /* Rumi Numeral Symbols */
   {0x10E80, 0x10EBF, ENTRY_NO  , 0}, /* Yezidi */
+  {0x10EC0, 0x10EFF, ENTRY_NO  , 0}, /* Arabic Extended-C */
   {0x10F00, 0x10F2F, ENTRY_NO  , 0}, /* Old Sogdian */
   {0x10F30, 0x10F6F, ENTRY_NO  , 0}, /* Sogdian */
   {0x10F70, 0x10FAF, ENTRY_NO  , 0}, /* Old Uyghur */
@@ -269,7 +271,7 @@ static struct ublock ublock_data[] = {
   {0x11600, 0x1165F, ENTRY_NO  , 0}, /* Modi */
   {0x11660, 0x1167F, ENTRY_NO  , 0}, /* Mongolian Supplement */
   {0x11680, 0x116CF, ENTRY_NO  , 0}, /* Takri */
-  {0x11700, 0x1173F, ENTRY_NO  , 0}, /* Ahom */
+  {0x11700, 0x1174F, ENTRY_NO  , 0}, /* Ahom */
   {0x11800, 0x1184F, ENTRY_NO  , 0}, /* Dogra */
   {0x118A0, 0x118FF, ENTRY_NO  , 0}, /* Warang Citi */
   {0x11900, 0x1195F, ENTRY_NO  , 0}, /* Dives Akuru */
@@ -278,11 +280,13 @@ static struct ublock ublock_data[] = {
   {0x11A50, 0x11AAF, ENTRY_NO  , 0}, /* Soyombo */
   {0x11AB0, 0x11ABF, ENTRY_NO  , 0}, /* Unified Canadian Aboriginal Syllabics Extended-A */
   {0x11AC0, 0x11AFF, ENTRY_NO  , 0}, /* Pau Cin Hau */
+  {0x11B00, 0x11B5F, ENTRY_NO  , 0}, /* Devanagari Extended-A */
   {0x11C00, 0x11C6F, ENTRY_NO  , 0}, /* Bhaiksuki */
   {0x11C70, 0x11CBF, ENTRY_NO  , 0}, /* Marchen */
   {0x11D00, 0x11D5F, ENTRY_NO  , 0}, /* Masaram Gondi */
   {0x11D60, 0x11DAF, ENTRY_NO  , 0}, /* Gunjala Gondi */
   {0x11EE0, 0x11EFF, ENTRY_NO  , 0}, /* Makasar */
+  {0x11F00, 0x11F5F, ENTRY_NO  , 0}, /* Kawi */
   {0x11FB0, 0x11FBF, ENTRY_NO  , 0}, /* Lisu Supplement */
   {0x11FC0, 0x11FFF, ENTRY_NO  , 0}, /* Tamil Supplement */
   {0x12000, 0x123FF, ENTRY_NO  , 0}, /* Cuneiform */
@@ -290,7 +294,7 @@ static struct ublock ublock_data[] = {
   {0x12480, 0x1254F, ENTRY_NO  , 0}, /* Early Dynastic Cuneiform */
   {0x12F90, 0x12FFF, ENTRY_NO  , 0}, /* Cypro-Minoan */
   {0x13000, 0x1342F, ENTRY_NO  , 0}, /* Egyptian Hieroglyphs */
-  {0x13430, 0x1343F, ENTRY_NO  , 0}, /* Egyptian Hieroglyph Format Controls */
+  {0x13430, 0x1345F, ENTRY_NO  , 0}, /* Egyptian Hieroglyph Format Controls */
   {0x14400, 0x1467F, ENTRY_NO  , 0}, /* Anatolian Hieroglyphs */
   {0x16800, 0x16A3F, ENTRY_NO  , 0}, /* Bamum Supplement */
   {0x16A40, 0x16A6F, ENTRY_NO  , 0}, /* Mro */
@@ -303,7 +307,7 @@ static struct ublock ublock_data[] = {
   {0x17000, 0x187FF, ENTRY_NO  , 0}, /* Tangut */
   {0x18800, 0x18AFF, ENTRY_NO  , 0}, /* Tangut Components */
   {0x18B00, 0x18CFF, ENTRY_NO  , 0}, /* Khitan Small Script */
-  {0x18D00, 0x18D8F, ENTRY_NO  , 0}, /* Tangut Supplement */
+  {0x18D00, 0x18D7F, ENTRY_NO  , 0}, /* Tangut Supplement */
   {0x1AFF0, 0x1AFFF, ENTRY_NO  , 0}, /* Kana Extended-B */
   {0x1B000, 0x1B0FF, ENTRY_NO  , 0}, /* Kana Supplement */
   {0x1B100, 0x1B12F, ENTRY_NO  , 0}, /* Kana Extended-A */
@@ -315,6 +319,7 @@ static struct ublock ublock_data[] = {
   {0x1D000, 0x1D0FF, ENTRY_NO  , 0}, /* Byzantine Musical Symbols */
   {0x1D100, 0x1D1FF, ENTRY_NO  , 0}, /* Musical Symbols */
   {0x1D200, 0x1D24F, ENTRY_NO  , 0}, /* Ancient Greek Musical Notation */
+  {0x1D2C0, 0x1D2DF, ENTRY_NO  , 0}, /* Kaktovik Numerals */
   {0x1D2E0, 0x1D2FF, ENTRY_NO  , 0}, /* Mayan Numerals */
   {0x1D300, 0x1D35F, ENTRY_NO  , 0}, /* Tai Xuan Jing Symbols */
   {0x1D360, 0x1D37F, ENTRY_NO  , 0}, /* Counting Rod Numerals */
@@ -322,9 +327,11 @@ static struct ublock ublock_data[] = {
   {0x1D800, 0x1DAAF, ENTRY_NO  , 0}, /* Sutton SignWriting */
   {0x1DF00, 0x1DFFF, ENTRY_NO  , 0}, /* Latin Extended-G */
   {0x1E000, 0x1E02F, ENTRY_NO  , 0}, /* Glagolitic Supplement */
+  {0x1E030, 0x1E08F, ENTRY_NO  , 0}, /* Cyrillic Extended-D */
   {0x1E100, 0x1E14F, ENTRY_NO  , 0}, /* Nyiakeng Puachue Hmong */
   {0x1E290, 0x1E2BF, ENTRY_NO  , 0}, /* Toto */
   {0x1E2C0, 0x1E2FF, ENTRY_NO  , 0}, /* Wancho */
+  {0x1E4D0, 0x1E4FF, ENTRY_NO  , 0}, /* Nag Mundari */
   {0x1E7E0, 0x1E7FF, ENTRY_NO  , 0}, /* Ethiopic Extended-B */
   {0x1E800, 0x1E8DF, ENTRY_NO  , 0}, /* Mende Kikakui */
   {0x1E900, 0x1E95F, ENTRY_NO  , 0}, /* Adlam */
@@ -354,6 +361,7 @@ static struct ublock ublock_data[] = {
   {0x2CEB0, 0x2EBEF, ENTRY_CJ  , 1}, /* CJK Unified Ideographs Extension F */
   {0x2F800, 0x2FA1F, ENTRY_CJ  , 1}, /* CJK Compatibility Ideographs Supplement */
   {0x30000, 0x3134F, ENTRY_NO  , 1}, /* CJK Unified Ideographs Extension G */
+  {0x31350, 0x323AF, ENTRY_NO  , 1}, /* CJK Unified Ideographs Extension H */
   {0xE0000, 0xE007F, ENTRY_NO  , 0}, /* Tags */
   {0xE0100, 0xE01EF, ENTRY_NO  , 0}, /* Variation Selectors Supplement */
   {0xF0000, 0xFFFFF, ENTRY_NO  , 0}, /* Supplementary Private Use Area-A */

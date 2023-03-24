@@ -1,5 +1,28 @@
-pdfTeX 3.141592653-2.6-1.40.24 (TeX Live 2022)
+pdfTeX 3.141592653-2.6-1.40.25 (TeX Live 2023) (March 9, 2023)
+- changes:
+  - new keyword `shipout' for \special and \pdfliteral, delaying
+    expansion until the node is shipped out, like non-\immediate \write.
+  - new primitive \pdfomitinfodict to omit /Info dictionary completely.
+  - new primitive \pdfomitprocset to control omitting /ProcSet array:
+    /ProcSet is included if this parameter is negative, or if this
+    parameter is zero and pdftex is generating PDF 1.x output.
+  - with \pdfinterwordspaceon, if the current font's encoding has a /space
+    character at slot 32, it is used; otherwise, the /space from the
+    (new) default font "pdftexspace" is used. That default font can be
+    overridden with the new primitive \pdfspacefont. This same new
+    procedure is used for \pdffakespace.
+    (In the past, the inserted fake space was always taken from the font
+    "dummy-space", which contained a tiny space character. It turns out
+    a normally-sized space character works with more viewers.)
 
+- bugfixes:
+  - finish omission of /Info dict when \pdfomitinfodict is not 0.
+  - generated beginbfrange should no longer be invalid with certain
+    characters (that is, no longer have have a last byte >255).
+  - include base and accent glyph in /CharSet when the Type 1 seac
+    operator is used (e.g., Lucida, DejaVu Serif).
+
+pdfTeX 3.141592653-2.6-1.40.24 (TeX Live 2022) (March 21, 2021)
 - changes:
   - new primitive \showstream to redirect \show output.
   - new primitives \partokenname, \partokencontext to control \par insertion.
@@ -24,6 +47,13 @@ pdfTeX 3.141592653-2.6-1.40.22 (TeX Live 2021) (March 23, 2021)
     different nesting level than \pdfstartlink". 
   - dump \pdfglyphtounicode assignments in fmt file.
   - ttf2afm outputs name information.
+  - If \tracinglostchars is set to 3 or more, missing characters will
+    result in an error, not just a message in the log file, and the
+    missing character code will be shown in hex.
+  - A new integer parameter \tracingstacklevels, if positive, and
+    \tracingmacros is also positive, causes a prefix indicating the macro
+    expansion depth to be output on each relevant log line. Also, macro
+    logging is truncated at a depth >= the parameter value.
 
 - bugfixes:
   - avoid crash in unusual autoexpand cases.

@@ -1,20 +1,19 @@
 #!/usr/bin/env perl
-# $Id: updmap.pl 59152 2021-05-09 21:49:52Z karl $
+# $Id: updmap.pl 65932 2023-02-19 20:49:48Z siepo $
 # updmap - maintain map files for outline fonts.
 # (Maintained in TeX Live:Master/texmf-dist/scripts/texlive.)
 # 
-# Copyright 2011-2021 Norbert Preining
+# Copyright 2011-2022 Norbert Preining
 # This file is licensed under the GNU General Public License version 2
 # or any later version.
 #
 # History:
-# Original shell script (C) 2002 Thomas Esser
+# Original shell script (C) 2002 Thomas Esser, released to the public domain.
 # first perl variant by Fabrice Popineau
-# later adaptions by Reinhard Kotucha and Karl Berry
-# the original versions were licensed under the following agreement:
-# Anyone may freely use, modify, and/or distribute this file, without
+# later adaptions by Reinhard Kotucha, and Karl Berry.
+# The current implementation is a complete rewrite.
 
-my $svnid = '$Id: updmap.pl 59152 2021-05-09 21:49:52Z karl $';
+my $svnid = '$Id: updmap.pl 65932 2023-02-19 20:49:48Z siepo $';
 
 my $TEXMFROOT;
 BEGIN {
@@ -27,17 +26,17 @@ BEGIN {
   unshift(@INC, "$TEXMFROOT/tlpkg");
 }
 
-my $lastchdate = '$Date: 2021-05-09 23:49:52 +0200 (Sun, 09 May 2021) $';
+my $lastchdate = '$Date: 2023-02-19 21:49:48 +0100 (Sun, 19 Feb 2023) $';
 $lastchdate =~ s/^\$Date:\s*//;
 $lastchdate =~ s/ \(.*$//;
-my $svnrev = '$Revision: 59152 $';
+my $svnrev = '$Revision: 65932 $';
 $svnrev =~ s/^\$Revision:\s*//;
 $svnrev =~ s/\s*\$$//;
 my $version = "r$svnrev ($lastchdate)";
 
 use Getopt::Long qw(:config no_autoabbrev ignore_case_always);
 use strict;
-use TeXLive::TLUtils qw(mkdirhier mktexupd win32 basename dirname 
+use TeXLive::TLUtils qw(mkdirhier mktexupd wndws basename dirname 
   sort_uniq member touch);
 
 (my $prg = basename($0)) =~ s/\.pl$//;
@@ -54,7 +53,7 @@ chomp(my $TEXMFSYSCONFIG = `kpsewhich -var-value=TEXMFSYSCONFIG`);
 chomp(my $TEXMFHOME = `kpsewhich -var-value=TEXMFHOME`);
 
 # make sure that on windows *everything* is in lower case for comparison
-if (win32()) {
+if (wndws()) {
   $TEXMFDIST = lc($TEXMFDIST);
   $TEXMFVAR = lc($TEXMFVAR);
   $TEXMFSYSVAR = lc($TEXMFSYSVAR);
@@ -232,7 +231,7 @@ sub main {
       if (! -f $f) {
         die "$prg: Config file \"$f\" not found.";
       }
-      push @tmp, (win32() ? lc($f) : $f);
+      push @tmp, (wndws() ? lc($f) : $f);
     }
     @{$opts{'cnffile'}} = @tmp;
     # in case that config files are given on the command line, the first
@@ -243,12 +242,12 @@ sub main {
     chomp(@all_files);
     my @used_files;
     for my $f (@all_files) {
-      push @used_files, (win32() ? lc($f) : $f);
+      push @used_files, (wndws() ? lc($f) : $f);
     }
     #
     my $TEXMFLOCALVAR;
     my @TEXMFLOCAL;
-    if (win32()) {
+    if (wndws()) {
       chomp($TEXMFLOCALVAR =`kpsewhich --expand-path=\$TEXMFLOCAL`);
       @TEXMFLOCAL = map { lc } split(/;/ , $TEXMFLOCALVAR);
     } else {
@@ -422,7 +421,7 @@ sub main {
     # but for compatibility we'll silently keep the option.
     $cmd = 'edit';
     my $editor = $ENV{'VISUAL'} || $ENV{'EDITOR'};
-    $editor ||= (&win32 ? "notepad" : "vi");
+    $editor ||= (wndws() ? "notepad" : "vi");
     if (-r $changes_config_file) {
       &copyFile($changes_config_file, $bakFile);
     } else {
@@ -481,7 +480,8 @@ sub main {
   }
 
   if (!$opts{'nohash'}) {
-    print "$prg: Updating ls-R files.\n" if !$opts{'quiet'};
+    my $not = $opts{"dry-run"} ? " not (-n)" : "";
+    print "$prg:$not updating ls-R files.\n" if !$opts{'quiet'};
     $updLSR->{exec}() unless $opts{"dry-run"};
   }
 
@@ -593,7 +593,7 @@ sub setupSymlinks {
 sub SymlinkOrCopy {
   my ($dir, $src, $dest) = @_;
   return ($src, $dest) if $opts{"dry-run"};
-  if (&win32 || $opts{'copy'}) {  # always copy
+  if (wndws() || $opts{'copy'}) {  # always copy
     &copyFile("$dir/$src", "$dir/$dest");
   } else { # symlink if supported by fs, copy otherwise
     system("cd \"$dir\" && ln -s $src $dest 2>/dev/null || "
@@ -1026,7 +1026,8 @@ sub mkMaps {
   # directory unless we are going to put something there.
   setupOutputDir("pxdvi") if $pxdviUse eq "true";
 
-  print_and_log ("\n$prg is creating new map files"
+  my $not = $opts{"dry-run"} ? " not (-n)" : "";
+  print_and_log ("\n$prg is$not creating new map files"
          . "\nusing the following configuration:"
          . "\n  LW35 font names                  : "
          .      "$mode ($mode_origin)"
@@ -1248,7 +1249,7 @@ sub mkMaps {
 
   our $link = &setupSymlinks($dvipsPreferOutline, $dvipsoutputdir, $pdftexDownloadBase14, $pdftexoutputdir);
 
-  print_and_log ("\nFiles generated:\n");
+  print_and_log ("\nFiles$not generated:\n");
   sub dir {
     my ($d, $f, $target)=@_;
     our $link;
@@ -1391,8 +1392,7 @@ listed below).
   }
 
   close LOG unless $opts{'dry-run'};
-  print "\nTranscript written on \"$logfile\".\n" if !$opts{'quiet'};
-
+  print "\nTranscript$not written on: $logfile\n" if !$opts{'quiet'};
 }
 
 
@@ -2216,7 +2216,7 @@ sub merge_data {
 #   and reset it to the real home dir of root.
 
 sub reset_root_home {
-  if (!win32() && ($> == 0)) {  # $> is effective uid
+  if (!wndws() && ($> == 0)) {  # $> is effective uid
     my $envhome = $ENV{'HOME'};
     # if $HOME isn't an existing directory, we don't care.
     if (defined($envhome) && (-d $envhome)) {

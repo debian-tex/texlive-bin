@@ -1,21 +1,3 @@
-@x e-upTeX: logo
-\def\eTeX{$\varepsilon$-\TeX}
-@y
-\def\eTeX{$\varepsilon$-\TeX}
-\def\eupTeX{$\varepsilon$-u\pTeX}
-@z
-
-@x e-upTeX: banner
-  {printed when u\pTeX\ starts}
-@y
-  {printed when u\pTeX\ starts}
-@#
-@d eupTeX_version==pTeX_version_string,upTeX_version_string,epTeX_version_string,eTeX_version_string
-@d eupTeX_banner=='This is e-upTeX, Version 3.141592653',eupTeX_version
-@d eupTeX_banner_k==eupTeX_banner
-  {printed when \eupTeX\ starts}
-@z
-
 @x [1.2]
 @d banner==upTeX_banner
 @d banner_k==upTeX_banner_k
@@ -25,15 +7,10 @@
 @z
 
 @x
-@d max_quarterword=@"FFFF {largest allowable value in a |quarterword|}
+@d uptex_version_code=ptex_version_code+1 {code for \.{\\uptexversion}}
+@d ptex_minor_version_code=uptex_version_code+1 {code for \.{\\ptexminorversion}}
 @y
-@d max_quarterword=255 {largest allowable value in a |quarterword|}
-@z
-
-@x
-@d protected_token=@'7001 {$2^8\cdot|end_match|+1$}
-@y
-@d protected_token=@"E01 {$2^8\cdot|end_match|+1$}
+@d ptex_minor_version_code=ptex_version_code+1 {code for \.{\\ptexminorversion}}
 @z
 
 @x
@@ -45,4 +22,3 @@
     uptex_version_code: cur_val:=upTeX_version;
 @y
 @z
-

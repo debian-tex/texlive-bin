@@ -113,8 +113,8 @@ am__aclocal_m4_deps = $(top_srcdir)/../../m4/kpse-common.m4 \
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 DIST_COMMON = $(srcdir)/Makefile.am $(top_srcdir)/configure \
-	$(am__configure_deps) $(dist_btdoc_DATA) $(dist_csf_DATA) \
-	$(am__DIST_COMMON)
+	$(am__configure_deps) $(dist_btdoc_DATA) $(dist_btudoc_DATA) \
+	$(dist_btuex_DATA) $(dist_csf_DATA) $(am__DIST_COMMON)
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno config.status.lineno
 mkinstalldirs = $(install_sh) -d
@@ -124,7 +124,8 @@ CONFIG_CLEAN_VPATH_FILES =
 @BIBTEX8_TRUE@am__EXEEXT_1 = bibtex8$(EXEEXT)
 @BIBTEXU_TRUE@am__EXEEXT_2 = bibtexu$(EXEEXT)
 am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(man1dir)" \
-	"$(DESTDIR)$(btdocdir)" "$(DESTDIR)$(csfdir)"
+	"$(DESTDIR)$(btdocdir)" "$(DESTDIR)$(btudocdir)" \
+	"$(DESTDIR)$(btuexdir)" "$(DESTDIR)$(csfdir)"
 PROGRAMS = $(bin_PROGRAMS)
 am__objects_1 = bibtex8-bibtex-1.$(OBJEXT) bibtex8-bibtex-2.$(OBJEXT) \
 	bibtex8-bibtex-3.$(OBJEXT) bibtex8-bibtex-4.$(OBJEXT) \
@@ -242,7 +243,8 @@ am__uninstall_files_from_dir = { \
 man1dir = $(mandir)/man1
 NROFF = nroff
 MANS = $(dist_man1_MANS)
-DATA = $(dist_btdoc_DATA) $(dist_csf_DATA)
+DATA = $(dist_btdoc_DATA) $(dist_btudoc_DATA) $(dist_btuex_DATA) \
+	$(dist_csf_DATA)
 am__tagged_files = $(HEADERS) $(SOURCES) $(TAGS_FILES) $(LISP) \
 	config.h.in
 # Read a list of newline-separated strings from the standard input,
@@ -438,7 +440,8 @@ am__set_b = \
       b='$*';; \
   esac
 am__DIST_COMMON = $(dist_man1_MANS) $(srcdir)/Makefile.in \
-	$(srcdir)/config.h.in $(top_srcdir)/../../build-aux/compile \
+	$(srcdir)/config.h.in $(top_srcdir)/../../build-aux/ar-lib \
+	$(top_srcdir)/../../build-aux/compile \
 	$(top_srcdir)/../../build-aux/config.guess \
 	$(top_srcdir)/../../build-aux/config.sub \
 	$(top_srcdir)/../../build-aux/depcomp \
@@ -451,7 +454,7 @@ am__DIST_COMMON = $(dist_man1_MANS) $(srcdir)/Makefile.in \
 	../../build-aux/depcomp ../../build-aux/install-sh \
 	../../build-aux/ltmain.sh ../../build-aux/missing \
 	../../build-aux/texinfo.tex ../../build-aux/ylwrap COPYING \
-	ChangeLog
+	ChangeLog README
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 distdir = $(PACKAGE)-$(VERSION)
 top_distdir = $(distdir)
@@ -504,6 +507,7 @@ EGREP = @EGREP@
 ETAGS = @ETAGS@
 EXEEXT = @EXEEXT@
 FGREP = @FGREP@
+FILECMD = @FILECMD@
 GREP = @GREP@
 ICU_CONFIG = @ICU_CONFIG@
 ICU_DEPEND = @ICU_DEPEND@
@@ -634,6 +638,8 @@ nodist_EXTRA_bibtexu_SOURCES = dummy.cxx
 bibtexu_CPPFLAGS = $(AM_CPPFLAGS) $(ICU_INCLUDES) -DUTF_8
 bibtexu_LDADD = $(KPATHSEA_LIBS) $(ICU_LIBS) $(PTHREAD_LIB) $(ICU_LIBS_EXTRA)
 dist_man1_MANS = bibtex8.1 bibtexu.1
+
+### BibTeX8 distribution
 csfdir = $(datarootdir)/texmf-dist/bibtex/csf/base
 dist_csf_DATA = \
 	csf/88591lat.csf \
@@ -647,31 +653,81 @@ dist_csf_DATA = \
 
 btdocdir = $(datarootdir)/texmf-dist/doc/bibtex8
 dist_btdoc_DATA = \
-	00readme.txt \
-	HISTORY \
-	csfile.txt \
-	file_id.diz
+	00bibtex8-readme.txt \
+	00bibtex8-history.txt \
+	file_id.diz \
+	csf/csfile.txt
 
-bibtex8_tests = tests/bibtex8.test tests/bibtex8-mem.test tests/sort.test
+
+### BibTeXu distribution
+btudocdir = $(datarootdir)/texmf-dist/doc/bibtexu
+btuexdir = $(datarootdir)/texmf-dist/doc/bibtexu/examples
+dist_btudoc_DATA = \
+	01bibtexu-doc/README
+
+dist_btuex_DATA = \
+	01bibtexu-doc/examples/test.bbl \
+	01bibtexu-doc/examples/test.bib \
+	01bibtexu-doc/examples/test.pdf \
+	01bibtexu-doc/examples/test.tex
+
+bibtex8_tests = tests/bibtex8.test tests/bibtex8u-mem.test \
+                tests/bibtex8-sort.test tests/bibtex8-char.test
+
 bibtexu_tests = tests/bibtexu.test tests/bibtexu-basic.test \
-                tests/bibtexu-range.test tests/bibtexu-yannis.test
+                tests/bibtexu-range.test tests/bibtexu-yannis.test \
+                tests/bibtexu-sort.test tests/bibtexu-char.test
 
 TESTS = $(am__append_3) $(am__append_4)
-EXTRA_DIST = $(bibtex8_tests) $(bibtexu_tests) tests/sort.aux \
-	tests/sort1.bbl tests/sort2.bbl tests/sort3.bbl \
+EXTRA_DIST = $(bibtex8_tests) $(bibtexu_tests) tests/exampl.bbl \
+	tests/sort.aux tests/sort1.bbl tests/sort2.bbl tests/sort3.bbl \
 	tests/sort1.csf tests/sort2.csf tests/sort3.csf \
-	tests/testdata.bib tests/teststyle.bst tests/ubasic.aux \
+	tests/testdata.bib tests/teststyle.bst tests/sort1.bbl \
+	tests/sort2.bbl tests/sort3.bbl tests/casea.aux \
+	tests/casea.bbl tests/testcasea.bib tests/testcase.bst \
+	tests/perioda.aux tests/perioda.bbl tests/testperioda.bib \
+	tests/testperiod.bst tests/substra.aux tests/substra.bbl \
+	tests/testsubstra.bib tests/testsubstr.bst tests/txtprfxa.aux \
+	tests/txtprfxa.bbl tests/testtxtprfx.bst tests/widtha.aux \
+	tests/widtha.bbl tests/testwidtha.bib tests/testwidth.bst \
+	tests/chara.aux tests/chara.bbl tests/testchara.bib \
+	tests/testchar.bst tests/namea.aux tests/namea.bbl \
+	tests/ltnbib.bib tests/testname.bst tests/ubasic.aux \
 	tests/ubasic.bbl tests/ubasic.bib tests/urange.aux \
 	tests/urange.bbl tests/urange.bib tests/yannis.aux \
-	tests/yannis.bbl tests/yannis.bib bt371csf.zip dos-dj.mak \
-	dos-emx.mak os2.mak unix.mak csf/00readme.txt csf/COPYING \
-	csf/HISTORY csf/file_id.diz
+	tests/yannis.bbl tests/yannis.bib tests/sortu.aux \
+	tests/sortu-az.bbl tests/sortu-da.bbl tests/sortu-en.bbl \
+	tests/sortu-fi.bbl tests/sortu-tr.bbl tests/testsortu.bib \
+	tests/caseu.aux tests/caseu.bbl tests/testcaseu.bib \
+	tests/periodu.aux tests/periodu.bbl tests/testperiodu.bib \
+	tests/substru.aux tests/substru.bbl tests/testsubstru.bib \
+	tests/txtprfxu.aux tests/txtprfxu.bbl tests/widthu.aux \
+	tests/widthu.bbl tests/testwidthu.bib tests/charu.aux \
+	tests/charu.bbl tests/testcharu.bib tests/nameu.aux \
+	tests/nameu.bbl tests/mlgbib.bib tests/iscjku.aux \
+	tests/iscjku.bbl tests/testiscjku.bib tests/testiscjk.bst \
+	dos-dj.mak dos-emx.mak os2.mak unix.mak
 DISTCLEANFILES = tests/xexampl.aux tests/xexampl.bbl tests/xexampl.blg \
-	tests/xsort.aux tests/xsort.bbl tests/xsort.blg \
-	tests/memtest.bib tests/memtest?.* tests/xubasic.aux \
-	tests/xubasic.bbl tests/xubasic.blg tests/xurange.aux \
-	tests/xurange.bbl tests/xurange.blg tests/xyannis.aux \
-	tests/xyannis.bbl tests/xyannis.blg
+	tests/memtest.bib tests/memtest?.* tests/memtestu?.* \
+	tests/xsort[123].aux tests/xsort[123].bbl tests/xsort[123].blg \
+	tests/xcase[123].aux tests/xcase[123].bbl tests/xcase[123].blg \
+	tests/xsubstra.aux tests/xsubstra.bbl tests/xsubstra.blg \
+	tests/xtxtprfxa.aux tests/txtprfxa.bbl tests/xtxtprfxa.blg \
+	tests/xwidtha.aux tests/widtha.bbl tests/xwidtha.blg \
+	tests/xchara.aux tests/xchara.bbl tests/xchara.blg \
+	tests/xnamea.aux tests/xnamea.bbl tests/xnamea.blg \
+	tests/xubasic.aux tests/xubasic.bbl tests/xubasic.blg \
+	tests/xurange.aux tests/xurange.bbl tests/xurange.blg \
+	tests/xyannis.aux tests/xyannis.bbl tests/xyannis.blg \
+	tests/xsortu-*.aux tests/xsortu-*.bbl tests/xsortu-*.blg \
+	tests/xcaseu.aux tests/xcaseu.bbl tests/xcaseu.blg \
+	tests/xperiodu.aux tests/xperiodu.bbl tests/xperiodu.blg \
+	tests/xsubstru.aux tests/xsubstru.bbl tests/xsubstru.blg \
+	tests/xtxtprfxu.aux tests/txtprfxu.bbl tests/xtxtprfxu.blg \
+	tests/xwidthu.aux tests/widthu.bbl tests/xwidthu.blg \
+	tests/xcharu.aux tests/xcharu.bbl tests/xcharu.blg \
+	tests/xnameu.aux tests/xnameu.bbl tests/xnameu.blg \
+	tests/xiscjku.aux tests/xiscjku.bbl tests/xiscjku.blg
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -1109,6 +1165,48 @@ uninstall-dist_btdocDATA:
 	@list='$(dist_btdoc_DATA)'; test -n "$(btdocdir)" || list=; \
 	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
 	dir='$(DESTDIR)$(btdocdir)'; $(am__uninstall_files_from_dir)
+install-dist_btudocDATA: $(dist_btudoc_DATA)
+	@$(NORMAL_INSTALL)
+	@list='$(dist_btudoc_DATA)'; test -n "$(btudocdir)" || list=; \
+	if test -n "$$list"; then \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(btudocdir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(btudocdir)" || exit 1; \
+	fi; \
+	for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  echo "$$d$$p"; \
+	done | $(am__base_list) | \
+	while read files; do \
+	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(btudocdir)'"; \
+	  $(INSTALL_DATA) $$files "$(DESTDIR)$(btudocdir)" || exit $$?; \
+	done
+
+uninstall-dist_btudocDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(dist_btudoc_DATA)'; test -n "$(btudocdir)" || list=; \
+	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
+	dir='$(DESTDIR)$(btudocdir)'; $(am__uninstall_files_from_dir)
+install-dist_btuexDATA: $(dist_btuex_DATA)
+	@$(NORMAL_INSTALL)
+	@list='$(dist_btuex_DATA)'; test -n "$(btuexdir)" || list=; \
+	if test -n "$$list"; then \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(btuexdir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(btuexdir)" || exit 1; \
+	fi; \
+	for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  echo "$$d$$p"; \
+	done | $(am__base_list) | \
+	while read files; do \
+	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(btuexdir)'"; \
+	  $(INSTALL_DATA) $$files "$(DESTDIR)$(btuexdir)" || exit $$?; \
+	done
+
+uninstall-dist_btuexDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(dist_btuex_DATA)'; test -n "$(btuexdir)" || list=; \
+	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
+	dir='$(DESTDIR)$(btuexdir)'; $(am__uninstall_files_from_dir)
 install-dist_csfDATA: $(dist_csf_DATA)
 	@$(NORMAL_INSTALL)
 	@list='$(dist_csf_DATA)'; test -n "$(csfdir)" || list=; \
@@ -1522,7 +1620,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(PROGRAMS) $(MANS) $(DATA) config.h
 installdirs:
-	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(man1dir)" "$(DESTDIR)$(btdocdir)" "$(DESTDIR)$(csfdir)"; do \
+	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(man1dir)" "$(DESTDIR)$(btdocdir)" "$(DESTDIR)$(btudocdir)" "$(DESTDIR)$(btuexdir)" "$(DESTDIR)$(csfdir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -1594,8 +1692,8 @@ info: info-am
 
 info-am:
 
-install-data-am: install-dist_btdocDATA install-dist_csfDATA \
-	install-man
+install-data-am: install-dist_btdocDATA install-dist_btudocDATA \
+	install-dist_btuexDATA install-dist_csfDATA install-man
 
 install-dvi: install-dvi-am
 
@@ -1656,6 +1754,7 @@ ps: ps-am
 ps-am:
 
 uninstall-am: uninstall-binPROGRAMS uninstall-dist_btdocDATA \
+	uninstall-dist_btudocDATA uninstall-dist_btuexDATA \
 	uninstall-dist_csfDATA uninstall-man
 
 uninstall-man: uninstall-man1
@@ -1671,16 +1770,18 @@ uninstall-man: uninstall-man1
 	distclean-libtool distclean-tags distcleancheck distdir \
 	distuninstallcheck dvi dvi-am html html-am info info-am \
 	install install-am install-binPROGRAMS install-data \
-	install-data-am install-dist_btdocDATA install-dist_csfDATA \
-	install-dvi install-dvi-am install-exec install-exec-am \
-	install-html install-html-am install-info install-info-am \
-	install-man install-man1 install-pdf install-pdf-am install-ps \
+	install-data-am install-dist_btdocDATA install-dist_btudocDATA \
+	install-dist_btuexDATA install-dist_csfDATA install-dvi \
+	install-dvi-am install-exec install-exec-am install-html \
+	install-html-am install-info install-info-am install-man \
+	install-man1 install-pdf install-pdf-am install-ps \
 	install-ps-am install-strip installcheck installcheck-am \
 	installdirs maintainer-clean maintainer-clean-generic \
 	mostlyclean mostlyclean-compile mostlyclean-generic \
 	mostlyclean-libtool pdf pdf-am ps ps-am recheck tags tags-am \
 	uninstall uninstall-am uninstall-binPROGRAMS \
-	uninstall-dist_btdocDATA uninstall-dist_csfDATA uninstall-man \
+	uninstall-dist_btdocDATA uninstall-dist_btudocDATA \
+	uninstall-dist_btuexDATA uninstall-dist_csfDATA uninstall-man \
 	uninstall-man1
 
 .PRECIOUS: Makefile

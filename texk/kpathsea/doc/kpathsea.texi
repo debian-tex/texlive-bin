@@ -2,13 +2,13 @@
 @setfilename kpathsea.info
 @settitle Kpathsea: A library for path searching
 
-@set version 6.3.4
-@set month-year January 2022
+@set version 6.3.5
+@set month-year February 2023
 
 @copying
 This file documents the Kpathsea library for path searching.
 
-Copyright @copyright{} 1996--2022 Karl Berry & Olaf Weber.
+Copyright @copyright{} 1996--2023 Karl Berry & Olaf Weber.
 
 Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -1619,7 +1619,7 @@ cweb: .w .web  .ch
 enc files: .enc
 cmap files (cmap):
 subfont definition files: .sfd
-opentype fonts: .otf
+opentype fonts: .otf .OTF
 pdftex config (pdftexconfig):
 lig files: .lig
 texmfscripts:
@@ -2150,6 +2150,20 @@ suffix @samp{.lig}.
 @vindex TEXMFDBS
 (Filename databases, @pxref{Filename database})
 @code{TEXMFDBS}.
+
+@item lua
+@flindex .lua
+@flindex .luatex
+@flindex .luc
+@flindex .luctex
+@flindex .texlua
+@flindex .texluc
+@flindex .tlu 
+@vindex LUAINPUTS
+(Lua scripts, @url{https://ctan.org/pkg/luatex})
+@code{LUAINPUTS}
+suffixes @samp{.lua}, @samp{.luatex}, @samp{.luc}, @samp{.luctex},
+@samp{.texlua}, @samp{.texluc}, @samp{.tlu}.
 
 @item map
 @flindex .map

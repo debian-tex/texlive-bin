@@ -1,4 +1,4 @@
-$Id: README 61999 2022-02-13 03:14:24Z kakuto $
+$Id: README 65992 2023-02-20 23:13:30Z kakuto $
 Public domain.  Originally created by Karl Berry, 2005.
 
 Libraries we compile for TeX Live.
@@ -12,7 +12,7 @@ See also comments in ../texk/README.
 cairo 1.16.0 - checked 20oct18
   http://cairographics.org/releases/
 
-freetype2 2.11.1 - checked 03dec21
+freetype2 2.13.0 - checked 11feb23
   http://download.savannah.gnu.org/releases/freetype/
 
 gd 2.3.3 - checked 13sep21
@@ -25,16 +25,16 @@ graphite2 1.3.14 - checked 10apr20
   http://sourceforge.net/projects/silgraphite/files/graphite2/
   (requires C++11)
 
-harfbuzz 3.4.0 - checked 13feb22
-  https://github.com/harfbuzz/harfbuzz/releases/download/3.4.0/
+harfbuzz 7.0.1 - checked 21feb23
+  https://github.com/harfbuzz/harfbuzz/releases/tag/7.0.1
 
 icu 70.1 - checked 16jan22
   https://github.com/unicode-org/icu/releases/
 
-libpaper 1.1.24+nmu2 - checked 24oct13
-  ftp://ftp.de.debian.org/debian/pool/main/libp/libpaper/
+libpaper 1.1.28 - checked 10sep22
+  http://ftp.debian.org/debian/pool/main/libp/libpaper/
 
-libpng 1.6.37 - checked 03may19
+libpng 1.6.39 - checked 11nov22
   https://sourceforge.net/projects/libpng/files/ - used by many
 
 lua 5.2.4 - checked 11mar15
@@ -46,11 +46,14 @@ lua 5.3.6 - checked 04oct20
 luajit 2.1.0-beta3 - checked 20jun17
   http://luajit.org/download/LuaJIT-2.1.0-beta3.tar.gz
 
-mpfr 4.1.0 - checked 12jul20
+mpfr 4.2.0 - checked 12jan23
   http://ftp.gnu.org/gnu/mpfr/
 
-pixman 0.40.0 - checked 21apr20
+pixman 0.42.2 - checked 03nov22
   http://cairographics.org/releases/
+
+potrace 1.16 - checked 29aug22
+  http://potrace.sourceforge.net
 
 pplib 2.05.0 - checked 21apr20
   https://github.com/contextgarden/pplib
@@ -58,12 +61,12 @@ pplib 2.05.0 - checked 21apr20
 teckit 2.5.11 - checked 09nov21
   https://github.com/silnrsi/teckit/archive/2.5.11.tar.gz
 
-xpdf 4.03 - checked 01feb21
+xpdf 4.04 - checked 24apr22
   http://www.xpdfreader.com/download.html
   with modifications for pdftex
 
-zlib 1.2.11 - checked 15jan17
+zlib 1.2.13 - checked 15oct22
   http://www.zlib.net/ - used by many
 
-zziplib 0.13.71 - checked 23apr20
+zziplib 0.13.72 - checked 10sep22
   https://github.com/gdraheim/zziplib/releases

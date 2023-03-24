@@ -43,18 +43,18 @@ Limbo.
 % Version 4.5 (based on WEAVE 4.5) was hacked together on 04 Jan 2022.
 @z
 
-@x 48c24
-  \centerline{\titlefont The {\ttitlefont WEAVE} processor}
-@y
-  \centerline{\titlefont The {\ttitlefont TWILL} processor}
-@z
-
 @x 43c19
 \let\maybe=\iffalse
 \def\title{WEAVE changes for C}
 @y
 \let\maybe=\iftrue
 \def\title{TWILL for \TeX~Live}
+@z
+
+@x 48c24
+  \centerline{\titlefont The {\ttitlefont WEAVE} processor}
+@y
+  \centerline{\titlefont The {\ttitlefont TWILL} processor}
 @z
 
 Section 1.
@@ -71,8 +71,10 @@ or to make this code usable by anyone else but its author.]
 @z
 
 @x 77c58
+@d my_name=='weave'
 @d banner=='This is WEAVE, Version 4.5'
 @y
+@d my_name=='twill'
 @d banner=='This is TWILL, Version 4.5'
 @z
 
@@ -566,7 +568,7 @@ Section 220.
 begin incr(module_count);@/
 @y
 begin incr(module_count);@/
-mm:=module_count+def_flag; ref_link[0]:=0; ref_loc[0]:=0; new_ref_ptr:=0;
+mm:=module_count+def_flag; ref_lnk[0]:=0; ref_loc[0]:=0; new_ref_ptr:=0;
 safety:=guaranteed;
 @z
 
@@ -829,9 +831,9 @@ if q<>0 then if q<>undef_val then if not phase_three then
   begin repeat r:=q; q:=dlink(q);
   until (q=0) or (num(q)>mm);
   if num(r)<>mm then
-    begin qq:=0; q:=ref_link[0];
+    begin qq:=0; q:=ref_lnk[0];
     while ref_loc[q]>r do
-      begin qq:=q; q:=ref_link[qq];
+      begin qq:=q; q:=ref_lnk[qq];
       end;
     if ref_loc[q]=r then
       begin if safety=guaranteed then
@@ -839,7 +841,7 @@ if q<>0 then if q<>undef_val then if not phase_three then
       end
     else  begin if new_ref_ptr=max_new_refs then overflow('new references');
       incr(new_ref_ptr);
-      ref_link[new_ref_ptr]:=q; ref_link[qq]:=new_ref_ptr;
+      ref_lnk[new_ref_ptr]:=q; ref_lnk[qq]:=new_ref_ptr;
       ref_loc[new_ref_ptr]:=r;
       if dlink(def_val[p])=0 then ref_safety[new_ref_ptr]:=guaranteed
       else ref_safety[new_ref_ptr]:=safety;
@@ -868,7 +870,7 @@ identifier is multiply defined.
 @<Glob...@>=
 @!mm:integer; {current module number plus |def_flag|}
 @!ref_loc:array[0..max_new_refs] of sixteen_bits;
-@!ref_link:array[0..max_new_refs] of sixteen_bits;
+@!ref_lnk:array[0..max_new_refs] of sixteen_bits;
 @!ref_safety:array[0..max_new_refs] of guaranteed..flaky;
 @!new_ref_ptr:0..max_new_refs;
 @!safety:guaranteed..flaky;
@@ -936,7 +938,7 @@ but not defined in the current module.
 procedure beta_out;
 label done,888,found;
 var k,p,q,w,xx,mmm:integer;
-begin p:=ref_link[0];
+begin p:=ref_lnk[0];
 while p<>0 do
   begin flush_buffer(out_ptr,false,false);
   out2("\")("[");
@@ -947,7 +949,7 @@ while p<>0 do
   @<Move past commas@>;
   @<Output the reference, based on its |dtype|@>;
   if ref_safety[p]=flaky then out3(" ")("%")("?");
-  p:=ref_link[p];
+  p:=ref_lnk[p];
   end;
 end;
 

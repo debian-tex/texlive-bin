@@ -1,3 +1,41 @@
+2023-02-09  Karl Berry  <karl@tug.org>
+
+	* version.ac: remove /dev, for TL23.
+
+2023-01-01  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+
+	* ptexenc.c, ptexenc/ptexenc.h:
+	Remove unused function ptenc_get_command_line_args().
+	* version.ac, COPYRIGHT: Update copyright year.
+
+2022-12-22  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* ptexenc.c, ptexenc/ptexenc.h:
+	Add a new function ptenc_conv_first_line()
+	to accept file names with JIS X 0208 characters
+	in `(e)(u)ptex --kanji-internal={euc,sjis}`.
+	https://github.com/texjporg/tex-jp-build/issues/136
+	* version.ac: Bump to 1.4.3/dev.
+
+2022-09-24  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+
+	* ptexenc.c: Skip guessing file encoding if input is from pipe.
+	https://github.com/texjporg/tex-jp-build/issues/148
+
+2022-09-01  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* ptexenc.c: Initialize infile_enc_auto only when this variable
+	is first used (input_line2).
+	https://github.com/texjporg/tex-jp-build/pull/144
+
+2022-06-12  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+
+	* ptexenc.c, unicode.c, ptexenc/ptexenc.h, ptexenc/unicode.h:
+	Add new functions ptenc_guess_enc() and set_guess_file_enc()
+	to support guessing input file encodings.
+	https://github.com/texjporg/tex-jp-build/issues/142
+	* version.ac: Bump to 1.4.2/dev.
+
 2022-03-21  Karl Berry  <karl@tug.org>
 
 	* TL'22 release.

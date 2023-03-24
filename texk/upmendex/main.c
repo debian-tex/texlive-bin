@@ -45,15 +45,6 @@ int main(int argc, char **argv)
 	}
 #endif
 
-	kp_ist.var_name = "INDEXSTYLE";
-	kp_ist.path = DEFAULT_INDEXSTYLES; /* default path. */
-	kp_ist.suffix = "ist";
-	KP_entry_filetype(&kp_ist);
-	kp_dict.var_name = "INDEXDICTIONARY";
-	kp_dict.path = DEFAULT_INDEXDICTS; /* default path */
-	kp_dict.suffix = "dict";
-	KP_entry_filetype(&kp_dict);
-
 /*   check options   */
 
 	for (i=1,j=k=0;i<argc && j<256;i++) {
@@ -160,7 +151,7 @@ int main(int argc, char **argv)
 
 			default:
 				fprintf(stderr,"upmendex - index processor, %s (%s).\n",VERSION, TL_VERSION);
-				fprintf(stderr," Copyright 2009 ASCII MEDIA WORKS, 2015-2022 TANAKA Takuji\n");
+				fprintf(stderr," Copyright 2009 ASCII MEDIA WORKS, 2015-2023 TANAKA Takuji\n");
 				fprintf(stderr," using ICU version %s\n",icu_version);
 				fprintf(stderr,"usage:\n");
 				fprintf(stderr,"%% upmendex [-ilqrcgf] [-s sty] [-d dic] [-o ind] [-t log] [-p no] [--] [idx0 idx1 ...]\n");
@@ -190,6 +181,15 @@ int main(int argc, char **argv)
 		}
 	}
 	idxcount=j+fsti;
+
+	kp_ist.var_name = "INDEXSTYLE";
+	kp_ist.path = DEFAULT_INDEXSTYLES; /* default path. */
+	kp_ist.suffix = "ist";
+	KP_entry_filetype(&kp_ist);
+	kp_dict.var_name = "INDEXDICTIONARY";
+	kp_dict.path = DEFAULT_INDEXDICTS; /* default path */
+	kp_dict.suffix = "dict";
+	KP_entry_filetype(&kp_dict);
 
 /*   check option errors   */
 
@@ -241,10 +241,6 @@ int main(int argc, char **argv)
 			    VERSION, icu_version, TL_VERSION);
 	}
 
-/*   init kanatable   */
-
-	initkanatable();
-
 /*   init hangul,devanagari,thai *_head table   */
 	u_strcpy(hangul_head,GANADA);
 	u_strcpy(devanagari_head,DVNG_HEAD);
@@ -255,6 +251,11 @@ int main(int argc, char **argv)
 	}
 
 	set_icu_attributes();
+	init_icu_collator();
+
+/*   init kanatable   */
+
+	initkanatable();
 
 /*   read dictionary   */
 
@@ -283,7 +284,7 @@ int main(int argc, char **argv)
 	default:
 		break;
 	}
-	if (u_strlen(kana_head)>0) u_strcpy(atama,kana_head);
+	if (u_strlen(kana_head)==0) u_strcpy(kana_head,atama);
 
 /*   read idx file   */
 

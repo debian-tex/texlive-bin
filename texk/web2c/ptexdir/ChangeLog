@@ -1,3 +1,126 @@
+2023-03-09  Karl Berry  <karl@tug.org>
+
+	* TL'23 release.
+
+2023-02-14  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* wcfname.test:
+	Avoid errors on parallel test processing.
+	Report from Ken Brown.
+
+2023-01-28  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+
+	* am/ptex.am:
+	Revert options --enable-ptex(-synctex) for configure.
+	By default, we do not build binary of pTeX (ptex)
+	and we use alias of e-pTeX (eptex) for it.
+	https://github.com/texjporg/tex-jp-build/issues/32
+
+2023-01-15  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+
+	* ptexextra.h:
+	Make AUTHOR "Japanese TeX Development Community".
+	* {nissya,pbibtex{,-mem},pdvitype,sample}.test,
+	{ppltotf,ptftopl,skipjfmp,yokotate}.test,
+	pbibtex-{longline,openout}-test.pl:
+	Remove unused tests.
+	* {pbibtex,pdvitype,ppltotf,ptftopl}.ch:
+	Remove unused change files.
+	* am/ptex.am:
+	Remove binaries of pTeX (ptex).
+	Now we use alias of e-pTeX (eptex) for pTeX (ptex).
+	https://github.com/texjporg/tex-jp-build/issues/32
+	* COPYRIGHT: copyright year.
+
+2022-12-28  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+
+	* wcfname.test, am/ptex.am:
+	Add tests for file names with JIS X 0208 characters
+	in `ptex --kanji-internal={euc,sjis}`.
+	https://github.com/texjporg/tex-jp-build/issues/136
+
+2022-12-22  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* ptex-base.ch, ptex.defines, kanji.h, am/ptex.am:
+	Accept file names with JIS X 0208 characters
+	in `ptex --kanji-internal={euc,sjis}`.
+	https://github.com/texjporg/tex-jp-build/issues/136
+
+2022-12-12  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* ptex-base.ch: Increase INHIBIT/KINSOKU table size to 1024.
+
+2022-12-03  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+
+	am/ptex.am:
+	Merge change files/binaries for pTeX tools into upTeX tools.
+	Now pTeX tools (pbibtex, pdvitype, ppltotf, ptftopl) run
+	as the compatible mode.
+	https://github.com/texjporg/tex-jp-build/issues/32
+	https://github.com/texjporg/tex-jp-build/issues/154
+
+2022-11-27  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+
+	* {nissya,pdvitype,yokotate}.test, tests/nissya_bib.bbl,
+	tests/chcode.pl, tests/chcode-{jis,utf8,euc,sjis}.pl, tests/chcode.tfm,
+	tests/ptex[34].{tex,dvi}, tests/ptex[34]a-{jis,utf8}.typ, am/ptex.am:
+	Add tests for pTeX compatible mode of tools for upTeX.
+	https://github.com/texjporg/tex-jp-build/issues/32
+
+2022-11-03  Hironobu Yamashita  <h.y.acetaminophen@gmail.com>
+
+	* ptex-base.ch: Increase max_quarterword to 0xFFFF on pTeX.
+	This is safe (and also necessary) as texmfmem.h already has
+	similar memory structure as upTeX, epTeX and eupTeX.
+	(Bug introduced on commit 2022-01-22)
+	https://github.com/texjporg/tex-jp-build/issues/152
+
+2022-10-24  Hironobu Yamashita  <h.y.acetaminophen@gmail.com>
+
+	* ptex-base.ch: Add a new syntax \font [in jis/ucs].
+	New primitives: \tojis, \ptextracingfonts and \ptexfontname.
+	* ptex.defines: Add toJIS.
+	* ptex_version.h: Version p4.1.0.
+
+2022-10-23  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* ptex-base.ch: initialize k in adjust_hlist.
+	https://github.com/texjporg/tex-jp-build/issues/151
+
+2022-09-03  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+
+	* pbibtex.ch:
+	Check options before initialization of kpathsearch parameters.
+	This change prevents unwanted looking for texmf.cnf.
+	https://github.com/texjporg/tex-jp-build/issues/145
+	* pbibtex.test, am/ptex.am:
+	Update tests for pBibTeX.
+
+2022-09-01  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* kanji.c: Initialization of infile_enc_auto is moved to ptexenc.
+	This change prevents unwanted looking for texmf.cnf.
+	https://github.com/texjporg/tex-jp-build/pull/144
+
+2022-06-12  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+
+	* kanji.[ch], pbibtex.ch:
+	Support guessing input file encodings.
+	https://github.com/texjporg/tex-jp-build/issues/142
+	* pbibtex.test, am/ptex.am:
+	Add tests for guess encodings & pBibTeX.
+
+2022-05-15  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+
+	* pbibtex.ch, ptex.defines:
+	Accept multibyte characters by int.to.chr$ and chr.to.int$, i.e.
+	chr is corresponding to one single character multibyte string.
+	Bump version to j0.35.
+
+2022-05-06  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+
+	* pbibtex.test: Update a test.
+
 2022-03-21  Karl Berry  <karl@tug.org>
 
 	* TL'22 release.

@@ -1,3 +1,83 @@
+2023-03-09  Karl Berry  <karl@tug.org>
+
+	* TL'23 release.
+
+2023-02-26  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+
+	* hanzi.h: Update references.
+
+2022-11-20  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+
+	* version 1.07  Stable version.
+	* configure.ac: Bump version.
+	* sort.c, fwrite.c, {,ex}hanzi.h:
+	Improve detection of hanzi header to support
+	Chinese polyphone (多音字).
+
+2022-11-16  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+
+	* version 1.06  Stable version.
+	* configure.ac: Bump version.
+	* sort.c: Add parameter option "@" to character_order,
+	which denotes character order is defined by icu_rules.
+	* fwrite.c: Better treatment for Marathi KSSA, JNYA.
+	* upmendex.ja.txt: Update document.
+
+2022-10-08  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+
+	* version 1.05  Stable version.
+	* configure.ac: Bump version.
+	* main.c, sort.c, convert.c, fwrite.c, {,ex}kana.h, mendex.h:
+	Support U+1B001 Hiragana Letter Archaic Ye.
+	* fwrite.c:
+	Strict check for dotted/dotless I/i in Turkish.
+	Strict check for Thai reordering.
+
+2022-09-17  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+
+	* fwrite.c:
+	Fix a bug on Thai words started with vowel followed by consonant.
+
+2022-09-11  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+
+	* version 1.03  Stable version.
+	* configure.ac: Bump version.
+	* main.c, sort.c, convert.c, fwrite.c, kana.h:
+	Support U+1B11F..1B122 Hiragana/Katakana Letter Archaic Wu, Yi, Ye.
+
+2022-09-04  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+
+	* version 1.02  Stable version.
+	* configure.ac: Bump version.
+	* fwrite.c:
+	Support U+1B132, U+1B155 Hiragana/Katakana Letter Small Ko.
+	They have not been supported yet but will be supported in ICU collator.
+	Support U+0626 Arabic Letter Yeh with Hamza Above for Uyghur.
+	Support U+0149 Latin Small Letter N Preceded By Apostrophe for Afrikaans.
+	Support digraphs dd, ff, ng, ph, rh for Welsh.
+	* sort.c: Add Latin Extended-F and -G.
+	Add CJK Unified Ideograph Extension H, Cyrillic Extended-D,
+	Devanagari Extended-A and Arabic Extended-C in Unicode 15.0.
+
+2022-09-02  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+
+	* main.c:
+	Moved calls of KP_entry_filetype() after checking options.
+	This change prevents unwanted looking for texmf.cnf.
+	https://github.com/texjporg/tex-jp-build/pull/144
+
+2022-05-22  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+
+	* version 1.01  Stable version.
+	* configure.ac: Bump version.
+	* fread.c:
+	Modify heuristic detection of page number types
+	for ambiguous ones between roman number and alphabet.
+	* tests/upmendex.test, tests/pprec[567].ist,
+	tests/romalp[ABCD].idx, tests/romalpA-[56].ind,
+	tests/romalp[BD]-[567].ind, tests/romalpC-5.ind, Makefile.am:
+	Update tests.
+
 2022-03-21  Karl Berry  <karl@tug.org>
 
 	* TL'22 release.

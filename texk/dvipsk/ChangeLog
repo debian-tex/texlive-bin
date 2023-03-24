@@ -1,3 +1,28 @@
+2023-03-09  Karl Berry  <karl@tug.org>
+
+	* TL'23 release.
+
+2022-01-18  Karl Berry  <karl@freefriends.org>
+
+	* NEWS,
+	* afm2tfm.c,
+	* dvips.c,
+	* dvips.h,
+	* dvips.texi,
+	* configure.ac: version 2023.1 and copyright 2023.
+
+2022-09-02  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+
+	* dvips.c:
+	Check options --help and --version before getdefaults(CONFIGFILE).
+	This change prevents unwanted looking for texmf.cnf.
+
+2022-04-06  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+
+	* tfmload.c:
+	Warn if interpreting OFM FONTDIR as pTeX vertical writing
+	with option -d 4.
+
 2022-03-21  Karl Berry  <karl@tug.org>
 
 	* TL'22 release.

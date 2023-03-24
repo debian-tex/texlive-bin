@@ -2,7 +2,7 @@
 
     DVIPDFMx, an eXtended version of DVIPDFM by Mark A. Wicks.
 
-    Copyright (C) 2002-2021 by Jin-Hwan Cho, Matthias Franz, and Shunsaku Hirata,
+    Copyright (C) 2002-2023 by Jin-Hwan Cho, Matthias Franz, and Shunsaku Hirata,
     the DVIPDFMx project team.
     
     Copyright (c) 2006 SIL. (xdvipdfmx extensions for XeTeX support)
@@ -121,6 +121,7 @@ double paper_height             = 842.0;
 static double x_offset          = 72.0;
 static double y_offset          = 72.0;
 int    landscape_mode           = 0;
+int    dvi_ptex_with_vert       = 0;
 static int    translate_origin  = 0;
 
 static int has_paper_option = 0;
@@ -174,8 +175,8 @@ show_version (void)
   if (*my_name == 'x')
     printf ("an extended version of DVIPDFMx, which in turn was\n");
   printf ("an extended version of dvipdfm-0.13.2c developed by Mark A. Wicks.\n");
-  printf ("\nCopyright (C) 2002-2021 the DVIPDFMx project team\n");
-  printf ("Copyright (C) 2006-2021 SIL International.\n");
+  printf ("\nCopyright (C) 2002-2023 the DVIPDFMx project team\n");
+  printf ("Copyright (C) 2006-2023 SIL International.\n");
   printf ("\nThis is free software; you can redistribute it and/or modify\n");
   printf ("it under the terms of the GNU General Public License as published by\n");
   printf ("the Free Software Foundation; either version 2 of the License, or\n");
@@ -198,11 +199,13 @@ show_usage (void)
   printf ("  -g dimension\tAnnotation \"grow\" amount [0.0in]\n");
   printf ("  -h | --help \tShow this help message and exit\n");
   printf ("  -i cfgfile\tRead additional configuration file\t\n");
+  printf ("  --kpathsea-debug number\tSet kpathsea debugging flags [0]\n");
   printf ("  -l \t\tLandscape mode\n");
   printf ("  -m number\tSet additional magnification [1.0]\n");
   printf ("  --mvorigin\tTranslate the origin for MP inclusion\n");
   printf ("  -o filename\tSet output file name, \"-\" for stdout [DVIFILE.pdf]\n");
   printf ("  -p papersize\tSet papersize [a4]\n");
+  printf ("  --pdfm-str-utf8\tAssume PDFMark strings are encoded in UTF-8\n");
   printf ("  -q \t\tBe quiet\n");
   printf ("  -r resolution\tSet resolution (in DPI) for raster fonts [600]\n");
   printf ("  -s pages\tSelect page ranges [all pages]\n");
@@ -211,7 +214,6 @@ show_usage (void)
   printf ("  --version\tOutput version information and exit\n");
   printf ("  -v \t\tBe verbose\n");
   printf ("  -vv\t\tBe more verbose\n");
-  printf ("  --kpathsea-debug number\tSet kpathsea debugging flags [0]\n");
   printf ("  -x dimension\tSet horizontal offset [1.0in]\n");
   printf ("  -y dimension\tSet vertical offset [1.0in]\n");
   printf ("  -z number  \tSet zlib compression level (0-9) [9]\n");
@@ -423,6 +425,7 @@ static struct option long_options[] = {
   {"dvipdfm", 0, 0, 132},
   {"mvorigin", 0, 0, 1000},
   {"kpathsea-debug", 1, 0, 133},
+  {"pdfm-str-utf8", 0, 0, 134},
   {0, 0, 0, 0}
 };
 
@@ -455,6 +458,10 @@ do_args_first_pass (int argc, char *argv[], const char *source, int unsafe)
 
     case 133: /* --kpathsea-debug */
       kpathsea_debug = atoi(optarg);
+      break;
+
+    case 134: /* --pdfm-str-utf8 */
+      dpx_conf.pdfm_str_utf8 = 1;
       break;
 
     case 1000: /* --mvorigin */
@@ -522,7 +529,7 @@ do_args_second_pass (int argc, char *argv[], const char *source, int unsafe)
   optind = 1;
   while ((c = getopt_long(argc, argv, optstrig, long_options, NULL)) != -1) {
     switch(c) {
-    case 'h': case 130: case 131: case 132: case 133: case 1000: case 'q': case 'v': case 'M': /* already done */
+    case 'h': case 130: case 131: case 132: case 133: case 134: case 1000: case 'q': case 'v': case 'M': /* already done */
       break;
 
     /* 'm' option handled in first_pass */
@@ -1175,7 +1182,7 @@ main (int argc, char *argv[])
   /* PDF trailer ID. */
   if (!has_id) {
 #define PRODUCER \
-"%s-%s, Copyright 2002-2021 by Jin-Hwan Cho, Matthias Franz, and Shunsaku Hirata"
+"%s-%s, Copyright 2002-2023 by Jin-Hwan Cho, Matthias Franz, and Shunsaku Hirata"
     char producer[256];
     
     sprintf(producer, PRODUCER, my_name, VERSION);

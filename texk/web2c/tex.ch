@@ -1,4 +1,4 @@
-% $Id: tex.ch 60074 2021-07-26 10:29:11Z hironobu $
+% $Id: tex.ch 64547 2022-09-29 01:20:56Z karl $
 % tex.ch for C compilation with web2c, derived from various other change files.
 % By Tim Morgan, UC Irvine ICS Department, and many others.
 %
@@ -575,6 +575,7 @@ tini@/
 @!file_line_error_style_p:cinttype; {format messages as file:line:error}
 @!eight_bit_p:cinttype; {make all characters printable by default}
 @!halt_on_error_p:cinttype; {stop at first error}
+@!halting_on_error_p:boolean; {already trying to halt?}
 @!quoted_filename:boolean; {current filename is quoted}
 {Variables for source specials}
 @!src_specials_p : boolean;{Whether |src_specials| are enabled at all}
@@ -875,7 +876,12 @@ print_char("."); show_context;
 @y
 print_char("."); show_context;
 if (halt_on_error_p) then begin
-  history:=fatal_error_stop; jump_out;
+  {If |close_files_and_terminate| generates an error, we'll end up back
+   here; just give up in that case. If files are truncated, too bad.}
+  if (halting_on_error_p) then do_final_end; {quit immediately}
+  halting_on_error_p:=true;
+  history:=fatal_error_stop;
+  jump_out;
 end;
 @z
 
@@ -1522,7 +1528,7 @@ aligning:begin print(" while scanning preamble"); info(p):=right_brace_token+"}"
 absorbing:begin print(" while scanning text"); info(p):=right_brace_token+"}";
 @z
 
-@x [25.366]
+@x [25.366] l.7672 - expansion depth overflow
 begin cv_backup:=cur_val; cvl_backup:=cur_val_level; radix_backup:=radix;
 @y
 begin
@@ -1531,14 +1537,22 @@ if expand_depth_count>=expand_depth then overflow("expansion depth",expand_depth
 cv_backup:=cur_val; cvl_backup:=cur_val_level; radix_backup:=radix;
 @z
 
-@x [25.366]
+@x [25.366] l.7678 - expansion depth overflow
 cur_order:=co_backup; link(backup_head):=backup_backup;
 @y
 cur_order:=co_backup; link(backup_head):=backup_backup;
 decr(expand_depth_count);
 @z
 
-@x [27.484] set limit when fatal_error
+% Original report: https://tex.stackexchange.com/questions/609423
+% TeX bug entry: https://tug.org/texmfbug/newbug.html#B155endwrite
+@x [25.369] l.7717 - disallow \noexpand\endwrite
+if t>=cs_token_flag then
+@y
+if (t>=cs_token_flag)and(t<>end_write_token) then
+@z
+
+@x [27.484] l.9495 - set limit when fatal_error
 else fatal_error("*** (cannot \read from terminal in nonstop modes)")
 @y
 else begin
@@ -4486,9 +4500,15 @@ system-dependent section allows easy integration of Web2c and e-\TeX, etc.)
 @ The |edit_name_start| will be set to point into |str_pool| somewhere after
 its beginning if \TeX\ is supposed to switch to an editor on exit.
 
+Initialize the |stop_at_space| variable for filename parsing.
+
+Initialize the |halting_on_error_p| variable to avoid infloop with
+\.{--halt-on-error}.
+
 @<Set init...@>=
 edit_name_start:=0;
 stop_at_space:=true;
+halting_on_error_p:=false;
 
 @ These are used when we regenerate the representation of the first 256
 strings.

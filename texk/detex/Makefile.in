@@ -399,6 +399,7 @@ am__set_b = \
   esac
 am__DIST_COMMON = $(srcdir)/../../am/dist_hook.am \
 	$(srcdir)/Makefile.in $(srcdir)/c-auto.in \
+	$(top_srcdir)/../../build-aux/ar-lib \
 	$(top_srcdir)/../../build-aux/compile \
 	$(top_srcdir)/../../build-aux/config.guess \
 	$(top_srcdir)/../../build-aux/config.sub \
@@ -461,6 +462,7 @@ EGREP = @EGREP@
 ETAGS = @ETAGS@
 EXEEXT = @EXEEXT@
 FGREP = @FGREP@
+FILECMD = @FILECMD@
 GREP = @GREP@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
@@ -561,7 +563,8 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-EXTRA_DIST = $(DETEX_TREE) TLpatches test.lout test.tex test.tout
+EXTRA_DIST = $(DETEX_TREE) TLpatches test.lout test.tex test.tout \
+	testverb.tex
 NEVER_DIST = `find . $(NEVER_NAMES)`
 
 # Files not to be distributed

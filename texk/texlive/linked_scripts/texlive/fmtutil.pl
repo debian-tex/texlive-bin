@@ -1,9 +1,9 @@
 #!/usr/bin/env perl
-# $Id: fmtutil.pl 60154 2021-08-03 21:55:56Z karl $
+# $Id: fmtutil.pl 65989 2023-02-20 21:52:59Z karl $
 # fmtutil - utility to maintain format files.
 # (Maintained in TeX Live:Master/texmf-dist/scripts/texlive.)
 # 
-# Copyright 2014-2021 Norbert Preining
+# Copyright 2014-2023 Norbert Preining
 # This file is licensed under the GNU General Public License version 2
 # or any later version.
 #
@@ -24,11 +24,11 @@ BEGIN {
   TeX::Update->import();
 }
 
-my $svnid = '$Id: fmtutil.pl 60154 2021-08-03 21:55:56Z karl $';
-my $lastchdate = '$Date: 2021-08-03 23:55:56 +0200 (Tue, 03 Aug 2021) $';
+my $svnid = '$Id: fmtutil.pl 65989 2023-02-20 21:52:59Z karl $';
+my $lastchdate = '$Date: 2023-02-20 22:52:59 +0100 (Mon, 20 Feb 2023) $';
 $lastchdate =~ s/^\$Date:\s*//;
 $lastchdate =~ s/ \(.*$//;
-my $svnrev = '$Revision: 60154 $';
+my $svnrev = '$Revision: 65989 $';
 $svnrev =~ s/^\$Revision:\s*//;
 $svnrev =~ s/\s*\$$//;
 my $version = "r$svnrev ($lastchdate)";
@@ -42,9 +42,9 @@ use Cwd;
 # don't import anything automatically, this requires us to explicitly
 # call functions with TeXLive::TLUtils prefix, and makes it easier to
 # find and if necessary remove references to TLUtils
-use TeXLive::TLUtils qw();
+use TeXLive::TLUtils qw(wndws);
 
-require TeXLive::TLWinGoo if TeXLive::TLUtils::win32;
+require TeXLive::TLWinGoo if wndws();
 
 # numerical constants
 my $FMT_NOTSELECTED = 0;
@@ -53,8 +53,8 @@ my $FMT_FAILURE     = 2;
 my $FMT_SUCCESS     = 3;
 my $FMT_NOTAVAIL    = 4;
 
-my $nul = (win32() ? 'nul' : '/dev/null');
-my $sep = (win32() ? ';' : ':');
+my $nul = (wndws() ? 'nul' : '/dev/null');
+my $sep = (wndws() ? ';' : ':');
 
 my @deferred_stderr;
 my @deferred_stdout;
@@ -84,7 +84,7 @@ chomp(our $TEXMFSYSCONFIG = `kpsewhich -var-value=TEXMFSYSCONFIG`);
 chomp(our $TEXMFHOME = `kpsewhich -var-value=TEXMFHOME`);
 
 # make sure that on windows *everything* is in lower case for comparison
-if (win32()) {
+if (wndws()) {
   $TEXMFDIST = lc($TEXMFDIST);
   $TEXMFVAR = lc($TEXMFVAR);
   $TEXMFSYSVAR = lc($TEXMFSYSVAR);
@@ -280,7 +280,7 @@ sub main {
     # but for compatibility we'll silently keep the option.
     $cmd = 'edit';
     my $editor = $ENV{'VISUAL'} || $ENV{'EDITOR'};
-    $editor ||= (&win32 ? "notepad" : "vi");
+    $editor ||= (&wndws ? "notepad" : "vi");
     if (-r $changes_config_file) {
       &copyFile($changes_config_file, $bakFile);
     } else {
@@ -389,7 +389,7 @@ sub callback_build_formats {
   # So make our own temp dir.
   my $tmpdir = "";
   if (! $opts{"dry-run"}) {
-    if (win32()) {
+    if (wndws()) {
       my $foo;
       my $tmp_deflt = File::Spec->tmpdir;
       for my $i (1..5) {
@@ -519,7 +519,7 @@ sub callback_build_formats {
   print_info("failed to build: $err (@err)\n")       if ($err);
   print_info("total formats: $total\n");
   chdir($thisdir) || warn "chdir($thisdir) failed: $!";
-  if (win32()) {
+  if (wndws()) {
     # try to remove the tmpdir with all files
     TeXLive::TLUtils::rmtree($tmpdir);
   }
@@ -709,6 +709,15 @@ sub rebuild_one_format {
   # get rid of leading * in inifiles
   $inifile =~ s/^\*//;
 
+  # Add -kanji-internal option for create (e-)p(La)TeX format
+  # with (e-)upTeX's pTeX compatible mode.
+  if ($eng =~ /^e?uptex$/
+      && $fmt =~ /^e?p/
+      && $addargs !~ /-kanji-internal=/) {
+    my $kanji = wndws() ? "sjis" : "euc";
+    $addargs = "-kanji-internal=$kanji " . $addargs;
+  }
+
   if ($fmt eq "metafun")       { $prgswitch .= "mpost"; }
   elsif ($fmt eq "mptopdf")    { $prgswitch .= "context"; }
   elsif ($fmt =~ m/^cont-..$/) { $prgswitch .= "context"; }
@@ -808,6 +817,13 @@ sub rebuild_one_format {
   if ($opts{"dry-run"}) {
     print_info("would copy log file to: $destdir/$logfile\n");
   } else {
+    # Add the actual invocation to the end of the log file
+    if (open(my $fd, ">>", $logfile)) {
+      print $fd "# actual command line used during this run\n# $cmdline\n";
+      close($fd);
+    } else {
+      print_deferred_error("cannot append cmdline to log file");
+    }
     # Here and in the following we use copy instead of move
     # to make sure that in SElinux enabled cases the rules of
     # the destination directory are applied.
@@ -1185,7 +1201,7 @@ sub determine_config_files {
           die "$prg: Config file \"$f\" not found";
         }
       }
-      push @tmp, (win32() ? lc($f) : $f);
+      push @tmp, (wndws() ? lc($f) : $f);
     }
     @{$opts{'cnffile'}} = @tmp;
     # in case that config files are given on the command line, the first
@@ -1196,12 +1212,12 @@ sub determine_config_files {
     chomp(@all_files);
     my @used_files;
     for my $f (@all_files) {
-      push @used_files, (win32() ? lc($f) : $f);
+      push @used_files, (wndws() ? lc($f) : $f);
     }
     #
     my $TEXMFLOCALVAR;
     my @TEXMFLOCAL;
-    if (win32()) {
+    if (wndws()) {
       chomp($TEXMFLOCALVAR =`kpsewhich --expand-path=\$TEXMFLOCAL`);
       @TEXMFLOCAL = map { lc } split(/;/ , $TEXMFLOCALVAR);
     } else {
@@ -1337,7 +1353,7 @@ sub save_fmtutil {
 #   and reset it to the real home dir of root.
 
 sub reset_root_home {
-  if (!win32() && ($> == 0)) {  # $> is effective uid
+  if (!wndws() && ($> == 0)) {  # $> is effective uid
     my $envhome = $ENV{'HOME'};
     # if $HOME isn't an existing directory, we don't care.
     if (defined($envhome) && (-d $envhome)) {
@@ -1403,16 +1419,6 @@ sub print_deferred_warning {
 }
 sub print_deferred_error {
   push @deferred_stderr, "$prg [ERROR]: @_";
-}
-
-
-# copied from TeXLive::TLUtils to reduce dependencies
-sub win32 {
-  if ($^O =~ /^MSWin/i) {
-    return 1;
-  } else {
-    return 0;
-  }
 }
 
 

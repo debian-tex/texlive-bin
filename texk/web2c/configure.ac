@@ -1,4 +1,4 @@
-dnl $Id: configure.ac 60569 2021-09-21 16:46:46Z karl $
+dnl $Id: configure.ac 65543 2023-01-15 05:09:14Z takuji $
 dnl Process this file with Autoconf to produce a configure script for Web2c.
 dnl
 dnl   Copyright 2018-2019 Karl Berry <tex-live@tug.org>
@@ -206,12 +206,12 @@ m4_foreach([Kpse_Win], [kpse_mf_win],
 
 AM_CONDITIONAL([WEB], [test "x$enable_web_progs" != xno])
 
-AS_IF([test "x$enable_ptex:$enable_eptex" = xno:no],
+AS_IF([test "x$enable_eptex" = xno:no],
       [enable_pweb_progs=no],
       [enable_pweb_progs=$enable_web_progs])
 AM_CONDITIONAL([PWEB], [test "x$enable_pweb_progs" != xno])
 
-AS_IF([test "x$enable_uptex:$enable_euptex" = xno:no],
+AS_IF([test "x$enable_euptex" = xno:no],
       [enable_upweb_progs=no],
       [enable_upweb_progs=$enable_web_progs])
 AM_CONDITIONAL([UPWEB], [test "x$enable_upweb_progs" != xno])
@@ -257,6 +257,7 @@ KPSE_LIBPNG_FLAGS
 KPSE_FREETYPE2_FLAGS
 KPSE_PIXMAN_FLAGS
 KPSE_CAIRO_FLAGS
+KPSE_POTRACE_FLAGS
 KPSE_GMP_FLAGS
 KPSE_MPFR_FLAGS
 KPSE_XPDF_FLAGS

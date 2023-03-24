@@ -1,4 +1,4 @@
-dnl $Id: web2c.ac 61680 2022-01-21 17:38:44Z karl $
+dnl $Id: web2c.ac 65655 2023-01-28 05:27:55Z takuji $
 # texk/web2c/ac/web2c.ac: configure.ac fragment for TL subdir
 dnl
 dnl Copyright 2015-2021 Karl Berry <tex-live@tug.org>
@@ -31,9 +31,9 @@ dnl [PROG, BUILD-OR-NO, SYNC-OR-NO, TEXT, REQUIRED-LIBS]
 m4_define([kpse_tex_progs], [dnl
 [[tex],       [yes], [no],  [TeX],        []],
 [[etex],      [no],  [yes], [e-TeX],      [zlib]],
-[[ptex],      [yes], [yes], [pTeX],       [ptexenc zlib]],
+[[ptex],      [no],  [yes], [pTeX],       [ptexenc zlib]],
 [[eptex],     [yes], [yes], [e-pTeX],     [ptexenc zlib]],
-[[uptex],     [yes], [yes], [upTeX],      [ptexenc zlib]],
+[[uptex],     [no],  [yes], [upTeX],      [ptexenc zlib]],
 [[euptex],    [yes], [yes], [e-upTeX],    [ptexenc zlib]],
 [[aleph],     [yes], [],    [Aleph],      []],
 [[hitex],     [yes], [],    [HiTeX],      [zlib]],
@@ -54,8 +54,8 @@ m4_foreach([Kpse_Prog], [kpse_tex_progs],
 dnl [PROG, BUILD-OR-NO, NOWIN-OR-NO, TEXT, REQUIRED-LIBS]
 m4_define([kpse_mf_progs], [dnl
 [[mf],       [yes], [yes], [METAFONT], []],
-[[mflua],    [yes], [no],  [MFLua],    [lua53]],
-[[mfluajit], [yes], [no],  [MFLuaJIT], [luajit]],
+[[mflua],    [yes], [no],  [MFLua],    [lua53 potrace]],
+[[mfluajit], [yes], [no],  [MFLuaJIT], [luajit potrace]],
 ])[]dnl
 m4_foreach([Kpse_Prog], [kpse_mf_progs],
            [m4_ifset([Kpse_Prog],

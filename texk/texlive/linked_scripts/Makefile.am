@@ -1,7 +1,7 @@
-## $Id: Makefile.am 61780 2022-01-28 22:36:18Z karl $
+## $Id: Makefile.am 66269 2023-03-01 01:59:43Z karl $
 ## Makefile.am for the TeX Live subdirectory texk/texlive/linked_scripts/
 ##
-## Copyright 2016-2022 Karl Berry <tex-live@tug.org>
+## Copyright 2016-2023 Karl Berry <tex-live@tug.org>
 ## Copyright 2009-2015 Peter Breitenlohner <tex-live@tug.org>
 ## You may freely use, modify and/or distribute this file.
 ##
@@ -38,23 +38,20 @@ installdirs-local:
 # dangling symlinks produced by `make install'.
 # The instances in texmf* are the masters (except when it is CTAN).
 #
-## We distinguish several classes of scripts according to their
-## type: `shell', `context', or `other'.
+## We distinguish classes of scripts: `shell' and `other'.
 ## 
 ## On Unix systems a symlink from $(bindir) to the script is installed
 ## for all of them; on Windows nothing is installed in $(bindir) for
 ## `shell' scripts whereas for `other' (usually perl, lua, ...) scripts
-## the standard wrapper ../$(WIN_WRAPPER)/runscript.exe is installed or
-## the ConTeXt wrapper ../$(WIN_WRAPPER)/context/mtxrun.exe for
-## `context' scripts.
+## the standard wrapper ../$(WIN_WRAPPER)/runscript.exe is installed.
 ##
-## WIN_WRAPPER is w32_wrapper for 32-bit or w64_wrapper for 64-bit.
+## WIN_WRAPPER is windows_wrapper (64-bit).
 ## 
-## The "shell" list aren't just shell scripts, in either direction.
-## Some /bin/sh scripts are listed as `other' or `context'
-## scripts because they are correctly handled by the wrapper binaries.
-## Conversely, some non-sh scripts are listed as `shell' because they
-## depend on shell scripts or otherwise aren't useful on Windows.
+## The "shell" list aren't just shell scripts, in either direction. Some
+## /bin/sh scripts are listed as `other' scripts because they are
+## correctly handled by the wrapper binaries. Conversely, some non-sh
+## scripts are listed as `shell' because they depend on shell scripts or
+## otherwise aren't useful on Windows.
 ## 
 texmf_scriptsdir = $(datarootdir)/texmf-dist/scripts
 texmf_shell_scripts = \
@@ -69,12 +66,15 @@ texmf_shell_scripts = \
 	listbib/listbib \
 	listings-ext/listings-ext.sh \
 	ltxfileinfo/ltxfileinfo \
+	pagelayout/pagelayoutapi \
+	pagelayout/textestvis \
 	pdfbook2/pdfbook2 \
 	pdfjam/pdfjam \
 	pdftex-quiet/pdftex-quiet \
 	pdfxup/pdfxup \
 	pst-pdf/ps4pdf \
 	simpdftex/simpdftex \
+	texaccents/texaccents.sno \
 	texlive-extra/allcm.sh \
 	texlive-extra/allneeded.sh \
 	texlive-extra/dvi2fax.sh \
@@ -110,11 +110,12 @@ texmf_other_scripts = \
 	authorindex/authorindex \
 	bib2gls/bib2gls.sh \
 	bib2gls/convertgls2bib.sh \
+	bibcop/bibcop.pl \
 	bundledoc/arlatex \
 	bundledoc/bundledoc \
 	cachepic/cachepic.tlu \
 	checkcites/checkcites.lua \
-	citation-style-language/citeproc.lua \
+	citation-style-language/citeproc-lua.lua \
 	chklref/chklref.pl \
 	cjk-gs-integrate/cjk-gs-integrate.pl \
 	clojure-pamphlet/pamphletangler \
@@ -132,6 +133,7 @@ texmf_other_scripts = \
 	ctanupload/ctanupload.pl \
 	de-macro/de-macro \
 	diadia/diadia.lua \
+	digestif/digestif.texlua \
 	dosepsbin/dosepsbin.pl \
 	dviasm/dviasm.py \
 	dviinfox/dviinfox.pl \
@@ -228,7 +230,7 @@ texmf_other_scripts = \
 	texlive/mktexmf \
 	texlive/mktexpk \
 	texlive/mktextfm \
-	texlive/rungs.tlu \
+	texlive/rungs.lua \
 	texlive/tlmgr.pl \
 	texlive/updmap-sys.sh \
 	texlive/updmap-user.sh \
@@ -249,23 +251,9 @@ texmf_other_scripts = \
 	xindex/xindex.lua \
 	yplan/yplan
 
-texmf_context_scripts = \
-	context/stubs/unix/context \
-	context/stubs/unix/contextjit \
-	context/stubs/unix/luatools \
-	context/stubs/unix/mtxrun \
-	context/stubs/unix/mtxrunjit \
-	context/stubs/unix/texexec \
-	context/stubs/unix/texmfstart
-
-EXTRA_DIST += \
-	context/stubs/unix/ctxtools \
-	context/stubs/unix/pstopdf
-
 nobase_dist_texmf_scripts_SCRIPTS = \
 	$(texmf_shell_scripts) \
-	$(texmf_other_scripts) \
-	$(texmf_context_scripts)
+	$(texmf_other_scripts)
 
 ## Symlinks within $(bindir): FILE:LINK here means "ln -s FILE LINK" is done.
 bin_links = \
@@ -304,7 +292,6 @@ bin_links = \
 EXTRA_DIST += ../../../build-aux/relpath
 relpath = $(SHELL) $(top_srcdir)/../../build-aux/relpath
 runscript = $(top_srcdir)/$(WIN_WRAPPER)/runscript.exe
-ctxscript = $(top_srcdir)/$(WIN_WRAPPER)/context/mtxrun.exe
 install-data-hook: installdirs-local
 if WIN32
 	@for s in $(texmf_other_scripts); do \
@@ -314,19 +301,7 @@ if WIN32
 	done
 	$(INSTALL_SCRIPT) $(top_srcdir)/$(WIN_WRAPPER)/runscript.dll $(DESTDIR)$(bindir)
 	$(INSTALL_SCRIPT) $(top_srcdir)/$(WIN_WRAPPER)/runscript.exe $(DESTDIR)$(bindir)
-	$(INSTALL_SCRIPT) $(top_srcdir)/w32_wrapper/runscript.tlu $(DESTDIR)$(bindir)
-	@for s in $(texmf_context_scripts); do \
-	  t=`basename $$s | sed 's,\.[^/]*$$,,' | tr '[A-Z]' '[a-z]'`; \
-	  echo "$(INSTALL_SCRIPT) '$(ctxscript)' '$(DESTDIR)$(bindir)/$$t.exe'"; \
-	  $(INSTALL_SCRIPT) $(ctxscript) $(DESTDIR)$(bindir)/$$t.exe; \
-	done
-	$(INSTALL_SCRIPT) $(top_srcdir)/$(WIN_WRAPPER)/context/mtxrun.dll $(DESTDIR)$(bindir)
-	$(INSTALL_SCRIPT) $(srcdir)/context/stubs/unix/mtxrun $(DESTDIR)$(bindir)/mtxrun.lua
-	@for s in $(bin_links); do \
-	  link=`echo $$s | sed 's,.*:,,'`; \
-	  echo "$(INSTALL_SCRIPT) '$(runscript)' '$(DESTDIR)$(bindir)/$$link.exe'"; \
-	  $(INSTALL_SCRIPT) $(runscript) $(DESTDIR)$(bindir)/$$link.exe || exit 1; \
-	done
+	$(INSTALL_SCRIPT) $(top_srcdir)/$(WIN_WRAPPER)/runscript.tlu $(DESTDIR)$(bindir)
 else !WIN32
 ## Name the link as the basename, removing any extension,
 ## except for listings-ext.sh, which is documented as that name.
@@ -392,6 +367,6 @@ endif !WIN32
 ## 
 ## This target is invoked by check-wrapper-consistency (run from cron).
 .PHONY: echo-shell-scripts
-shell_scripts = $(texmf_shell_scripts) $(texmf_context_scripts)
+shell_scripts = $(texmf_shell_scripts)
 echo-shell-scripts:
 	@echo $(shell_scripts)

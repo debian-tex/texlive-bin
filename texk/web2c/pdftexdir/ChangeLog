@@ -1,3 +1,143 @@
+2023-03-09  Karl Berry  <karl@tug.org>
+
+	* TL'23 release.
+
+2023-02-21  Phelype Oleinik  <phelype.oleinik@latex-project.org>
+
+	* pdftex.web: reduce memory usage for \special shipout,
+	a la HH/luatex.
+
+2023-02-14  Thanh Han The  <hanthethanh@gmail.com>
+
+	* writet1.c (cs_mark) <CS_SEAC>: look for the composite(d) glyphs too,
+	to include in /CharSet. Original report from John Lienhard
+	for Lucida: https://tug.org/pipermail/lucida/2023-February/000922.html
+	Also happens with DejaVuSerif: tests/31-CharSet-miss-composite-char.
+	(pdftex r902)
+
+2023-02-14  Thanh Han The  <hanthethanh@gmail.com>
+
+	* tounicode.c (set_glyph_unicode): take new glyph_unicode_entry arg.
+	(is_last_byte_valid): new fn.
+	(write_tounicode): stop writing range when last byte of a
+	beginbfrange is no longer valid, that is, >255.
+	Report from Ben JW:
+	  https://tug.org/pipermail/tex-live/2023-February/048845.html
+	and corresponding veraPDF issue:
+	  https://github.com/veraPDF/veraPDF-library/issues/1253#issuecomment-1420125850
+
+2023-02-14  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* wcfname.test:
+	Avoid errors on parallel test processing.
+	Report from Ken Brown.
+
+2023-02-12  Phelype Oleinik <phe.h.o1@gmail.com>
+        and Karl Berry  <karl@freefriends.org>
+
+	* pdftex.web (Implement \.{\\special}): add comments explaining
+	that write_stream(tail):=null is an overflow assignment with the
+	current memory_word structure, and is overwritten in enctex2.ch.
+
+2023-02-11  Thanh Han The  <hanthethanh@gmail.com>
+
+	* pdftex.ch (pdf_font_has_space_char): xmalloc and maintain new array.
+	* pdftex.web (pdf_init_font): update pdf_font_has_space_char array.
+	(pdf_read_dummy_font): use pdf_space_font_name instead of
+	hardwired "dummy-space".
+	(pdf_begin_string): use real space char if pdf_font_has_space_char,
+	else call pdf_insert_interword_space.
+	(pdf_space_font_code): new \pdfspacefont primitive.
+	(Put each ...): define it.
+	(Cases of |print_cmd_chr|...): print it.
+	(Declare act...): switch on it.
+	(Implement \.{\\pdfspacefont}): implement it.
+	(Glob...): declare pdf_space_font_name.
+	(Set init...): initialize it.
+	* pdftex.defines,
+	* ptexlib.h,
+	* mapfile.c (hasspacechar, pdfmaplinesp): new fns.
+	* NEWS: mention new behavior.
+
+2021-02-17  Karl Berry  <karl@tug.org>
+
+        * NEWS,
+        * pdftex_version.h,
+        * pdftex.web (pdftex_revision, pdftex_version_string):
+        version [1.40.]25 for TL23.
+
+2023-12-28  Thanh Han The  <hanthethanh@gmail.com>
+
+	* pdftex.web: use real space char for \pdfinterwordspaceon,
+	but only works for fonts containing the real space char.
+
+2023-01-20  Phelype Oleinik  <phe.h.o1@gmail.com>
+
+	* pdftex.web: implement shipout keyword for delayed expansion
+	with \pdfliteral and \special, like non-\immediate \write.
+	(pdf_out_literal): check for pdf_lateliteral_node.
+	(pdf_special): check for latespecial_node.
+	(latespecial_node): new @d (4)
+	(pdf_lateliteral_node): new @d (pdftex_first_extension_code + 1).
+	(Implement \.{\\special}),
+	(Implement \.{\\pdfliteral}): look for `shipout' keyword.
+	(scan_pdf_ext_late_toks): new procedure.
+	(Display the whatsit) <latespecial_node, <pdf_lateliteral_node>:
+	new cases.
+
+2022-12-28  Thanh Han The  <hanthethanh@gmail.com>
+
+	* pdftex.web (Display the whatsit...) <pdf_dest_node>: indicate
+	if a pdfdest is a struct (pdftex r888). Report from Ulrike Fischer,
+	https://tug.org/pipermail/pdftex/2022-December/009315.html
+
+2022-12-28  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+
+	* wcfname.test, am/pdftex.am:
+	Add tests for file names with UTF-8 characters.
+
+2022-12-21  Thanh Han The  <hanthethanh@gmail.com>
+
+	* pdftex.web (pdf_omit_info_procset_code),
+	(pdf_omit_procset): new parameter \pdfomitprocset.
+	(Put each...): add it.
+	(Generate ProcSet if desired): rename from <Generate ProcSet>;
+	output /ProcSet if the parameter is negative,
+	or if the parameter is zero and we are generating PDF 1.x (not 2.x).
+	Request by Ross,
+	https://tug.org/pipermail/pdftex/2022-December/009310.html
+
+2022-11-30  Thanh Han The  <hanthethanh@gmail.com>
+
+	* pdftex.web (Finish the PDF file): omit call to pdf_print_info
+	if pdf_omit_info_dict = 0. Report from Ulrike,
+	https://tug.org/pipermail/pdftex/2022-November/009308.html
+	(from pdftex r885)
+
+2022-05-23  Thanh Han The  <hanthethanh@gmail.com>
+
+	* writettf.c (ttf_write_OS2): don't complain about v4 of OS/2
+	table, present in GentiumPlus-Regular.ttf, v6.101,
+	released recently. Also, make the complaint about future versions
+	a warning instead of a failure.
+
+2022-04-17  Thanh Han The  <hanthethanh@gmail.com>
+
+	* pdftex.web (pdf_omit_info_dict_code),
+	(pdf_omit_info_dict): new parameter \pdfomitinfodict.
+	(Put each...): add it.
+	(Output the cross-reference stream dictionary),
+	(Output the trailer): omit /Info if parameter is nonzero.
+	Request by Ulrike for the pdf A-4 standard.
+	https://tug.org/pipermail/pdftex/2022-April/009282.html
+
+2022-04-12  Marcel Kr\"uger  <tex@2krueger.de>
+
+	* pdftex.web (Write out resource list): Write forms last,
+	to avoid recursive xforms clobbering |pdfpagegroupval|.
+	https://tug.org/pipermail/pdftex/2022-April/009276.html
+	https://tug.org/pipermail/pdftex/2022-April/009280.html
+
 2022-03-21  Karl Berry  <karl@tug.org>
 
 	* TL'22 release.

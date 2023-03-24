@@ -40,27 +40,18 @@
 
 #define VERSION 1
 #define REVISION 3
-#define PATCHLEVEL 0
+#define PATCHLEVEL 1
 
-#if 0
-#include "rendernative.h" /* rendernative needs gcache_s */
-#else
-extern void nativeInit(void);
-extern void nativeClear(void);
-extern void nativeSetDark(int dark);
-#endif
 #include "error.h"
 #include "basetypes.h"
 #include "format.h"
 #include "get.h"
 #include "hint.h"
 #include "hrender.h"
-
-FILE* hlog;
-jmp_buf error_exit;
+#include "rendernative.h"
 
 /* Error Handling */
-int herror(const char *title, const char *message)
+int hint_error(const char *title, const char *message)
 { fprintf(stderr,"ERROR %s: %s\n",title,message);
   return 0;
 }
@@ -73,35 +64,150 @@ int hmessage(char *title, char *format, ...)
 }
 
 void error_callback(int error, const char* description)
-{ herror("OpenGL",description);
-  longjmp(error_exit,1);
+{ hint_error("OpenGL",description);
+  longjmp(hint_error_exit,1);
 }
 
 GLFWwindow* window;
-int px_h=1024, px_v=768; // size in pixel
-double x_dpi, y_dpi;
 #define SCALE_MIN 0.2
 #define SCALE_NORMAL 1.0
 #define SCALE_MAX 5.0
 double scale=SCALE_NORMAL;
 uint64_t pos; /* position of current page */
 
+
+/* Getting the dpi for a window is not as simple as one might think,
+   because windows might dynamically move between monitors.
+
+
+   To get a list of monitors use:
+   int monitor_count;
+   GLFWmonitor** monitors = glfwGetMonitors(&monitor_count);
+
+   To get notified about connecting or disconnecting of monitors use:
+   glfwSetMonitorCallback(monitor_callback)
+   the callback should refresh the pointer and count returned
+   from  glfwGetMonitors.
+
+   for a monitor, we can get:
+
+   - its physical size:
+   int width_mm, height_mm;
+   glfwGetMonitorPhysicalSize(monitor, &width_mm, &height_mm);
+
+   - its position (upper left) in screen coordinates:
+   int xpos, ypos;
+   glfwGetMonitorPos(monitor, &xpos, &ypos);
+
+   - its video mode:
+   GLFWvidmode* mode = glfwGetVideoMode(monitor);
+ 
+   and through the video mode the mode->width and mode->height
+   in screen coordinates.
+
+   Using this information, we can 
+   - get the area of a monitor by its position width and height
+     in screen coordinates and
+   - convert screen coordinates
+     for the monitor into physical coordinates.
+   
+   To determine the monitor where a window is currently displayed
+   screen coordinates must be used.
+
+   we get the window size in screen coordinates using:
+   int width, height;
+   glfwGetWindowSize(window, &width, &height);
+
+   we get the window position (upper left) in screen coordinates using:
+   int xpos, ypos;
+   glfwGetWindowPos(window, &xpos, &ypos);
+   
+   Matching the window position against the monitor area we can find
+   the monitor on which we have the window position.
+
+   Using the information about the monitor, we can convert the
+   size of the window from screen coordinates to physical sizes.
+
+   To obtain the resolution of a window we use the size of the
+   windows framebuffer, which is in pixels either with
+   int width, height;
+   glfwGetFramebufferSize(window, &width, &height);
+
+   or by getting a notification using:
+   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+
+   void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+   {
+    glViewport(0, 0, width, height);
+   }
+
+*/
+
+/* Monitors */
+static int monitor_count;
+static GLFWmonitor** monitors;
+
+static void monitor_callback(GLFWmonitor* monitor, int event)
+{  monitors=glfwGetMonitors(&monitor_count);
+  if (monitors==NULL || monitor_count==0)
+    error_callback(0,"Unable to find a monitor");
+  LOG("monitors %d\n",monitor_count);
+}
+
+static void init_monitors(void)
+{ monitor_callback(NULL,0);
+  glfwSetMonitorCallback(monitor_callback);
+}
+
+static int m_width, m_height;
+int width_mm, height_mm;
+
+static int find_monitor(int x, int y)
+/* return monitor for screen coordinates (x, y) */
+{ int i;
+  for (i=0; i< monitor_count; i++)
+  {  int mx, my;
+    glfwGetMonitorPos(monitors[i], &mx, &my);
+    if (x>= mx && y >= my ) 
+    { const GLFWvidmode *mode = glfwGetVideoMode(monitors[i]); 	
+      if (x <= mx+mode->width && y<=my+mode->height)
+      { m_width=mode->width; m_height=mode->height;
+        glfwGetMonitorPhysicalSize(monitors[i], &width_mm, &height_mm);
+        LOG("Monitor pos: %d x %d, size: %d x %d, %dmm x %dmm\n",mx,my,m_width,m_height,width_mm, height_mm);
+        return i;
+      }
+    }
+  }
+  return 0;
+}
+
+int px_h=1024, px_v=768; // size in pixel
+double x_dpi, y_dpi;
+
+void set_dpi(GLFWwindow* window, int px, int py)
+{ int wx, wy, ww, wh;
+  glfwGetWindowPos(window, &wx, &wy);
+  glfwGetWindowSize(window, &ww, &wh);
+  find_monitor(wx,wy);
+  x_dpi=25.5*px*m_width/width_mm/ww;
+  y_dpi=25.5*py*m_height/height_mm/wh;
+  LOG("Window pos:  %d x %d, size: %d x %d,  %dpx x %dpx\n",wx, wy,ww,wh,px,py);
+  LOG("dpi: %f x %f\n",x_dpi,y_dpi);
+}
+
 void framebuffer_size_callback(GLFWwindow* window, int w, int h)
 { px_h=w; px_v=h;
   glViewport(0, 0, w, h);
+  set_dpi(window,w,h);
   //LOG("w=%d, h=%d\n",w,h);
   hint_resize(px_h,px_v,scale*x_dpi,scale*y_dpi);
   hint_page();
 }
 
-void getDPI(void)
-{ int widthMM, heightMM;
-  GLFWmonitor* monitor = glfwGetPrimaryMonitor();
-  glfwGetMonitorPhysicalSize(monitor, &widthMM, &heightMM);
-  const GLFWvidmode* mode = glfwGetVideoMode(monitor);
-  x_dpi = mode->width / (widthMM / 25.4);
-  y_dpi = mode->height / (heightMM / 25.4);
-  //LOG("xdpi=%f, ydpi=%f\n",x_dpi,y_dpi);
+void init_dpi(GLFWwindow* window)
+{ int px,py;
+  glfwGetFramebufferSize(window, &px, &py);
+  set_dpi(window,px,py);
 }
 
 void hint_unmap(void)
@@ -147,10 +253,81 @@ static int new_file_time(void)
   return 0;
 }
 
+
+static int set_hin_name(char *fn)
+{  size_t sl;
+  if (hin_name!=NULL) { free(hin_name); hin_name=NULL; }
+  { hin_name=malloc(strlen(fn)+1);
+    if (hin_name==NULL)
+    { hint_error("Out of memory for file name", fn);
+      return 0;
+    }
+    strcpy(hin_name,fn);
+  }
+  sl=strlen(hin_name);
+  if (sl>4 && strncmp(hin_name+sl-4,".hnt",4)!=0)
+  {  hint_error("Unknown File Type,I dont know how to open this file", hin_name);
+    return 0;
+  }
+  return 1;
+}
+
+#if (WITH_GTK==2) ||  (WITH_GTK==3)
+#include <gtk/gtk.h>
+
+static int file_chooser(void)
+{ GtkWidget *dialog;
+  GtkFileFilter *filter;
+  gint res;
+
+  if ( !gtk_init_check( NULL, NULL ) )
+  { fprintf(stderr,"ERROR: Unable to initialize GTK\n");
+       return 0;
+  }
+
+  dialog = gtk_file_chooser_dialog_new ("Open File",
+					NULL,/* no parent */
+                                      GTK_FILE_CHOOSER_ACTION_OPEN,
+                                      "_Cancel", GTK_RESPONSE_CANCEL,
+                                      "_Open", GTK_RESPONSE_ACCEPT,
+                                      NULL);
+  
+  filter = gtk_file_filter_new();
+  gtk_file_filter_set_name( filter, "HINT file" );
+  gtk_file_filter_add_pattern( filter, "*.hnt");
+  gtk_file_chooser_add_filter( GTK_FILE_CHOOSER(dialog), filter );
+
+  res = gtk_dialog_run (GTK_DIALOG (dialog));
+  if (res == GTK_RESPONSE_ACCEPT)
+  { char *fn;
+    fn = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
+    res=set_hin_name(fn);
+    g_free (fn);
+  }
+  else
+    res=0;
+  gtk_widget_destroy (dialog);
+  while (gtk_events_pending()) gtk_main_iteration();
+  return res;
+}
+#else
+static int file_chooser(void)
+{ return 0; }
+#endif
+
+
+static int set_input_file(char *fn)
+{ 
+  if (fn!=NULL)
+    return set_hin_name(fn);
+  else  
+    return file_chooser();
+}
+
 int dark = 0, loading=0, autoreload=0, home=0;
 
 int usage(void)
-{    return herror("Usage:", "hintview [options] file\n"
+{    return hint_error("Usage:", "hintview [options] file\n"
 		  "Call 'hintview --help' for details.\n");
 }
 
@@ -174,8 +351,7 @@ int help(void)
 }
 
 int command_line(int argc, char *argv[])
-{ size_t sl;
-  int i;
+{ int i;
   for (i=1; argv[i]!=NULL && argv[i][0]=='-'; i++)
     { switch (argv[i][1])
       { case '-':
@@ -187,6 +363,10 @@ int command_line(int argc, char *argv[])
 	    else
 	      return usage();
 	case 'a': autoreload=1; break;
+        case 'd': 
+          i++; if (argv[i]==NULL) debugflags = -1;
+          else debugflags=strtol(argv[i],NULL,16);
+          break;
         case 'n': dark=1; break;
         case 'o': break;
         case 'z': scale=SCALE_NORMAL; break;
@@ -194,17 +374,9 @@ int command_line(int argc, char *argv[])
         default: return usage();
       }
     }
-  if (argv[i]==NULL)
+  if (!set_input_file(argv[i]))
     return usage();
-  if (hin_name!=NULL) free(hin_name);
-  hin_name=malloc(strlen(argv[i])+1);
-  if (hin_name==NULL)
-    return herror("Out of memory for file name", argv[i]);
-  strcpy(hin_name,argv[i]);
-  sl=strlen(hin_name);
-  if (sl>4 && strncmp(hin_name+sl-4,".hnt",4)!=0)
-    return herror("Unknown File Type,I dont know how to open this file", argv[1]);
-return 1;	
+  return 1;	
 }
 
 GLFWcursor *drag_cursor, *hand_cursor, *arrow_cursor;
@@ -228,7 +400,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     break;
   case CTRL(GLFW_KEY_N):
     dark=!dark;
-    nativeSetDark(dark);
+    hint_dark(dark);
     break;
   case KEY(GLFW_KEY_HOME):
   case CTRL(GLFW_KEY_H):
@@ -265,11 +437,13 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     }
     clear_cursor();
     break;
+  case CTRL(GLFW_KEY_S): /* search */
     break;
-  case CTRL(GLFW_KEY_F): /* find */
+  case CTRL(GLFW_KEY_F): /* file */
+    if (set_input_file(NULL))
+      open_file(home);
     break;
-  case CTRL(GLFW_KEY_O): /* outlines */
-    break;
+   case CTRL(GLFW_KEY_O): /* outlines */
   default:
     // LOG("key %d, scan %d, action %d, mosd %d\n",key, scancode, action, mods);
     break;
@@ -362,7 +536,7 @@ void cursor_enter_callback(GLFWwindow* window, int entered)
 int create_window(void)
 { if( !glfwInit() )
   {
-    herror("GLFW", "Failed to initialize GLFW\n" );
+    hint_error("GLFW", "Failed to initialize GLFW\n" );
     getchar();
     return 0;
   }
@@ -376,7 +550,7 @@ int create_window(void)
   /* Open a window and create its OpenGL context */
   window = glfwCreateWindow( px_h, px_v, "HintView", NULL, NULL);
   if( window == NULL ){
-    herror("GLFW","Failed to open GLFW window.\n"
+    hint_error("GLFW","Failed to open GLFW window.\n"
 	   "If you have an Intel GPU, they are not 3.3 compatible.\n"
 	   "Try the 2.1 version of the tutorials.\n" );
     glfwTerminate();
@@ -391,8 +565,9 @@ int create_window(void)
   hand_cursor = glfwCreateStandardCursor(GLFW_HAND_CURSOR);
   arrow_cursor = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
 
-  getDPI();
- 
+  //getDPI();
+  init_monitors();
+  init_dpi(window);
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
   glfwSetKeyCallback(window, key_callback);
   glfwSetCursorEnterCallback(window,cursor_enter_callback);
@@ -401,13 +576,13 @@ int create_window(void)
 
   glfwSetCursorPos(window, px_h/2, px_v/2);
  
-  nativeInit();
+  hint_render_on();
   return 1;
 }
 
 int main(int argc, char *argv[])
 { hlog=stderr;
-  if (setjmp(error_exit)!=0) return 1;
+  if (setjmp(hint_error_exit)!=0) return 1;
   if (!command_line(argc,argv))
     return 1;
    if (!create_window())
@@ -416,8 +591,7 @@ int main(int argc, char *argv[])
   hint_resize(px_h,px_v,scale*x_dpi,scale*y_dpi);
   if (!open_file(home))
     return 1;
-  hint_page_home();
-  if (setjmp(error_exit)==0)
+  if (setjmp(hint_error_exit)==0)
     do
     { hint_render();
       glfwSwapBuffers(window);

@@ -1,3 +1,129 @@
+2023-02-14  Hironori Kitagawa  <h_kitagawa2001@yahoo.co.jp>
+
+	* tests/fn-generate.perl:
+	Avoid errors on parallel test processing.
+	Report from Ken Brown.
+
+2023-02-13  Karl Berry  <karl@freefriends.org>
+
+	* enctexdir/enctex-pdftex.ch: move "\special shipout"
+	change here, from enctex2.ch, so it is not applied to tex (which
+	doesn't have it).
+
+2023-02-12  Phelype Oleinik <phe.h.o1@gmail.com>
+        and Karl Berry  <karl@freefriends.org>
+
+	* enctexdir/enctex2.ch: make parallel change for ``late''
+	\special shipout. This code is what avoids the invalid
+	write_stream(tail):=null assignment in the original code.
+	See pdftex.web (Implement \.{\\special}) for more.
+
+2023-01-28  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+
+	* Makefile.in, ac/web2c.ac (ptex, uptex):
+	Revert options --enable-(u)ptex(-synctex) for configure.
+	By default, we do not build binaries of (u)pTeX (ptex, uptex)
+	and we use alias of e-upTeX (eptex, euptex) for them.
+	https://github.com/texjporg/tex-jp-build/issues/32
+
+2023-01-15  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+
+	* configure.ac, ac/web2c.ac (ptex, uptex):
+	Remove binaries of (u)pTeX (ptex, uptex). Now we use alias
+	of e-upTeX (eptex, euptex) for (u)pTeX (ptex, uptex).
+	https://github.com/texjporg/tex-jp-build/issues/32
+
+2023-01-08  Andreas Scherer  <https://ascherer.github.io>
+
+	* cwebboot.cin: C++ has removed 'register' storage class.
+
+2022-12-28  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+
+	* tests/fn-generate.perl, tests/fn-{utf8,euc,sjis}.txt,
+	Makefile.in:
+	Tests for file names with wide characters & {pdf,Xe,p,up}TeX.
+
+2022-09-28  Karl Berry  <karl@freefriends.org>
+
+	* tex.ch (halting_on_error_p): new variable, set when we start to
+	halt_on_error, and exit immediately if seen again.
+	* mf.ch: likewise.
+	(The cause is that close_files_and_terminate tries to close out
+	the dvi file nicely, which includes figuring out the
+	magnification, so if the magnification is already set, there's a
+	"recursive" error, which caused an infloop.)
+	Report from Bachir Bendrissou, tlsecurity 28 Sep 2022 12:28:10.
+
+2022-09-03  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+
+	* bibtex.ch:
+	Check options before initialization of kpathsearch parameters.
+	This change prevents unwanted looking for texmf.cnf.
+	https://github.com/texjporg/tex-jp-build/issues/145
+	* bibtex.test, tests/enc-u.aux, tests/enc-u{p,u}.bbl:
+	Update tests for ((u)p)BibTeX.
+
+2022-08-22 Luigi Scarso <luigi.scarso@gmail.com>
+
+	* ac/web2c.ac: add potrace as dependency of mflua/mfluajit
+	* Makefile.am: add @POTRACE_RULE@
+	* configure.ac: add KPSE_POTRACE_FLAGS
+
+2022-08-21  Andreas Scherer  <https://ascherer.github.io>
+
+	* ctangleboot.cin,
+	* help.h: New option '+u' for CTANGLE.
+
+2022-08-06  Andreas Scherer  <https://ascherer.github.io>
+
+	* weave.ch: Rewrite 'squash' to match description in section 148.
+
+2022-07-16  Karl Berry  <karl@freefriends.org>
+
+	* tex.ch (25.369, <Suppress expansion ...>): disallow
+	\noexpand\endwrite, else we get a seg fault because of fetching
+	mem[null]. Fix from drf.
+	Original report: https://tex.stackexchange.com/questions/609423
+	TeX bug entry: https://tug.org/texmfbug/newbug.html#B155endwrite
+
+2022-06-12  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+
+	* texmfmp-help.h ((e)(u)pTeX), help.h ((u)pBibTeX):
+	Support guessing input file encodings.
+	https://github.com/texjporg/tex-jp-build/issues/142
+	* tests/enc-{asc,jis,sjis,euc,utf8{,a,b},amb[012]}.bib,
+	tests/enc{,-[es]}.aux, tests/testfield.bst,
+	tests/enc-{,[es]}[pu].bbl:
+	Add tests for guess encodings & (u)pBibTeX.
+
+2022-06-05  Andreas Scherer  <https://ascherer.github.io>
+
+	* ctangleboot.cin: CWEB 4.8 release.
+
+2022-05-06  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+
+	* bibtex.ch:
+	Apply max_print_line variable in kpathsea to ((u)p)BibTeX.
+	* bibtex.test, tests/exampl.bbl, am/web.am:
+	Update tests for ((u)p)BibTeX.
+
+2022-04-30  Andreas Scherer  <https://ascherer.github.io>
+
+	* weav-twill.ch,
+	* weave.ch: Reshuffle '\title' changes..
+
+2022-04-27  Andreas Scherer  <https://ascherer.github.io>
+
+	* weav-twill.ch: Avoid non-POSIX conflict with Solaris 11.4.
+
+2022-04-06  Andreas Scherer  <https://ascherer.github.io>
+
+	* weav-twill.ch: My name is 'twill'.
+
+2022-03-27  Andreas Scherer  <https://ascherer.github.io>
+
+	* help.h: TWILL has a third file argument.
+
 2022-03-21  Karl Berry  <karl@tug.org>
 
 	* TL'22 release.

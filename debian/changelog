@@ -8,6 +8,8 @@ texlive-bin (2023.20230311.66589-1) UNRELEASED; urgency=medium
     - Add libpotrace-dev
     - Replace libfontconfig1-dev by libfontconfig-dev
   * Fix / Add Lintian Overrides.
+  * Split luajit based binaries into texlive-binaries-sse2 to make
+    TL usable on non sse2 capable CPU's at all (Closes: #1035461).
 
  -- Hilmar Preusse <hille42@web.de>  Wed, 22 Mar 2023 11:28:12 +0100
 

@@ -4,6 +4,8 @@
 export SHELL=/bin/bash
 export CONFIG_SHELL=/bin/bash
 
+export DEBIANTMP=debian/tmp
+
 # this ships out the test logs when a test failed, set it in any case
 export VERBOSE=1
 
@@ -153,7 +155,7 @@ override_dh_auto_configure-indep:
 	# Nothing to do here
 
 override_dh_auto_install-arch:
-	dh_auto_install -- DESTDIR=$(CURDIR)/debian/tmp
+	dh_auto_install -- DESTDIR=$(CURDIR)/$(DEBIANTMP)
 
 override_dh_auto_install-indep:
 	# Nothing to do here
@@ -161,13 +163,13 @@ override_dh_auto_install-indep:
 override_dh_install-arch:
 	# remove .la files which we do not install, so that dh_install
 	# can work with --fail-missing
-	rm -f debian/tmp/usr/lib/*.la debian/tmp/usr/lib/*/*.la
+	rm -f $(DEBIANTMP)/usr/lib/*.la $(DEBIANTMP)/usr/lib/*/*.la
 	# mv c-auto.h into arch-dependent include path
-	mkdir -p debian/tmp/usr/include/$(DEB_HOST_MULTIARCH)/kpathsea
-	mv debian/tmp/usr/include/kpathsea/c-auto.h \
-	 	debian/tmp/usr/include/$(DEB_HOST_MULTIARCH)/kpathsea/
-	dh_install --sourcedir=$(CURDIR)/debian/tmp
-	dh_missing --sourcedir=$(CURDIR)/debian/tmp --fail-missing
+	mkdir -p $(DEBIANTMP)/usr/include/$(DEB_HOST_MULTIARCH)/kpathsea
+	mv $(DEBIANTMP)/usr/include/kpathsea/c-auto.h \
+		$(DEBIANTMP)/usr/include/$(DEB_HOST_MULTIARCH)/kpathsea/
+	dh_install --sourcedir=$(CURDIR)/$(DEBIANTMP)
+	dh_missing --sourcedir=$(CURDIR)/$(DEBIANTMP) --fail-missing
 
 execute_after_dh_install-arch:
 	# replace xdvi wrapper shell script with perl variant to
@@ -185,6 +187,10 @@ execute_after_dh_install-arch:
 		dviluatex platex-dev uplatex-dev xelatex-dev amstex ; do \
 	  rm debian/texlive-binaries/usr/share/man/man1/$$i.1* ; \
 	done
+	#
+	# Remove luajit* binaries from texlive-binaries
+	rm -f debian/texlive-binaries/usr/bin/*luajit*
+	rm -f debian/texlive-binaries/usr/share/man/man*/*luajit*
 	#
 	# remove tex4ht links, they are shipped with tl-htmlxml
 	for i in ht htcontext htlatex htmex httex httexi htxelatex htxetex mk4ht xhlatex ; do \

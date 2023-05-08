@@ -1,0 +1,66 @@
+From ad8702a45e317fa9d396ef4d50467c37964a9543 Mon Sep 17 00:00:00 2001
+From: Luigi Scarso <luigi.scarso@gmail.com>
+Date: Fri, 31 Mar 2023 20:15:48 +0000
+Subject: [PATCH] Bump to version 1.16.1; bugfix for setpdforigin()  (A.
+ Matthias)
+
+git-svn-id: svn://tug.org/texlive/trunk/Build/source@66717 c570f23f-e606-0410-a88d-b1316a301751
+---
+ texk/web2c/luatexdir/ChangeLog           | 5 ++++-
+ texk/web2c/luatexdir/lua/lpdflib.c       | 2 +-
+ texk/web2c/luatexdir/luatex.c            | 4 ++--
+ texk/web2c/luatexdir/luatex_svnversion.h | 2 +-
+ 4 files changed, 8 insertions(+), 5 deletions(-)
+
+diff --git a/texk/web2c/luatexdir/ChangeLog b/texk/web2c/luatexdir/ChangeLog
+index 868f64cc33..27fbebcbb0 100644
+--- a/texk/web2c/luatexdir/ChangeLog
++++ b/texk/web2c/luatexdir/ChangeLog
+@@ -1,5 +1,8 @@
++2023-03-30  Luigi Scarso <luigi.scarso@gmail.com> 
++    * bugfix for setpdforigin()  (A. Matthias) 
++
+ 2023-02-22  Luigi Scarso <luigi.scarso@gmail.com> 
+-    *  fix latelua data reference (side effect of deferred late additions) (H.Hagen)
++    * fix latelua data reference (side effect of deferred late additions) (H.Hagen)
+ 
+ 2023-02-18  Luigi Scarso <luigi.scarso@gmail.com> 
+     * Fixed the "Invalid unicode ranges in CMap beginbfrange operator bug" as in pdfTeX (Hàn Thế Thành)
+diff --git a/texk/web2c/luatexdir/lua/lpdflib.c b/texk/web2c/luatexdir/lua/lpdflib.c
+index 70fbde76bb..263fd56444 100644
+--- a/texk/web2c/luatexdir/lua/lpdflib.c
++++ b/texk/web2c/luatexdir/lua/lpdflib.c
+@@ -1048,7 +1048,7 @@ static int setpdforigin(lua_State * L)
+     if (lua_type(L, 1) == LUA_TNUMBER) {
+         h = (int) lua_roundnumber(L, 1);
+         if (lua_type(L, 2) == LUA_TNUMBER) {
+-            v = (int) lua_roundnumber(L, 1);
++            v = (int) lua_roundnumber(L, 2);
+         } else {
+             v = h;
+         }
+diff --git a/texk/web2c/luatexdir/luatex.c b/texk/web2c/luatexdir/luatex.c
+index c11b0ca628..40eaa2a116 100644
+--- a/texk/web2c/luatexdir/luatex.c
++++ b/texk/web2c/luatexdir/luatex.c
+@@ -33,8 +33,8 @@
+ */
+ 
+ int luatex_version = 116;
+-int luatex_revision = '0';
+-const char *luatex_version_string = "1.16.0";
++int luatex_revision = '1';
++const char *luatex_version_string = "1.16.1";
+ const char *engine_name = my_name;
+ 
+ #include <kpathsea/c-ctype.h>
+diff --git a/texk/web2c/luatexdir/luatex_svnversion.h b/texk/web2c/luatexdir/luatex_svnversion.h
+index 257aec7189..76d929807b 100644
+--- a/texk/web2c/luatexdir/luatex_svnversion.h
++++ b/texk/web2c/luatexdir/luatex_svnversion.h
+@@ -1,4 +1,4 @@
+ #ifndef luatex_svn_revision_h
+ #define luatex_svn_revision_h
+-#define luatex_svn_revision 7567
++#define luatex_svn_revision 7569
+ #endif

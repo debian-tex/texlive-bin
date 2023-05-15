@@ -3,6 +3,8 @@ texlive-bin (2023.20230311.66589-1) UNRELEASED; urgency=medium
   * New upstream snapshot made for TL 2023.
     - Remove sources of dvisvgm from orig.tar.xz, we don't build
       it anyways.
+    - New luatex version, fixes issues with discretionaries when
+      priorities are used (Closes: #1018206).
     - Refresh / Disable patches.
   * Fix BD:
     - Add libpotrace-dev

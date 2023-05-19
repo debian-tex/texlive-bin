@@ -13,3 +13,4 @@ b20034c3cf23f813a70cb60de8e1761a443f5fbf.patch
 #spelling_in_binaries
 bad-whatis-entry_xml2pmx.1
 wrong-manual-section_axohelp.1
+CVE-2023-32700.patch

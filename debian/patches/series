@@ -23,3 +23,4 @@ axohelp_man.diff
 upstream-xdvi-shell-escape
 upstream-svn58283-disable-pipe-write18
 upstream-svn58292-various-luatex-sec-fixes
+CVE-2023-32700.patch

@@ -23,4 +23,3 @@ gftodvi_man.patch
 # patches from upstream
 t4ht-correct-expansion
 dvisvgm-fix-missing-libs
-9216833a3888a4105a18e8c349f65b045ddb1079.patch

@@ -2,7 +2,8 @@ Source: texlive-bin
 Section: tex
 Priority: optional
 Maintainer: Debian TeX Maintainers <debian-tex-maint@lists.debian.org>
-Uploaders: Norbert Preining <preining@debian.org>
+Uploaders: Norbert Preining <preining@debian.org>,
+    Hilmar Preusse <hille42@web.de>
 Build-Depends:
   autoconf (>= 2.69),
   automake (>= 1:1.13.1),

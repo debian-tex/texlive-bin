@@ -9,17 +9,12 @@ debian-builtin-searchpath
 debian-no-tl-scripts
 debian-remove-unneeded-x-libs-linking
 debian-fix-quote-in-quote
-# from here on upstream patches
-#disable-seetex-stdin-tests
 debian-SDE-docs-in-tex-etex-manpage
 fix-maxpathlen-hurd
-# disabled for now
-#poppler-0.64
-# to be sent upstream at some point
 freetype-use-pkg-config
 disdvi_man.patch
 dv2dt_man.patch
 gftodvi_man.patch
-# patches from upstream
 t4ht-correct-expansion
 dvisvgm-fix-missing-libs
+CVE-2023-32700.patch

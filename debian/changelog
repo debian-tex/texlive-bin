@@ -1,8 +1,9 @@
 texlive-bin (2020.20200327.54578-7+deb11u1) bullseye-security; urgency=high
 
+  * Non-maintainer upload by the Security Team.
   * Fix improperly secured shell-escape in LuaTeX (CVE-2023-32700)
 
- -- Hilmar Preusse <hille42@web.de>  Fri, 19 May 2023 14:18:38 +0200
+ -- Salvatore Bonaccorso <carnil@debian.org>  Thu, 18 May 2023 11:50:03 +0200
 
 texlive-bin (2020.20200327.54578-7) unstable; urgency=medium
 

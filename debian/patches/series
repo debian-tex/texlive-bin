@@ -18,4 +18,4 @@ gftodvi_man.patch
 t4ht-correct-expansion
 dvisvgm-fix-missing-libs
 CVE-2023-32700.patch
-9216833a3888a4105a18e8c349f65b045ddb1079.patch
+CVE-2019-18604.patch

@@ -1,9 +1,14 @@
-texlive-bin (2018.20181218.49446-1+deb10u2) UNRELEASED; urgency=medium
+texlive-bin (2018.20181218.49446-1+deb10u2) buster-security; urgency=high
 
-  * Add patch for CVE-2019-18604.
-  * Add me to uploaders.
+  * Non-maintainer upload by the LTS team.
+  * It was discovered that the patch to fix CVE-2023-32700 was incomplete and
+    caused an error when running the lualatex command. (Closes: #1036891)
+    Thanks to Philippe SWARTVAGHER for the report.
+  * Fix CVE-2019-18604:
+    A flaw was found in axohelp in axodraw2. The sprintf function is mishandled
+    which may cause a stack overflow error.
 
- -- Hilmar Preusse <hille42@web.de>  Sun, 21 May 2023 00:06:22 +0200
+ -- Markus Koschany <apo@debian.org>  Wed, 31 May 2023 19:01:19 +0200
 
 texlive-bin (2018.20181218.49446-1+deb10u1) buster-security; urgency=high
 

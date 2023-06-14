@@ -15,3 +15,4 @@ bad-whatis-entry_xml2pmx.1
 wrong-manual-section_axohelp.1
 ad8702a45e317fa9d396ef4d50467c37964a9543.patch
 6ace460233115bd42b36e63c7ddce11cc92a1ebd.patch
+syntax_error_luatex_man

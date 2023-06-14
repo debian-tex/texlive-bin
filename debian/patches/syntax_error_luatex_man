@@ -1,0 +1,101 @@
+From: Bjarni Ingi Gislason <bjarniig@simnet.is>
+Date: Wed, 14 Jun 2023 11:42:29 +0200
+Forwarded: Not done, could be done
+Subject: Fix syntax errors in luatex manual page.
+
+--- a/texk/web2c/man/luatex.man	2023-06-14 04:02:56.000000000 +0000
++++ b/texk/web2c/man/luatex.man	2023-06-14 04:23:51.000000000 +0000
+@@ -5,10 +5,11 @@
+ .if t .ds TX \fRT\\h'-0.1667m'\\v'0.20v'E\\v'-0.20v'\\h'-0.125m'X\fP
+ .if n .ds TX TeX
+ .if n .ds WB Web
+-.if t .ds WB W\s-2EB\s0
++.if t .ds WB W\s-2EB\s+2
+ .\"=====================================================================
+ .SH NAME
+-luatex, dviluatex, luahbtex, luajittex, texlua, texluac \- An extended version of TeX using Lua as an embedded scripting language
++luatex, dviluatex, luahbtex, luajittex, texlua, texluac \- \
++An extended version of TeX using Lua as an embedded scripting language
+ .\"=====================================================================
+ .SH SYNOPSIS
+ .B luatex
+@@ -44,8 +45,9 @@ interpret all non\-option arguments as a
+ 
+ Alternatively, if the first non\-option argument begins with a \fB&\fR,
+ the
+-next word is taken as the \fIFMT\fR to read, overriding all else. Any
+-remaining arguments are processed as above.
++next word is taken as the \fIFMT\fR to read,
++overriding all else.
++Any remaining arguments are processed as above.
+ 
+ If no arguments or options are specified, prompt for input.
+ 
+@@ -68,7 +70,7 @@ the \*(TX engine.
+ In \fIPDF\fR mode, Lua\*(TX can natively handle the \fIPDF\fR, \fIJPG\fR,
+ \fIJBIG2\fR, and \fIPNG\fR graphics formats.  Lua\*(TX cannot include
+ PostScript or Encapsulated PostScript (EPS) graphics files; first convert
+-them to PDF using \fBepstopdf\fR (1).
++them to PDF using \fBepstopdf\fR(1).
+ 
+ The luajittex variant includes the Lua just-in-time compiler.
+ 
+@@ -79,11 +81,14 @@ instead of Lua\*(TX's built-in shaper.
+ .SH "OPTIONS"
+ When the Lua\*(TX executable starts, it looks for the \fB\-\-lua\fR
+ command-line option.
+-If there is no \fB\-\-lua\fR option, the command line is interpreted in a
+-similar fashion as in traditional pdf\*(TX and Aleph. But if the option
+-is present, Lua\*(TX will enter an alternative mode of command-line parsing
+-in comparison to the standard web2c programs. The presence of \fB--lua\fR
+-makes most of other options unreliable, because the lua initialization
++If there is no \fB\-\-lua\fR option,
++the command line is interpreted in a
++similar fashion as in traditional pdf\*(TX and Aleph.
++But if the option is present,
++Lua\*(TX will enter an alternative mode of command-line parsing
++in comparison to the standard web2c programs.
++The presence of \fB\-\-lua\fR makes most of other options unreliable,
++because the lua initialization
+ file can disable kpathsea and/or hook functions into various callbacks.
+ .ig
+ Here is the list of possibly affected switches/functionality, and why:
+@@ -95,16 +100,21 @@ The lua initialization file.
+ The following two options alter the executable behaviour:
+ .TP
+ .B \-\-luaonly
+-Start Lua\*(TX as a Lua interpreter. In this mode, it will set Lua's
+-\fIarg[0]\fR to the found script name, pushing preceding options in
++Start Lua\*(TX as a Lua interpreter.
++In this mode,
++it will set Lua's \fIarg[0]\fR to the found script name,
++pushing preceding options in
+ negative values and the rest of the command line in the positive values,
+-just like the Lua interpreter. Lua\*(TX will exit immediately after
+-executing the specified Lua script.
++just like the Lua interpreter.
++Lua\*(TX will exit immediately after executing the specified Lua script.
+ .TP
+-.BI \-\-luaconly
+-Start Lua\*(TX as a Lua byte compiler. In this mode, Lua\*(TX is exactly
+-like \fBluac\fR from the standalone Lua distribution, except that it
+-does not have the \fB\-l\fR switch, and that it accepts (but ignores)
++.B \-\-luaconly
++Start Lua\*(TX as a Lua byte compiler.
++In this mode,
++Lua\*(TX is exactly
++like \fBluac\fR from the standalone Lua distribution,
++except that it does not have the \fB\-l\fR switch,
++and that it accepts (but ignores)
+ the \fB\-\-luaconly\fR switch.
+ .PP
+ Then the regular web2c options:
+@@ -190,7 +200,6 @@ or \fItfm\fR.
+ .B \-\-nosocket
+ Disable the luasocket (network) library.
+ .TP
+-.TP
+ .BI "\-\-output\-comment=" STRING
+ In \fIDVI\fR mode, use \fISTRING\fR for the \fIDVI\fR file comment
+ instead of the date.  This option is ignored in\fIPDF\fR mode.
+

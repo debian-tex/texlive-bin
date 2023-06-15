@@ -6,7 +6,8 @@ texlive-bin (2023.20230311.66589-1) UNRELEASED; urgency=medium
     - New luatex version
       + Fixes issues with discretionaries when priorities are used
         (Closes: #1018206).
-      * Contains fix for CVE-2023-32668 (Closes: #1036470).
+      + Contains fix for CVE-2023-32668 (Closes: #1036470), add Breaks
+        statement for old context.
     - Refresh / Disable patches.
   * Fix BD:
     - Add libpotrace-dev

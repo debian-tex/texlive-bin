@@ -55,7 +55,7 @@ Depends: libptexenc1 (>= ${source:Version}),
 Recommends: texlive-base, dvisvgm
 Replaces: ptex-bin, mendexk, jmpost, luatex (<< 2014), gregorio (<= 2.3-1), texlive-extra-utils (<< 2020.20200329), texlive-luatex (<< 2020.20200329)
 Conflicts: mendexk, makejvf, jmpost
-Breaks: texlive-base (<< 2021), luatex (<< 2014), gregorio (<= 2.3-1), texlive-extra-utils (<< 2020.20200329), texlive-luatex (<< 2020.20200329)
+Breaks: texlive-base (<< 2021), luatex (<< 2014), gregorio (<= 2.3-1), texlive-extra-utils (<< 2020.20200329), texlive-luatex (<< 2020.20200329), context (<= 2021.03.05.20230120+dfsg-1)
 Provides: texlive-base-bin, makejvf, mendexk, jmpost, luatex
 Description: Binaries for TeX Live
  This package contains all the binaries of TeX Live packages.

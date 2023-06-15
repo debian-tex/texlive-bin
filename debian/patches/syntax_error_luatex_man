@@ -1,6 +1,6 @@
 From: Bjarni Ingi Gislason <bjarniig@simnet.is>
 Date: Wed, 14 Jun 2023 11:42:29 +0200
-Forwarded: Not done, could be done
+Forwarded: http://tracker.luatex.org/view.php?id=1025
 Subject: Fix syntax errors in luatex manual page.
 
 --- a/texk/web2c/man/luatex.man	2023-06-14 04:02:56.000000000 +0000

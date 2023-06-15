@@ -2,7 +2,8 @@ texlive-bin (2022.20220321.62855-5.1+deb12u1) UNRELEASED; urgency=medium
 
   * Stop building *jit* binaries on i386 based arches to make TL installable
     on computers not supporting sse2 (Closes: #1035461).
-  * Add patch for CVE-2023-32668 (Closes: #1036470).
+  * Add patch for CVE-2023-32668: disable socket in luatex by default
+    (Closes: #1036470).
 
  -- Hilmar Preusse <hille42@web.de>  Mon, 12 Jun 2023 23:19:18 +0200
 

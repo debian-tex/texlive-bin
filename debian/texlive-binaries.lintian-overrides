@@ -5,12 +5,14 @@ texlive-binaries: embedded-library poppler [usr/bin/pdftex]
 texlive-binaries: embedded-library poppler [usr/bin/pdftosrc]
 texlive-binaries: no-manual-page [usr/bin/etex]
 #texlive-binaries: no-manual-page usr/bin/gregorio
-texlive-binaries: no-manual-page [usr/bin/luajithbtex]
+# Moved to texlive-binaries-sse2
+#texlive-binaries: no-manual-page [usr/bin/luajithbtex]
 #texlive-binaries: no-manual-page usr/bin/mflua
 # #970746
 texlive-binaries: no-manual-page [usr/bin/mflua-nowin]
-texlive-binaries: no-manual-page [usr/bin/mfluajit]
-texlive-binaries: no-manual-page [usr/bin/mfluajit-nowin]
+# Moved to texlive-binaries-sse2
+#texlive-binaries: no-manual-page [usr/bin/mfluajit]
+#texlive-binaries: no-manual-page [usr/bin/mfluajit-nowin]
 #texlive-binaries: no-manual-page usr/bin/mfplain
 #texlive-binaries: no-manual-page usr/bin/omfonts
 #texlive-binaries: no-manual-page usr/bin/pbibtex

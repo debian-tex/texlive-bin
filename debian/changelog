@@ -1,3 +1,10 @@
+texlive-bin (2022.20220321.62855-7) unstable; urgency=medium
+
+  * Don't build the libtexluajit* packages on *i386*; texlive-binaries must
+    not depend on them. This fixes build failure on *i386* (Closes: #1039963).
+
+ -- Hilmar Preusse <hille42@web.de>  Fri, 30 Jun 2023 12:14:36 +0200
+
 texlive-bin (2022.20220321.62855-6) unstable; urgency=medium
 
   * Stop building *jit* binaries on i386 based arches to make TL installable

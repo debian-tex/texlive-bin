@@ -1,0 +1,52 @@
+--- a/utils/axodraw2/axodraw2-src/axohelp.1	2023-06-29 23:48:04.000000000 +0000
++++ b/utils/axodraw2/axodraw2-src/axohelp.1	2023-06-29 23:56:06.000000000 +0000
+@@ -1,7 +1,7 @@
+ .TH "axohelp" 1 "5 Mar 2021" ""
+ .SH NAME
+-axohelp - helper program for use of LaTeX package axodraw2 with
+-pdflatex. 
++axohelp \- helper program for use of LaTeX package axodraw2 with
++pdflatex.
+ .SH SYNOPSIS
+ .B axohelp [options] [filename]
+ .SH DESCRIPTION
+@@ -19,24 +19,25 @@ draw the desired graphics.
+ 
+ The files processed are specified as follows: When the filename on the
+ command line is of the form file.ax1, then the input file is file.ax1
+-and the output file is file.ax2. If the filename on the command line
+-does not have extension .ax1, then this extension is appended.
++and the output file is file.ax2.
++If the filename on the command line does not have extension .ax1,
++then this extension is appended.
+ 
+ 
+ .SH OPTIONS
+-Options can be introduced by single or double hyphen characters. The
+-possible options are:
++Options can be introduced by single or double hyphen characters.
++The possible options are:
+ 
+ .TP
+-.B -h, --help
++.B \-h, \-\-help
+ Gives usage information
+ 
+ .TP
+-.B -v, --version
++.B \-v, \-\-version
+ Gives version information
+ 
+ .TP
+-.B -V
++.B \-V
+ NOT CURRENTLY IMPLEMENTED: Give information on each function used.
+ 
+ .SH AUTHOR
+@@ -45,4 +46,4 @@ Jos Vermaseren (username t68 at nikhef d
+ 
+ The released version can be obtained from CTAN:
+ <http://www.ctan.org/pkg/axodraw2/>, and an author's website
+-<https://www.nikhef.nl/~form/maindir/others/axodraw2/axodraw2.html>.
++<https://www.nikhef.nl/\s+3~\s-3form/maindir/others/axodraw2/axodraw2.html>.
+

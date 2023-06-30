@@ -13,7 +13,12 @@ texlive-bin (2023.20230311.66589-1) UNRELEASED; urgency=medium
     - Add libpotrace-dev
     - Replace libfontconfig1-dev by libfontconfig-dev
   * Fix / Add Lintian Overrides.
-  * Add syntax fixes for luatex.1 (Closes: #1037553).
+  * Add syntax fixes for:
+    - luatex.1 (Closes: #1037553).
+    - bibtex.original.1 (Closes: #1039975).
+    - detex.1 (Closes: #1039976).
+    - kpsewhich.1 (Closes: #1039977)
+    - axohelp.1 (Closes: #1039978)
   * Split luajit based binaries into texlive-binaries-sse2 to make
     TL usable on non sse2 capable CPU's at all (Closes: #1035461).
 

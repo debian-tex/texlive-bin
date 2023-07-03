@@ -1,4 +1,4 @@
-texlive-bin (2023.20230311.66589-1) UNRELEASED; urgency=medium
+texlive-bin (2023.20230311.66589-1) experimental; urgency=medium
 
   * New upstream snapshot made for TL 2023.
     - Remove sources of dvisvgm from orig.tar.xz, we don't build
@@ -22,7 +22,7 @@ texlive-bin (2023.20230311.66589-1) UNRELEASED; urgency=medium
   * Split luajit based binaries into texlive-binaries-sse2 to make
     TL usable on non sse2 capable CPU's at all (Closes: #1035461).
 
- -- Hilmar Preusse <hille42@web.de>  Wed, 22 Mar 2023 11:28:12 +0100
+ -- Hilmar Preusse <hille42@web.de>  Mon, 03 Jul 2023 22:57:44 +0200
 
 texlive-bin (2022.20220321.62855-5) unstable; urgency=medium
 

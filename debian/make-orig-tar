@@ -100,5 +100,4 @@ find $verstr -name \.github -exec rm -rf '{}' \;
 find $verstr -name autom4te.cache -exec rm -rf '{}' \;
 
 echo "packing up"
-tar -cJf $pkgstr.orig.tar.xz $verstr
-
+tar -cJf ${pkgstr}+ds.orig.tar.xz $verstr

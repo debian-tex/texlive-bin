@@ -1,0 +1,24 @@
+From be0377afd9573be47495ac97be42ecc4dae5f0a2 Mon Sep 17 00:00:00 2001
+From: Luigi Scarso <luigi.scarso@gmail.com>
+Date: Sat, 30 Jul 2022 20:41:39 +0000
+Subject: [PATCH] Backtrack replace pointer when successive disc in exceptions
+ (H. Hagen)
+
+---
+ source/texk/web2c/luatexdir/ChangeLog           | 3 +++
+ source/texk/web2c/luatexdir/lang/texlang.c      | 1 +
+ source/texk/web2c/luatexdir/luatex_svnversion.h | 2 +-
+ 3 files changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/source/texk/web2c/luatexdir/lang/texlang.c b/source/texk/web2c/luatexdir/lang/texlang.c
+index f9e53bbba..a0d067251 100644
+--- a/texk/web2c/luatexdir/lang/texlang.c
++++ b/texk/web2c/luatexdir/lang/texlang.c
+@@ -705,6 +705,7 @@ static void do_exception(halfword wordstart, halfword r, char *replacement)
+             /*tex check if we have two exceptions in a row */
+             if (uword[i + 1] == '{') {
+                 i--;
++t = alink(t);
+             }
+         } else {
+             t = vlink(t);

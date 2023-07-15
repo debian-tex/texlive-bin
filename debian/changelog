@@ -6,7 +6,7 @@ texlive-bin (2023.20230311.66589-1) experimental; urgency=medium
     - New luatex version
       + Fixes issues with discretionaries when priorities are used
         (Closes: #1018206).
-      + Contains fix for CVE-2023-32668 (Closes: #1036470), add Breaks
+      + Contains fix for CVE-2023-32668 (Closes: #1041149), add Breaks
         statement for old context.
     - Refresh / Disable patches.
   * Fix BD:
@@ -20,7 +20,7 @@ texlive-bin (2023.20230311.66589-1) experimental; urgency=medium
     - kpsewhich.1 (Closes: #1039977)
     - axohelp.1 (Closes: #1039978)
   * Split luajit based binaries into texlive-binaries-sse2 to make
-    TL usable on non sse2 capable CPU's at all (Closes: #1035461).
+    TL usable on non sse2 capable CPU's at all (Closes: #1041148).
 
  -- Hilmar Preusse <hille42@web.de>  Mon, 03 Jul 2023 22:57:44 +0200
 

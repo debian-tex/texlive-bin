@@ -13,6 +13,7 @@ texlive-bin (2023.20230311.66589-1) experimental; urgency=medium
     - Add libpotrace-dev
     - Replace libfontconfig1-dev by libfontconfig-dev
   * Fix / Add Lintian Overrides.
+  * Convert d/copyright into DEP5.
   * Add syntax fixes for:
     - luatex.1 (Closes: #1037553).
     - bibtex.original.1 (Closes: #1039975).

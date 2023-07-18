@@ -20,10 +20,8 @@ texlive-bin (2023.20230311.66589-1) experimental; urgency=medium
     - detex.1 (Closes: #1039976).
     - kpsewhich.1 (Closes: #1039977)
     - axohelp.1 (Closes: #1039978)
-  * Split luajit based binaries into texlive-binaries-sse2 to make
-    TL usable on non sse2 capable CPU's at all (Closes: #1041148).
 
- -- Hilmar Preusse <hille42@web.de>  Mon, 03 Jul 2023 22:57:44 +0200
+ -- Hilmar Preusse <hille42@web.de>  Tue, 18 Jul 2023 23:21:48 +0200
 
 texlive-bin (2022.20220321.62855-5) unstable; urgency=medium
 

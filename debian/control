@@ -49,6 +49,9 @@ Depends: libptexenc1 (>= ${source:Version}),
   libsynctex2 (<< ${source:Version}.1~),
   libtexlua53-5 (>= ${source:Version}),
   libtexlua53-5 (<< ${source:Version}.1~),
+  libtexluajit2 (>= ${source:Version}) [amd64 armel armhf hurd-i386 i386 kfreebsd-amd64 kfreebsd-i386 powerpc],
+  libtexluajit2 (<< ${source:Version}.1~) [amd64 armel armhf hurd-i386 i386 kfreebsd-amd64 kfreebsd-i386 powerpc],
+  sse2-support [i386],
   t1utils, tex-common, perl:any,
   ${shlibs:Depends}, ${misc:Depends}
 Recommends: texlive-base, dvisvgm
@@ -59,41 +62,12 @@ Breaks: texlive-base (<< 2021), luatex (<< 2014), gregorio (<= 2.3-1),
     texlive-extra-utils (<< 2020.20200329), texlive-luatex (<< 2020.20200329),
     context (<= 2021.03.05.20230120+dfsg-1)
 Provides: texlive-base-bin, makejvf, mendexk, jmpost, luatex
-Suggests: texlive-binaries-sse2
 Description: Binaries for TeX Live
  This package contains all the binaries of TeX Live packages.
  .
  Note that this package alone has hardly any functionality.  Rather,
  choose the texlive-* packages you want to use, e.g.
  texlive-latex-recommended or context
-
-Package: texlive-binaries-sse2
-Architecture: any
-Multi-Arch: foreign
-Depends: libptexenc1 (>= ${source:Version}),
-  libptexenc1 (<< ${source:Version}.1~),
-  libkpathsea6 (>= ${source:Version}),
-  libkpathsea6 (<< ${source:Version}.1~),
-  libsynctex2 (>= ${source:Version}),
-  libsynctex2 (<< ${source:Version}.1~),
-  libtexlua53-5 (>= ${source:Version}),
-  libtexlua53-5 (<< ${source:Version}.1~),
-  libtexluajit2 (>= ${source:Version}) [amd64 armel armhf hurd-i386 i386 kfreebsd-amd64 kfreebsd-i386 powerpc],
-  libtexluajit2 (<< ${source:Version}.1~) [amd64 armel armhf hurd-i386 i386 kfreebsd-amd64 kfreebsd-i386 powerpc],
-  sse2-support [i386],
-  t1utils, tex-common, perl:any,
-  ${shlibs:Depends}, ${misc:Depends}, texlive-binaries
-Replaces: texlive-binaries (<= 2022.20220321.62855-5)
-Breaks: texlive-binaries (<= 2022.20220321.62855-5)
-Description: Binaries for TeX Live (the JIT part)
- This package contains all the binaries of TeX Live packages.
- .
- Note that this package alone has hardly any functionality.  Rather,
- choose the texlive-* packages you want to use, e.g.
- texlive-latex-recommended or context
- .
- This package contains the luajit binaries, which run only on sse2
- capable CPU's.
 
 Package: libkpathsea6
 Section: libs

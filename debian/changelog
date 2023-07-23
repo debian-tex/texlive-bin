@@ -1,3 +1,10 @@
+texlive-bin (2022.20220321.62855-8) UNRELEASED; urgency=medium
+
+  * Add patches from upstream for "luatex loses or changes text when
+    discretionaries with priorities are used" (Closes: #1018206).
+
+ -- Hilmar Preusse <hille42@web.de>  Sun, 23 Jul 2023 16:14:55 +0200
+
 texlive-bin (2022.20220321.62855-7) unstable; urgency=medium
 
   * Don't build the libtexluajit* packages on *i386*; texlive-binaries must

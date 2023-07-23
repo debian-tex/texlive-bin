@@ -1,9 +1,9 @@
-texlive-bin (2022.20220321.62855-5.1+deb12u2) UNRELEASED; urgency=medium
+texlive-bin (2022.20220321.62855-5.1+deb12u2) bookworm; urgency=medium
 
   * Add patches from upstream for "luatex loses or changes text when
     discretionaries with priorities are used" (Closes: #1041441).
 
- -- Hilmar Preusse <hille42@web.de>  Thu, 06 Jul 2023 23:29:51 +0200
+ -- Hilmar Preusse <hille42@web.de>  Sun, 23 Jul 2023 20:20:20 +0200
 
 texlive-bin (2022.20220321.62855-5.1+deb12u1) bookworm; urgency=medium
 

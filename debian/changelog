@@ -1,3 +1,10 @@
+texlive-bin (2023.20230311.66589-2) experimental; urgency=medium
+
+  * Add fixes for bibtex(8) to (hopefully) fix build failure on
+    armhf. Bump bibtex-x to version 4.01.
+
+ -- Hilmar Preusse <hille42@web.de>  Mon, 24 Jul 2023 23:48:05 +0200
+
 texlive-bin (2023.20230311.66589-1) experimental; urgency=medium
 
   * New upstream snapshot made for TL 2023.

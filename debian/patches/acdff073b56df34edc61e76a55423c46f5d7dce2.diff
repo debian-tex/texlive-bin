@@ -1,0 +1,700 @@
+--- texlive-bin.orig/texk/bibtex-x/ChangeLog
++++ texlive-bin/texk/bibtex-x/ChangeLog
+@@ -1,3 +1,19 @@
++2023-07-15  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
++
++	* configure.ac, version.h:
++	Bump version to 4.01 (15 jul 2023).
++	* bibtex.{c,h}, bibtex-{1,2,3}.c, utils.c, gblvars.h:
++	Define "max_print_line" by function setup_bound_variable().
++	* bibtex-{1,4}.c:
++	Support characters defined by Unicode 15.0
++	and fix the degrade at 2023-07-08.
++	* bibtex-{2,3}.c, utils.c, sysdep.h:
++	Allow 8-bit/Unicode file names (both on Unix/Linux and Windows).
++	* tests/bibtexu-char.test: Enable test rc=16 again.
++	* tests/bibtex{8,u}.test, tests/bibtex8u-mem.test,
++	caseu.bbl, iscjku.bbl, testcaseu.bib, testiscjku.bib:
++	Update tests.
++
+ 2023-07-09  Karl Berry  <karl@freefriends.org>
+ 
+ 	* tests/bibtexu-char.test (is.knj.str$): test fails (rc=16).
+--- texlive-bin.orig/texk/bibtex-x/bibtex-1.c
++++ texlive-bin/texk/bibtex-x/bibtex-1.c
+@@ -276,7 +276,7 @@
+   END
+   out_buf_length = out_buf_ptr;
+   unbreakable_tail = FALSE;
+-  while ((out_buf_length > MAX_PRINT_LINE) && ! unbreakable_tail)
++  while ((out_buf_length > Max_Print_Line) && ! unbreakable_tail)
+ 
+ /***************************************************************************
+  * WEB section number:	 323
+@@ -292,7 +292,7 @@
+  ***************************************************************************/
+   BEGIN
+     end_ptr = out_buf_length;
+-    out_buf_ptr = MAX_PRINT_LINE;
++    out_buf_ptr = Max_Print_Line;
+     break_pt_found = FALSE;
+     while ((lex_class[out_buf[out_buf_ptr]] != WHITE_SPACE)
+         && (out_buf_ptr >= MIN_PRINT_LINE))
+@@ -313,7 +313,7 @@
+  * point, so we don't break the line (yet).
+  ***************************************************************************/
+     BEGIN
+-      out_buf_ptr = MAX_PRINT_LINE + 1;
++      out_buf_ptr = Max_Print_Line + 1;
+       while (out_buf_ptr < end_ptr)
+       BEGIN
+ #ifdef UTF_8
+@@ -330,7 +330,7 @@
+             case UBLOCK_LATIN_EXTENDED_C:
+             case UBLOCK_LATIN_EXTENDED_D:
+             case UBLOCK_LATIN_EXTENDED_E:
+-#if defined(UBLOCK_LATIN_EXTENDED_G)
++#if defined(U_ICU_VERSION_MAJOR_NUM) && (U_ICU_VERSION_MAJOR_NUM > 69)
+             case UBLOCK_LATIN_EXTENDED_F:
+             case UBLOCK_LATIN_EXTENDED_G:
+ #endif
+@@ -342,6 +342,9 @@
+             case UBLOCK_CYRILLIC_EXTENDED_A:
+             case UBLOCK_CYRILLIC_EXTENDED_B:
+             case UBLOCK_CYRILLIC_EXTENDED_C:
++#if defined(U_ICU_VERSION_MAJOR_NUM) && (U_ICU_VERSION_MAJOR_NUM > 71)
++            case UBLOCK_CYRILLIC_EXTENDED_D:
++#endif
+             case UBLOCK_HANGUL_SYLLABLES:
+               goto Loop1_Exit; /* break line */
+             break;
+--- texlive-bin.orig/texk/bibtex-x/bibtex-2.c
++++ texlive-bin/texk/bibtex-x/bibtex-2.c
+@@ -2203,10 +2203,10 @@
+     if (MIN_PRINT_LINE < 3)
+         bad = 1;
+ 
+-    if (MAX_PRINT_LINE <= MIN_PRINT_LINE)
++    if (Max_Print_Line <= MIN_PRINT_LINE)
+         bad = 10 * bad + 2;
+ 
+-    if (MAX_PRINT_LINE >= Buf_Size)
++    if (Max_Print_Line >= Buf_Size)
+         bad = 10 * bad + 3;
+ 
+     if (Hash_Prime < 128)
+@@ -2393,9 +2393,10 @@
+ /*
+ **  Full 8Bit Support Note [ASIERRA95]:
+ **  BibTeX just must recognize characters greater than 127.
+-**    for (i=128; i<=255; i++)
+-**      xchr [i] = (unsigned char) i;
+ */
++    for (i=128; i<=255; i++)
++      xchr [i] = (unsigned char) i;
++
+ #endif                          /* SUPPORT_8BIT */
+ 
+ /*^^^^^^^^^^^^^^^^^^^^^^^^^^ END OF SECTION 25 ^^^^^^^^^^^^^^^^^^^^^^^^^^^*/
+@@ -2458,13 +2459,10 @@
+     END
+ 
+ #ifdef SUPPORT_8BIT
+-/*
+-**    if (!Flag_7bit)
+-**      for (i=128; i<=LAST_ASCII_CHAR; i++)
+-**      BEGIN
+-**	  xord[xchr[i]] = i;
+-**      END
+-*/
++    for (i=128; i<=LAST_ASCII_CHAR; i++)
++    BEGIN
++        xord[xchr[i]] = i;
++    END
+ #endif                          /* SUPPORT_8BIT */
+ 
+ /*^^^^^^^^^^^^^^^^^^^^^^^^^^ END OF SECTION 28 ^^^^^^^^^^^^^^^^^^^^^^^^^^^*/
+@@ -3779,10 +3777,22 @@
+ 
+   if (f != NULL)
+   BEGIN
++#if defined(WIN32) && defined(KPATHSEA)
++#define  MAX_STR  780
++    unsigned char tmpstr[MAX_STR];
++    int j=0;
++    for (i=str_start[s]; i<=(str_start[s+1] - 1) && j<MAX_STR-1; i++, j++)
++    BEGIN
++      tmpstr[j] = xchr[str_pool[i]];
++    END
++    tmpstr[j] = '\0';
++    FPUTS (tmpstr, f);
++#else
+     for (i=str_start[s]; i<=(str_start[s+1] - 1); i++)
+     BEGIN
+       FPUTC (xchr[str_pool[i]], f);
+     END
++#endif
+   END
+ END
+ /*^^^^^^^^^^^^^^^^^^^^^^^^^^ END OF SECTION 51 ^^^^^^^^^^^^^^^^^^^^^^^^^^^*/
+--- texlive-bin.orig/texk/bibtex-x/bibtex-3.c
++++ texlive-bin/texk/bibtex-x/bibtex-3.c
+@@ -1069,12 +1069,7 @@
+ void          sam_wrong_file_name_print (void)
+ BEGIN
+   FPRINTF (TERM_OUT, "I couldn't open file name `");
+-  name_ptr = 0;
+-  while (name_ptr < name_length)
+-  BEGIN
+-    FPUTC (name_of_file[name_ptr], TERM_OUT);
+-    INCR (name_ptr);
+-  END
++  FPUTS (name_of_file, TERM_OUT);
+   FPRINTF (TERM_OUT, "'\n");
+ END
+ /*^^^^^^^^^^^^^^^^^^^^^^^^^^ END OF SECTION  99 ^^^^^^^^^^^^^^^^^^^^^^^^^^^*/
+--- texlive-bin.orig/texk/bibtex-x/bibtex-4.c
++++ texlive-bin/texk/bibtex-x/bibtex-4.c
+@@ -2818,9 +2818,12 @@
+           case UBLOCK_CJK_UNIFIED_IDEOGRAPHS_EXTENSION_D:
+           case UBLOCK_CJK_UNIFIED_IDEOGRAPHS_EXTENSION_E:
+           case UBLOCK_CJK_UNIFIED_IDEOGRAPHS_EXTENSION_F:
+-#if defined(UBLOCK_CJK_UNIFIED_IDEOGRAPHS_EXTENSION_G)
++#if defined(U_ICU_VERSION_MAJOR_NUM) && (U_ICU_VERSION_MAJOR_NUM > 65)
+           case UBLOCK_CJK_UNIFIED_IDEOGRAPHS_EXTENSION_G:
+ #endif
++#if defined(U_ICU_VERSION_MAJOR_NUM) && (U_ICU_VERSION_MAJOR_NUM > 71)
++          case UBLOCK_CJK_UNIFIED_IDEOGRAPHS_EXTENSION_H:
++#endif
+             string_width |= 0x001;
+             break;
+       /* kana */
+@@ -2828,10 +2831,10 @@
+           case UBLOCK_KATAKANA:
+           case UBLOCK_KATAKANA_PHONETIC_EXTENSIONS:
+           case UBLOCK_KANA_EXTENDED_A:
+-#if defined(UBLOCK_KANA_EXTENDED_B)
++#if defined(U_ICU_VERSION_MAJOR_NUM) && (U_ICU_VERSION_MAJOR_NUM > 69)
+           case UBLOCK_KANA_EXTENDED_B:
+ #endif
+-#if defined(UBLOCK_SMALL_KANA_EXTENSION)
++#if defined(U_ICU_VERSION_MAJOR_NUM) && (U_ICU_VERSION_MAJOR_NUM > 63)
+           case UBLOCK_SMALL_KANA_EXTENSION:
+ #endif
+             string_width |= 0x002;
+--- texlive-bin.orig/texk/bibtex-x/bibtex.c
++++ texlive-bin/texk/bibtex-x/bibtex.c
+@@ -229,9 +229,6 @@
+ BEGIN
+     extern Integer8_T       history;
+     int			    exit_status;
+-#ifdef KPATHSEA
+-    char *mpl;
+-#endif
+ 
+     /*-
+     **------------------------------------------------------------------------
+@@ -261,24 +258,9 @@
+       goto Close_Up_Shop_Label;
+     END
+ 
+-    number_of_command_line_args = argc;
+-    command_line_arg_strings = (char **) argv;
+-
+     history = SPOTLESS;
+     parse_cmd_line (argc, argv);
+ 
+-#ifdef KPATHSEA
+-    kpse_set_program_name(argv[0], PROGNAME);
+-    mpl = kpse_var_value("max_print_line");
+-    if (mpl)
+-    BEGIN
+-        max_print_line = atoi(mpl);
+-        free(mpl);
+-    END
+-    else
+-        max_print_line = 79;  /* default */
+-#endif
+-
+     set_array_sizes ();
+     report_search_paths ();
+ 
+--- texlive-bin.orig/texk/bibtex-x/bibtex.h
++++ texlive-bin/texk/bibtex-x/bibtex.h
+@@ -268,11 +268,7 @@
+  * cites when used with the standard styles.
+  ***************************************************************************/
+ #define MIN_PRINT_LINE              3
+-#ifdef KPATHSEA
+-#define MAX_PRINT_LINE              max_print_line
+-#else
+ #define MAX_PRINT_LINE              79
+-#endif
+ #define AUX_STACK_SIZE              20
+ #define MAX_BIB_FILES               20
+ 
+--- texlive-bin.orig/texk/bibtex-x/configure
++++ texlive-bin/texk/bibtex-x/configure
+@@ -1,6 +1,6 @@
+ #! /bin/sh
+ # Guess values for system-dependent variables and create Makefiles.
+-# Generated by GNU Autoconf 2.71 for extended BibTeX (TeX Live) 4.00.
++# Generated by GNU Autoconf 2.71 for extended BibTeX (TeX Live) 4.01.
+ #
+ # Report bugs to <tex-k@tug.org>.
+ #
+@@ -629,8 +629,8 @@
+ # Identity of this package.
+ PACKAGE_NAME='extended BibTeX (TeX Live)'
+ PACKAGE_TARNAME='extended-bibtex--tex-live-'
+-PACKAGE_VERSION='4.00'
+-PACKAGE_STRING='extended BibTeX (TeX Live) 4.00'
++PACKAGE_VERSION='4.01'
++PACKAGE_STRING='extended BibTeX (TeX Live) 4.01'
+ PACKAGE_BUGREPORT='tex-k@tug.org'
+ PACKAGE_URL=''
+ 
+@@ -1400,7 +1400,7 @@
+   # Omit some internal or obsolete options to make the list less imposing.
+   # This message is too long to be a string in the A/UX 3.1 sh.
+   cat <<_ACEOF
+-\`configure' configures extended BibTeX (TeX Live) 4.00 to adapt to many kinds of systems.
++\`configure' configures extended BibTeX (TeX Live) 4.01 to adapt to many kinds of systems.
+ 
+ Usage: $0 [OPTION]... [VAR=VALUE]...
+ 
+@@ -1472,7 +1472,7 @@
+ 
+ if test -n "$ac_init_help"; then
+   case $ac_init_help in
+-     short | recursive ) echo "Configuration of extended BibTeX (TeX Live) 4.00:";;
++     short | recursive ) echo "Configuration of extended BibTeX (TeX Live) 4.01:";;
+    esac
+   cat <<\_ACEOF
+ 
+@@ -1599,7 +1599,7 @@
+ test -n "$ac_init_help" && exit $ac_status
+ if $ac_init_version; then
+   cat <<\_ACEOF
+-extended BibTeX (TeX Live) configure 4.00
++extended BibTeX (TeX Live) configure 4.01
+ generated by GNU Autoconf 2.71
+ 
+ Copyright (C) 2021 Free Software Foundation, Inc.
+@@ -2280,7 +2280,7 @@
+ This file contains any messages produced by compilers while
+ running configure, to aid debugging if configure makes a mistake.
+ 
+-It was created by extended BibTeX (TeX Live) $as_me 4.00, which was
++It was created by extended BibTeX (TeX Live) $as_me 4.01, which was
+ generated by GNU Autoconf 2.71.  Invocation command line was
+ 
+   $ $0$ac_configure_args_raw
+@@ -8937,7 +8937,7 @@
+ 
+ # Define the identity of the package.
+  PACKAGE='extended-bibtex--tex-live-'
+- VERSION='4.00'
++ VERSION='4.01'
+ 
+ 
+ # Some tools Automake needs.
+@@ -19141,7 +19141,7 @@
+ Report bugs to <bug-libtool@gnu.org>."
+ 
+ lt_cl_version="\
+-extended BibTeX (TeX Live) config.lt 4.00
++extended BibTeX (TeX Live) config.lt 4.01
+ configured by $0, generated by GNU Autoconf 2.71.
+ 
+ Copyright (C) 2011 Free Software Foundation, Inc.
+@@ -21537,7 +21537,7 @@
+ # report actual input values of CONFIG_FILES etc. instead of their
+ # values after options handling.
+ ac_log="
+-This file was extended by extended BibTeX (TeX Live) $as_me 4.00, which was
++This file was extended by extended BibTeX (TeX Live) $as_me 4.01, which was
+ generated by GNU Autoconf 2.71.  Invocation command line was
+ 
+   CONFIG_FILES    = $CONFIG_FILES
+@@ -21605,7 +21605,7 @@
+ cat >>$CONFIG_STATUS <<_ACEOF || ac_write_fail=1
+ ac_cs_config='$ac_cs_config_escaped'
+ ac_cs_version="\\
+-extended BibTeX (TeX Live) config.status 4.00
++extended BibTeX (TeX Live) config.status 4.01
+ configured by $0, generated by GNU Autoconf 2.71,
+   with options \\"\$ac_cs_config\\"
+ 
+--- texlive-bin.orig/texk/bibtex-x/configure.ac
++++ texlive-bin/texk/bibtex-x/configure.ac
+@@ -8,7 +8,7 @@
+ dnl   gives unlimited permission to copy and/or distribute it,
+ dnl   with or without modifications, as long as this notice is preserved.
+ dnl
+-AC_INIT([extended BibTeX (TeX Live)], [4.00], [tex-k@tug.org])
++AC_INIT([extended BibTeX (TeX Live)], [4.01], [tex-k@tug.org])
+ AC_PREREQ([2.65])
+ AC_CONFIG_SRCDIR([bibtex-1.c])
+ AC_CONFIG_AUX_DIR([../../build-aux])
+--- texlive-bin.orig/texk/bibtex-x/gblvars.h
++++ texlive-bin/texk/bibtex-x/gblvars.h
+@@ -174,9 +174,6 @@
+ __EXTERN__ StrNumber_T                  bst_str;
+ __EXTERN__ BufPointer_T                 buf_ptr1;
+ __EXTERN__ BufPointer_T                 buf_ptr2;
+-#ifdef KPATHSEA
+-__EXTERN__ Integer_T                    max_print_line;
+-#endif
+ 
+ __EXTERN__ Boolean_T                    citation_seen;
+ __EXTERN__ Boolean_T                    cite_found;
+@@ -189,7 +186,6 @@
+ __EXTERN__ StrNumber_T                  cmd_str_ptr;
+ __EXTERN__ BufPointer_T                 comma1;
+ __EXTERN__ BufPointer_T                 comma2;
+-__EXTERN__ Char_T                     **command_line_arg_strings;
+ __EXTERN__ Integer_T                    command_num;
+ __EXTERN__ HashLoc_T                    control_seq_loc;
+ __EXTERN__ Integer8_T                   conversion_type;
+@@ -264,7 +260,6 @@
+ __EXTERN__ FieldLoc_T                   num_pre_defined_fields;
+ __EXTERN__ BufPointer_T                 num_text_chars;
+ __EXTERN__ BufPointer_T                 num_tokens;
+-__EXTERN__ Integer8_T                   number_of_command_line_args;
+ 
+ __EXTERN__ CiteNumber_T                 old_num_cites;
+ __EXTERN__ BufPointer_T                 out_buf_length;
+@@ -467,6 +462,7 @@
+ __EXTERN__ Integer_T                    Max_Cites;
+ __EXTERN__ Integer_T                    Max_Fields;
+ __EXTERN__ Integer_T                    Max_Glob_Strs;
++__EXTERN__ Integer_T                    Max_Print_Line;
+ __EXTERN__ Integer_T                    Max_Strings;
+ __EXTERN__ Integer_T                    Min_Crossrefs;
+ __EXTERN__ Integer_T                    Pool_Size;
+--- texlive-bin.orig/texk/bibtex-x/sysdep.h
++++ texlive-bin/texk/bibtex-x/sysdep.h
+@@ -190,7 +190,13 @@
+ ** Some macros to satisfy ANSI C's strict (for C anyway) type checking.
+ **============================================================================
+ */
++#if defined(WIN32) && defined(KPATHSEA)
++#define FPRINTF                     (void) win32_fprintf
++#define FPUTS                       (void) win32_fputs
++#else
+ #define FPRINTF                     (void) fprintf
++#define FPUTS                       (void) fputs
++#endif
+ #define FPUTC                       (void) fputc
+ #define PRINTF                      (void) printf
+ #define PUTC                        (void) putc
+--- texlive-bin.orig/texk/bibtex-x/tests/bibtex8.test
++++ texlive-bin/texk/bibtex-x/tests/bibtex8.test
+@@ -2,15 +2,46 @@
+ # $Id: bibtex8.test 63257 2022-05-08 13:25:05Z takuji $
+ # Copyright 2017-2023 Karl Berry <tex-live@tug.org>
+ # Copyright 2010 Peter Breitenlohner <tex-live@tug.org>
++# Copyright 2023 TANAKA Takuji <ttk@t-lab.opal.ne.jp>
+ # You may freely use, modify and/or distribute this file.
+ 
+ test -d tests || mkdir -p tests
+-rm -f tests/xexampl.* # different filenames than bibtexu.test
+ 
+-cp $srcdir/../web2c/tests/exampl.aux tests/xexampl.aux || exit 1
++rc=0
++
++rm -f tests/xex*.* # different filenames than bibtexu.test
++
++
++cp $srcdir/../web2c/tests/exampl.aux tests/xexampl.aux || rc=1
+ 
+ TEXMFCNF=$srcdir/../kpathsea \
+   BSTINPUTS=$srcdir/../web2c/tests \
+   BIBINPUTS=$srcdir/../web2c/tests \
+-  ./bibtex8 -7 tests/xexampl || test $? = 1 || exit 1
+-diff $srcdir/tests/exampl.bbl tests/xexampl.bbl || exit 2
++  ./bibtex8 -7 -s -d all tests/xexampl || test $? = 1 || rc=2
++diff $srcdir/tests/exampl.bbl tests/xexampl.bbl || rc=3
++
++
++LC_ALL=C; export LC_ALL; LANGUAGE=C; export LANGUAGE
++TEXMFCNF=$srcdir/../kpathsea
++BSTINPUTS=$srcdir/../web2c/tests
++BIBINPUTS=$srcdir/../web2c/tests
++export TEXMFCNF BSTINPUTS BIBINPUTS
++
++
++cp $srcdir/../web2c/tests/exampl.aux tests/xex_пробный.aux || rc=4
++
++./bibtex8 -7 -s -d io tests/xex_пробный || test $? = 1 || rc=5
++diff $srcdir/tests/exampl.bbl tests/xex_пробный.bbl || rc=6
++
++
++cp $srcdir/../web2c/tests/exampl.aux tests/xex_试验.aux || rc=7
++
++./bibtex8 -7 -s -d io tests/xex_试验 || test $? = 1 || rc=8
++diff $srcdir/tests/exampl.bbl tests/xex_试验.bbl || rc=9
++
++
++## not exist, cause fatal error
++./bibtex8 -d io tests/xex_δίκη || test $? = 1 && rc=10
++
++
++exit $rc
+--- texlive-bin.orig/texk/bibtex-x/tests/bibtex8u-mem.test
++++ texlive-bin/texk/bibtex-x/tests/bibtex8u-mem.test
+@@ -64,14 +64,14 @@
+     TEXMFCNF=$srcdir/../kpathsea \
+     BSTINPUTS=$srcdir/../web2c/tests:$srcdir/csf \
+     BIBINPUTS=./tests \
+-    ./bibtex8 tests/memtest$t || exit 1
++    ./bibtex8 -s tests/memtest$t || exit 1
+ 
+   cp -p tests/memtest$t.aux tests/memtestu$t.aux
+   eval $env \
+     TEXMFCNF=$srcdir/../kpathsea \
+     BSTINPUTS=$srcdir/../web2c/tests:$srcdir/csf \
+     BIBINPUTS=./tests \
+-    ./bibtexu tests/memtestu$t || exit 2
++    ./bibtexu -s tests/memtestu$t || exit 2
+ 
+ done
+ 
+--- texlive-bin.orig/texk/bibtex-x/tests/bibtexu-char.test
++++ texlive-bin/texk/bibtex-x/tests/bibtexu-char.test
+@@ -47,8 +47,8 @@
+ diff $srcdir/tests/nameu.bbl tests/xnameu.bbl || rc=14
+ 
+ ## test for is.knj.str$
+-#cp $srcdir/tests/iscjku.aux tests/xiscjku.aux
+-#./bibtexu tests/xiscjku || rc=15
+-#diff $srcdir/tests/iscjku.bbl tests/xiscjku.bbl || rc=16
++cp $srcdir/tests/iscjku.aux tests/xiscjku.aux
++./bibtexu tests/xiscjku || rc=15
++diff $srcdir/tests/iscjku.bbl tests/xiscjku.bbl || rc=16
+ 
+ exit $rc
+--- texlive-bin.orig/texk/bibtex-x/tests/bibtexu.test
++++ texlive-bin/texk/bibtex-x/tests/bibtexu.test
+@@ -2,15 +2,46 @@
+ # $Id: bibtexu.test 63257 2022-05-08 13:25:05Z takuji $
+ # Copyright 2017-2023 Karl Berry <tex-live@tug.org>
+ # Copyright 2010 Peter Breitenlohner <tex-live@tug.org>
++# Copyright 2023 TANAKA Takuji <ttk@t-lab.opal.ne.jp>
+ # You may freely use, modify and/or distribute this file.
+ 
+ test -d tests || mkdir -p tests
+-rm -f tests/uexampl.* # different filenames than bibtex8.test
+ 
+-cp $srcdir/../web2c/tests/exampl.aux tests/uexampl.aux || exit 1
++rc=0
++
++rm -f tests/uex*.* # different filenames than bibtex8.test
++
++
++cp $srcdir/../web2c/tests/exampl.aux tests/uexampl.aux || rc=1
+ 
+ TEXMFCNF=$srcdir/../kpathsea \
+   BSTINPUTS=$srcdir/../web2c/tests \
+   BIBINPUTS=$srcdir/../web2c/tests \
+-  ./bibtexu tests/uexampl || test $? = 1 || exit 1
+-diff $srcdir/tests/exampl.bbl tests/uexampl.bbl || exit 2
++  ./bibtexu -s -d all tests/uexampl || test $? = 1 || rc=2
++diff $srcdir/tests/exampl.bbl tests/uexampl.bbl || rc=3
++
++
++LC_ALL=C; export LC_ALL; LANGUAGE=C; export LANGUAGE
++TEXMFCNF=$srcdir/../kpathsea
++BSTINPUTS=$srcdir/../web2c/tests
++BIBINPUTS=$srcdir/../web2c/tests
++export TEXMFCNF BSTINPUTS BIBINPUTS
++
++
++cp $srcdir/../web2c/tests/exampl.aux tests/uex_пробный.aux || rc=4
++
++./bibtexu -s -d io tests/uex_пробный || test $? = 1 || rc=5
++diff $srcdir/tests/exampl.bbl tests/uex_пробный.bbl || rc=6
++
++
++cp $srcdir/../web2c/tests/exampl.aux tests/uex_试验.aux || rc=7
++
++./bibtexu -s -d io tests/uex_试验 || test $? = 1 || rc=8
++diff $srcdir/tests/exampl.bbl tests/uex_试验.bbl || rc=9
++
++
++## not exist, cause fatal error
++./bibtexu -d io tests/uex_δίκη || test $? = 1 && rc=10
++
++
++exit $rc
+--- texlive-bin.orig/texk/bibtex-x/tests/caseu.bbl
++++ texlive-bin/texk/bibtex-x/tests/caseu.bbl
+@@ -12,14 +12,14 @@
+ \item[u] ABC HIJ XYZ ABC HIJ XYZ {ACE} {ace}
+ \item[l] abc hij xyz abc hij xyz {ACE} {ace}
+ \item[t] Abc hij xyz abc hij xyz {ACE} {ace}
++\item[~] ŌŎŒ ŖŦŲ ŴŶŸ ŹŻŽ ōŏœ ŗŧų ŵŷÿ źżž
++\item[u] ŌŎŒ ŖŦŲ ŴŶŸ ŹŻŽ ŌŎŒ ŖŦŲ ŴŶŸ ŹŻŽ
++\item[l] ōŏœ ŗŧų ŵŷÿ źżž ōŏœ ŗŧų ŵŷÿ źżž
++\item[t] Ōŏœ ŗŧų ŵŷÿ źżž ōŏœ ŗŧų ŵŷÿ źżž
+ \item[~] SS S ß s
+ \item[u] SS S SS S
+ \item[l] ss s ß s
+ \item[t] Ss s ß s
+-\item[~] ŊŌŎ ŲŴŶ Ÿ ŹŻŽ ŋōŏ ųŵŷ ÿ źżž
+-\item[u] ŊŌŎ ŲŴŶ Ÿ ŹŻŽ ŊŌŎ ŲŴŶ Ÿ ŹŻŽ
+-\item[l] ŋōŏ ųŵŷ ÿ źżž ŋōŏ ųŵŷ ÿ źżž
+-\item[t] Ŋōŏ ųŵŷ ÿ źżž ŋōŏ ųŵŷ ÿ źżž
+ \item[~] ΑΒΓ ΠΡ ΣΤ ΧΨΩΪ αβγ πρ στ χψωϊ {ΑΠΣ} {απσ}
+ \item[u] ΑΒΓ ΠΡ ΣΤ ΧΨΩΪ ΑΒΓ ΠΡ ΣΤ ΧΨΩΪ {ΑΠΣ} {απσ}
+ \item[l] αβγ πρ στ χψωϊ αβγ πρ στ χψωϊ {ΑΠΣ} {απσ}
+--- texlive-bin.orig/texk/bibtex-x/tests/iscjku.bbl
++++ texlive-bin/texk/bibtex-x/tests/iscjku.bbl
+@@ -52,7 +52,9 @@
+ \item ㄅㄆㄇㄈㄦㄧㄨㄩ: 8 8 hz:0 kn:0 hg:0 bp:8 misc:0
+ \item ㆠㆡㆢㆣㆤㆥㆦㆧ: 8 8 hz:0 kn:0 hg:0 bp:8 misc:0
+ \item 一二三四漆捌玖拾: 1 1 hz:1 kn:0 hg:0 bp:0 misc:0
++\item 𰀀𰀁𰀂𰀃𰀄𰀅𰀆𰀇: 1 1 hz:1 kn:0 hg:0 bp:0 misc:0
+ \item 𪜀𪜁𪜂𪜃𪜄𪜅𪜆𪜇: 1 1 hz:1 kn:0 hg:0 bp:0 misc:0
++\item 𱍐𱍑𱍒𱍓𱍔𱍕𱍖𱍗: 1 1 hz:1 kn:0 hg:0 bp:0 misc:0
+ \item 㐂㒵㓛㞍㟢㐆㐬㐮㔫㚑㐧: 1 1 hz:1 kn:0 hg:0 bp:0 misc:0
+ \item ⺐⺒⺓⺔⺖⺗⺘⺙⻭⻯⻲: 2048 2048 hz:0 kn:0 hg:0 bp:0
+   misc:2048
+--- texlive-bin.orig/texk/bibtex-x/tests/testcaseu.bib
++++ texlive-bin/texk/bibtex-x/tests/testcaseu.bib
+@@ -11,7 +11,7 @@
+ }
+ 
+ @Type{latin-extA2,
+-  field	  = {ŊŌŎ ŲŴŶ Ÿ ŹŻŽ ŋōŏ ųŵŷ ÿ źżž},
++  field	  = {ŌŎŒ ŖŦŲ ŴŶŸ ŹŻŽ ōŏœ ŗŧų ŵŷÿ źżž},
+ }
+ 
+ @Type{latin-SharpS,
+--- texlive-bin.orig/texk/bibtex-x/tests/testiscjku.bib
++++ texlive-bin/texk/bibtex-x/tests/testiscjku.bib
+@@ -21,6 +21,8 @@
+ @Type{cjk-ideograph-ExtB-1000, field = {櫛杓𦥑𠮟𠀋𡈽𥝱𡚴}, }
+ @Type{cjk-compatibility-ideograph-1000, field = {豈更車賈滑串句龜}, }
+ @Type{cjk-ideograph-ExtC-1000, field = {𪜀𪜁𪜂𪜃𪜄𪜅𪜆𪜇}, }
++@Type{cjk-ideograph-ExtG-1000, field = {𰀀𰀁𰀂𰀃𰀄𰀅𰀆𰀇}, }
++@Type{cjk-ideograph-ExtH-1000, field = {𱍐𱍑𱍒𱍓𱍔𱍕𱍖𱍗}, }
+ 
+ @Type{hangul-1000, field = {가나다라마한글텍}, }
+ 
+--- texlive-bin.orig/texk/bibtex-x/utils.c
++++ texlive-bin/texk/bibtex-x/utils.c
+@@ -121,7 +121,7 @@
+ 
+ #include <stdarg.h>
+ #ifdef WIN32
+-#if !defined(_MSC_VER)
++#if !defined(KPATHSEA)
+ #include <getopt.h>
+ #endif
+ #else
+@@ -135,10 +135,8 @@
+ #include <kpathsea/paths.h>
+ #include <kpathsea/variable.h>
+ #include <kpathsea/lib.h>
+-#if !defined(WIN32) || defined(_MSC_VER)
+ #include <kpathsea/getopt.h>
+ #endif
+-#endif
+ 
+ #include "sysdep.h"
+ #include "bibtex.h"
+@@ -148,6 +146,12 @@
+ #include "utils.h"
+ #include "version.h"
+ 
++#if defined(WIN32) && defined(KPATHSEA)
++#undef fopen
++#define fopen fsyscp_fopen
++#undef vfprintf
++#define vfprintf win32_vfprintf
++#endif
+ 
+ /*
+ ** Useful macros to keep the code nicely formatted.
+@@ -1126,6 +1130,22 @@
+         }                       /* end switch (c) */
+     }                           /* end while (1) */
+ 
++#ifdef KPATHSEA
++    kpse_set_program_name(argv[0], PROGNAME);
++
++#ifdef WIN32
++    {
++        int ac;
++        char **av, *enc;
++
++        enc = kpse_var_value("command_line_encoding");
++        if (get_command_line_args_utf8(enc, &ac, &av)) {
++            argc = ac;
++            argv = av;
++        }
++    }
++#endif
++#endif
+ 
+     /*
+     ** Check that a single .aux file was specified.
+@@ -1213,7 +1233,7 @@
+         LOG_CAPACITY (Max_Cites);
+         LOG_CAPACITY (Max_Fields);
+         LOG_CAPACITY (Max_Glob_Strs);
+-        LOG_CAPACITY (MAX_PRINT_LINE);
++        LOG_CAPACITY (Max_Print_Line);
+         LOG_CAPACITY (Max_Strings);
+         LOG_CAPACITY (Min_Crossrefs);
+         LOG_CAPACITY (MIN_PRINT_LINE);
+@@ -1284,7 +1304,7 @@
+ **============================================================================
+ */
+ static void setup_bound_variable (Integer_T *var, const char *name,
+-                                  unsigned long def_value)
++                                  unsigned long def_value, unsigned long min_value)
+ {
+ #ifdef KPATHSEA
+     char *expansion = kpse_var_value (name);
+@@ -1295,11 +1315,12 @@
+     const char *me = PROGNAME;
+     const char *src = "";
+ #endif
++    int threshold = min_value ? min_value : def_value;
+ 
+     *var = def_value;
+     if (expansion) {
+         int conf_val = atoi (expansion);
+-        if (conf_val < def_value)
++        if (conf_val < threshold)
+             fprintf (stderr,
+             "%s: Bad value (%ld) in environment%s for %s, keeping %ld.\n",
+             me, (long) conf_val, src, name, def_value);
+@@ -1322,9 +1343,10 @@
+ */
+ static void setup_params (void)
+ {
+-    setup_bound_variable (&Ent_Str_Size, "ent_str_size", ENT_STR_SIZE);
+-    setup_bound_variable (&Glob_Str_Size, "glob_str_size", GLOB_STR_SIZE);
+-    setup_bound_variable (&Max_Strings, "max_strings", MAX_STRINGS);
++    setup_bound_variable (&Ent_Str_Size, "ent_str_size", ENT_STR_SIZE, 0);
++    setup_bound_variable (&Glob_Str_Size, "glob_str_size", GLOB_STR_SIZE, 0);
++    setup_bound_variable (&Max_Strings, "max_strings", MAX_STRINGS, 0);
++    setup_bound_variable (&Max_Print_Line, "max_print_line", MAX_PRINT_LINE, MIN_PRINT_LINE);
+ 
+     /* Obsolete: Max_Strings specified via command line.  */
+     if (Flag_big)
+--- texlive-bin.orig/texk/bibtex-x/version.h
++++ texlive-bin/texk/bibtex-x/version.h
+@@ -89,7 +89,7 @@
+ */
+ #ifndef __VERSION_H__
+ # define __VERSION_H__              1
+-# define PACKAGE_DATE               "(22 may 2022)"
++# define PACKAGE_DATE               "(15 jul 2023)"
+ # define EXT_VERSION                PACKAGE_VERSION
+ # define VERSION                    PACKAGE_VERSION " " PACKAGE_DATE
+ #endif                          /* __VERSION_H__ */

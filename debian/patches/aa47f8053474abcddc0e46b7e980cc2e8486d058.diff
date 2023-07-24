@@ -1,0 +1,61 @@
+--- texlive-bin.orig/texk/bibtex-x/ChangeLog
++++ texlive-bin/texk/bibtex-x/ChangeLog
+@@ -1,3 +1,10 @@
++2023-04-12  Karl Berry  <karl@freefriends.org>
++
++	* tests/bibtex8.test,
++	* tests/bibtexu.test: use different basenames for the
++	different bibtex programs. Hoping to fix report of sporadic
++	failures from Werner Fink, 12 Apr 2023 12:46:56.
++
+ 2023-04-10  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+ 
+ 	* tests/substr[au].bbl, tests/testsubstr.bst:
+--- texlive-bin.orig/texk/bibtex-x/tests/bibtex8.test
++++ texlive-bin/texk/bibtex-x/tests/bibtex8.test
+@@ -1,17 +1,16 @@
+ #! /bin/sh -vx
+ # $Id: bibtex8.test 63257 2022-05-08 13:25:05Z takuji $
+-# Copyright 2017 Karl Berry <tex-live@tug.org>
++# Copyright 2017-2023 Karl Berry <tex-live@tug.org>
+ # Copyright 2010 Peter Breitenlohner <tex-live@tug.org>
+ # You may freely use, modify and/or distribute this file.
+ 
+ test -d tests || mkdir -p tests
+-rm -f tests/xexampl.*
++rm -f tests/xexampl.* # different filenames than bibtexu.test
+ 
+-cp $srcdir/../web2c/tests/exampl.aux tests/xexampl.aux
++cp $srcdir/../web2c/tests/exampl.aux tests/xexampl.aux || exit 1
+ 
+ TEXMFCNF=$srcdir/../kpathsea \
+   BSTINPUTS=$srcdir/../web2c/tests \
+   BIBINPUTS=$srcdir/../web2c/tests \
+   ./bibtex8 -7 tests/xexampl || test $? = 1 || exit 1
+ diff $srcdir/tests/exampl.bbl tests/xexampl.bbl || exit 2
+-
+--- texlive-bin.orig/texk/bibtex-x/tests/bibtexu.test
++++ texlive-bin/texk/bibtex-x/tests/bibtexu.test
+@@ -1,17 +1,16 @@
+ #! /bin/sh -vx
+ # $Id: bibtexu.test 63257 2022-05-08 13:25:05Z takuji $
+-# Copyright 2017 Karl Berry <tex-live@tug.org>
++# Copyright 2017-2023 Karl Berry <tex-live@tug.org>
+ # Copyright 2010 Peter Breitenlohner <tex-live@tug.org>
+ # You may freely use, modify and/or distribute this file.
+ 
+ test -d tests || mkdir -p tests
+-rm -f tests/xexampl.*
++rm -f tests/uexampl.* # different filenames than bibtex8.test
+ 
+-cp $srcdir/../web2c/tests/exampl.aux tests/xexampl.aux
++cp $srcdir/../web2c/tests/exampl.aux tests/uexampl.aux || exit 1
+ 
+ TEXMFCNF=$srcdir/../kpathsea \
+   BSTINPUTS=$srcdir/../web2c/tests \
+   BIBINPUTS=$srcdir/../web2c/tests \
+-  ./bibtexu tests/xexampl || test $? = 1 || exit 1
+-diff $srcdir/tests/exampl.bbl tests/xexampl.bbl || exit 2
+-
++  ./bibtexu tests/uexampl || test $? = 1 || exit 1
++diff $srcdir/tests/exampl.bbl tests/uexampl.bbl || exit 2

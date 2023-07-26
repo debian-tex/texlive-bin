@@ -1,0 +1,5 @@
+texlive-binaries-sse2: no-manual-page [usr/bin/luajithbtex]
+texlive-binaries-sse2: no-manual-page [usr/bin/mfluajit-nowin]
+texlive-binaries-sse2: no-manual-page [usr/bin/mfluajit]
+texlive-binaries-sse2: no-manual-page [usr/bin/texluajit]
+texlive-binaries-sse2: no-manual-page [usr/bin/texluajitc]

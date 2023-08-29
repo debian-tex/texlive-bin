@@ -191,7 +191,7 @@ Description: TeX Live: Lua 5.3, modified for use with LuaTeX (development part)
 
 Package: libtexluajit2
 Section: libs
-Architecture: amd64 armel armhf hurd-i386 i386 kfreebsd-amd64 kfreebsd-i386 powerpc
+Architecture: amd64 armel armhf hurd-i386 i386 powerpc
 Multi-Arch: same
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Pre-Depends: ${misc:Pre-Depends}
@@ -200,7 +200,7 @@ Description: TeX Live: LuaJIT, modified for use with LuaJITTeX
 
 Package: libtexluajit-dev
 Section: libdevel
-Architecture: amd64 armel armhf hurd-i386 i386 kfreebsd-amd64 kfreebsd-i386 powerpc
+Architecture: amd64 armel armhf hurd-i386 i386 powerpc
 Multi-Arch: same
 Depends: ${misc:Depends}, libtexluajit2 (= ${binary:Version})
 Description: TeX Live: LuaJIT, modified for use with LuaJITTeX (development part)

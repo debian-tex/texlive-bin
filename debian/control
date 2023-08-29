@@ -83,8 +83,8 @@ Depends: libptexenc1 (>= ${source:Version}),
   sse2-support [i386],
   t1utils, tex-common, perl:any,
   ${shlibs:Depends}, ${misc:Depends}, texlive-binaries
-Replaces: texlive-binaries (<= 2023.20230311.66589-2)
-Breaks: texlive-binaries (<= 2023.20230311.66589-2)
+Replaces: texlive-binaries (<= 2023.20230311.66589-3)
+Breaks: texlive-binaries (<= 2023.20230311.66589-3)
 Description: Binaries for TeX Live (the JIT part)
  This package contains all the binaries of TeX Live packages.
  .

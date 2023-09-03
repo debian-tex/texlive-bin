@@ -1,3 +1,10 @@
+texlive-bin (2023.20230311.66589-4) unstable; urgency=medium
+
+  * Add "Breaks: texlive-formats-extra (<< 2023.20230613)" to make
+    sure hitex reads a fixed file hiplainpage.tex (Closes: #1041508).
+
+ -- Hilmar Preusse <hille42@web.de>  Sun, 03 Sep 2023 08:54:53 +0200
+
 texlive-bin (2023.20230311.66589-3) unstable; urgency=medium
 
   * Upload to unstable.

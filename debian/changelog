@@ -1,3 +1,11 @@
+texlive-bin (2023.20230311.66589-5) unstable; urgency=medium
+
+  * Split luajit based binaries into texlive-binaries-sse2 to make
+    TL usable on non-sse2 capable CPU's at all (Closes: #1041148).
+  * Remove kfreebsd* from LuaJIT arches.
+
+ -- Hilmar Preusse <hille42@web.de>  Sat, 09 Sep 2023 11:57:07 +0200
+
 texlive-bin (2023.20230311.66589-4) unstable; urgency=medium
 
   * Add "Breaks: texlive-formats-extra (<< 2023.20230613)" to make

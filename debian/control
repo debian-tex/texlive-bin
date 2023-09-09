@@ -49,12 +49,10 @@ Depends: libptexenc1 (>= ${source:Version}),
   libsynctex2 (<< ${source:Version}.1~),
   libtexlua53-5 (>= ${source:Version}),
   libtexlua53-5 (<< ${source:Version}.1~),
-  libtexluajit2 (>= ${source:Version}) [amd64 armel armhf hurd-i386 i386 kfreebsd-amd64 kfreebsd-i386 powerpc],
-  libtexluajit2 (<< ${source:Version}.1~) [amd64 armel armhf hurd-i386 i386 kfreebsd-amd64 kfreebsd-i386 powerpc],
-  sse2-support [i386],
   t1utils, tex-common, perl:any,
   ${shlibs:Depends}, ${misc:Depends}
 Recommends: texlive-base, dvisvgm
+Suggests: texlive-binaries-sse2
 Replaces: ptex-bin, mendexk, jmpost, luatex (<< 2014), gregorio (<= 2.3-1),
     texlive-extra-utils (<< 2020.20200329), texlive-luatex (<< 2020.20200329)
 Conflicts: mendexk, makejvf, jmpost
@@ -68,6 +66,34 @@ Description: Binaries for TeX Live
  Note that this package alone has hardly any functionality.  Rather,
  choose the texlive-* packages you want to use, e.g.
  texlive-latex-recommended or context
+
+Package: texlive-binaries-sse2
+Architecture: any
+Multi-Arch: foreign
+Depends: libptexenc1 (>= ${source:Version}),
+  libptexenc1 (<< ${source:Version}.1~),
+  libkpathsea6 (>= ${source:Version}),
+  libkpathsea6 (<< ${source:Version}.1~),
+  libsynctex2 (>= ${source:Version}),
+  libsynctex2 (<< ${source:Version}.1~),
+  libtexlua53-5 (>= ${source:Version}),
+  libtexlua53-5 (<< ${source:Version}.1~),
+  libtexluajit2 (>= ${source:Version}) [amd64 armel armhf hurd-i386 i386 powerpc],
+  libtexluajit2 (<< ${source:Version}.1~) [amd64 armel armhf hurd-i386 i386 powerpc],
+  sse2-support [i386],
+  t1utils, tex-common, perl:any,
+  ${shlibs:Depends}, ${misc:Depends}, texlive-binaries
+Replaces: texlive-binaries (<= 2023.20230311.66589-4)
+Breaks: texlive-binaries (<= 2023.20230311.66589-4)
+Description: Binaries for TeX Live (the JIT part)
+ This package contains all the binaries of TeX Live packages.
+ .
+ Note that this package alone has hardly any functionality.  Rather,
+ choose the texlive-* packages you want to use, e.g.
+ texlive-latex-recommended or context
+ .
+ This package contains the luajit binaries, which run only on sse2
+ capable CPU's.
 
 Package: libkpathsea6
 Section: libs
@@ -165,7 +191,7 @@ Description: TeX Live: Lua 5.3, modified for use with LuaTeX (development part)
 
 Package: libtexluajit2
 Section: libs
-Architecture: amd64 armel armhf hurd-i386 i386 kfreebsd-amd64 kfreebsd-i386 powerpc
+Architecture: amd64 armel armhf hurd-i386 i386 powerpc
 Multi-Arch: same
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Pre-Depends: ${misc:Pre-Depends}
@@ -174,7 +200,7 @@ Description: TeX Live: LuaJIT, modified for use with LuaJITTeX
 
 Package: libtexluajit-dev
 Section: libdevel
-Architecture: amd64 armel armhf hurd-i386 i386 kfreebsd-amd64 kfreebsd-i386 powerpc
+Architecture: amd64 armel armhf hurd-i386 i386 powerpc
 Multi-Arch: same
 Depends: ${misc:Depends}, libtexluajit2 (= ${binary:Version})
 Description: TeX Live: LuaJIT, modified for use with LuaJITTeX (development part)

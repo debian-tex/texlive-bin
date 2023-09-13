@@ -1,8 +1,14 @@
-# poppler >= 0.62 is necessary for building TeX Live
-# As soon as poppler is updated in unstable the system library will
-# be used for compilation.
+# TL upstream stopped using poppler to get pdf support in pdftex
+# and pdftosrc. Instead they use the shipped xpdf "library". The
+# configure option "--with-system-xpdf" does not do anything.
+# https://tug.org/pipermail/tex-live/2023-September/049457.html ff.
 texlive-binaries: embedded-library poppler [usr/bin/pdftex]
 texlive-binaries: embedded-library poppler [usr/bin/pdftosrc]
+# The old, non-hinted Lintian syntax is required because FTP Masters
+# is running an older version of Lintian.  The following 2 lines can be
+# removed at some point in the future.
+texlive-binaries: embedded-library usr/bin/pdftex: poppler
+texlive-binaries: embedded-library usr/bin/pdftosrc: poppler
 texlive-binaries: no-manual-page [usr/bin/etex]
 #texlive-binaries: no-manual-page usr/bin/gregorio
 # Moved to texlive-binaries-sse2

@@ -82,7 +82,7 @@ override_dh_autoreconf-indep:
 #
 # poppler is used two times in TeX Live:
 # once for pdftex/xetex
-# once for luatex
+# once for luatex -> obsolete, luatex uses pplib
 # - the pdftex/xetex version is controlled via --with-system-xpdf
 # - the luatex version is controlled via --with-system-poppler
 #
@@ -92,6 +92,12 @@ override_dh_autoreconf-indep:
 #	--with-system-poppler			\
 #	--with-system-xpdf			\
 #
+# Status as of 20230913
+# TL upstream stopped using poppler to get pdf support in pdftex
+# and pdftosrc. Instead they use the shipped xpdf "library". The
+# configure option "--with-system-xpdf" does not do anything.
+# https://tug.org/pipermail/tex-live/2023-September/049457.html ff.
+
 # disable-largefile seems to break omegafonts, as they core dump
 # leave it as is for now and see what else pops up
 #	--disable-largefile			\

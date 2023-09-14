@@ -68,8 +68,8 @@ Description: Binaries for TeX Live
  texlive-latex-recommended or context
 
 Package: texlive-binaries-sse2
-Architecture: any
-Multi-Arch: foreign
+Architecture: amd64 armel armhf hurd-i386 i386 powerpc
+Multi-Arch: same
 Depends: libptexenc1 (>= ${source:Version}),
   libptexenc1 (<< ${source:Version}.1~),
   libkpathsea6 (>= ${source:Version}),

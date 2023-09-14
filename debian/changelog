@@ -1,3 +1,10 @@
+texlive-bin (2023.20230311.66589-6) unstable; urgency=medium
+
+  * Fix Architecture field of the new texlive-binaries-sse2 package.
+    This should fix build failures on systems w/o *jit* binaries.
+
+ -- Hilmar Preusse <hille42@web.de>  Thu, 14 Sep 2023 23:27:32 +0200
+
 texlive-bin (2023.20230311.66589-5) unstable; urgency=medium
 
   * Split luajit based binaries into texlive-binaries-sse2 to make

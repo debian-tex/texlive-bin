@@ -2,6 +2,7 @@ texlive-bin (2023.20230311.66589-7) UNRELEASED; urgency=medium
 
   * Suggest texlive-binaries-sse2 only on arches, where it is
     available.
+  * Add "hintview" to list of suggested package of texlive-binaries.
   * Extend the list of arches, where luajit binaries are available: arm64.
   * Add patch to fix ToUnicode map on Big Endian.
 

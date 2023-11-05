@@ -198,6 +198,10 @@ execute_after_dh_install-arch:
 	rm -f debian/texlive-binaries/usr/bin/*luajit*
 	rm -f debian/texlive-binaries/usr/share/man/man*/*luajit*
 	#
+	# Remove xdvi stuff from texlive-binaries
+	rm -f debian/texlive-binaries/usr/bin/xdvi debian/texlive-binaries/usr/bin/xdvi-xaw
+	rm -f debian/texlive-binaries/usr/share/man/man1/xdvi.1
+	#
 	# remove tex4ht links, they are shipped with tl-htmlxml
 	for i in ht htcontext htlatex htmex httex httexi htxelatex htxetex mk4ht xhlatex ; do \
 	  rm debian/texlive-binaries/usr/bin/$$i ; \

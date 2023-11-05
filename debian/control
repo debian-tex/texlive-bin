@@ -95,6 +95,22 @@ Description: Binaries for TeX Live (the JIT part)
  This package contains the luajit binaries, which run only on sse2
  capable CPU's.
 
+Package: texlive-binaries-xdvi
+Architecture: any
+Multi-Arch: foreign
+Depends: texlive-binaries
+Replaces: ptex-bin, mendexk, jmpost, luatex (<< 2014), gregorio (<= 2.3-1),
+    texlive-extra-utils (<< 2020.20200329), texlive-luatex (<< 2020.20200329)
+Breaks: texlive-base (<< 2021), luatex (<< 2014), gregorio (<= 2.3-1),
+    texlive-extra-utils (<< 2020.20200329), texlive-luatex (<< 2020.20200329),
+    context (<= 2021.03.05.20230120+dfsg-1), texlive-formats-extra (<< 2023.20230613)
+Description: Binaries for TeX Live: xdvi viewer
+ This package provides the xdvi DVI viewer.
+ .
+ Note that this package alone has hardly any functionality.  Rather,
+ choose the texlive-* packages you want to use, e.g.
+ texlive-latex-recommended or context
+
 Package: libkpathsea6
 Section: libs
 Architecture: any

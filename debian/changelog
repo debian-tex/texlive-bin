@@ -1,9 +1,10 @@
-texlive-bin (2023.20230311.66589-8) UNRELEASED; urgency=high
+texlive-bin (2023.20230311.66589-8) unstable; urgency=high
 
   * Untighten version check of zlib in texk/web2c/luatexdir/luazlib/lzlib.c
-    to make binaries linked with 1.2.x runnable with 1.3.x (Closes: #1056183).
+    again to make binaries linked with 1.2.x runnable with 1.3.x
+    (Closes: #1056183).
 
- -- Hilmar Preusse <hille42@web.de>  Sun, 19 Nov 2023 20:00:29 +0100
+ -- Hilmar Preusse <hille42@web.de>  Mon, 20 Nov 2023 08:45:38 +0000
 
 texlive-bin (2023.20230311.66589-7) unstable; urgency=medium
 

@@ -3,6 +3,7 @@ From: Luigi Scarso <luigi.scarso@gmail.com>
 Date: Fri, 31 Mar 2023 20:15:48 +0000
 Subject: [PATCH] Bump to version 1.16.1; bugfix for setpdforigin()  (A.
  Matthias)
+Origin: upstream
 
 git-svn-id: svn://tug.org/texlive/trunk/Build/source@66717 c570f23f-e606-0410-a88d-b1316a301751
 ---

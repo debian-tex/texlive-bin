@@ -2,6 +2,7 @@ From 6ace460233115bd42b36e63c7ddce11cc92a1ebd Mon Sep 17 00:00:00 2001
 From: Luigi Scarso <luigi.scarso@gmail.com>
 Date: Sat, 29 Apr 2023 14:41:51 +0000
 Subject: [PATCH] LuaTeX 1.17.0 .
+Origin: upstream
 
 git-svn-id: svn://tug.org/texlive/trunk/Build/source@66967 c570f23f-e606-0410-a88d-b1316a301751
 ---

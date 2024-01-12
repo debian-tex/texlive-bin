@@ -1,3 +1,7 @@
+From: TANAKA Takuji <ttk@t-lab.opal.ne.jp>
+Subject: Fixes for bibtex-x #2
+Origin: upstream
+
 diff --git a/texk/bibtex-x/ChangeLog b/texk/bibtex-x/ChangeLog
 index 04a103d84..8ea45a55c 100644
 --- a/texk/bibtex-x/ChangeLog

@@ -1,3 +1,7 @@
+From: TANAKA Takuji <ttk@t-lab.opal.ne.jp>
+Subject: Fixes for bibtex-x #6
+Origin: upstream
+
 --- texlive-bin.orig/texk/bibtex-x/ChangeLog
 +++ texlive-bin/texk/bibtex-x/ChangeLog
 @@ -1,3 +1,19 @@

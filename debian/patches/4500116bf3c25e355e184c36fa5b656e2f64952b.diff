@@ -1,3 +1,7 @@
+From: Karl Berry <karl@freefriends.org>
+Subject: Fixes for bibtex-x #5
+Origin: upstream
+
 diff --git a/texk/bibtex-x/ChangeLog b/texk/bibtex-x/ChangeLog
 index f13181f87..e152c25ca 100644
 --- a/texk/bibtex-x/ChangeLog

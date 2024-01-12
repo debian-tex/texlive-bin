@@ -1,3 +1,7 @@
+From: TANAKA Takuji <ttk@t-lab.opal.ne.jp>
+Subject: Fixes for bibtex-x #1
+Origin: upstream
+
 diff --git a/texk/web2c/ChangeLog b/texk/web2c/ChangeLog
 index bda62667c..a341eb42d 100644
 --- a/texk/web2c/ChangeLog

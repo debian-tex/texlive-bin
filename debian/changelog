@@ -1,6 +1,8 @@
 texlive-bin (2023.20230311.66589-9) UNRELEASED; urgency=medium
 
   * Rename / Remove obsolete patches form source package.
+  * Add DEP-3 headers to a few other patches.
+  * Add "DEB_BUILD_MAINT_OPTIONS = hardening=+all" to d/rules.
 
  -- Hilmar Preusse <hille42@web.de>  Fri, 12 Jan 2024 07:59:15 +0000
 

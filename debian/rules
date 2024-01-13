@@ -9,6 +9,9 @@ export DEBIANTMP=debian/tmp
 # this ships out the test logs when a test failed, set it in any case
 export VERBOSE=1
 
+# See FEATURE AREAS in dpkg-buildflags(1).
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+
 #
 # the configure code already checks a lot, but it does not catch
 # all cases. We have now two ways to test for where to build.

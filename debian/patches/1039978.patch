@@ -1,3 +1,8 @@
+Description: axohelp.1: some remarks and editorial fixes for the manual.
+Forwarded: Not yet.
+Author: Bjarni Ingi Gislason <bjarniig@simnet.is>
+Last-Update: 2023-06-30
+
 --- a/utils/axodraw2/axodraw2-src/axohelp.1	2023-06-29 23:48:04.000000000 +0000
 +++ b/utils/axodraw2/axodraw2-src/axohelp.1	2023-06-29 23:56:06.000000000 +0000
 @@ -1,7 +1,7 @@

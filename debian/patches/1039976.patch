@@ -1,3 +1,9 @@
+Description: detex: some remarks and editorial fixes in a patch for the manual
+Forwarded: https://github.com/pkubowicz/opendetex/pull/83
+Author: Bjarni Ingi Gislason <bjarniig@simnet.is>
+Applied-Upstream: 2.8.11, https://github.com/pkubowicz/opendetex/commit/9e0e21d772a0a19cc6ccb6f634aadd1b47bed179
+Last-Update: 2023-12-16
+
 --- texlive-bin.orig/texk/detex/detex-src/detex.man
 +++ texlive-bin/texk/detex/detex-src/detex.man
 @@ -13,18 +13,18 @@

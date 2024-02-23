@@ -110,7 +110,7 @@ Package: libkpathsea-dev
 Section: libdevel
 Architecture: any
 Multi-Arch: same
-Depends: ${misc:Depends}, libkpathsea6 (= ${binary:Version}), ${shlibs:Depends}
+Depends: ${misc:Depends}, libkpathsea6 (= ${binary:Version})
 Description: TeX Live: path search library for TeX (development part)
  This package contains the static library and header files for the
  Kpathsea[rch] library, which implements generic path searching,
@@ -129,7 +129,7 @@ Package: libptexenc-dev
 Section: libdevel
 Architecture: any
 Multi-Arch: same
-Depends: ${misc:Depends}, libptexenc1 (= ${binary:Version}), ${shlibs:Depends}
+Depends: ${misc:Depends}, libptexenc1 (= ${binary:Version})
 Description: TeX Live: ptex encoding library (development part)
  This package contains the static library and header files for the
  ptexenc library, a library for encoding support in pTeX, a Japanese

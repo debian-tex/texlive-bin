@@ -1,11 +1,12 @@
-texlive-bin (2023.20230311.66589-9) UNRELEASED; urgency=medium
+texlive-bin (2023.20230311.66589-9) unstable; urgency=medium
 
   * Rename / Remove obsolete patches form source package.
   * Add DEP-3 headers to a few other patches.
   * Add "DEB_BUILD_MAINT_OPTIONS = hardening=+all" to d/rules.
   * Add patch for CVE-2024-25262 (Closes: #1064517).
+  * Remove surplus ${shlibs:Depends} from -dev packages.
 
- -- Hilmar Preusse <hille42@web.de>  Fri, 12 Jan 2024 07:59:15 +0000
+ -- Hilmar Preusse <hille42@web.de>  Fri, 23 Feb 2024 22:59:00 +0100
 
 texlive-bin (2023.20230311.66589-8) unstable; urgency=high
 

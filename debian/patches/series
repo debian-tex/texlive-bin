@@ -24,3 +24,4 @@ aa47f8053474abcddc0e46b7e980cc2e8486d058.diff
 acdff073b56df34edc61e76a55423c46f5d7dce2.diff
 1054218.patch
 untighten_version_check_zlib.diff
+CVE-2024-25262.diff

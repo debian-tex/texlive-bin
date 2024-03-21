@@ -2,6 +2,10 @@ Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: Karl Berry
 Upstream-Contact: karl@freefriends.org
 Source: http://tug.org/texlive/
+Comment: The upstream tar ball is created using the debian/make-orig-tar
+ script. In the script we package the upstream git/svn repository and
+ remove some programs / libraries, which have been packaged separately
+ in Debian.
 
 Files: *
 Copyright: Copyright (C) 2005-2023 Karl Berry

@@ -1,4 +1,4 @@
-{$Id: common.defines 62367 2022-03-03 16:21:45Z ascherer $
+{$Id$
  common.defines.  Public domain.
 
  This file is concatenated by ./convert to the beginning of the Pascal

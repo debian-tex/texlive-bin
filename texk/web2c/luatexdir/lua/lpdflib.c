@@ -828,6 +828,8 @@ static int getpdfomitmediabox(lua_State * L)
 
 static int setpdfgentounicode(lua_State * L)
 {
+    /* ensures that glyph_unicode_tree is not null */
+    glyph_unicode_new(); 
     if (lua_type(L, 1) == LUA_TNUMBER) {
         set_pdf_gen_tounicode(lua_tointeger(L, 1));
     }
@@ -1048,7 +1050,7 @@ static int setpdforigin(lua_State * L)
     if (lua_type(L, 1) == LUA_TNUMBER) {
         h = (int) lua_roundnumber(L, 1);
         if (lua_type(L, 2) == LUA_TNUMBER) {
-            v = (int) lua_roundnumber(L, 1);
+            v = (int) lua_roundnumber(L, 2);
         } else {
             v = h;
         }

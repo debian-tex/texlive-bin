@@ -1,5 +1,5 @@
 #! @SHELL@
-# $Id: ctangleboot-sh.in 61575 2022-01-11 22:47:10Z karl $
+# $Id$
 # ctangleboot-sh: shell script to invoke ctangleboot and, if required,
 #   update c{tangle,web}boot.[ch]in from c{tangle,web}.[ch].
 # For details see tangle-sh[.in].

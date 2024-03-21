@@ -1,4 +1,4 @@
-dnl $Id: xpdf.ac 55138 2020-05-14 17:47:47Z karl $
+dnl $Id$
 ## libs/xpdf/ac/xpdf.ac: configure.ac fragment for the TeX Live subdirectory libs/xpdf/
 dnl
 dnl Copyright 2015-2020 Karl Berry <tex-live@tug.org>

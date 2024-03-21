@@ -1,4 +1,4 @@
-/* $Id: color.c 57073 2020-12-05 05:22:50Z takuji $
+/* $Id$
  *  This is a set of routines for dvips that are used to process color
  *  commands in the TeX file (passed by \special commands).  This was
  *  orignally written by J. Hafner, E. Blanz and M. Flickner of IBM

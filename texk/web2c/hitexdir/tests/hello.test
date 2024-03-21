@@ -1,5 +1,5 @@
 #!/bin/sh -vx
-# $Id: hello.test 61117 2021-11-22 16:45:58Z mruckert $
+# $Id$
 # Public domain. Originally written by Martin Ruckert
 # Basic check that rule.tex can be hitexed stretched and shrinked.
 

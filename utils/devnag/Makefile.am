@@ -1,4 +1,4 @@
-## $Id: Makefile.am 39975 2016-03-09 00:21:38Z karl $
+## $Id$
 ## Makefile.am for the TeX Live subdirectory utils/devnag/
 ##
 ## Copyright 2016 Karl Berry <tex-live@tug.org>

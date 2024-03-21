@@ -1,4 +1,4 @@
-$Id: README 63453 2022-05-31 15:40:57Z karl $
+$Id$
 dvipdfmx and xdvipdfmx for TeX Live
 ===================================
 dvipdfmx is a DVI-to-PDF translator. It requires the Kpathsea library

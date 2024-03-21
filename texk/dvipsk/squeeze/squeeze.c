@@ -1,4 +1,4 @@
-/*   $Id: squeeze.c 14277 2009-07-16 12:00:58Z peter $
+/*   $Id$
  *   Copyright 1986-2008 Tomas Rokicki.
  *   You may freely use, modify and/or distribute this program or any
  *   portion thereof.

@@ -2,7 +2,7 @@
    and it produces several .c and .h files in the current directory
    as its output.
 
-   $Id: splitup.c 37504 2015-06-12 08:45:07Z peter $
+   $Id$
 
    Tim Morgan  September 19, 1987.  */
 

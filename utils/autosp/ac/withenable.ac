@@ -1,5 +1,5 @@
 ## utils/autosp/ac/withenable.ac: configure.ac fragment for Tl subdir
-dnl $Id: withenable.ac 55466 2020-06-07 18:00:56Z karl $
+dnl $Id$
 dnl
 dnl Copyright 2016-2020 Karl Berry <tex-live@tug.org>
 dnl You may freely use, modify and/or distribute this file.

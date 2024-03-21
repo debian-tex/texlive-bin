@@ -1,4 +1,4 @@
-% $Id: char-warning-xetex.ch 57769 2021-02-17 03:03:54Z karl $
+% $Id$
 % Public domain. See ../pdftexdir/char-warning-pdftex.ch for basic info.
 % In addition to the basic change, we also define a new procedure
 % print_ucs_code to print in the format U+.... for system fonts.

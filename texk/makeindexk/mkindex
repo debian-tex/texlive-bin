@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: mkindex 52596 2019-11-01 18:11:31Z karl $
+# $Id$
 # Public domain. Originally written by Thomas Esser around 2001..
 
 test -f /bin/sh5 && test -z "$RUNNING_SH5" \

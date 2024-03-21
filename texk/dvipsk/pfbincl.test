@@ -1,8 +1,12 @@
 #! /bin/sh -vx
-# $Id: pfbincl.test 45809 2017-11-15 00:36:56Z karl $
+# $Id$
 # Public domain.
 
-./dvips -D 300 $srcdir/testdata/pfbincl.xdv -o pfbincl.ps || exit 1
+BinDir=${BinDir:-.}
+ExeExt=${ExeExt:-}
+_dvips=$BinDir/dvips$ExeExt
+
+$_dvips -D 300 $srcdir/testdata/pfbincl.xdv -o pfbincl.ps || exit 1
 diff $srcdir/testdata/pfbincl.xps pfbincl.ps
 
 exit 0

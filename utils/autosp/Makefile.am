@@ -1,4 +1,4 @@
-## $Id: Makefile.am 55466 2020-06-07 18:00:56Z karl $
+## $Id$
 ## Makefile.am for the TeX Live subdirectory utils/autosp/
 ##
 ## Copyright 2016-2020 Karl Berry <tex-live@tug.org>

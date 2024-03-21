@@ -1,3 +1,9 @@
+Description: #1039975: bibtex.original.1: some remarks and editorial fixes for the manual
+Forwarded: https://github.com/TeX-Live/texlive-source/pull/67
+Author: Bjarni Ingi Gislason <bjarniig@simnet.is>
+Applied-Upstream: https://github.com/TeX-Live/texlive-source/commit/dfd296b7f8bbaac09c0fc3dc5322403ea362fc5d
+Last-Update: 2023-06-30
+
 --- a/texk/web2c/man/bibtex.man	2023-06-30 03:12:16.000000000 +0000
 +++ b/texk/web2c/man/bibtex.man	2023-06-30 03:20:30.000000000 +0000
 @@ -5,10 +5,10 @@
@@ -25,8 +31,8 @@
  It formats the information from those entries
  according to instructions in a bibliography style
  .RB ( .bst )
--file (specified by the \\bibliographystyle command,
-+file (specified by the \ebibliographystyle command,
+-file (specified by the \\bibliographystyle command),
++file (specified by the \ebibliographystyle command),
  and it outputs the results to the
  .B .bbl
  file.

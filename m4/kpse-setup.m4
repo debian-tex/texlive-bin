@@ -1,4 +1,4 @@
-# $Id: kpse-setup.m4 57699 2021-02-10 02:06:16Z karl $
+# $Id$
 # Private macros for the TeX Live (TL) tree.
 # Copyright 2017-2021 Karl Berry <tex-live@tug.org>
 # Copyright 2009-2015 Peter Breitenlohner <tex-live@tug.org>

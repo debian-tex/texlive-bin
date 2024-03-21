@@ -1,4 +1,4 @@
-## $Id: Makefile.am 61335 2021-12-17 16:42:00Z karl $
+## $Id$
 ## Makefile.am for the TeX Live subdirectory texk/web2c/omegafonts/
 ##
 ## Copyright 2015-2021 Karl Berry <tex-live@tug.org>

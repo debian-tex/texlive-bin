@@ -123,6 +123,7 @@ extern int luaopen_profiler(lua_State * L);
 extern int luaopen_socket_core(lua_State * L);
 extern int luaopen_mime_core(lua_State * L);
 extern void luatex_socketlua_open(lua_State * L);
+extern void luatex_socketlua_safe_open(lua_State * L);
 
 extern int luaopen_img(lua_State * L);
 extern int l_new_image(lua_State * L);
@@ -158,6 +159,7 @@ extern int font_parameters_to_lua(lua_State * L, int f);
 extern int font_to_lua(lua_State * L, int f, int usecache);
 extern int font_from_lua(lua_State * L, int f); /* return is boolean */
 extern int characters_from_lua(lua_State * L, int f); /* return is boolean */
+extern void glyph_unicode_new(void); /* ensures that glyph_unicode_tree is not null */
 
 extern int luaopen_token(lua_State * L);
 extern void tokenlist_to_lua(lua_State * L, int p);
@@ -239,7 +241,9 @@ extern char *startup_filename;
 extern int safer_option;
 extern int nosocket_option;
 extern int utc_option;
+extern int luadebug_option;
 
+extern char *output_directory;
 extern char *last_source_name;
 extern int last_lineno;
 

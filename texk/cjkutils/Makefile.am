@@ -1,4 +1,4 @@
-## $Id: Makefile.am 43567 2017-03-21 17:43:10Z karl $
+## $Id$
 ## Makefile.am for the TeX Live subdirectory texk/cjkutils/
 ##
 ## Copyright 2017 Karl Berry <tex-live@tug.org>

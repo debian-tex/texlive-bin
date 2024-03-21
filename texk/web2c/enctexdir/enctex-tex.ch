@@ -1,4 +1,4 @@
-% $Id: enctex-tex.ch 57736 2021-02-13 23:02:37Z karl $
+% $Id$
 % enctex1.ch is applied first.
 % Then this change is applied for original TeX and eTeX,
 % since they do not include tracingstacklevels.ch,

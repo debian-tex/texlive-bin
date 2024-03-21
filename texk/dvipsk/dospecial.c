@@ -1,4 +1,4 @@
-/* $Id: dospecial.c 57073 2020-12-05 05:22:50Z takuji $
+/* $Id$
  *   This routine handles special commands;
  *   predospecial() is for the prescan, dospecial() for the real thing.
  */

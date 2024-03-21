@@ -1,4 +1,4 @@
-## $Id: bin_links.am 61576 2022-01-11 22:54:49Z karl $
+## $Id$
 ## am/bin_links.am: Makefile fragment for bindir links.
 ##
 ## Copyright 2017-2022 Karl Berry <tex-live@tug.org>

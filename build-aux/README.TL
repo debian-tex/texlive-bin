@@ -1,4 +1,4 @@
-$Id: README.TL 40250 2016-04-05 18:20:42Z karl $
+$Id$
 Copyright 2016      Karl Berry <tex-live@tug.org>
 Copyright 2009-2013 Peter Breitenlohner <tex-live@tug.org>
 You may freely use, modify and/or distribute this file.

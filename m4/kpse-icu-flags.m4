@@ -1,4 +1,4 @@
-# $Id: kpse-icu-flags.m4 49495 2018-12-24 23:17:30Z karl $
+# $Id$
 # ICU support in the TeX Live (TL) tree.
 # Copyright 2017-2018 Karl Berry <tex-live@tug.org>
 # Copyright 2009-2015 Peter Breitenlohner <tex-live@tug.org>

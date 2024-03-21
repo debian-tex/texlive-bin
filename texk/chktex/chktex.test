@@ -1,5 +1,5 @@
 #! /bin/sh -vx
-# $Id: chktex.test 65275 2022-12-15 11:48:56Z hironobu $
+# $Id$
 # Copyright 2017-2022 Karl Berry <tex-live@tug.org>
 # Copyright 2009-2015 Peter Breitenlohner <tex-live@tug.org>
 # You may freely use, modify and/or distribute this file.

@@ -1,4 +1,4 @@
-% $Id: enctex-pdftex.ch 65813 2023-02-13 16:30:22Z karl $
+% $Id$
 % enctex1.ch is applied first.
 % Then this change is applied for pdfTeX et al. (but not TeX),
 % assuming that tracingstacklevels.ch, partoken.ch, and showstream.ch

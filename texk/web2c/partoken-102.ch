@@ -1,4 +1,4 @@
-% $Id: partoken-102.ch 60054 2021-07-25 16:07:35Z karl $
+% $Id$
 % Public domain. See partoken.ch (and pdfTeX manual) for main information.
 
 % New internal constant for the main command |\partokenname|.

@@ -1,4 +1,4 @@
-dnl $Id: configure.ac 57688 2021-02-09 18:23:15Z karl $
+dnl $Id$
 dnl Process this file with autoconf to produce a configure script.
 dnl
 dnl   Copyright 2021 Bob Tennent <rdt@queensu.org>

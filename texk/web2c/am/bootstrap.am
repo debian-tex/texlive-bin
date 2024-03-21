@@ -1,4 +1,4 @@
-## $Id: bootstrap.am 61575 2022-01-11 22:47:10Z karl $
+## $Id$
 ## texk/web2c/am/bootstrap.am: Makefile fragment for tangle and ctangle.
 ##
 ## Copyright 2015-2022 Karl Berry <tex-live@tug.org>

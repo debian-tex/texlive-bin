@@ -1,4 +1,4 @@
-% $Id: char-warning-pdftex.ch 57769 2021-02-17 03:03:54Z karl $
+% $Id$
 % Public domain (from David Jones, tex-implementors 30jun2020).
 % Unfortunately this cannot be in pdftex.ch since the ordering
 % of changes gets messed up.

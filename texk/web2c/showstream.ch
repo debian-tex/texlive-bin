@@ -1,4 +1,4 @@
-% $Id: showstream.ch 61589 2022-01-12 21:47:55Z karl $
+% $Id$
 % Implementation of |\showstream|.
 % Public domain. Originally written by Marcel Kr\"uger, 2021.
 

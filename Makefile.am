@@ -1,4 +1,4 @@
-## $Id: Makefile.am 55329 2020-05-28 22:03:59Z karl $
+## $Id$
 ## Makefile.am for the TeX Live top-level
 ##
 ## Copyright 2016-2020 Karl Berry <tex-live@tug.org>

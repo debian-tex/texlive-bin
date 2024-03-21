@@ -1,4 +1,4 @@
-# $Id: texmf.cnf 51875 2019-08-13 22:43:09Z karl $
+# $Id$
 # Public domain. This tiny texmf.cnf is for kpathsea/tests/cnfprog.test.
 
 # An empty program name is warned about (as of August 2019).

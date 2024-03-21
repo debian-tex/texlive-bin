@@ -1,7 +1,7 @@
 #!/usr/bin/env texlua
 --*-Lua-*-
 
--- $Id: rungs.lua 64342 2022-09-11 19:08:51Z reinhardk $
+-- $Id$
 
 -- rungs - Run Ghostscript (gs on Unix, gswin(32|64)c on Windows)
 

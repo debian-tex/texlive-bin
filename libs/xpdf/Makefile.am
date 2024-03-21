@@ -1,4 +1,4 @@
-## $Id: Makefile.am 57588 2021-02-01 06:11:18Z kakuto $
+## $Id$
 ## Proxy Makefile.am to build xpdf for TeX Live.
 ##
 ##   Copyright 2016-2017 Karl Berry <tex-live@tug.org>

@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: tcfmgr 34641 2014-07-17 16:38:18Z karl $
+# $Id$
 # tcfmgr - TeX configuration file manager (sort of).
 # Public domain.  Originally written by Thomas Esser.
 

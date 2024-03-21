@@ -1,4 +1,4 @@
-# $Id: kpse-xpdf-flags.m4 55138 2020-05-14 17:47:47Z karl $
+# $Id$
 # Public macros for the TeX Live (TL) tree.
 # Copyright 2015-2020 Karl Berry <tex-live@tug.org>
 # Copyright 2009-2015 Peter Breitenlohner <tex-live@tug.org>

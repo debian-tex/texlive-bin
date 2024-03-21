@@ -1,5 +1,5 @@
 #! @SHELL@
-# $Id: tangle-sh.in 61575 2022-01-11 22:47:10Z karl $
+# $Id$
 # tangle-sh: shell script to invoke tangle, ctangle, otangle.
 #
 #   Copyright 2015-2022 Karl Berry <tex-live@tug.org>

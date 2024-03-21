@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-# $Id: write18-quote-test.pl 17085 2010-02-18 18:03:18Z karl $
+# $Id$
 # Public domain.  Originally written 2010, Karl Berry.
 # Check that restricted shell invocation doesn't misquote.
 

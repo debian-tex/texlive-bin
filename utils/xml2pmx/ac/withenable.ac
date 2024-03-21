@@ -1,5 +1,5 @@
 ## utils/xml2pmx/ac/withenable.ac: configure.ac fragment for the TeX Live subdirectory utils/xml2pmx/
-dnl $Id: withenable.ac 57662 2021-02-07 18:58:21Z karl $
+dnl $Id$
 dnl
 dnl Copyright 2021 Karl Berry <tex-live@tug.org>
 dnl You may freely use, modify and/or distribute this file.

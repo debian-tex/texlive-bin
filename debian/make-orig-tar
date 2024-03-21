@@ -69,6 +69,7 @@ for i in \
 	harfbuzz	\
 	icu		\
 	libpaper	\
+	mpfi		\
 	mpfr		\
 	pixman		\
 	potrace		\

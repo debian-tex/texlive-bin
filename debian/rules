@@ -129,6 +129,7 @@ override_dh_auto_configure-arch:
 	--with-system-zziplib			\
 	--with-system-icu			\
 	--with-system-gmp			\
+	--with-system-mpfi			\
 	--with-system-mpfr			\
 	--with-system-freetype2			\
 	--with-freetype2-include=/usr/include/freetype2 \

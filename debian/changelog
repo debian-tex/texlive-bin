@@ -1,3 +1,10 @@
+texlive-bin (2024.20240313.70630+ds-1) experimental; urgency=medium
+
+  * New upstream snapshot for TL2024; refresh, disable patches.
+    - Use libmpfi-dev (>= 1.5.4) from Debian.
+
+ -- Hilmar Preusse <hille42@web.de>  Thu, 21 Mar 2024 22:54:39 +0100
+
 texlive-bin (2023.20230311.66589-9) unstable; urgency=medium
 
   * Rename / Remove obsolete patches form source package.

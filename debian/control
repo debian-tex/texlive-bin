@@ -19,6 +19,7 @@ Build-Depends-Arch:
   libgraphite2-dev,
   libharfbuzz-dev (>= 2.4),
   libicu-dev,
+  libmpfi-dev (>= 1.5.4),
   libmpfr-dev,
   libpaper-dev,
   libpotrace-dev,

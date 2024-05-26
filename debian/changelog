@@ -1,8 +1,9 @@
-texlive-bin (2024.20240313.70630+ds-2) UNRELEASED; urgency=medium
+texlive-bin (2024.20240313.70630+ds-2) unstable; urgency=medium
 
+  * Upload to unstable.
   * Corrections for mflua.1 (Closes: #1071649).
 
- -- Hilmar Preusse <hille42@web.de>  Thu, 23 May 2024 09:35:41 +0200
+ -- Hilmar Preusse <hille42@web.de>  Sun, 26 May 2024 15:51:10 +0200
 
 texlive-bin (2024.20240313.70630+ds-1) experimental; urgency=medium
 

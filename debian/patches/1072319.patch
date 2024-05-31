@@ -1,0 +1,112 @@
+--- a/texk/ttf2pk2/ttf2pk.1	2024-05-31 13:36:36.686567085 +0000
++++ b/texk/ttf2pk2/ttf2pk.1	2024-05-31 22:32:34.572210190 +0000
+@@ -35,8 +35,8 @@ ttf2pk \- convert a TrueType font into T
+ .\" and here the same for \LaTeX
+ .if t \{\
+ .ie '\*(.T'dvi' \
+-.ds LX \fRL\h'-0.36m'\v'-0.15v'\s-3A\s0\h'-0.15m'\v'0.15v'\fP\*(TX
+-.el .ds LX \fRL\h'-0.36m'\v'-0.22v'\s-2A\s0\h'-0.15m'\v'0.22v'\fP\*(TX
++.ds LX \fRL\h'-0.36m'\v'-0.15v'\s-3A\s+3\h'-0.15m'\v'0.15v'\fP\*(TX
++.el .ds LX \fRL\h'-0.36m'\v'-0.22v'\s-2A\s+2\h'-0.15m'\v'0.22v'\fP\*(TX
+ .\}
+ .if n .ds LX LaTeX
+ .
+@@ -52,7 +52,7 @@ ttf2pk \- convert a TrueType font into T
+ .\" a typewriter font
+ .if t \{\
+ .de C
+-\fC\\$1\fP\\$2
++\f(CR\\$1\fP\\$2
+ ..
+ .\}
+ .if n \{\
+@@ -73,12 +73,12 @@ This program converts a TrueType font in
+ file; the created font can then be used with \*(TX
+ or \*(LX.
+ .PP
+-CJKV (Chinese/Japanese/Korean/old Vietnamese) subfonts as created by 
++CJKV (Chinese/Japanese/Korean/old Vietnamese) subfonts as created by
+ .B ttf2tfm
+ are also supported.
+ .PP
+ .B ttf2pk
+-always assumes 10pt as the design size for the written \*(TX
++always assumes 10\~points (10pt) as the design size for the written \*(TX
+ font.
+ .
+ .
+@@ -120,7 +120,7 @@ to process the font.
+ The resolution, given in dots per inch.
+ Currently the horizontal resolution is equal to the vertical
+ resolution.
+-The design size is always assumed to be 10pt.
++The design size is always assumed to be 10\~points (10pt).
+ .TP
+ .B \-\^\-version
+ Shows the current version of
+@@ -188,7 +188,7 @@ map file.
+ As an example, a call to
+ .PP
+ .in +2m
+-.C "ttf2tfm arial -p T1.enc -s 0.25 -P 1 -E 0 arials"
++.C "ttf2tfm arial \-p T1.enc \-s 0.25 \-P 1 \-E 0 arials"
+ .PP
+ will produce the following line:
+ .PP
+@@ -209,27 +209,27 @@ parameters and the corresponding entries
+ .PP
+ .in +4m
+ .ta 2i
+--s	Slant
++\-s	Slant
+ .br
+--e	Extend
++\-e	Extend
+ .br
+--p	Encoding
++\-p	Encoding
+ .br
+--f	Fontindex
++\-f	Fontindex
+ .br
+--P	Pid
++\-P	Pid
+ .br
+--E	Eid
++\-E	Eid
+ .br
+--n	PS=Yes
++\-n	PS=Yes
+ .br
+--N	PS=Only
++\-N	PS=Only
+ .br
+--R	Replacement
++\-R	Replacement
+ .br
+--x	Rotate=Yes
++\-x	Rotate=Yes
+ .br
+--y	Y-Offset
++\-y	Y-Offset
+ .PP
+ Single replacement glyph names given to
+ .B ttf2tfm
+@@ -243,7 +243,7 @@ They will be ignored if in subfont mode
+ One additional parameter in a map file is unique to
+ .BR ttf2pk :
+ `Hinting', which can take the values `On' or `Off'.
+-Some fonts (e.g.\ the CJK part of
++Some fonts (e.g., the CJK part of
+ .C \%cyberbit.ttf )
+ are rendered incorrectly if hinting is activated.
+ Default is `On' (you can also use `Yes', `No', `1', and `0').
+@@ -270,7 +270,7 @@ command line is found, otherwise the pro
+ Thus you can use any character invalid in a \*(TX
+ font name to start a comment line.
+ .PP
+-You can use `\\' as the final character of a line to indicate that the
++You can use `\e' as the final character of a line to indicate that the
+ input is continued on the next line.
+ The backslash and the following newline character will be removed.
+ .PP

@@ -1,3 +1,11 @@
+texlive-bin (2024.20240313.70630+ds-3) UNRELEASED; urgency=medium
+
+  * Add patches for manual pages:
+    - tex2aspc.1 (Closes: #1072254)
+    - ttf2pk.1 (Closes: #1072319)
+
+ -- Hilmar Preusse <hille42@web.de>  Sat, 01 Jun 2024 00:59:34 +0200
+
 texlive-bin (2024.20240313.70630+ds-2) unstable; urgency=medium
 
   * Upload to unstable.

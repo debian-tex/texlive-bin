@@ -25,3 +25,5 @@ syntax_error_luatex_man
 #1054218.patch
 #untighten_version_check_zlib.diff
 #CVE-2024-25262.diff
+1072254.patch
+1072319.patch

@@ -1,0 +1,74 @@
+--- a/utils/autosp/autosp-src/tex2aspc.1	2024-05-31 00:36:37.067135796 +0000
++++ b/utils/autosp/autosp-src/tex2aspc.1	2024-05-31 00:42:03.778851779 +0000
+@@ -1,48 +1,43 @@
+ .\" This manpage is licensed under the GNU Public License
+ .TH TEX2ASPC 1 2018-02-14  "" ""
+-
++.
+ .SH NAME
+-
+-tex2aspc \- converts conventional MusiXTeX scores to .aspc format 
++tex2aspc \- converts conventional MusiXTeX scores to .aspc format
+ for processing by
+ .BR autosp (1).
+-
++.
+ .SH SYNOPSIS
+-
+-.B tex2aspc 
+-.RB  [ \-v\ |\ \-\-version\ |\ \-h\ |\ \-\-help ]
+-
+ .B tex2aspc
+-.IR infile [\fR.tex\fP]
+-.RI [ outfile [ \fR.aspc\fP ]]
++.\".RB  [ \-v\ |\ \-\-version\ |\ \-h\ |\ \-\-help ]
++.RB [ \-v " | " \-\-version " | " \-h " | " \-\-help ]
+ 
++.B tex2aspc
++.IR infile [ \fB.tex\fP ]
++.RI [ outfile [ \fB.aspc\fP ]]
++.
+ .SH DESCRIPTION
+-
+-This program re-factors (sequences of) conventional 
+-note-spacing commands (\\notes \\Notes \\NOtes ...)
+-in a measure 
++This program re-factors (sequences of) conventional
++note-spacing commands (\enotes \eNotes \eNOtes ...\&)
++in a measure
+ into
+-a single \\anotes command.
++a single \eanotes command.
+ This is intended for "legacy" scores in order to take advantage of
+-features 
+-only provided by 
++features
++only provided by
+ .BR autosp (1),
+-such as "global" skips and processing of \TransformNotes commands.
+-
++such as "global" skips and processing of TransformNotes commands.
++.
+ .SH LIMITATIONS
+-
+-
+ .B tex2aspc
+-assumes that & and | (rather than \\nextinstrument and \\nextstaff) are used to separate instruments and staffs.
++assumes that & and | (rather than \enextinstrument and \enextstaff) are used
++to separate instruments and staffs.
+ 
+ User-defined macros are not processed or expanded.
+-
++.
+ .SH SEE ALSO
+ .BR autosp (1)
+-.PP 
++.PP
+ musixdoc.pdf
+-
+-.SH AUTHOR 
++.
++.SH AUTHOR
+ This program and manual page were written by Bob Tennent <rdt@cs.queensu.ca>.
+-
+-

@@ -1,5 +1,6 @@
-texlive-bin (2024.20240313.70630+ds-3) UNRELEASED; urgency=medium
+texlive-bin (2024.20240313.70630+ds-3) unstable; urgency=medium
 
+  [ Hilmar Preusse ]
   * Add patches for manual pages:
     - tex2aspc.1 (Closes: #1072254)
     - ttf2pk.1 (Closes: #1072319)
@@ -11,7 +12,7 @@ texlive-bin (2024.20240313.70630+ds-3) UNRELEASED; urgency=medium
 
   [1] https://src.fedoraproject.org/rpms/texlive-base/c/ef14236976cfb48e0fe4b2b3af14cdf3d0d64516?branch=rawhide
 
- -- Hilmar Preusse <hille42@web.de>  Sat, 01 Jun 2024 00:59:34 +0200
+ -- Hilmar Preuße <hille42@debian.org>  Thu, 25 Jul 2024 12:03:11 +0200
 
 texlive-bin (2024.20240313.70630+ds-2) unstable; urgency=medium
 

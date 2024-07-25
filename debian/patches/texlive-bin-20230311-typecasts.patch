@@ -1,0 +1,12 @@
+diff -up texlive-base-20230311/source/texk/xdvik/gui/pagesel.c.me texlive-base-20230311/source/texk/xdvik/gui/pagesel.c
+--- texlive-base-20230311/texk/xdvik/gui/pagesel.c.me	2024-01-19 21:02:08.541378286 +0100
++++ texlive-base-20230311/texk/xdvik/gui/pagesel.c	2024-01-19 21:17:31.425443142 +0100
+@@ -538,7 +538,7 @@ xaw_update_list(void)
+     button_width = get_panel_width() - 2 * (resource.btn_side_spacing + resource.btn_border_width);
+     /* delete and re-create list */
+     ASSERT(total_pages <= (int)page_info.index_size, "");
+-    XawListChange(LIST_WIDGET, page_info.page_labels, 0,
++    XawListChange(LIST_WIDGET,(const char **) page_info.page_labels, 0,
+ 		  MAX(button_width, pagelist_width), False);
+     /* restore selected item */
+     if (idx != XAW_LIST_NONE) {

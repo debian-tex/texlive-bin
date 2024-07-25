@@ -4,6 +4,13 @@ texlive-bin (2024.20240313.70630+ds-3) UNRELEASED; urgency=medium
     - tex2aspc.1 (Closes: #1072254)
     - ttf2pk.1 (Closes: #1072319)
 
+  Add patch texlive-bin-20230311-typecasts.patch (from Fedora [1]) to
+  make xdvik compatible to the old lbxaw package currently in Debian.
+  Once libxaw >= 1.0.16 has entered Debian the patch needs to be
+  disabled again (Closes: #1075564).
+
+  [1] https://src.fedoraproject.org/rpms/texlive-base/c/ef14236976cfb48e0fe4b2b3af14cdf3d0d64516?branch=rawhide
+
  -- Hilmar Preusse <hille42@web.de>  Sat, 01 Jun 2024 00:59:34 +0200
 
 texlive-bin (2024.20240313.70630+ds-2) unstable; urgency=medium

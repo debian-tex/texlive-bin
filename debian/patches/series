@@ -28,3 +28,4 @@ syntax_error_luatex_man
 1072254.patch
 1072319.patch
 texlive-bin-20230311-typecasts.patch
+1077073.patch

@@ -27,7 +27,7 @@ Build-Depends-Arch:
   libpng-dev,
   libteckit-dev,
   libtool,
-  libxaw7-dev,
+  libxaw7-dev (>= 2:1.0.16),
   libxi-dev,
   libzzip-dev,
   m4,

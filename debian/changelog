@@ -1,3 +1,10 @@
+texlive-bin (2024.20240313.70630+ds-5) unstable; urgency=medium
+
+  * Disable patch texlive-bin-20230311-typecasts.patch to be compatible
+    to libxaw (>= 1.0.16).
+
+ -- Hilmar Preuße <hille42@debian.org>  Sat, 02 Nov 2024 16:31:58 +0100
+
 texlive-bin (2024.20240313.70630+ds-4) unstable; urgency=medium
 
   * Patch form upstream: fix "incompatible pointer type" issues on 32bit

@@ -25,3 +25,4 @@ upstream-svn58283-disable-pipe-write18
 upstream-svn58292-various-luatex-sec-fixes
 CVE-2023-32700.patch
 CVE-2023-32668.patch
+CVE-2024-25262.patch

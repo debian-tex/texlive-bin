@@ -6,6 +6,11 @@ texlive-bin (2020.20200327.54578-7+deb11u2) bullseye; urgency=medium
     This occurs because full access to the socket library was
     permitted by default, as stated in the documentation.
     (Closes: #1036470)
+  * Fix CVE-2024-25262: A heap buffer overflow was found via
+    the function ttfLoadHDMX:ttfdump. This vulnerability
+    allows attackers to cause a Denial of Service (DoS)
+    via supplying a crafted TTF file.
+    (Closes: #1064517)
 
  -- Bastien Roucariès <rouca@debian.org>  Tue, 29 Oct 2024 21:04:14 +0000
 

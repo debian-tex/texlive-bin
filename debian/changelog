@@ -1,4 +1,4 @@
-texlive-bin (2020.20200327.54578-7+deb11u2) bullseye; urgency=medium
+texlive-bin (2020.20200327.54578-7+deb11u2) bullseye-security; urgency=high
 
   * Non-maintainer upload by the LTS team
   * Fix CVE-2023-32668: A document (compiled with the default settings)

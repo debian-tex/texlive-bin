@@ -1,0 +1,176 @@
+--- texlive-bin.orig/texk/web2c/man/aleph.man
++++ texlive-bin/texk/web2c/man/aleph.man
+@@ -7,10 +7,10 @@
+ .ie t .ds OX \fIT\v'+0.25m'E\v'-0.25m'X\fP
+ .el .ds OX TeX
+ .\" BX definition must follow TX so BX can use TX
+-.if t .ds BX \fRB\s-2IB\s0\fP\*(TX
++.if t .ds BX \fRB\s-2IB\s+2\fP\*(TX
+ .if n .ds BX BibTeX
+ .\" LX definition must follow TX so LX can use TX
+-.if t .ds LX \fRL\\h'-0.36m'\\v'-0.15v'\s-2A\s0\\h'-0.15m'\\v'0.15v'\fP\*(TX
++.if t .ds LX \fRL\\h'-0.36m'\\v'-0.15v'\s-2A\s+2\\h'-0.15m'\\v'0.15v'\fP\*(TX
+ .if n .ds LX LaTeX
+ .if t .ds AX \fRA\\h'-0.1667m'\\v'0.20v'M\\v'-0.20v'\\h'-0.125m'S\fP\*(TX
+ .if n .ds AX AmSTeX
+@@ -30,16 +30,16 @@
+ .IR file ,
+ usually creating
+ .IR file.dvi .
+-If the file argument has no extension, ".tex" will be appended to it. 
++If the file argument has no extension, ".tex" will be appended to it.
+ Instead of a filename, a set of Aleph commands can be given, the first
+ of which must start with a backslash.
+-With a 
++With a
+ .BI & format
+ argument Aleph uses a different set of precompiled commands,
+ contained in
+ .IR format\fB.fmt\fP ;
+ it is usually better to use the
+-.B -fmt
++.B \-fmt
+ .I format
+ option instead.
+ .PP
+@@ -53,17 +53,17 @@
+ activity.
+ .\"=====================================================================
+ .SH OPTIONS
+-Run aleph --help to see the complete list of options; this is not
++Run aleph \-\-help to see the complete list of options; this is not
+ exhaustive.
+ .TP
+-.BI -cnf-line \ string
++.BI \-cnf-line \ string
+ Parse
+ .I string
+ as a
+ .I texmf.cnf
+ configuration line.  See the Kpathsea manual.
+ .TP
+-.BI --fmt \ format
++.BI \-\-fmt \ format
+ Use
+ .I format
+ as the name of the format to be used, instead of the name by which
+@@ -71,18 +71,18 @@
+ .I %&
+ line.
+ .TP
+-.B --halt-on-error
++.B \-\-halt-on-error
+ Exit with an error code when an error is encountered during processing.
+ .TP
+-.B --help
++.B \-\-help
+ Print help message and exit.
+ .TP
+-.B --ini
++.B \-\-ini
+ Be `initial' Aleph for dumping formats; this is implicitly true if the
+ program is called as
+ .BR inialeph .
+ .TP
+-.BI --interaction \ mode
++.BI \-\-interaction \ mode
+ Sets the interaction mode.  The mode can be one of
+ .IR batchmode ,
+ .IR nonstopmode ,
+@@ -92,22 +92,22 @@
+ The meaning of these modes is the same as that of the corresponding
+ \ecommands.
+ .TP
+-.B --ipc
++.B \-\-ipc
+ Send DVI output to a socket as well as the usual output file.  Whether
+ this option is available is the choice of the installer.
+ .TP
+-.B --ipc-start
++.B \-\-ipc-start
+ As
+-.BR --ipc ,
++.BR \-\-ipc ,
+ and starts the server at the other end as well.  Whether this option
+ is available is the choice of the installer.
+ .TP
+-.BI --kpathsea-debug \ bitmask
++.BI \-\-kpathsea-debug \ bitmask
+ Sets path searching debugging flags according to the bitmask.  See the
+ .I Kpathsea
+ manual for details.
+ .TP
+-.BI --maketex \ fmt
++.BI \-\-maketex \ fmt
+ Enable
+ .RI mktex fmt ,
+ where
+@@ -117,7 +117,7 @@
+ or
+ .IR tfm .
+ .TP
+-.BI --no-maketex \ fmt
++.BI \-\-no-maketex \ fmt
+ Disable
+ .RI mktex fmt ,
+ where
+@@ -127,43 +127,43 @@
+ or
+ .IR tfm .
+ .TP
+-.BI --output-comment \ string
++.BI \-\-output-comment \ string
+ Use
+ .I string
+ for the DVI file comment instead of the date.
+ .TP
+-.BI --output-directory \ directory
++.BI \-\-output-directory \ directory
+ Write output files in
+ .I directory
+ instead of the current directory.  Look up input files in
+ .I directory
+ first, then along the normal search path.
+ .TP
+-.B --parse-first-line
++.B \-\-parse-first-line
+ If the first line of the main input file begins with
+ .I %&
+ parse it to look for a dump name.
+ .TP
+-.BI --progname \ name
++.BI \-\-progname \ name
+ Pretend to be program
+ .IR name .
+ This affects both the format used and the search paths.
+ .TP
+-.B --recorder
++.B \-\-recorder
+ Enable the filename recorder.  This leaves a trace of the files opened
+ for input and output in a file with extension
+ .IR .ofl .
+ (This option is always on.)
+ .TP
+-.B --shell-escape
++.B \-\-shell-escape
+ Enable the
+ .BI \ewrite18{ command }
+ construct.  The
+ .I command
+-can be any Bourne shell command.  By default, this construct is 
++can be any Bourne shell command.  By default, this construct is
+ enabled in a restricted mode, for security reasons.
+ .TP
+-.B --version
++.B \-\-version
+ Print version information and exit.
+ .\"=====================================================================
+ .SH ENVIRONMENT
+@@ -177,7 +177,6 @@
+ give directly to Aleph, because ~ is an active character, and hence is
+ expanded, not taken as part of the filename.  Other programs, such as
+ \*(MF, do not have this problem.
+-.PP
+ .TP
+ .B TEXMFOUTPUT
+ Normally, Aleph puts its output files in the current directory.  If

@@ -1,3 +1,9 @@
+texlive-bin (2024.20240313.70630+ds-6) UNRELEASED; urgency=medium
+
+  * Patch for #1088318.
+
+ -- Hilmar Preuße <hille42@debian.org>  Tue, 26 Nov 2024 23:46:40 +0100
+
 texlive-bin (2024.20240313.70630+ds-5) unstable; urgency=medium
 
   * Disable patch texlive-bin-20230311-typecasts.patch to be compatible

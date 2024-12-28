@@ -2,8 +2,9 @@ texlive-bin (2024.20240313.70630+ds-6) UNRELEASED; urgency=medium
 
   * Patches for manual pages thanks to Bjarni Ingi Gislason
     <bjarniig@simnet.is>.
-    - aleph.1 (Closes: #1088318=
-    - autosp.1 (Closes: #1088853=
+    - aleph.1 (Closes: #1088318)
+    - autosp.1 (Closes: #1088853)
+    - opl2ofm.1 (Closes: #1091540)
 
  -- Hilmar Preuße <hille42@debian.org>  Tue, 26 Nov 2024 23:46:40 +0100
 

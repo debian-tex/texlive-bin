@@ -10,7 +10,6 @@ gftodvi_man.patch
 bad-whatis-entry_xml2pmx.1
 wrong-manual-section_axohelp.1
 syntax_error_luatex_man
-#1039976.patch
 1039978.patch
 1039977.patch
 1039975.patch

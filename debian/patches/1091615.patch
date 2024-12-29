@@ -1,0 +1,55 @@
+--- texlive-bin.orig/texk/web2c/otps/outocp.man
++++ texlive-bin/texk/web2c/otps/outocp.man
+@@ -1,34 +1,27 @@
+ .TH "outocp" "1" "8 March 2022" "TeX Live"
+-.PP 
+-.SH "NAME" 
++.SH "NAME"
+ outocp \- debug an OCP file
+-.SH "SYNOPSIS" 
++.SH "SYNOPSIS"
+ .B outocp
+ .IR OCPFILE [ \fB.ocp\fP ]
+-.SH "DESCRIPTION" 
+-.PP 
++.SH "DESCRIPTION"
+ \fBoutocp\fP is used for debugging Omega Compiled Translation Process
+-(OCP) files\&.  It generates some statistics about the OCP file, and
+-then runs through the states that the file defines\&. 
+-.PP 
++(OCP) files.  It generates some statistics about the OCP file, and
++then runs through the states that the file defines.
++.PP
+ Omega Translation Processes are rules used to translate one character
+ set to another and to choose between characters with one or more
+-context-sensitive variants\&.  OTPs could also be used to change the
+-case or hyphenation of text\&.
+-.PP 
+-.SH "BUGS" 
+-.PP 
++context-sensitive variants.  OTPs could also be used to change the
++case or hyphenation of text.
++.SH "BUGS"
+ Email bug reports to <https://lists.tug.org/tex-k> (public mailing list).
+-.PP 
+-.SH "SEE ALSO" 
+-.PP 
+-\fBocp2otp\fP(1), \fBotp2ocp\fP(1), \fBomega\fP(1)\&.
++.SH "SEE ALSO"
++\fBocp2otp\fP(1), \fBotp2ocp\fP(1), \fBomega\fP(1),
+ <https://ctan.org/pkg/omega>
+-.PP 
+-.SH "AUTHOR" 
+-.PP 
+-\fBmkocp\fP is part of Omega\&.  The primary authors of Omega are John Plaice
+-and Yannis Haralambous\&.
+-.PP 
+-This manual page was written by C\&.M\&. Connelly for the Debian
+-GNU/Linux system\&. It is now maintained as part of TeX Live.
++.SH "AUTHOR"
++\fBmkocp\fP is part of Omega.
++The primary authors of Omega are John Plaice and Yannis Haralambous.
++.PP
++This manual page was written by C.M.\& Connelly for the Debian
++GNU/Linux system.
++It is now maintained as part of TeX Live.

@@ -50,6 +50,7 @@ texlive-bin (2024.20240313.70630+ds-1) experimental; urgency=medium
 
   * New upstream snapshot for TL2024; refresh, disable patches.
     - Use libmpfi-dev (>= 1.5.4) from Debian.
+    - Contains fixes for pdftex.1 (Closes: #1065094).
 
  -- Hilmar Preusse <hille42@web.de>  Thu, 21 Mar 2024 22:54:39 +0100
 

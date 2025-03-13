@@ -1,4 +1,4 @@
-texlive-bin (2024.20240313.70630+ds-6) UNRELEASED; urgency=medium
+texlive-bin (2024.20240313.70630+ds-6) unstable; urgency=medium
 
   * Patches for manual pages thanks to Bjarni Ingi Gislason
     <bjarniig@simnet.is>.
@@ -11,7 +11,7 @@ texlive-bin (2024.20240313.70630+ds-6) UNRELEASED; urgency=medium
   * Remove mflua.1 from texlive-binaries, it is/will be shipped by
     texlive-extra-utils.
 
- -- Hilmar Preuße <hille42@debian.org>  Tue, 26 Nov 2024 23:46:40 +0100
+ -- Hilmar Preuße <hille42@debian.org>  Thu, 13 Mar 2025 21:10:00 +0100
 
 texlive-bin (2024.20240313.70630+ds-5) unstable; urgency=medium
 

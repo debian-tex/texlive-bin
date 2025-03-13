@@ -8,6 +8,8 @@ texlive-bin (2024.20240313.70630+ds-6) UNRELEASED; urgency=medium
     - outocp.1: (Closes: #1091615)
     - ovf2ovp.1 (Closes: #1091618)
     - ovp2ovf.1 (Closes: #1091630)
+  * Remove mflua.1 from texlive-binaries, it is/will be shipped by
+    texlive-extra-utils.
 
  -- Hilmar Preuße <hille42@debian.org>  Tue, 26 Nov 2024 23:46:40 +0100
 

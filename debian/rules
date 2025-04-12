@@ -68,6 +68,9 @@ endif
 # the patch debian/patches/debian-no-linked-scripts
 # must be adapted to also patch the Makefile.in!
 
+# Workaround for incompatibility to GCC 15.
+export CFLAGS += -std=gnu17
+
 %:
 	dh $@ --builddirectory Work --max-parallel=8
 

@@ -1,3 +1,10 @@
+texlive-bin (2024.20240313.70630+ds-7) UNRELEASED; urgency=medium
+
+  * Lower C standard to C17. This is assumed to be a workaround for
+    #1097988.
+
+ -- Hilmar Preuße <hille42@debian.org>  Sat, 12 Apr 2025 11:19:32 +0200
+
 texlive-bin (2024.20240313.70630+ds-6) unstable; urgency=medium
 
   * Patches for manual pages thanks to Bjarni Ingi Gislason

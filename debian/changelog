@@ -2,9 +2,9 @@ texlive-bin (2024.20240313.70630+ds-7) UNRELEASED; urgency=medium
 
   * Lower C standard to C17. This is assumed to be a workaround for
     #1097988.
-  * Remove (incompatible) getenv declaration from kpathsea header.
+  * Remove (incompatible) getenv, strtok & strstr declaration from
+    kpathsea headers. (Closes: #1109256).
     https://tug.org/pipermail/tex-live/2025-July/051609.html
-    (Closes: #1109256).
 
  -- Hilmar Preuße <hille42@debian.org>  Sat, 12 Apr 2025 11:19:32 +0200
 

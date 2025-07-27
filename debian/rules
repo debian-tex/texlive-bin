@@ -69,6 +69,7 @@ endif
 # must be adapted to also patch the Makefile.in!
 
 # Workaround for incompatibility to GCC 15.
+# Mostly lua[hb][jit]text, pdftex & ps2pk are not fixed yet.
 export CFLAGS += -std=gnu17
 
 %:

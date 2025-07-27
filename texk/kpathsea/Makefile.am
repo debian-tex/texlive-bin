@@ -1,4 +1,4 @@
-## $Id$
+## $Id: Makefile.am 69416 2024-01-14 18:27:55Z karl $
 ## Makefile.am for the TeX Live subdirectory texk/kpathsea/
 ##
 ## Copyright 2015-2024 Karl Berry <tex-live@tug.org>

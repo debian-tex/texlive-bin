@@ -1,3 +1,28 @@
+2025-03-07  Karl Berry  <karl@tug.org>
+
+	* TL'25 release.
+
+2025-02-07  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+
+	* tests/catcd.tex, tests/al-cat.log: Update tests.
+
+2025-02-02  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+
+	* aleph-cat.test, tests/catcd.tex, tests/al-cat.log,
+	am/aleph.am: Add test for catcode of 16bit latin character.
+	* aleph-ofm.test, tests/al-ofm.tex, tests/al-ofm.log:
+	Update tests.
+
+2025-01-27  Karl Berry  <karl@freefriends.org>
+
+	* am/aleph.am (aleph-pool.c): exit 1 if makecpool failed.
+
+2024-10-20  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+
+	* aleph-{ofm,lmr}.test, tests/lmr1.tex,
+	tests/al-ofm.tex, tests/al-lmr1.log, tests/al-ofm.log,
+	tests/inutf8.ocp, am/aleph.am: Add tests for OFM.
+
 2024-03-10  Karl Berry  <karl@tug.org>
 
 	* TL'24 release.

@@ -1,4 +1,4 @@
-$Id$
+$Id: README 70439 2024-03-06 17:35:27Z karl $
 The e-TeX engine is an extended TeX developed under the auspices of the
 NTS Group and implemented by Peter Breitenlohner (deceased 2015).
 The extensions are enabled by a leading "*" character at initex time.

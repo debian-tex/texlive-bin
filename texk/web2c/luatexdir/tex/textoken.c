@@ -2624,6 +2624,8 @@ static int do_variable_pdf(halfword c)
     else if (scan_keyword("omitinfodict"))         { do_variable_backend_int(c_pdf_omit_infodict); }
     else if (scan_keyword("omitmediabox"))         { do_variable_backend_int(c_pdf_omit_mediabox); }
     else if (scan_keyword("linking"))              { do_variable_backend_int(c_pdf_linking); }
+    else if (scan_keyword("omitprocset"))          { do_variable_backend_int(c_pdf_omit_procset); }
+    else if (scan_keyword("ptexprefix"))           { do_variable_backend_int(c_pdf_ptex_prefix); }
 
     else if (scan_keyword("horigin"))              { do_variable_backend_dimen(d_pdf_h_origin); }
     else if (scan_keyword("vorigin"))              { do_variable_backend_dimen(d_pdf_v_origin); }
@@ -2905,7 +2907,10 @@ void conv_toks(void)
                 /*tex one-step do_assignment */
                 if (cur_cmd > max_non_prefixed_command) {
                     set_box_allowed = false;
-                    prefixed_command();
+                    if (cur_cmd == combine_toks_cmd)
+                        combine_the_toks();
+                    else
+                        prefixed_command();
                     set_box_allowed = true;
                 }
                 /*tex done */
@@ -2920,7 +2925,10 @@ void conv_toks(void)
                             break;
                         } else {
                             set_box_allowed = false;
-                            prefixed_command();
+                            if (cur_cmd == combine_toks_cmd)
+                                combine_the_toks();
+                            else
+                                prefixed_command();
                             set_box_allowed = true;
                         }
                     }

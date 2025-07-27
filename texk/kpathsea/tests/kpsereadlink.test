@@ -1,5 +1,5 @@
 #! /bin/sh -vx
-# $Id$
+# $Id: kpsereadlink.test 70081 2024-02-22 23:41:54Z karl $
 # Copyright 2017-2024 Karl Berry <tex-live@tug.org>
 # Copyright 2010 Peter Breitenlohner <tex-live@tug.org>
 # You may freely use, modify and/or distribute this file.

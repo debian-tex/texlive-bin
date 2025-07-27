@@ -361,9 +361,11 @@ static int addInObj(PDF pdf, PdfDocument * pdf_doc, ppref * ref)
             because new objects are being added while the list is being
             written out by writeRefs().
         */
+        q = NULL;
         for (p = pdf_doc->inObjList; p != NULL; p = p->next)
             q = p;
-        q->next = n;
+        if (q) 
+            q->next = n;
     }
     return n->num;
 }
@@ -822,15 +824,12 @@ void write_epdf(PDF pdf, image_dict * idict, int suppress_optional_info)
     */
     pdf_dict_add_img_filename(pdf, idict);
     if ((suppress_optional_info & 4) == 0) {
-        pdf_dict_add_int(pdf, "PTEX.PageNumber", (int) img_pagenum(idict));
+        pdf_dict_add_int(pdf, pdf_pdf_prefix_str("PTEX_PageNumber", "PTEX.PageNumber"), (int) img_pagenum(idict));
     }
     if ((suppress_optional_info & 8) == 0) {
         infoDict = ppdoc_info(pdfe);
         if (infoDict != NULL) {
-            /* todo : check this
-                pdf_dict_add_ref(pdf, "PTEX.InfoDict", addInObj(pdf, pdf_doc, infoDict));
-            */
-            pdf_add_name(pdf, "PTEX.InfoDict");
+            pdf_add_name(pdf,pdf_pdf_prefix_str("PTEX_InfoDict", "PTEX.InfoDict"));
             copyDict(pdf, pdf_doc, infoDict);
         }
     }

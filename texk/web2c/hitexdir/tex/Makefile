@@ -1,4 +1,4 @@
-# $Id$
+# $Id: Makefile 66891 2023-04-19 01:01:28Z karl $
 # Standalone Makefile for hitex/tex. Public domain.
 # This is not run as part of the build, just a convenience used by hand
 # from the Build/source/... directory.

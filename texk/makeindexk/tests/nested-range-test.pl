@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-# $Id$
+# $Id: nested-range-test.pl 24153 2011-09-30 08:41:47Z peter $
 # Public domain.  Originally written 2011, Karl Berry.
 # Check that makeindex doesn't create spurious output from nested ranges.
 # See nested-range.tex and -bb.tex.

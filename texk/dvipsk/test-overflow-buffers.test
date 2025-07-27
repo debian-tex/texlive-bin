@@ -1,5 +1,5 @@
 #! /bin/sh -vx
-# $Id$
+# $Id: test-overflow-buffers.test 67885 2023-08-11 14:25:18Z takuji $
 # Public domain. Various buffer overflows, reported by
 # Andy Nguyen of ETH Zurich. The program should detect and abort.
 

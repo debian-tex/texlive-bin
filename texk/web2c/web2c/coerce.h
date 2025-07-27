@@ -1,6 +1,6 @@
 /* Some definitions that get appended to the `coerce.h' file that web2c
    outputs.  */
-/* $Id$ */
+/* $Id: coerce.h 37504 2015-06-12 08:45:07Z peter $ */
 
 /* The C compiler ignores most unnecessary casts (i.e., casts of
    something to its own type).  However, for structures, it doesn't.

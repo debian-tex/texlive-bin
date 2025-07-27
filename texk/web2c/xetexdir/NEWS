@@ -1,4 +1,18 @@
 ==============================================================
+XeTeX 0.999997 (7 March 2025)
+
+* Unicode characters beyond BMP in filenames also supported with synctex.
+
+Cross-engine changes:
+
+* new primitive \ignoreprimitiveerror, enabled with -etex: if set
+  to 1, the error "Infinite glue shrinkage" becomes a warning
+  (exit status remains 0). Other values reserved for future use.
+
+* scaling fonts to >= 2048pt now results in an error message, instead of
+  (unhandled) arithmetic overflow or silent changing of the user's value.
+
+==============================================================
 XeTeX 0.999996 (February 2024)
 
 * Unicode characters beyond the BMP now supported in filenames.

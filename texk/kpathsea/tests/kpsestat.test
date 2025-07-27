@@ -1,5 +1,5 @@
 #! /bin/sh -vx
-# $Id$
+# $Id: kpsestat.test 67880 2023-08-11 11:46:24Z takuji $
 # Copyright 2017 Karl Berry <tex-live@tug.org>
 # Copyright 2010 Peter Breitenlohner <tex-live@tug.org>
 # You may freely use, modify and/or distribute this file.

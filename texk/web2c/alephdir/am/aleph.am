@@ -1,7 +1,7 @@
-## $Id$
+## $Id: aleph.am 73684 2025-02-02 08:06:22Z takuji $
 ## texk/web2c/alephdir/am/aleph.am: Makefile fragment for Aleph.
 ##
-## Copyright 2015-2023 Karl Berry <tex-live@tug.org>
+## Copyright 2015-2025 Karl Berry <tex-live@tug.org>
 ## Copyright 2009-2015 Peter Breitenlohner <tex-live@tug.org>
 ## You may freely use, modify and/or distribute this file.
 
@@ -37,7 +37,7 @@ $(aleph_c_h): aleph-web2c
 aleph-web2c: aleph.p $(web2c_texmf) alephdir/aleph.defines
 	@$(web2c) aleph
 aleph-pool.c: aleph.pool alephd.h $(makecpool_stamp)
-	$(makecpool) aleph >$@ || rm -f $@
+	$(makecpool) aleph >$@ || { rm -f $@; exit 1; }
 
 # Tangling Aleph
 aleph.p aleph.pool: aleph-tangle
@@ -104,10 +104,25 @@ EXTRA_DIST += \
 
 # Aleph Tests
 #
-aleph_tests = alephdir/aleph.test
-alephdir/aleph.log: aleph$(EXEEXT)
+aleph_tests = alephdir/aleph.test \
+	alephdir/aleph-ofm.test alephdir/aleph-lmr.test \
+	alephdir/aleph-cat.test
+alephdir/aleph.log \
+	alephdir/aleph-ofm.log alephdir/aleph-lmr.log \
+	alephdir/aleph-cat.log \
+	: aleph$(EXEEXT)
 
 EXTRA_DIST += $(aleph_tests)
+
+## alephdir/aleph-ofm.test
+EXTRA_DIST += alephdir/tests/al-ofm.tex alephdir/tests/al-ofm.log
+DISTCLEANFILES += al-ofm.*
+## alephdir/aleph-lmr.test
+EXTRA_DIST += alephdir/tests/lmr1.tex alephdir/tests/al-lmr1.log
+DISTCLEANFILES += al-lmr*.*
+## alephdir/aleph-cat.test
+EXTRA_DIST += alephdir/tests/catcd.tex alephdir/tests/al-cat.log
+DISTCLEANFILES += al-cat.*
 
 if ALEPH
 TESTS += $(aleph_tests)

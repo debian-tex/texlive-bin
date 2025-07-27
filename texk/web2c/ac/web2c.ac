@@ -1,4 +1,4 @@
-dnl $Id$
+dnl $Id: web2c.ac 72216 2024-09-07 16:42:07Z karl $
 # texk/web2c/ac/web2c.ac: configure.ac fragment for TL subdir
 dnl
 dnl Copyright 2015-2024 Karl Berry <tex-live@tug.org>
@@ -32,7 +32,6 @@ m4_define([kpse_tex_progs], [dnl
 [[tex],       [yes], [no],  [TeX],        []],
 [[etex],      [no],  [yes], [e-TeX],      [zlib]],
 [[ptex],      [no],  [yes], [pTeX],       [ptexenc zlib]],
-[[eptex],     [no],  [yes], [e-pTeX],     [ptexenc zlib]],
 [[uptex],     [no],  [yes], [upTeX],      [ptexenc zlib]],
 [[euptex],    [yes], [yes], [e-upTeX],    [ptexenc zlib]],
 [[aleph],     [yes], [],    [Aleph],      []],
@@ -44,6 +43,7 @@ m4_define([kpse_tex_progs], [dnl
 [[luajithbtex], [yes], [],    [LuaHBJITTeX],  [pplib libpng zziplib luajit harfbuzz]],
 [[mp],        [yes], [],    [MetaPost],   [mpfi mpfr cairo libpng]],
 [[pmp],       [yes], [],    [pMetaPost],  [mpfi mpfr cairo libpng ptexenc]],
+[[texprof],   [yes], [],    [TeXprof],    []],
 [[upmp],      [yes], [],    [upMetaPost], [mpfi mpfr cairo libpng ptexenc]],
 [[xetex],     [yes], [yes], [XeTeX],      [pplib libpng freetype2 teckit harfbuzz]],
 ])[]dnl

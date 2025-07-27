@@ -1,4 +1,4 @@
-dnl $Id$
+dnl $Id: lcdf-typetools.ac 69194 2023-12-22 02:16:38Z karl $
 # Define configure options for lcdf-typetools.  Extracted from configure.ac
 # for ease of building TeX Live.
 #

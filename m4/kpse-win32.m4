@@ -1,4 +1,4 @@
-# $Id$
+# $Id: kpse-win32.m4 66321 2023-03-03 07:53:56Z lscarso $
 # Public macros for the TeX Live (TL) tree.
 # Copyright 2016-2019 Karl Berry <tex-live@tug.org>
 # Copyright 2009-2015 Peter Breitenlohner <tex-live@tug.org>

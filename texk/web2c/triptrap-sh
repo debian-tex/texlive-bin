@@ -1,5 +1,5 @@
 #! /bin/sh
-# $Id$
+# $Id: triptrap-sh 57558 2021-01-30 01:42:07Z karl $
 # shell script to run TRIP and TRAP tests and create diffs.
 #
 #   Copyright 2015-2021 Karl Berry <tex-live@tug.org>

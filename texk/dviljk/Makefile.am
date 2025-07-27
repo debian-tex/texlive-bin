@@ -1,4 +1,4 @@
-## $Id$
+## $Id: Makefile.am 64247 2022-08-31 01:02:48Z karl $
 ## Makefile.am for the TeX Live subdirectory texk/dviljk/
 ##
 ## Copyright 2016-2022 Karl Berry <tex-live@tug.org>

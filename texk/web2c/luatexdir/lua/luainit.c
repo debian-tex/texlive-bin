@@ -69,7 +69,7 @@ const_string LUATEX_IHELP[] = {
     "",
     "  The following regular options are understood: ",
     "",
-    "   --cnf-line =STRING            parse STRING as a configuration file line",
+    "   --cnf-line=STRING             parse STRING as a configuration file line",
     "   --credits                     display credits and exit",
     "   --debug-format                enable format debugging",
     "   --draftmode                   switch on draft mode (generates no output PDF)",
@@ -387,7 +387,7 @@ static void parse_options(int ac, char **av)
             lua_offset = optind;
             luainit = 1;
         } else if (ARGUMENT_IS("lua")) {
-            startup_filename = optarg;
+            startup_filename =  xstrdup(optarg);
             lua_offset = (optind - 1);
             luainit = 1;
 #ifdef LuajitTeX
@@ -491,7 +491,7 @@ static void parse_options(int ac, char **av)
                  "the terms of the GNU General Public License, version 2 or (at your option)\n"
                  "any later version. For more information about these matters, see the file\n"
                  "named COPYING and the LuaTeX source.\n\n"
-                 "LuaTeX is Copyright 2022 Taco Hoekwater and the LuaTeX Team.\n");
+                 "LuaTeX is Copyright 2025 Taco Hoekwater and the LuaTeX Team.\n");
             /* *INDENT-ON* */
             uexit(0);
         } else if (ARGUMENT_IS("credits")) {
@@ -499,7 +499,7 @@ static void parse_options(int ac, char **av)
             initversionstring(&versions);
             print_version_banner();
             /* *INDENT-OFF* */
-            puts("\n\nThe LuaTeX team is Hans Hagen, Hartmut Henkel, Taco Hoekwater, Luigi Scarso.\n\n"
+            puts("\n\nThe luatex project is a ConTeXt community project by\nHans Hagen, Hartmut Henkel, Taco Hoekwater and Luigi Scarso.\nThe current maintainers are Hans Hagen and Luigi Scarso.\n\n"
                  MyName " merges and builds upon (parts of) the code from these projects:\n\n"
                  "tex       : Donald Knuth\n"
                  "etex      : Peter Breitenlohner, Phil Taylor and friends\n"
@@ -733,6 +733,11 @@ static int luatex_kpse_clua_find(lua_State * L)
 {
     const char *filename;
     const char *name;
+    if (!clua_loader_function) {
+        /*tex library not found in this path */
+        lua_pushliteral(L, "\n\t[C searcher requires unrestricted shell escape]");
+        return 1;
+    }
     if (safer_option) {
         /*tex library not found in this path */
         lua_pushliteral(L, "\n\t[C searcher disabled in safer mode]");
@@ -1240,6 +1245,9 @@ void lua_initialize(int ac, char **av)
     /* the lua debug library is enabled if shell escape permits everything */
     if (shellenabledp && restrictedshell != 1) {
       luadebug_option = 1 ;      
+    } else {
+        luaL_unref(Luas, LUA_REGISTRYINDEX, clua_loader_function);
+        clua_loader_function = 0;
     }
     /*tex Here we load luatex-core.lua which takes care of some protection on demand. */
     if (load_luatex_core_lua(Luas)) {

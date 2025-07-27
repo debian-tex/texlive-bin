@@ -1,6 +1,6 @@
 #! /bin/sh -vx
 # qqq also check propagated to subprog
-# $Id$
+# $Id: outputdir.test 68508 2023-10-10 22:01:41Z karl $
 # outputdir.test - check that TEXMF_OUTPUT_DIRECTORY works.
 # Public domain. Originally written by Karl Berry, 2023.
 

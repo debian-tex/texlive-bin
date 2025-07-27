@@ -411,20 +411,32 @@ void do_subst_font(halfword p, int ex_ratio)
     if (type(p) == disc_node) {
         halfword r = vlink(pre_break(p));
         while (r != null) {
-            if (is_char_node(r))
+            if (is_char_node(r)) {
+if (tracing_lost_chars_par > 3 && ! char_exists(font(r), character(r))) {
+    char_warning(font(r), character(r));
+}
                 do_subst_font(r, ex_ratio);
+            }
             r = vlink(r);
         }
         r = vlink(post_break(p));
         while (r != null) {
-            if (is_char_node(r))
+            if (is_char_node(r)) {
+if (tracing_lost_chars_par > 3 && ! char_exists(font(r), character(r))) {
+    char_warning(font(r), character(r));
+}
                 do_subst_font(r, ex_ratio);
+            }
             r = vlink(r);
         }
         r = vlink(no_break(p));
         while (r != null) {
-            if (is_char_node(r))
+            if (is_char_node(r)) {
+if (tracing_lost_chars_par > 3 && ! char_exists(font(r), character(r))) {
+    char_warning(font(r), character(r));
+}
                 do_subst_font(r, ex_ratio);
+            }
             r = vlink(r);
         }
         return;
@@ -620,6 +632,9 @@ halfword hpack(halfword p, scaled w, int m, int pack_direction)
                 these instructions to be exercised one more time.
 
             */
+if (tracing_lost_chars_par > 3 && ! char_exists(font(p), character(p))) {
+    char_warning(font(p), character(p));
+}
             if (m >= cal_expand_ratio) {
                 prev_char_p = p;
                 if (m == cal_expand_ratio) {
@@ -1070,6 +1085,9 @@ scaled_whd natural_sizes(halfword p, halfword pp, glue_ratio g_mult, int g_sign,
     }
     while (p != pp && p != null) {
         while (is_char_node(p) && p != pp) {
+if (tracing_lost_chars_par > 3 && ! char_exists(font(p), character(p))) {
+    char_warning(font(p), character(p));
+} 
             whd = pack_width_height_depth(hpack_dir, dir_TRT, p, true);
             siz.wd += whd.wd;
             if (whd.ht > siz.ht)
@@ -1854,7 +1872,11 @@ halfword vert_break(halfword p, scaled h, scaled d)
             active_height[2 + stretch_order(p)] += stretch(p);
             active_height[7] += shrink(p);
             if ((shrink_order(p) != normal) && (shrink(p) != 0)) {
+	      if (((unsigned int)ignore_primitive_error_par) & 0x1){
+		print_ignored_err("Infinite glue shrinkage found in box being split");
+	      } else {
                 print_err("Infinite glue shrinkage found in box being split");
+		
                 help4(
                     "The box you are \\vsplitting contains some infinitely",
                     "shrinkable glue, e.g., `\\vss' or `\\vskip 0pt minus 1fil'.",
@@ -1862,7 +1884,8 @@ halfword vert_break(halfword p, scaled h, scaled d)
                     "since the offensive shrinkability has been made finite."
                 );
                 error();
-                shrink_order(p) = normal;
+	      }
+	    shrink_order(p) = normal;
             }
         }
         cur_height = cur_height + prev_dp + width(p);

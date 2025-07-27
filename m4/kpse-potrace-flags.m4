@@ -1,4 +1,4 @@
-# $Id$
+# $Id: kpse-potrace-flags.m4 66135 2023-02-24 23:44:01Z karl $
 # Public macros for the TeX Live (TL) tree.
 # Copyright (C) 2022-2023 Luigi Scarso <tex-live@tug.org>
 #

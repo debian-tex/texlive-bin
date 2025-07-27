@@ -1,4 +1,4 @@
-## $Id$
+## $Id: mplib.am 69664 2024-02-01 22:56:12Z karl $
 ## texk/web2c/mplibdir/am/mplib.am: Makefile fragment for MetaPost.
 ##
 ## Copyright 2017-2022 Luigi Scarso <tex-live@tug.org>

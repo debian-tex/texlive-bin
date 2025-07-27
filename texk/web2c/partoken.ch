@@ -1,4 +1,4 @@
-% $Id$
+% $Id: partoken.ch 60088 2021-07-27 01:25:13Z karl $
 % Implementation of |\partokenname| and |\partokencontext| primitives.
 % Public domain. Originally written by Petr Olsak, 2021.
 

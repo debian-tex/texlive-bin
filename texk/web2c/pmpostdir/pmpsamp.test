@@ -1,5 +1,5 @@
 #! /bin/sh -vx
-# $Id$
+# $Id: pmpsamp.test 69684 2024-02-03 02:15:55Z takuji $
 # Copyright 2017-2018 Karl Berry <tex-live@tug.org>
 # Copyright 2014 Peter Breitenlohner <tex-live@tug.org>
 # You may freely use, modify and/or distribute this file.

@@ -1,5 +1,5 @@
 #! /bin/sh -vx
-# $Id$
+# $Id: ctwill.test 68690 2023-10-29 13:15:04Z ascherer $
 # Copyright 2023 Andreas Scherer <tex-live@tug.org>
 # You may freely use, modify and/or distribute this file.
 

@@ -1,4 +1,4 @@
-/* $Id$
+/* $Id: emspecial.c 57073 2020-12-05 05:22:50Z takuji $
  *   emspecial.c
  *   This routine handles the emTeX special commands.
  */

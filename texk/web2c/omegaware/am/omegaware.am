@@ -1,4 +1,4 @@
-## $Id$
+## $Id: omegaware.am 61575 2022-01-11 22:47:10Z karl $
 ## texk/web2c/omegaware/am/omegaware.am: Makefile fragment for omegaware web programs.
 ##
 ## Copyright 2015-2022 Karl Berry <tex-live@tug.org>

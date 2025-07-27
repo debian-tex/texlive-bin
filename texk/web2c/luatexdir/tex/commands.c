@@ -180,6 +180,7 @@ void initialize_commands(void)
     primitive_luatex("mathdefaultsmode", assign_int_cmd, int_base + math_defaults_mode_code, int_base);
     primitive_luatex("discretionaryligaturemode", assign_int_cmd, int_base + discretionary_ligature_mode_code, int_base);
     primitive_etex("partokencontext", assign_int_cmd, int_base + partoken_context_code, int_base);
+    primitive_luatex("mathemptydisplaymode", assign_int_cmd, int_base + math_empty_display_mode_code, int_base);
 
     /*tex
 
@@ -789,6 +790,7 @@ void initialize_etex_commands(void)
     primitive_etex("lastlinefit", assign_int_cmd, int_base + last_line_fit_code, int_base);
     primitive_etex("savingvdiscards", assign_int_cmd, int_base + saving_vdiscards_code, int_base);
     primitive_etex("savinghyphcodes", assign_int_cmd, int_base + saving_hyph_codes_code, int_base);
+    primitive_etex("ignoreprimitiveerror", assign_int_cmd, int_base + ignore_primitive_error_code, int_base);
     primitive_luatex("suppressfontnotfounderror", assign_int_cmd, int_base + suppress_fontnotfound_error_code, int_base);
     primitive_luatex("suppresslongerror", assign_int_cmd, int_base + suppress_long_error_code, int_base);
     primitive_luatex("suppressprimitiveerror", assign_int_cmd, int_base + suppress_primitive_error_code, int_base);

@@ -1,4 +1,4 @@
-## $Id$
+## $Id: pmpost.am 69664 2024-02-01 22:56:12Z karl $
 ## texk/web2c/pmpostdir/am/pmpost.am: Makefile fragment for pMetaPost.
 ##
 ## Copyright 2018-2022 Karl Berry <tex-live@tug.org>

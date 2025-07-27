@@ -1,5 +1,5 @@
 #! /bin/sh -vx
-# $Id$
+# $Id: dvipdfmx-upjf.test 74206 2025-02-22 18:41:57Z karl $
 # Copyright 2020-2023 Japanese TeX Development Community <issue@texjp.org>
 # You may freely use, modify and/or distribute this file.
 
@@ -84,6 +84,8 @@ echo "*** dvipdfmx: test for upjf1_omit2.pdf" && echo \
 	|| failed="$failed dvipdfmx-upjf1-vf_omit2"
 
 cmp ./upjf1_full.pdf ./upjf1_omit2.pdf || failed="$failed dvipdfmx-upjf1-cmp2"
+
+rm -f upjf-r.ofm upjv-r.ofm
 
 
 test -z "$failed" && exit 0

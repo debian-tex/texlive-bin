@@ -1,5 +1,5 @@
 #! /bin/sh -vx
-# $Id$
+# $Id: makejvf.test 68305 2023-09-17 13:24:00Z hironobu $
 # Copyright 2017-2023 Karl Berry <tex-live@tug.org>
 # Copyright 2010-2013 Peter Breitenlohner <tex-live@tug.org>
 # You may freely use, modify and/or distribute this file.

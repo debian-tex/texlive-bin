@@ -1,5 +1,5 @@
 #! /bin/sh -vx
-# $Id$
+# $Id: test-dvips.test 67885 2023-08-11 14:25:18Z takuji $
 # Public domain.
 
 BinDir=${BinDir:-.}

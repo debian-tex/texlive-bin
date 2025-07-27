@@ -1,4 +1,4 @@
-% Copyright 1996-2023 Han Th\^e\llap{\raise 0.5ex\hbox{\'{}}} Th\`anh,
+% Copyright 1996-2025 Han Th\^e\llap{\raise 0.5ex\hbox{\'{}}} Th\`anh,
 % <thanh@@pdftex.org>
 
 % This file is part of pdfTeX.
@@ -307,8 +307,8 @@ known as `\eTeX'.
   {printed when \eTeX\ starts}
 @#
 @d pdftex_version==140 { \.{\\pdftexversion} }
-@d pdftex_revision=="26" { \.{\\pdftexrevision} }
-@d pdftex_version_string=='-1.40.26' {current \pdfTeX\ version}
+@d pdftex_revision=="28" { \.{\\pdftexrevision} }
+@d pdftex_version_string=='-1.40.28' {current \pdfTeX\ version}
 @#
 @d pdfTeX_banner=='This is pdfTeX, Version 3.141592653',eTeX_version_string,pdftex_version_string
    {printed when \pdfTeX\ starts}
@@ -1886,6 +1886,9 @@ amounts of user interaction:
 @d error_stop_mode=3 {stops at every opportunity to interact}
 @d print_err(#)==begin if interaction=error_stop_mode then wake_up_terminal;
   print_nl("! "); print(#);
+  end
+@d print_ignored_err(#)==begin if interaction=error_stop_mode then wake_up_terminal;
+  print_nl("ignored error: "); print(#);
   end
 
 @<Glob...@>=
@@ -5704,10 +5707,11 @@ that will be defined later.
 @d pdf_suppress_warning_page_group_code  = pdftex_first_integer_code + 30 {suppress warning about multiple pdfs with page group}
 @d pdf_info_omit_date_code  = pdftex_first_integer_code + 31 {omit generating CreationDate and ModDate}
 @d pdf_suppress_ptex_info_code = pdftex_first_integer_code + 32 {suppress /PTEX.* entries in PDF dictionaries}
-@d pdf_omit_charset_code = pdftex_first_integer_code + 33 {suppress /PTEX.* entries in PDF dictionaries}
-@d pdf_omit_info_dict_code = pdftex_first_integer_code + 34 {suppress /PTEX.* entries in PDF dictionaries}
-@d pdf_omit_procset_code = pdftex_first_integer_code + 35 {suppress /PTEX.* entries in PDF dictionaries}
-@d pdf_int_pars=pdftex_first_integer_code + 36 {total number of \pdfTeX's integer parameters}
+@d pdf_omit_charset_code = pdftex_first_integer_code + 33 {omit CharSet in Font dict}
+@d pdf_omit_info_dict_code = pdftex_first_integer_code + 34 {omit Info dict}
+@d pdf_omit_procset_code = pdftex_first_integer_code + 35 {omit ProcSet in resources dict}
+@d pdf_ptex_use_underscore_code = pdftex_first_integer_code + 36 {use underscore for PTEX prefix}
+@d pdf_int_pars=pdftex_first_integer_code + 37 {total number of \pdfTeX's integer parameters}
 @#
 @d etex_int_base=pdf_int_pars {base for \eTeX's integer parameters}
 @d tracing_assigns_code=etex_int_base {show assignments}
@@ -5719,7 +5723,8 @@ that will be defined later.
 @d last_line_fit_code=etex_int_base+6 {adjustment for last line of paragraph}
 @d saving_vdiscards_code=etex_int_base+7 {save items discarded from vlists}
 @d saving_hyph_codes_code=etex_int_base+8 {save hyphenation codes for languages}
-@d eTeX_state_code=etex_int_base+9 {\eTeX\ state variables}
+@d ignore_primitive_error_code=etex_int_base+9 {ignore some primitive/engine errors}
+@d eTeX_state_code=etex_int_base+10 {\eTeX\ state variables}
 @d etex_int_pars=eTeX_state_code+eTeX_states {total number of \eTeX's integer parameters}
 @#
 @d int_pars=etex_int_pars {total number of integer parameters}
@@ -5822,6 +5827,7 @@ that will be defined later.
 @d pdf_omit_charset == int_par(pdf_omit_charset_code)
 @d pdf_omit_info_dict == int_par(pdf_omit_info_dict_code)
 @d pdf_omit_procset == int_par(pdf_omit_procset_code)
+@d pdf_ptex_use_underscore == int_par(pdf_ptex_use_underscore_code)
 @#
 @d tracing_assigns==int_par(tracing_assigns_code)
 @d tracing_groups==int_par(tracing_groups_code)
@@ -5832,6 +5838,7 @@ that will be defined later.
 @d last_line_fit==int_par(last_line_fit_code)
 @d saving_vdiscards==int_par(saving_vdiscards_code)
 @d saving_hyph_codes==int_par(saving_hyph_codes_code)
+@d ignore_primitive_error==int_par(ignore_primitive_error_code)
 
 @<Assign the values |depth_threshold:=show_box_depth|...@>=
 depth_threshold:=show_box_depth;
@@ -5933,6 +5940,7 @@ pdf_suppress_ptex_info_code: print_esc("pdfsuppressptexinfo");
 pdf_omit_charset_code: print_esc("pdfomitcharset");
 pdf_omit_info_dict_code: print_esc("pdfomitinfodict");
 pdf_omit_procset_code: print_esc("pdfomitprocset");
+pdf_ptex_use_underscore_code: print_esc("pdfptexuseunderscore");
 @/@<Cases for |print_param|@>@/
 othercases print("[unknown integer parameter!]")
 endcases;
@@ -6136,6 +6144,9 @@ primitive("pdfomitinfodict",assign_int,int_base+pdf_omit_info_dict_code);@/
 
 primitive("pdfomitprocset",assign_int,int_base+pdf_omit_procset_code);@/
 @!@:pdf_omit_procset}{\.{\\pdfomitprocset} primitive@>
+
+primitive("pdfptexuseunderscore",assign_int,int_base+pdf_ptex_use_underscore_code);@/
+@!@:pdf_ptex_use_underscore}{\.{\\pdfptexuseunderscore} primitive@>
 
 @ @<Cases of |print_cmd_chr|...@>=
 assign_int: if chr_code<count_base then print_param(chr_code-int_base)
@@ -10948,7 +10959,7 @@ p, q: pointer;
 @!save_scanner_status:small_number; {|scanner_status| upon entry}
 @!save_def_ref: pointer; {|def_ref| upon entry, important if inside `\.{\\message}'}
 @!save_warning_index: pointer;
-@!bool: boolean; {temp boolean}
+@!booltemp: boolean; {temp boolean}
 @!i: integer; {first temp integer}
 @!j: integer; {second temp integer}
 @!b:pool_pointer; {base of temporary string}
@@ -11148,7 +11159,7 @@ pdf_mdfive_sum_code:
     save_warning_index := warning_index;
     save_def_ref := def_ref;
     save_cur_string;
-    bool := scan_keyword("file");
+    booltemp := scan_keyword("file");
     scan_pdf_ext_toks;
     s := tokens_to_string(def_ref);
     delete_token_ref(def_ref);
@@ -11156,7 +11167,7 @@ pdf_mdfive_sum_code:
     warning_index := save_warning_index;
     scanner_status := save_scanner_status;
     b := pool_ptr;
-    getmd5sum(s, bool);
+    getmd5sum(s, booltemp);
     link(garbage) := str_toks(b);
     flush_str(s);
     ins_list(link(temp_head));
@@ -11219,7 +11230,7 @@ pdf_match_code:
     save_def_ref := def_ref;
     save_cur_string;
     {scan for icase}
-    bool := scan_keyword("icase");
+    booltemp := scan_keyword("icase");
     {scan for subcount}
     i := -1; {default for subcount}
     if scan_keyword("subcount") then begin
@@ -11236,7 +11247,7 @@ pdf_match_code:
     warning_index := save_warning_index;
     scanner_status := save_scanner_status;
     b := pool_ptr;
-    matchstrings(s, t, i, bool);
+    matchstrings(s, t, i, booltemp);
     link(garbage) := str_toks(b);
     flush_str(t);
     flush_str(s);
@@ -11275,7 +11286,7 @@ pdf_strcmp_code:
   end;
 pdf_colorstack_init_code:
   begin
-    bool := scan_keyword("page");
+    booltemp := scan_keyword("page");
     if scan_keyword("direct") then
         cur_val := direct_always
     else
@@ -11293,7 +11304,7 @@ pdf_colorstack_init_code:
     def_ref := save_def_ref;
     warning_index := save_warning_index;
     scanner_status := save_scanner_status;
-    cur_val := newcolorstack(s, cur_val, bool);
+    cur_val := newcolorstack(s, cur_val, booltemp);
     flush_str(s);
     cur_val_level := int_val;
     if cur_val < 0 then begin
@@ -15154,6 +15165,12 @@ begin
     get_pdf_omit_charset := pdf_omit_charset;
 end;
 
+function get_ptex_use_underscore: boolean;
+begin
+    get_ptex_use_underscore
+      := (pdf_ptex_use_underscore > 0) or (pdf_major_version >= 2)
+end;
+
 function get_nullfont: internal_font_number;
 begin
     get_nullfont := null_font;
@@ -15772,17 +15789,19 @@ accuracy.
 @!one_bp: scaled; {scaled value corresponds to 1bp}
 @!one_hundred_bp: scaled; {scaled value corresponds to 100bp}
 @!one_hundred_inch: scaled; {scaled value corresponds to 100in}
+@!one_inch: integer; {(1in in sp)/|maxdimen|}
 @!ten_pow: array[0..9] of integer; {$10^0..10^9$}
 @!scaled_out: integer; {amount of |scaled| that was taken out in
 |divide_scaled|}
 @!init_pdf_output: boolean;
-@!adv_char_width_s: integer; {to save result of calculation done in |adv_char_width| }
+@!adv_char_width_s: integer; {to save result of calculation done in |adv_char_width|}
 @!adv_char_width_s_out: scaled;
 
 @ @<Set init...@>=
 one_bp := 65782; {65781.76}
 one_hundred_bp := 6578176;
 one_hundred_inch := 473628672;
+one_inch := 226;
 ten_pow[0] := 1;
 for i := 1 to 9 do
     ten_pow[i] := 10*ten_pow[i - 1];
@@ -15790,6 +15809,9 @@ init_pdf_output := false;
 
 
 @ The following function divides |s| by |m|. |dd| is number of decimal digits.
+The result is $r = (s/m) \times 10^{dd}$, and the remainder after
+the division is $s - |scaled_out|$
+
 
 @<Declare procedures that need to be declared forward for \pdfTeX@>=
 function divide_scaled(s, m: scaled; dd: integer): scaled;
@@ -15843,6 +15865,16 @@ else
     round_xn_over_d := -u;
 end;
 
+function is_bit_set(n: integer; s: small_number): boolean;
+{check if $s$-th bit (one-based) of $n$ is set}
+var m, i: integer;
+begin
+  m := 1;
+  for i := 1 to s - 1 do
+    m := m * 2;
+  is_bit_set := (n div m) mod 2;
+end;
+
 @ Next subroutines are needed for controlling spacing in PDF page description.
 For a given character |c| from a font |f|,
 the procedure |adv_char_width| advances |pdf_h|
@@ -15864,7 +15896,7 @@ For PK fonts things are more complicated,
 as we have to deal with scaling bitmaps as well.
 
 @p
-procedure adv_char_width(f: internal_font_number; c: eight_bits; dd: eight_bits);
+procedure adv_char_width(f: internal_font_number; c: eight_bits);
 {update |pdf_delta_h| by character width |w| from font |f|}
 var w, s_out: scaled;
     s: integer;
@@ -15872,21 +15904,21 @@ begin
     w := char_width(f)(char_info(f)(c));
     if isscalable(f) then begin
         if pdf_cur_Tm_a = 0 then begin
-            s := divide_scaled(w, pdf_font_size[f], dd);
+            s := divide_scaled(w, pdf_font_size[f], 4);
             s_out := scaled_out;
             pdf_delta_h := pdf_delta_h + s_out;
         end
         else begin
             s := divide_scaled(round_xn_over_d(w, 1000, 1000 + pdf_cur_Tm_a),
                                pdf_font_size[f],
-                               dd);
+                               4);
             s_out := round_xn_over_d(round_xn_over_d(pdf_font_size[f], abs(s), 10000),
                                      1000 + pdf_cur_Tm_a, 1000);
             if s < 0 then
                 s_out := -s_out;
             pdf_delta_h := pdf_delta_h + s_out;
         end;
-        adv_char_width_s := s;
+        adv_char_width_s := round(s/10);
         adv_char_width_s_out := s_out;
     end else
         pdf_delta_h := pdf_delta_h + get_pk_char_width(f, w);
@@ -15962,7 +15994,7 @@ DVI}
 @!pdf_draftmode_value: integer;
 @!pdf_cur_Tm_a: integer; {|a| value of the current text matrix, i.e., the current
                           horizontal scaling factor}
-@!pdf_last_f: internal_font_number; {last font in PDF output page}
+@!pdf_last_f: internal_font_number; {last font in PDF output page; this can differ from |pdf_f|}
 @!pdf_last_fs: internal_font_number; {last font size in PDF output page}
 @!pdf_dummy_font: internal_font_number; {font used to insert artificial interword spaces}
 
@@ -16014,17 +16046,21 @@ begin
     end;
 end;
 
-procedure pdf_set_textmatrix(v, v_out: scaled; f: internal_font_number);
-{set the next starting point to |cur_h|, |cur_v|}
+function get_font_auto_expand_ratio(f: internal_font_number): integer;
+{return |pdf_font_expand_ratio[f]| if f is auto-expanded, 0 otherwise}
+begin
+    if pdf_font_auto_expand[f] then
+        get_font_auto_expand_ratio := pdf_font_expand_ratio[f]
+    else
+        get_font_auto_expand_ratio := 0;
+end;
+
+procedure pdf_set_text_pos(v, v_out: scaled; f: internal_font_number);
+{set the next starting point for text to |cur_h|, |cur_v|}
 var pdf_new_Tm_a: integer; {|a| value of the new text matrix}
 begin
     pdf_out(" ");
-    if f = pdf_f then
-        pdf_new_Tm_a := pdf_cur_Tm_a
-    else if not pdf_font_auto_expand[f] then
-        pdf_new_Tm_a := 0
-    else
-        pdf_new_Tm_a := pdf_font_expand_ratio[f];
+    pdf_new_Tm_a := get_font_auto_expand_ratio(f);
     if (pdf_new_Tm_a <> 0) or
         ((pdf_new_Tm_a = 0) and (pdf_cur_Tm_a <> 0)) then begin
         pdf_print_real(1000 + pdf_new_Tm_a, 3);
@@ -16118,7 +16154,7 @@ begin
 
     {create a new font object for |f|}
     pdf_create_obj(obj_type_font, f);
-    pdf_font_has_space_char[f] := hasspacechar(f);
+    pdf_font_has_space_char[f] := hasspacechar(f) and (char_width(f)(char_info(f)(32)) > one_bp);
     pdf_use_font(f, obj_ptr);
 end;
 
@@ -16133,6 +16169,7 @@ label found, found1;
 var p: pointer;
     k: internal_font_number;
 begin
+    pdf_f := f;
     if not font_used[f] then
         pdf_init_font(f);
     set_ff(f); {set |ff| to the tfm number of the font sharing the font object
@@ -16191,14 +16228,22 @@ end;
 
 procedure pdf_begin_string(f: internal_font_number); {begin to draw a string}
 var s_out, v, v_out: scaled;
-    save_pdf_delta_h: scaled;
     s: integer;
     must_end_string: boolean;  {must we end the current string?}
     must_insert_space: boolean;  {must we insert an interword space?}
+    must_set_text_pos: boolean;  {move must be set using Tm or Td operator}
+    move_looks_like_interword_space: boolean; {move could be a space}
 begin
+    must_insert_space := false;
+    must_end_string := false;
+
     if not pdf_doing_text then
         pdf_begin_text;
-    if f <> pdf_f then begin
+
+    {delay font switch if we must insert interword space}
+    if (not gen_faked_interword_space and pdf_f <> f)
+        or (gen_faked_interword_space and not (font_used[f] and font_used[pdf_f]))
+    then begin
         pdf_end_string;
         pdf_set_font(f);
     end;
@@ -16230,28 +16275,30 @@ begin
         v_out := 0;
     end;
 
-    must_insert_space := false;
-    must_end_string := false;
+    must_set_text_pos := (v <> 0)
+        or (abs(s) >= @'100000)
+        or (get_font_auto_expand_ratio(f) <> pdf_cur_Tm_a)
+        or get_font_auto_expand_ratio(f) <> get_font_auto_expand_ratio(pdf_f);
 
-    if (f <> pdf_f) or (v <> 0) or (abs(s) >= @'100000) then begin
+    if must_set_text_pos then begin
         must_end_string := true;
     end;
 
+    move_looks_like_interword_space := (space(f) > one_bp)
+        and (s_out > space(f) - space_shrink(f) - one_bp div 10)
+        and (v = 0);
+
     if gen_faked_interword_space
-        and pdf_doing_string
-        and (not must_end_string)
-        and (s_out > space(f) - space_shrink(f))
-        and (v = 0)
+        and move_looks_like_interword_space
     then begin
         must_insert_space := true;
     end;
 
     if (must_insert_space) then begin
         {insert a real space char from the font when possible}
-        if pdf_font_has_space_char[f]  then begin
+        if pdf_font_has_space_char[f] and pdf_doing_string then begin
             pdf_out(" ");
-            save_pdf_delta_h := pdf_delta_h;
-            adv_char_width(f, 32, 3); { to get |adv_char_width_s| and |adv_char_width_s_out|}
+            adv_char_width(f, 32); { update |pdf_delta_h|, get |adv_char_width_s| and |adv_char_width_s_out|}
             s := s - adv_char_width_s;
             s_out := s_out - adv_char_width_s_out;
             pdf_mark_char(f, 32);
@@ -16264,12 +16311,17 @@ begin
         pdf_end_string;
         {insert a space char from the dummy font if needed}
         if (must_insert_space) and (not pdf_font_has_space_char[f]) then begin
-            pdf_insert_interword_space; {this will change |pdf_f|}
-            pdf_set_font(f);
+            pdf_insert_interword_space; {this will change the current font}
         end;
-        pdf_set_textmatrix(v, v_out, f);
-        pdf_f := f;
+        pdf_set_font(f);
+        pdf_set_text_pos(v, v_out, f);
         s := 0;
+    end;
+
+    {do font switch here after interword space could have been inserted}
+    if gen_faked_interword_space and (pdf_f <> f) then begin
+        pdf_end_string;
+        pdf_set_font(f);
     end;
 
     if not pdf_doing_string then begin
@@ -16297,6 +16349,7 @@ begin
     pdf_read_dummy_font;
     pdf_begin_string(pdf_dummy_font);
     pdf_print(" ");
+    adv_char_width(pdf_dummy_font, 32);
     pdf_end_string_nl;
 
     gen_faked_interword_space := s;
@@ -18381,7 +18434,7 @@ end;
     else begin
         pdf_begin_string(f);
         pdf_print_char(f, #);
-        adv_char_width(f, #, 4);
+        adv_char_width(f, #);
     end;
 end
 
@@ -20300,7 +20353,10 @@ begin
         pdf_print_ln("/Trapped /False");
     end;
     if pdf_suppress_ptex_info mod 2 = 0 then begin
-        pdf_str_entry_ln("PTEX.Fullbanner", pdftex_banner);
+        if get_ptex_use_underscore then
+            pdf_str_entry_ln("PTEX_Fullbanner", pdftex_banner)
+        else
+            pdf_str_entry_ln("PTEX.Fullbanner", pdftex_banner);
     end;
     pdf_end_dict;
 end;
@@ -27622,13 +27678,18 @@ else  begin q:=glue_ptr(p);
   active_height[6]:=active_height[6]+shrink(q);
   if (shrink_order(q)<>normal)and(shrink(q)<>0) then
     begin@t@>@;@/
-    print_err("Infinite glue shrinkage found in box being split");@/
+    if is_bit_set(ignore_primitive_error, 1) then
+      print_ignored_err("Infinite glue shrinkage found in box being split")
+    else begin
+      print_err("Infinite glue shrinkage found in box being split");@/
 @.Infinite glue shrinkage...@>
-    help4("The box you are \vsplitting contains some infinitely")@/
-      ("shrinkable glue, e.g., `\vss' or `\vskip 0pt minus 1fil'.")@/
-      ("Such glue doesn't belong there; but you can safely proceed,")@/
-      ("since the offensive shrinkability has been made finite.");
-    error; r:=new_spec(q); shrink_order(r):=normal; delete_glue_ref(q);
+      help4("The box you are \vsplitting contains some infinitely")@/
+        ("shrinkable glue, e.g., `\vss' or `\vskip 0pt minus 1fil'.")@/
+        ("Such glue doesn't belong there; but you can safely proceed,")@/
+        ("since the offensive shrinkability has been made finite.");
+      error;
+    end;
+    r:=new_spec(q); shrink_order(r):=normal; delete_glue_ref(q);
     glue_ptr(p):=r; q:=r;
     end;
   end;
@@ -34414,6 +34475,17 @@ begin
     end;
     if (x <= 0) or (y <= 0) or (xr < 0) or (yr < 0) then
         pdf_error("ext1", "invalid image dimensions");
+    if (xr = 0) and (yr = 0) then begin
+        {If both resolutions are zero, that suggests that the resolution data
+         is missing, so we should never issue a warning.}
+    end
+    else if (x / one_inch >= xr) or (y / one_inch >= yr) then begin
+        {It's better to warn and ignore too-small resolutions given in
+         the image file, usually 1dpi x 1dpi, to avoid arithmetic overflow.}
+        xr := 0;
+        yr := 0;
+        pdf_warning("ext1", "too small image resolution ignored", true, true);
+    end;
     if is_pdf_image(image) then begin
         w := x;
         h := y;
@@ -37185,6 +37257,8 @@ primitive("savingvdiscards",assign_int,int_base+saving_vdiscards_code);@/
 @!@:saving_vdiscards_}{\.{\\savingvdiscards} primitive@>
 primitive("savinghyphcodes",assign_int,int_base+saving_hyph_codes_code);@/
 @!@:saving_hyph_codes_}{\.{\\savinghyphcodes} primitive@>
+primitive("ignoreprimitiveerror",assign_int,int_base+ignore_primitive_error_code);@/
+@!@:ignore_primitive_error_}{\.{\\ignoreprimitiveerror} primitive@>
 
 @ @d every_eof==equiv(every_eof_loc)
 
@@ -37201,6 +37275,7 @@ pre_display_direction_code:print_esc("predisplaydirection");
 last_line_fit_code:print_esc("lastlinefit");
 saving_vdiscards_code:print_esc("savingvdiscards");
 saving_hyph_codes_code:print_esc("savinghyphcodes");
+ignore_primitive_error_code:print_esc("ignoreprimitiveerror");
 
 @ In order to handle \.{\\everyeof} we need an array |eof_seen| of
 boolean variables.

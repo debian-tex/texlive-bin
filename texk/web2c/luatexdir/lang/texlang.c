@@ -213,7 +213,6 @@ const char *clean_hyphenation(int id, const char *buff, char **cleaned)
     int i = 0;
     char *uindex = (char *)word;
     const char *s = buff;
-
     while (*s && !isspace((unsigned char)*s)) {
         word[i++] = (unsigned)*s;
         s++;
@@ -472,7 +471,8 @@ static halfword compound_word_break(halfword t, int clang)
 void set_disc_field(halfword f, halfword t)
 {
     if (t != null) {
-        couple_nodes(f, t);
+        alink(t) = null; /* don't expose this one! */
+        vlink(f) = t;
         tlink(f) = tail_of_list(t);
     } else {
         vlink(f) = null;

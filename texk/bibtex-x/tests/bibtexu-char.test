@@ -1,5 +1,5 @@
 #! /bin/sh -vx
-# $Id$
+# $Id: bibtexu-char.test 69145 2023-12-16 06:51:56Z takuji $
 # Copyright 2022-2023 TANAKA Takuji <ttk@t-lab.opal.ne.jp>
 # You may freely use, modify and/or distribute this file.
 

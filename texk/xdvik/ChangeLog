@@ -1,3 +1,37 @@
+2025-02-17  Karl Berry  <karl@freefriends.org>
+
+	* m4/xdvi-check-xaw.m4: try to discern the type of the list
+	(second) parameter of the XawListChange function, (too) simply
+	with: sed -n 's/list,$//p' /usr/include/X11/Xaw/List.h.
+	Default to the type of the page_labels member, as before.
+	Maybe it will work in practice?
+	* gui/pagesel.c (XAWLISTCHANGELISTTYPE): define if not defined.
+	(xaw_update_list): cast to it.
+	(See next ChangeLog entry for links to discussions.)
+
+	* c-auto.in,
+	* configure: regenerate.
+
+2025-02-15  Karl Berry  <karl@freefriends.org>
+
+	* gui/pagesel.c (xaw_update_list): put in comment about the known
+	problem of incompatible pointer types in the XawListChange call.
+	A configure test seems to be needed.
+	xdvi bug report: https://sourceforge.net/p/xdvi/bugs/406/
+	discussion of alternatives:
+	  https://tug.org/pipermail/tex-k/2024-February/004008.html
+
+2024-11-26  Sam James  <sam@gentoo.org>
+
+	* dvi-draw.c (lseek,pow): remove () declarations, incompatible
+	with C23.
+	* gui/menu.c,
+	* gui/sfDraw.c,
+	* gui/sfDraw.h,
+	* gui/sfSelFile.c: avoid () decls.
+	https://tug.org/pipermail/tex-live/2024-November/050931.html
+	https://tug.org/pipermail/tex-live/2024-November/050930.html
+
 2023-02-02  Florian Weimer  <fweimer@redhat.com>
 
 	* m4/xdvi-func-setsid-in-fork.m4.c99-4: avoid implicit

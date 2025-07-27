@@ -1,5 +1,8 @@
-$Id$
+$Id: NEWS 74485 2025-03-06 22:52:00Z karl $
 This file records noteworthy changes.  (Public domain.)
+
+dvips 2025.1 (TeX Live 2025, 7 March 2025):
+  Support upTeX new encoding for combining characters via virtual fonts.
 
 dvips 2024.1 (TeX Live 2024):
   Support for multibyte characters in virtual fonts to OFM fonts for (u)pTeX.

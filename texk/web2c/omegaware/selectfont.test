@@ -1,5 +1,5 @@
 #! /bin/sh -vx
-# $Id$
+# $Id: selectfont.test 67907 2023-08-13 13:50:50Z takuji $
 # Copyright 2017 Karl Berry <tex-live@tug.org>
 # Copyright 2011-2015 Peter Breitenlohner <tex-live@tug.org>
 # You may freely use, modify and/or distribute this file.

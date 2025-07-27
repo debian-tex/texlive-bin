@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 # (The MIT License)
 #
-# Copyright (c) 2022-2024 Yegor Bugayenko
+# Copyright (c) 2022-2025 Yegor Bugayenko
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the 'Software'), to deal
@@ -21,11 +21,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-# 2024-01-17 0.0.19
+# 2025/01/22 0.0.25
 package bibcop;
 
 use warnings;
 use strict;
+use POSIX;
 use File::Basename;
 
 # Hash of incoming command line arguments.
@@ -36,14 +37,16 @@ my %args = map { $_ => 1 } @ARGV;
 
 # Only these tags are allowed and only these types of entries.
 my %blessed = (
-  'article' => ['doi', 'year', 'title', 'author', 'journal', 'volume', 'number', 'publisher?', 'pages?'],
-  'inproceedings' => ['doi', 'booktitle', 'title', 'author', 'year', 'pages?', 'organization?', 'volume?'],
-  'book' => ['title', 'author', 'year', 'publisher', 'doi?'],
-  'misc' => ['title', 'author', 'year', 'eprint?', 'archiveprefix?', 'primaryclass?', 'publisher?', 'organization?', 'doi?', 'url?'],
+  'article' => ['doi', 'year', 'title', 'author', 'journal', 'volume', 'number', 'month?', 'pages?'],
+  'inproceedings' => ['doi', 'booktitle', 'title', 'author', 'year', 'pages?', 'month?', 'organization?', 'volume?'],
+  'incollection' => ['doi', 'booktitle', 'title', 'author', 'year', 'editor', 'pages?', 'month?', 'volume?', 'publisher?'],
+  'book' => ['title', 'author', 'year', 'publisher', 'doi?', 'edition?'],
+  'phdthesis' => ['title', 'author', 'year', 'school', 'doi?'],
+  'misc' => ['title', 'author', 'year', 'eprint?', 'archiveprefix?', 'primaryclass?', 'month?', 'organization?', 'doi?', 'howpublished?', 'note?'],
 );
 
 # See https://research.arizona.edu/faq/what-do-you-mean-when-you-say-use-title-case-proposalproject-titles
-my %minors = map { $_ => 1 } qw/in of at to by the a an and or as if up via yet nor but off on for into/;
+my %minors = map { $_ => 1 } qw/in of at to by the a an and or as if up via yet nor but off on for into vs versus/;
 
 # Check the presence of mandatory tags.
 sub check_mandatory_tags {
@@ -52,6 +55,9 @@ sub check_mandatory_tags {
   }
   my (%entry) = @_;
   my $type = $entry{':type'};
+  if (not exists $blessed{$type}) {
+    return "The type of entry is not allowed: '$type'"
+  }
   my $mandatory = $blessed{$type};
   foreach my $tag (@$mandatory) {
     if ($tag =~ /^.*\?$/) {
@@ -89,29 +95,35 @@ sub check_capitalization {
     if (not exists $tags{$tag}) {
       next;
     }
-    my $tailed = qr/^.+(:|\?)$/;
+    my @ends = qw/ ; ? . --- : ! /;
     my $value = $entry{$tag};
     my @words = only_words($value);
     my $pos = 0;
     foreach my $word (@words) {
+      $word =~ s/\.$//g;
       $pos = $pos + 1;
       if (not $word =~ /^[A-Za-z]/) {
         next;
       }
+      if ($word =~ /^\{.*|.*\}$/) {
+        next;
+      }
       if (exists $minors{$word}) {
         if ($pos eq 1) {
-          return "The minor word in the '$tag' must be upper-cased since it is the first one"
+          return "The minor word '$word' in the '$tag' must be upper-cased since it is the first one"
         }
-        if (not $words[$pos - 2] =~ $tailed) {
-          next;
+        my $before = $words[$pos - 2];
+        if (grep(/^\Q$before\E$/, @ends)) {
+          return "The minor word '$word' in the '$tag' must be upper-cased, because it follows the '$before'"
         }
-        return "The minor word in the '$tag' must be upper-cased, because it follows the colon"
+        next;
       }
       if (exists $minors{lc($word)}) {
         if ($pos eq 1) {
           next;
         }
-        if ($words[$pos - 2] =~ $tailed) {
+        my $before = $words[$pos - 2];
+        if (grep(/^\Q$before\E$/, @ends)) {
           next;
         }
         return "All minor words in the '$tag' must be lower-cased, while @{[as_position($pos)]} word '$word' is not"
@@ -126,39 +138,45 @@ sub check_capitalization {
 # Check that the 'author' is formatted correctly.
 sub check_author {
   my (%entry) = @_;
-  if (not exists $entry{'author'}) {
-    return;
-  }
-  if ($entry{'author'} =~ /^\{.+\}$/) {
-    return;
-  }
-  my $author = clean_tex($entry{'author'});
-  my @authors = split(/\s+and\s+/, $author);
-  my $pos = 0;
-  for my $a (@authors) {
-    $pos += 1;
-    if ($a eq 'others') {
+  my @tags = qw/author editor/;
+  foreach my $tag (@tags) {
+    if (not exists $entry{$tag}) {
       next;
     }
-    if (index($a, ' ') != -1 and index($a, ',') == -1) {
-      return "The last name should go first, all other names must follow, after a comma in @{[as_position($pos)]} 'author', as in 'Knuth, Donald E.'";
+    if ($entry{$tag} =~ /^\{.+\}$/) {
+      next;
     }
-    my $npos = 0;
-    for my $name (split(/[ ,]+/, $a)) {
-      $npos += 1;
-      if (index($name, '{') != -1) {
+    my $author = clean_tex($entry{$tag});
+    my @authors = split(/\s+and\s+/, $author);
+    my $pos = 0;
+    for my $a (@authors) {
+      $pos += 1;
+      if ($a eq 'others') {
         next;
       }
-      if ($name =~ /^[A-Z]\.$/) {
-        next;
+      if (index($a, ' ') != -1 and index($a, ',') == -1) {
+        return "The last name should go first, all other names must follow, after a comma in @{[as_position($pos)]} '$tag', as in 'Knuth, Donald E.'";
       }
-      if ($name =~ /^[A-Z][^.]+$/) {
-        next
+      my $npos = 0;
+      for my $name (split(/[ ,]+/, $a)) {
+        $npos += 1;
+        if (index($name, '{') != -1) {
+          next;
+        }
+        if ($name =~ /^[A-Z]\.$/) {
+          next;
+        }
+        if ($name =~ /^[A-Z][^.]+$/) {
+          next
+        }
+        if ($name =~ /^(van|de|der|dos)$/) {
+          next
+        }
+        if ($name =~ /^[A-Z]$/) {
+          return "A shortened name must have a tailing dot in @{[as_position($pos)]} '$tag', as in 'Knuth, Donald E.'";
+        }
+        return "In @{[as_position($pos)]} '$tag' @{[as_position($npos)]} name looks suspicious ($name), use something like 'Knuth, Donald E. and Duane, Bibby'";
       }
-      if ($name =~ /^[A-Z]$/) {
-        return "A shortened name must have a tailing dot in @{[as_position($pos)]} 'author', as in 'Knuth, Donald E.'";
-      }
-      return "In @{[as_position($pos)]} 'author' @{[as_position($npos)]} name looks suspicious ($name), use something like 'Knuth, Donald E. and Duane, Bibby'";
     }
   }
 }
@@ -172,9 +190,15 @@ sub check_shortenings {
       next;
     }
     my $value = $entry{$tag};
-    my @words = only_words($value);
+    my @words = split(/ /, clean_tex($value));
     foreach my $word (@words) {
       if (not $word =~ /^[A-Za-z]/) {
+        next;
+      }
+      if ($word eq 'vs.') {
+        next;
+      }
+      if ($word =~ /\.\.\.$/) {
         next;
       }
       if ($word =~ /^.*\.$/) {
@@ -235,7 +259,7 @@ sub check_org_in_booktitle {
     return;
   }
   my (%entry) = @_;
-  my @orgs = ( 'ACM', 'IEEE' );
+  my @orgs = qw/ACM IEEE/;
   if (exists($entry{'booktitle'})) {
     my $title = $entry{'booktitle'};
     foreach my $o (@orgs) {
@@ -254,6 +278,7 @@ sub check_org_in_booktitle {
 sub check_typography {
   my (%entry) = @_;
   my %symbols = (
+    '...' => 'ellipses',
     '.' => 'dot',
     ',' => 'comma',
     ';' => 'semi-colon',
@@ -268,12 +293,13 @@ sub check_typography {
     '[' => 'opening square bracket',
     ']' => 'closing square bracket',
   );
-  my @spaces_around = ( '---' );
+  my @need_spaces_around = ( '---', '...' );
   my @no_spaces_around = ( '--', '-' );
   my @no_space_before = ( '.', ',', ';', ':', '?', '!', ')', ']' );
   my @no_space_after = ( '(', '[' );
-  my @space_before = ( '(', '[' );
-  my @space_after = ( ')', ']' );
+  my @need_space_before = ( '(', '[' );
+  my @need_space_after = ( ')', ']', ',' );
+  my @good_tails = ( 'Inc.', 'Ltd.' );
   my @bad_tails = ( '.', ',', ';', ':', '-' );
   foreach my $tag (keys %entry) {
     if ($tag =~ /^:.*/) {
@@ -284,15 +310,23 @@ sub check_typography {
     }
     my $value = $entry{$tag};
     foreach my $s (@bad_tails) {
-      if ($s eq '.' and $tag eq 'author') {
+      if ($s eq '.' and ($tag eq 'author' or $tag eq 'editor')) {
         next;
       }
-      if ($value =~ /^.*\Q$s\E$/) {
-        return "The '$tag' must not end with a $symbols{$s}"
+      my $good = 0;
+      foreach my $s (@good_tails) {
+        if ($value =~ /^.*\Q$s\E$/) {
+          $good = 1;
+        }
+      }
+      if (not $good) {
+        if ($value =~ /^.*\Q$s\E$/) {
+          return "The '$tag' must not end with a $symbols{$s}"
+        }
       }
     }
     foreach my $s (@no_space_before) {
-      if ($value =~ /^.*\s\Q$s\E.*$/) {
+      if ($value =~ /^.*\s\Q$s\E(?!\Q$s\E).*$/) {
         return "In the '$tag', do not put a space before the $symbols{$s}"
       }
     }
@@ -301,18 +335,18 @@ sub check_typography {
         return "In the '$tag', do not put a space after the $symbols{$s}"
       }
     }
-    foreach my $s (@space_before) {
+    foreach my $s (@need_space_before) {
       if ($value =~ /^.*[^\{\s\\]\Q$s\E.*$/) {
         return "In the '$tag', put a space before the $symbols{$s}"
       }
     }
-    foreach my $s (@space_after) {
+    foreach my $s (@need_space_after) {
       my $p = join('', @no_space_before);
-      if ($value =~ /^.*\Q$s\E[^\}\s\Q$p\E].*$/) {
+      if ($value =~ /^.*[^\\]\Q$s\E[^\}\s\Q$p\E].*$/) {
         return "In the '$tag', put a space after the $symbols{$s}"
       }
     }
-    foreach my $s (@spaces_around) {
+    foreach my $s (@need_spaces_around) {
       if ($value =~ /^.*[^\s]\Q$s\E.*$/ or $value =~ /^.*\Q$s\E[^\s].*$/) {
         return "In the '$tag', put spaces around the $symbols{$s}"
       }
@@ -400,8 +434,28 @@ sub check_doi {
   my (%entry) = @_;
   if (exists $entry{'doi'}) {
     my $doi = $entry{'doi'};
-    if (not $doi =~ /^[0-9a-zA-Z.]+\/[0-9a-zA-Z._\-)(><:;]+$/) {
+    if (not $doi =~ /^[0-9a-zA-Z.]+\/[0-9a-zA-Z._\-)(><:;\/]+$/) {
       return "The format of the 'doi' is wrong"
+    }
+  }
+}
+
+# Check the right format of the 'howpublished.'
+sub check_howpublished {
+  my (%entry) = @_;
+  if (exists $entry{'howpublished'}) {
+    my $how = $entry{'howpublished'};
+    if (not $how =~ /^\\url\{.+\}$/) {
+      return "The format of the 'howpublished' is wrong, use \\url{} inside"
+    }
+    my $url = substr($how, 5, -1);
+    if (not $url =~ /^https?:\/\/.+$/) {
+      return "The format of the URL in 'howpublished' is wrong, doesn't start with https://: '$url'"
+    }
+    my $max = 64;
+    my $len = length($url);
+    if ($len gt $max) {
+      return "The length of the URL in 'howpublished' is too big ($len > $max), use URL shoftener: '$url'"
     }
   }
 }
@@ -428,7 +482,7 @@ sub check_month {
   my (%entry) = @_;
   if (exists $entry{'month'}) {
     my $month = $entry{'month'};
-    if (not $month =~ /^[1-9]|10|11|12$/) {
+    if (not $month =~ /^[1-9]|10|11|12|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec$/) {
       return "The format of the 'month' is wrong"
     }
   }
@@ -530,20 +584,33 @@ sub entry_fix {
   my $tags = $blessed{$type};
   my %allowed = map { $_ => 1 } @$tags;
   my @lines;
+  if (exists $entry{'booktitle'} and $entry{':type'} eq 'article') {
+    $entry{'journal'} = $entry{'booktitle'};
+  }
+  if (exists $entry{'journal'} and $entry{':type'} eq 'inproceedings') {
+    $entry{'booktitle'} = $entry{'journal'};
+  }
   foreach my $tag (keys %entry) {
     if ($tag =~ /^:/) {
+      next;
+    }
+    my $value = clean_tex($entry{$tag});
+    if ($tag eq 'url') {
+      my $today = strftime('%d-%m-%Y', localtime(time));
+      push(@lines, "  howpublished = {\\url{$value}},");
+      push(@lines, "  note = {[Online; accessed $today]},");
       next;
     }
     if (not exists $allowed{$tag} and not exists $allowed{$tag . '?'}) {
       next;
     }
-    my $value = clean_tex($entry{$tag});
     my $fixer = "fix_$tag";
     my $fixed = $value;
     if (defined &{$fixer}) {
       no strict 'refs';
       $value = $fixer->($value);
     }
+    $value = fix_unicode($value);
     if ($tag =~ /title|booktitle|journal/) {
       $value = '{' . $value . '}';
     }
@@ -562,10 +629,23 @@ sub entry_fix {
 
 sub fix_author {
   my ($value) = @_;
+  $value =~ s/\s{2,}/ /g;
   my @authors = split(/\s+and\s+/, $value);
   foreach my $author (@authors) {
     $author =~ s/^\s+|\s+$//g;
+    if (index($author, ' {') != -1 or index($author, '} ') != -1) {
+      next;
+    }
     $author =~ s/ ([A-Z])($| )/ $1.$2/g;
+    if (index($author, ',') == -1) {
+      my @words = split(/\s+/, $author);
+      my $total = @words+0;
+      if ($total > 1) {
+        $author = $words[$total - 1] . ', ' . join(' ', @words[0 .. $total - 2]);
+      }
+    }
+    $author =~ s/([A-Z])\.(?![ ,])/$1. /g;
+    $author =~ s/^\s+|\s+$//g;
   }
   return join(' and ', @authors);
 }
@@ -573,6 +653,35 @@ sub fix_author {
 sub fix_number {
   my ($value) = @_;
   $value =~ s/^0+//g;
+  return $value;
+}
+
+sub fix_month {
+  my ($value) = @_;
+  my %months = (
+    '1' => 'jan',
+    '2' => 'feb',
+    '3' => 'mar',
+    '4' => 'apr',
+    '5' => 'may',
+    '6' => 'jun',
+    '7' => 'jul',
+    '8' => 'aug',
+    '9' => 'sep',
+    '10' => 'oct',
+    '11' => 'nov',
+    '12' => 'dec',
+  );
+  $value =~ s/^0+//g;
+  if ($value =~ /^11|12|[0-9]$/) {
+    $value = $months{$value};
+  } else {
+    my %rev = reverse %months;
+    my $lc = substr(lc($value), 0, 3);
+    if (exists $rev{$lc}) {
+      $value = $lc;
+    }
+  }
   return $value;
 }
 
@@ -585,19 +694,37 @@ sub fix_capitalization {
     if (not $word =~ /^[A-Za-z]/) {
       next;
     }
-    if (exists $minors{$word}) {
-      next;
+    my $start = 1;
+    if ($pos > 1) {
+      my $before = $words[$pos - 2];
+      if (not $before =~ /(:|\?|!|;|-)$/) {
+        $start = 0;
+      }
     }
-    if (exists $minors{lc($word)} and $pos gt 1) {
-      $word = lc($word);
-      next;
+    my @parts = split(/-/, $word, -1);
+    my $p = 0;
+    foreach my $part (@parts) {
+      $p += 1;
+      my $lcp = lc($part);
+      my $head = $lcp;
+      $head =~ s/[,\.!\?;:]$//g;
+      if (exists $minors{$head}) {
+        if ($p > 1) {
+          my $pre = $parts[$p - 2];
+          if (not $pre eq '') {
+            $part = $lcp;
+            next;
+          }
+        } elsif (@parts+0 == 1) {
+          if (not $start) {
+            $part = $lcp;
+            next;
+          }
+        }
+      }
+      $part =~ s/^([a-z])/\U$1/g;
     }
-    if ($word =~ /^[a-z].*/) {
-      $word =~ s/^([a-z])/\U$1/g;
-    }
-    if (index($word, '-') != -1) {
-      $word =~ s/-([a-z])/-\U$1/g;
-    }
+    $word = join('-', @parts);
   }
   return join(' ', @words);
 }
@@ -605,6 +732,8 @@ sub fix_capitalization {
 sub fix_title {
   my ($value) = @_;
   $value = fix_capitalization($value);
+  $value =~ s/([^ ])---/$1 ---/g;
+  $value =~ s/---([^ ])/--- $1/g;
   return $value;
 }
 
@@ -630,7 +759,9 @@ sub fix_pages {
   if ($left !~ /^[0-9]*$/ or $right !~ /^[0-9]*$/) {
     return $value;
   }
-  if ($left + 0 gt $right + 0) {
+  $left = $left + 0;
+  $right = $right + 0;
+  if ($left > $right) {
     my $tmp = $left;
     $left = $right;
     $right = $tmp;
@@ -647,6 +778,27 @@ sub fix_booktitle {
   if (index($value, 'Proceedings ') != 0) {
     $value = 'Proceedings of the ' . $value;
   }
+  $value =~ s/ (19|20)[0-9]{2} / /g;
+  my @orgs = qw/ACM IEEE ACM\/IEEE IEEE\/ACM/;
+  foreach my $org (@orgs) {
+    $value =~ s/ \Q$org\E / /g;
+  }
+  my %numbers = (
+    'First' => '1st',
+    'Second' => '2nd',
+    'Third' => '3rd',
+    'Fourth' => '4th',
+    'Fifth' => '5th',
+    'Sixth' => '6th',
+    'Seventh' => '7th',
+    'Eighth' => '8th',
+    'Nineth' => '9th',
+    'Tenth' => '10th'
+  );
+  keys %numbers;
+  while(my($left, $right) = each %numbers) {
+    $value =~ s/^Proceedings of the \Q$left\E /Proceedings of the $right /g;
+  }
   return $value;
 }
 
@@ -656,15 +808,48 @@ sub fix_journal {
   return $value;
 }
 
+sub fix_org_name {
+  my ($value) = @_;
+  my @orgs = qw/ACM IEEE/;
+  foreach my $org (@orgs) {
+    $value =~ s/^\Q$org\E($|[^A-Z0-9a-z].*$)/$org/g;
+  }
+  return $value;
+}
+
 sub fix_publisher {
   my ($value) = @_;
   $value = fix_capitalization($value);
+  $value = fix_org_name($value);
   return $value;
 }
 
 sub fix_organization {
   my ($value) = @_;
   $value = fix_capitalization($value);
+  $value = fix_org_name($value);
+  return $value;
+}
+
+sub fix_unicode {
+  my ($value) = @_;
+  my %literals = (
+    'ò' => '\`{o}', 'ó' => '\\\'{o}', 'ô' => '\^{o}', 'ö' => '\"{o}', 'ő' => '\H{o}', 'ǒ' => '\v{o}', 'õ' => '\~{o}',
+    'à' => '\`{a}', 'á' => '\\\'{a}', 'â' => '\^{a}', 'ä' => '\"{a}', 'å' => '\r{a}', 'ą' => '\k{a}', 'ǎ' => '\v{a}', 'ã' => '\~{a}',
+    'ù' => '\`{u}', 'ú' => '\\\'{u}', 'û' => '\^{u}', 'ü' => '\"{u}', 'ů' => '\r{u}', 'ǔ' => '\v{u}', 'ũ' => '\~{u}',
+    'ì' => '\`{i}', 'í' => '\\\'{i}', 'î' => '\^{i}', 'ï' => '\"{i}', 'ǐ' => '\v{i}', 'ĩ' => '\~{i}',
+    'ń' => '\\\'{n}', 'ň' => '\v{n}', 'ñ' => '\~{n}',
+    'ç' => '\c{c}',
+    'ł' => '\l{}',
+    'ı' => '{\i}',
+    'ø' => '\o{}',
+    '–' => '--', '—' => '---',
+    '’' => '\''
+  );
+  keys %literals;
+  while(my($k, $v) = each %literals) {
+    $value =~ s/\Q$k\E/$v/g;
+  }
   return $value;
 }
 
@@ -793,7 +978,12 @@ sub entries {
 # Takes the text and returns only list of words seen there.
 sub only_words {
   my ($tex) = @_;
-  return split(/[ \-]/, clean_tex($tex));
+  my $t = clean_tex($tex);
+  $t =~ s/([^a-zA-Z0-9\\'])/ $1 /g;
+  $t =~ s/- +- +-/---/g;
+  $t =~ s/{ /{/g;
+  $t =~ s/ }/}/g;
+  return split(/ +/, $t);
 }
 
 # Take a TeX string and return a cleaner one, without redundant spaces, brackets, etc.
@@ -900,14 +1090,14 @@ if (not $script eq 'bibcop') {
 }
 
 if (@ARGV+0 eq 0 or exists $args{'--help'} or exists $args{'-?'}) {
-  info("Bibcop is a Style Checker of BibTeX Files\n\n" .
+  info("Bibcop is a style checker of BibTeX files (.bib)\n\n" .
     "Usage:\n" .
     "  bibcop [<options>] <.bib file path>\n\n" .
     "Options:\n" .
-    "  -v, --version   Print the current version of the tool and exit\n" .
+    "  -v, --version   Print the current version of Bibcop and exit\n" .
     "  -?, --help      Print this help screen\n" .
     "      --fix       Fix the errors and print a new version of the .bib file to the console\n" .
-    "  -i, --in-place  When used together with --fix, modifies the file in place, doesn't print it to the console\n" .
+    "  -i, --in-place  When used together with the --fix, modifies the file in place, doesn't print it to the console\n" .
     "      --verbose   Print supplementary debugging information\n" .
     "      --no:XXX    Disable one of the following checks (e.g. --no:wraps):\n" .
     "                    tags    Only some tags are allowed, while some of them are mandatory\n" .
@@ -916,10 +1106,10 @@ if (@ARGV+0 eq 0 or exists $args{'--help'} or exists $args{'-?'}) {
     "                    doi     The presence of the 'doi' tag is mandatory in all entries\n" .
     "                    inproc  The booktitle of \@inproceedings must start with 'Proceedings of the'\n" .
     "                    org     The booktitle may not mention ACM or IEEE\n" .
-    "      --latex     Report errors in LaTeX format using \\PackageWarningNoLine command\n\n" .
-    "If any issues, report to GitHub: https://github.com/yegor256/bibcop");
+    "      --latex     Report errors in LaTeX format using the \\PackageWarningNoLine command\n\n" .
+    "If any issues, please, report to GitHub: https://github.com/yegor256/bibcop");
 } elsif (exists $args{'--version'} or exists $args{'-v'}) {
-  info('0.0.19 2024-01-17');
+  info('0.0.25 2025/01/22');
 } else {
   my ($file) = grep { not($_ =~ /^-.*$/) } @ARGV;
   if (not $file) {
@@ -930,9 +1120,15 @@ if (@ARGV+0 eq 0 or exists $args{'--help'} or exists $args{'-?'}) {
   my @entries = entries($bib);
   if (exists $args{'--fix'}) {
     my $fixed = '';
+    my %seen;
     for my $i (0..(@entries+0 - 1)) {
       my %entry = %{ $entries[$i] };
+      my $name = $entry{':name'};
+      if (exists $seen{$name}) {
+        next;
+      }
       $fixed = $fixed . entry_fix(%entry);
+      $seen{$name} = 1;
     }
     if (exists $args{'-i'} or exists $args{'--in-place'}) {
       open(my $out, '>', $file) or error('Cannot open file for writing: ' . $file);
@@ -952,7 +1148,7 @@ if (@ARGV+0 eq 0 or exists $args{'--help'} or exists $args{'-?'}) {
         $found += 1;
       }
     }
-    if ($found gt 0) {
+    if ($found > 0) {
       debug("$found problem(s) found");
       fail();
     }

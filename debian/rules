@@ -198,7 +198,9 @@ execute_after_dh_install-arch:
 	rm debian/texlive-binaries/usr/share/info/tlbuild.info*
 	# remove various man pages
 	for i in latex latex-dev pdflatex pdflatex-dev lamed lualatex-dev dvilualatex-dev \
-		dviluatex platex-dev uplatex-dev xelatex-dev amstex ; do \
+		dviluatex platex-dev uplatex-dev xelatex-dev amstex \
+		eptex euptex ptex pbibtex ppltotf ptftopl upbibtex uppltotf uptex uptftopl \
+		texprof texprofile ; do \
 	  rm debian/texlive-binaries/usr/share/man/man1/$$i.1* ; \
 	done
 	#

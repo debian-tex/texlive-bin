@@ -1,0 +1,21 @@
+Description: #1097988: texlive-bin: ftbfs with GCC-15
+Author: Hilmar Preuße <hille42@debian.org>
+Applied-Upstream: I confirmed TeX Live svn r74888 and I agree with the commit.
+Last-Update: 2025-04-11
+
+--- texlive-bin-2025.20250325.74682.orig/texk/kpathsea/c-memstr.h
++++ texlive-bin-2025.20250325.74682/texk/kpathsea/c-memstr.h
+@@ -53,11 +53,11 @@
+ #define memcpy(to, from, len) bcopy ((from), (to), (len))
+ #endif
+ 
+-#if !defined(HAVE_STRING_H)
++/* #if !defined(HAVE_STRING_H)
+ extern char *strtok ();
+ #ifndef strstr
+ extern char *strstr ();
+ #endif
+-#endif
++#endif */
+ 
+ #endif /* not KPATHSEA_C_MEMSTR_H */

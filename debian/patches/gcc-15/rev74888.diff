@@ -1,0 +1,69 @@
+Description: #1097988: texlive-bin: ftbfs with GCC-15
+Author: Karl Berry <karl@freefriends.org>
+Applied-Upstream: I confirmed TeX Live svn r74888 and I agree with the commit.
+Last-Update: 2025-04-08
+
+Index: texk/ps2pk/ChangeLog
+===================================================================
+--- texlive-bin-2025.20250325.74682.orig/texk/ps2pk/ChangeLog	(revision 74876)
++++ texlive-bin-2025.20250325.74682/texk/ps2pk/ChangeLog	(revision 74888)
+@@ -1,5 +1,12 @@
+ 2025-04-08  Karl Berry  <karl@freefriends.org>
+ 
++	* fontstruct.h: note that the integer types in the new
++	prototype are "incompatible", causing warnings before C23.
++	* spaces.h (XYspace): disable my attempted prototypes,
++	the calls are incompatible even before C23.
++
++2025-04-08  Karl Berry  <karl@freefriends.org>
++
+ 	Partially placate C23's backward incompatible requirements. Sigh.
+ 	
+ 	* fontfcn.h (Type1CloseFont): arg is FontPtr.
+Index: texk/ps2pk/fontstruct.h
+===================================================================
+--- texlive-bin-2025.20250325.74682.orig/texk/ps2pk/fontstruct.h	(revision 74876)
++++ texlive-bin-2025.20250325.74682/texk/ps2pk/fontstruct.h	(revision 74888)
+@@ -119,6 +119,9 @@
+     char        scan;
+     fsBitmapFormat format;
+     int         (*get_glyphs) ( /* font, count, chars, encoding, count, glyphs */
++/* The integer types are incompatible with the uint32_t and similar used
++    in the calls. I guess have to insert explicit casts? Not done.
++    --karl, 8apr25.  */
+                                struct _Font *pFont, unsigned long count,
+                                unsigned char *chars, int charEncoding,
+                                unsigned *glyphCount,
+Index: texk/ps2pk/spaces.h
+===================================================================
+--- texlive-bin-2025.20250325.74682.orig/texk/ps2pk/spaces.h	(revision 74876)
++++ texlive-bin-2025.20250325.74682/texk/ps2pk/spaces.h	(revision 74888)
+@@ -67,7 +67,19 @@
+ struct XYspace {
+        XOBJ_COMMON           /* xobject common data define 3-26-91 PNM       */
+ 			     /* type = SPACETYPE			     */
+-       /* calculate "fractpoint" X,Y from float X,Y  [= FXYconvert]:  */
++       void (*convert)();     /* calculate "fractpoint" X,Y from float X,Y    */
++       void (*iconvert)();    /* calculate "fractpoint" X,Y from int X,Y      */
++       fractpel (*xconvert)();  /* subroutine of convert                     */
++       fractpel (*yconvert)();  /* subroutine of convert                     */
++       fractpel (*ixconvert)();  /* subroutine of iconvert                   */
++       fractpel (*iyconvert)();  /* subroutine of iconvert                   */
++#if 0
++/* These were my attempts at the C23-required replacement declarations
++   with all argument types (I gave up at ixconvert and iyconvert). But
++   the result still gets errors about incompatible types, so leaving
++   them disabled. The [=...] are my attempts at listing the functions
++   that get assigned to these structure members. --karl, 8apr25  */
++       /* calculate "fractpoint" X,Y from float X,Y  [=FXYconvert]:  */
+        void (*convert)(struct fractpoint *,struct XYspace *,double,double);
+        /* calculate "fractpoint" X,Y from int X,Y    [=ForceFloat,IXYConvert]: */
+        void (*iconvert)(struct fractpoint *,struct XYspace *,long,long);
+@@ -79,6 +91,7 @@
+        fractpel (*ixconvert)();
+        /* subroutine of iconvert  [=same] */
+        fractpel (*iyconvert)();
++#endif
+        int ID;               /* unique identifier (used in font caching)     */
+        unsigned char context;  /* device context of coordinate space         */
+        struct doublematrix tofract;  /* xform to get to fractional pels      */

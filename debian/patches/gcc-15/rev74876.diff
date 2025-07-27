@@ -1,0 +1,140 @@
+Description: #1097988: texlive-bin: ftbfs with GCC-15
+Author: Karl Berry <karl@freefriends.org>
+Applied-Upstream: I confirmed TeX Live svn r74876 and I agree with the commit.
+Last-Update: 2025-04-08
+
+Index: texk/ps2pk/ChangeLog
+===================================================================
+--- texlive-bin-2025.20250325.74682.orig/texk/ps2pk/ChangeLog	(revision 74855)
++++ texlive-bin-2025.20250325.74682/texk/ps2pk/ChangeLog	(revision 74876)
+@@ -1,3 +1,25 @@
++2025-04-08  Karl Berry  <karl@freefriends.org>
++
++	Partially placate C23's backward incompatible requirements. Sigh.
++	
++	* fontfcn.h (Type1CloseFont): arg is FontPtr.
++	* fontstruct.h (_Font) <get_glyphs>: declare args.
++	* regions.c (SortSwath): declare args of function argument.
++	(swathfcn): likewise.
++	* spaces.h (struct fractpoint): move to before struct XYspace.
++	(XYspace): declare arguments to convert(), iconvert(),
++	xconvert(), and yconvert(), though problems remain with them.
++	ixconvert() and iyconvert() also remain to be done.
++	Report from Hilmar, 3 Apr 2025 23:54:54.
++	
++	P.S. I was compiling like this on Rocky Linux 9:
++	  scl enable gcc-toolset-14 -- make -C $WK/ps2pk CFLAGS=-std=c23 
++	(where WK=.../Work/texk/)
++	This is not the final c23, but I doubt that matters.
++	
++	P.P.S. If anyone has time and interest to track down the remaining
++	errors, please (please) do.
++
+ 2023-08-27  TANAKA Takuji  <ttk@t-lab.opal.ne.jp>
+ 
+ 	* tests/ps2pk.test, tests/lmmath.test:
+Index: texk/ps2pk/fontfcn.h
+===================================================================
+--- texlive-bin-2025.20250325.74682.orig/texk/ps2pk/fontfcn.h	(revision 74855)
++++ texlive-bin-2025.20250325.74682/texk/ps2pk/fontfcn.h	(revision 74876)
+@@ -64,7 +64,7 @@
+ 		             FontScalablePtr, fsBitmapFormat,
+ 		             fsBitmapFormatMask, DOUBLE, DOUBLE);
+ extern void Type1RegisterFontFileFunctions(void);
+-extern void Type1CloseFont();
++extern void Type1CloseFont(FontPtr);
+ extern int CheckFSFormat(int format,int fmask,int *bit,int *byte,int *scan,int *glyph,int *image);
+  
+ /***================================================================***/
+Index: texk/ps2pk/fontstruct.h
+===================================================================
+--- texlive-bin-2025.20250325.74682.orig/texk/ps2pk/fontstruct.h	(revision 74855)
++++ texlive-bin-2025.20250325.74682/texk/ps2pk/fontstruct.h	(revision 74876)
+@@ -118,7 +118,11 @@
+     char        glyph;
+     char        scan;
+     fsBitmapFormat format;
+-    int         (*get_glyphs) ( /* font, count, chars, encoding, count, glyphs */ );
++    int         (*get_glyphs) ( /* font, count, chars, encoding, count, glyphs */
++                               struct _Font *pFont, unsigned long count,
++                               unsigned char *chars, int charEncoding,
++                               unsigned *glyphCount,
++                               struct _CharInfo **glyphs );
+     int         (*get_metrics) ( /* font, count, chars, encoding, count, glyphs */ );
+     int         (*get_bitmaps) (/* client, font, flags, ranges, nranges,
+ 				    nextents, extents */ );
+Index: texk/ps2pk/regions.c
+===================================================================
+--- texlive-bin-2025.20250325.74682.orig/texk/ps2pk/regions.c	(revision 74855)
++++ texlive-bin-2025.20250325.74682/texk/ps2pk/regions.c	(revision 74876)
+@@ -364,7 +364,7 @@
+ */
+  
+ static struct edgelist *SortSwath( struct edgelist *, struct edgelist *,
+-       struct edgelist *(*)());
++       struct edgelist *(*)(struct edgelist *before0,struct edgelist *edge));
+  
+ /*SHARED LINE(S) ORIGINATED HERE*/
+  
+@@ -793,7 +793,7 @@
+ static struct edgelist *SortSwath(
+        struct edgelist *anchor,  /* list being built                         */
+        register struct edgelist *edge,  /* incoming edge or pair of edges    */
+-       struct edgelist *(*swathfcn)())  /* horizontal sorter                 */
++       struct edgelist *(*swathfcn)(struct edgelist *before0,struct edgelist *edge))  /* horizontal sorter                 */
+ {
+        register struct edgelist *before,*after;
+        struct edgelist base;
+Index: texk/ps2pk/spaces.h
+===================================================================
+--- texlive-bin-2025.20250325.74682.orig/texk/ps2pk/spaces.h	(revision 74855)
++++ texlive-bin-2025.20250325.74682/texk/ps2pk/spaces.h	(revision 74876)
+@@ -57,15 +57,28 @@
+ /*END SHARED*/
+ /*SHARED*/
+  
++struct fractpoint {
++       fractpel x,y;
++} ;
++ 
++/*END SHARED*/
++/*SHARED*/
++ 
+ struct XYspace {
+        XOBJ_COMMON           /* xobject common data define 3-26-91 PNM       */
+ 			     /* type = SPACETYPE			     */
+-       void (*convert)();     /* calculate "fractpoint" X,Y from float X,Y    */
+-       void (*iconvert)();    /* calculate "fractpoint" X,Y from int X,Y      */
+-       fractpel (*xconvert)();  /* subroutine of convert                     */
+-       fractpel (*yconvert)();  /* subroutine of convert                     */
+-       fractpel (*ixconvert)();  /* subroutine of iconvert                   */
+-       fractpel (*iyconvert)();  /* subroutine of iconvert                   */
++       /* calculate "fractpoint" X,Y from float X,Y  [= FXYconvert]:  */
++       void (*convert)(struct fractpoint *,struct XYspace *,double,double);
++       /* calculate "fractpoint" X,Y from int X,Y    [=ForceFloat,IXYConvert]: */
++       void (*iconvert)(struct fractpoint *,struct XYspace *,long,long);
++       /* subroutine of convert  [=FXonly,FYonly,FXYboth] */
++       fractpel (*xconvert)(DOUBLE,DOUBLE,DOUBLE,DOUBLE);
++       /* subroutine of convert  [=same]                  */
++       fractpel (*yconvert)(DOUBLE,DOUBLE,DOUBLE,DOUBLE);
++       /* subroutine of iconvert  [=IXonly,IYonly,IXYboth] */
++       fractpel (*ixconvert)();
++       /* subroutine of iconvert  [=same] */
++       fractpel (*iyconvert)();
+        int ID;               /* unique identifier (used in font caching)     */
+        unsigned char context;  /* device context of coordinate space         */
+        struct doublematrix tofract;  /* xform to get to fractional pels      */
+@@ -76,13 +89,6 @@
+  
+ /*END SHARED*/
+ /*SHARED*/
+- 
+-struct fractpoint {
+-       fractpel x,y;
+-} ;
+- 
+-/*END SHARED*/
+-/*SHARED*/
+ 
+ extern struct XYspace *IDENTITY;
+ extern struct XYspace *USER;

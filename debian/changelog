@@ -1,4 +1,4 @@
-texlive-bin (2025.20250727.75242+ds-1) UNRELEASED; urgency=medium
+texlive-bin (2025.20250727.75242+ds-1) experimental; urgency=medium
 
   * New version TL 2025.
     - Contains fix for manual pages (Closes: #991944).
@@ -8,7 +8,7 @@ texlive-bin (2025.20250727.75242+ds-1) UNRELEASED; urgency=medium
     kpathsea headers. (Closes: #1109256).
     https://tug.org/pipermail/tex-live/2025-July/051609.html
 
- -- Hilmar Preuße <hille42@debian.org>  Tue, 25 Mar 2025 10:06:06 +0100
+ -- Hilmar Preuße <hille42@debian.org>  Sun, 27 Jul 2025 23:14:41 +0200
 
 texlive-bin (2024.20240313.70630+ds-6) unstable; urgency=medium
 

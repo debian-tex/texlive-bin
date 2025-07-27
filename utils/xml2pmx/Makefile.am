@@ -1,4 +1,4 @@
-## $Id$
+## $Id: Makefile.am 57693 2021-02-09 23:08:35Z karl $
 ## Makefile.am for the TeX Live subdirectory utils/xml2pmx/
 ##
 ## Copyright 2021 Bob Tennent <rdt@queensu.org>

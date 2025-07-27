@@ -1,0 +1,36 @@
+diff -bu a/source/libs/luajit/LuaJIT-src/src/lj_load.c  b/source/libs/luajit/LuaJIT-src/src/lj_load.c 
+--- a/source/libs/luajit/LuaJIT-src/src/lj_load.c
++++ b/source/libs/luajit/LuaJIT-src/src/lj_load.c
+@@ -182,3 +182,32 @@
+     return 1;
+ }
+ 
++/* -- Luajittex needs this one because it's faster than make it with Lua  -- */
++LUA_API int RESERVED_lua_dump(lua_State *L, lua_Writer writer, void *data, int strip)
++{
++  cTValue *o = L->top-1;
++  lj_checkapi(L->top > L->base, "top slot empty");
++  if (tvisfunc(o) && isluafunc(funcV(o)))
++    return lj_bcwrite(L, funcproto(funcV(o)), writer, data, strip);
++  else
++    return 1;
++}
++
++/* -- Luajittex needs this one because it overloads loadfile  -- */
++LUALIB_API int RESERVED_load_aux_JIT(lua_State *L, int status, int envarg)
++{
++  if (status == 0) {
++    if (tvistab(L->base+envarg-1)) {
++      GCfunc *fn = funcV(L->top-1);
++      GCtab *t = tabV(L->base+envarg-1);
++      setgcref(fn->c.env, obj2gco(t));
++      lj_gc_objbarrier(L, fn, t);
++    }
++    return 1;
++  } else {
++    setnilV(L->top-2);
++    return 2;
++  }
++}
++
++

@@ -1,5 +1,5 @@
 #! /bin/sh -vx
-# $Id$
+# $Id: psutils.test 68032 2023-08-23 14:53:18Z takuji $
 # Copyright 2017-2018 Karl Berry <tex-live@tug.org>
 # Copyright 2011-2014 Peter Breitenlohner <tex-live@tug.org>
 # You may freely use, modify and/or distribute this file.

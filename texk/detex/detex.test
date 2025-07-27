@@ -1,5 +1,5 @@
 #! /bin/sh -vx
-# $Id$
+# $Id: detex.test 68156 2023-09-03 11:26:27Z takuji $
 # Copyright 2017 Karl Berry <tex-live@tug.org>
 # Copyright 2009 Peter Breitenlohner <tex-live@tug.org>
 # You may freely use, modify and/or distribute this file.

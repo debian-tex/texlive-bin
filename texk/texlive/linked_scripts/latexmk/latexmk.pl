@@ -47,9 +47,15 @@ BEGIN {
     # blocks.
     $my_name = 'latexmk';
     $My_name = 'Latexmk';
-    $version_num = '4.83';
-    $version_details = "$My_name, John Collins, 31 Jan. 2024. Version $version_num";
+    $version_num = '4.86a';
+    $version_details = "$My_name, John Collins, 27 Dec. 2024. Version $version_num";
 }
+
+# Ensure that when STDERR and STDOUT are both redirected, the results are
+#   in the order they are written.  Otherwise, the default situation for
+#   redirected output is that STDERR is always autoflushed, but STDOUT is
+#   not, and therefore output does not appear in the order is was written.
+STDOUT->autoflush(1);
 
 use Config;
 use File::Basename;
@@ -365,7 +371,8 @@ our @latex_file_hooks = ();
 #
 # Single hash for various stacks of hooks:
 our %hooks = ();
-for ( 'before_xlatex', 'after_xlatex', 'after_xlatex_analysis' ) {
+for ( 'before_xlatex', 'after_xlatex', 'after_xlatex_analysis', 'after_main_pdf',
+      'cleanup', 'cleanup_extra_full' ) {
     $hooks{$_} = [];
 }
 $hooks{aux_hooks} = \@aux_hooks;
@@ -415,7 +422,11 @@ our $lualatex_silent_switch  = '-interaction=batchmode';
 our $xelatex_silent_switch  = '-interaction=batchmode';
 
 # Whether to emulate -aux-directory, so we can use it on system(s) (TeXLive)
-# that don't support it:
+# that don't support it.
+# Possible values: 0: I don't do any emulation, and use -aux-directory &
+#                       -out-directory options to *latex.
+#                  1: Emulate MiKTeX behavior: Use -output-directory=<aux dir>
+#                       in call to *latex.  Then move pdf (etc) files after run.
 our $emulate_aux = 1;
 # Whether emulate_aux had to be switched on during a run:
 our $emulate_aux_switched = 0;
@@ -740,10 +751,6 @@ our ( $pdf_previewer, $ps_previewer, $ps_previewer_landscape, $dvi_previewer,
       $dvi_previewer_landscape, $hnt_previewer );
 $pdf_previewer = $ps_previewer  = $ps_previewer_landscape  = $dvi_previewer  = $dvi_previewer_landscape = $hnt_previewer = "NONE";
 
-# The following variables are assigned once and then used in symbolic 
-#     references, so we need to avoid warnings 'name used only once':
-our ( $aux_dir_requested, $out_dir_requested );
-
 our $dvi_update_signal = undef;
 our $ps_update_signal = undef;
 our $pdf_update_signal = undef;
@@ -767,6 +774,11 @@ our $hnt_update_method = 1;
 our $ps_update_method = 1;
 our $pdf_update_method = 1;
 
+# Whether to allow latexmk to create subdirectories of aux_dir when there's
+#  a report in the log file that *latex "can't write on file ...".
+#  Values: 0: no subdir creation,
+#          1: only for aux files (occurs with \include{chapters/chap} etc
+#          2: generally
 our $allow_subdir_creation = 1;
 
 our $new_viewer_always = 0;     # If 1, always open a new viewer in pvc mode.
@@ -1221,7 +1233,7 @@ our $user_deleted_file_treated_as_changed = 0; # Whether when testing for change
                # compilation of .tex file tests for file existence and
                # adjusts behavior accordingly, instead of simply giving an
                # error. 
-our $max_repeat = 5;        # Maximum times I repeat latex.  Normally
+our $max_repeat = 5;    # Maximum times I repeat latex.  Normally
                         # 3 would be sufficient: 1st run generates aux file,
                         # 2nd run picks up aux file, and maybe toc, lof which 
                         # contain out-of-date information, e.g., wrong page
@@ -1259,7 +1271,7 @@ our $texfile_search = "";   # Specification for extra files to search for
                         # This variable is obsolete, and only in here for
                         # backward compatibility.
 
-our $jobname = '';          # Jobname: as with current tex, etc indicates
+our $jobname = '';      # Jobname: as with current tex, etc indicates
                         # basename of generated files.  Defined so
                         # that --jobname=STRING on latexmk's command
                         # line has same effect as with current tex,
@@ -1272,6 +1284,7 @@ our $jobname = '';          # Jobname: as with current tex, etc indicates
                         # dependent on name of main TeX file; this is
                         # useful when a jobname is used and latexmk is
                         # invoked on multiple files.
+our $out2_dir = '';     # Directory for final output files.  
 our $out_dir = '';      # Directory for output files.  
                         # Cf. --output-directory of current *latex
                         # Blank means default, i.e., cwd.
@@ -1283,6 +1296,17 @@ our $aux_dir = '';      # Directory for aux files (log, aux, etc).
 # Corresponding forms that can be concatenated (e.g., when $aux_dir is '.', $aux_dir1 is './').
 our $aux_dir1 = '';
 our $out_dir1 = '';
+our $out2_dir1 = '';
+
+# Use the following for saving original values, before directories are normalized.
+our ( $aux_dir_requested, $out_dir_requested, $out2_dir_requested );
+
+
+
+# Extensions for files to be copied to $out2_dir.
+# Specify as for @generated_exts: I.e., extension w/o period
+#  or string including %R to be substituted by basename.
+our @out2_exts = ( 'hnt', 'pdf', 'ps', 'synctex', 'synctex.gz' );
 
 ## default flag settings.
 our $recorder = 1;          # Whether to use recorder option on latex/pdflatex
@@ -1641,6 +1665,7 @@ our %rule_db = ();  # Database of all rules:
                     #       %R for base of primary tex file, %T for
                     #       texfile name, %O for options,
                     #       %V=$aux_dir, %W=$out_dir,
+                    #       %X for $out2_dir1
                     #       %Y for $aux_dir1, and %Z for $out_dir1
                     #     int_cmd specifies any internal command to be
                     #       used to implement the application of the
@@ -1865,7 +1890,7 @@ our ($rule, $PA_extra_gen, $PAint_cmd, $PArule_data, $Pbase, $Pchanged,
      $Plast_message, $Plast_result, $Plast_result_info, 
      $Pno_history, $Pout_of_date, $Pout_of_date_user, $Prun_time, $Psource,
      $file, $PAfile_data, $Ptime, $Psize, $Pmd5, $DUMMY, $Pcorrect_after_primary
-);
+    );
            
 # User's home directory
 our $HOME = '';
@@ -1970,8 +1995,6 @@ if ( $auto_rc_use ) {
     read_first_rc_file_in_list( ".latexmkrc", "latexmkrc" );
 }
 
-
-
 ## Process command line args.
 our @command_line_file_list = ();
 our $bad_options = 0;
@@ -2016,16 +2039,18 @@ while (defined(local $_ = $ARGV[0])) {
   elsif (/^-dir-report$/)    { $aux_out_dir_report = 1; }
   elsif (/^-dir-report-$/)   { $aux_out_dir_report = 0; }
   elsif (/^-dvi$/)    { $dvi_mode = 1;
-                        $hnt_mode = 0;
+                        $hnt_mode = $xdv_mode = 0;
+                        # Postscript mode OK
                         if ( ($pdf_mode != 2) && ($pdf_mode != 3) ) {
-                            # if pdf_mode is not via dvi or pdf, turn it off
+                            # if pdf_mode is not via dvi or ps, turn it off
                             $pdf_mode = 0;
                         }
                       }
   elsif (/^-dvilua$/) { $dvi_mode = 2;
-                        $hnt_mode = 0;
+                        $hnt_mode = $xdv_mode = 0;
+                        # Postscript mode OK
                         if ( ($pdf_mode != 2) && ($pdf_mode != 3) ) {
-                            # if pdf_mode is not via dvi or pdf, turn it off
+                            # if pdf_mode is not via dvi or ps, turn it off
                             $pdf_mode = 0;
                         }
                       }
@@ -2047,18 +2072,20 @@ while (defined(local $_ = $ARGV[0])) {
   }
   elsif ( /^-h$/ || /^-help$/ )   { &print_help; exit;}
   elsif (/^-hnt$/)    { $hnt_mode = 1;
-                        $dvi_mode = $postscript_mode = $pdf_mode = 0;
+                        $dvi_mode = $postscript_mode = $pdf_mode = $xdv_mode = 0;
                       }
   elsif (/^-jobname=(.*)$/) {
       $jobname = $1;
   }
   elsif (/^-l$/)     { $landscape_mode = 1; }
   elsif (/^-l-$/)    { $landscape_mode = 0; }
-  elsif ( /^-latex$/ )      { 
-      $pdf_mode = 0;
-      $postscript_mode = 0; 
-      $dvi_mode = 1;
-      $hnt_mode = 0;
+  elsif ( /^-latex$/ ) { $dvi_mode = 1;
+                         $hnt_mode = $postscript_mode = $xdv_mode = 0;
+                         # Postscript mode OK
+                         if ( ($pdf_mode != 2) && ($pdf_mode != 3) ) {
+                             # if pdf_mode is not via dvi or ps, turn it off
+                             $pdf_mode = 0;
+                         }
   }
   elsif (/^-latex=(.*)$/) {
       $latex = $1;
@@ -2076,7 +2103,7 @@ while (defined(local $_ = $ARGV[0])) {
       { $silence_logfile_warnings = 1; }
   elsif ( /^-lualatex$/ || /^-pdflualatex$/ )      { 
       $pdf_mode = 4;
-      $dvi_mode = $hnt_mode = $postscript_mode = 0; 
+      $dvi_mode = $hnt_mode = $postscript_mode = $xdv_mode = 0; 
   }
 # See below for -lualatex=...
 # See above for -M
@@ -2108,19 +2135,23 @@ while (defined(local $_ = $ARGV[0])) {
   elsif ( /^-output-directory=(.*)$/ ||/^-outdir=(.*)$/ ) {
       $out_dir = $1;
   }
+  elsif ( /^-out2dir=(.*)$/ ) {
+      $out2_dir = $1;
+  }
   elsif ( /^-output-format=(.*)$/ ) {
       my $format = $1;
       if ($format eq 'dvi' ) {
           $dvi_mode = 1;
-          $hnt_mode = 0;
+          $hnt_mode = $xdv_mode = 0;
+          # Postscript mode OK
           if ( ($pdf_mode != 2) && ($pdf_mode != 3) ) {
-              # if pdf_mode is not via dvi or pdf, turn it off
+              # if pdf_mode is not via dvi or ps, turn it off
               $pdf_mode = 0;
           }
       }
       elsif ($format eq 'pdf' ) {
           $pdf_mode = 1;
-          $dvi_mode = $hnt_mode = $postscript_mode = 0;
+          $dvi_mode = $hnt_mode = $postscript_mode = $xdv_mode = 0;
       }
       else {
           warn "$My_name: unknown format in option '$_'\n";
@@ -2132,16 +2163,16 @@ while (defined(local $_ = $ARGV[0])) {
                        $preview_mode = 0;  
                      }
   elsif (/^-p-$/)    { $printout_mode = 0; }
-  elsif (/^-pdf$/)   { $pdf_mode = 1; $dvi_mode = $hnt_mode = $postscript_mode = 0; }
+  elsif (/^-pdf$/)   { $pdf_mode = 1; $dvi_mode = $hnt_mode = $postscript_mode = $xdv_mode = 0; }
   elsif (/^-pdf-$/)  { $pdf_mode = 0; }
-  elsif (/^-pdfdvi$/){ $pdf_mode = 3;  $hnt_mode = 0; }
-  elsif (/^-pdflua$/){ $pdf_mode = 4; $dvi_mode =  $hnt_mode = $postscript_mode = 0; }
-  elsif (/^-pdfps$/) { $pdf_mode = 2;  $hnt_mode = 0; }
+  elsif (/^-pdfdvi$/){ $pdf_mode = 3;  $hnt_mode = $xdv_mode = 0; }
+  elsif (/^-pdflua$/){ $pdf_mode = 4; $dvi_mode =  $hnt_mode = $postscript_mode = $xdv_mode = 0; }
+  elsif (/^-pdfps$/) { $pdf_mode = 2;  $hnt_mode = $xdv_mode = 0; }
   elsif (/^-pdfxe$/) { $pdf_mode = 5; $dvi_mode =  $hnt_mode = $postscript_mode = 0; }
   elsif (/^-pdflatex$/) {
       $pdflatex = "pdflatex %O %S";
       $pdf_mode = 1;
-      $dvi_mode =  $hnt_mode = $postscript_mode = 0; 
+      $dvi_mode =  $hnt_mode = $postscript_mode = $xdv_mode = 0; 
   }
   elsif (/^-pdflatex=(.*)$/) {
       $pdflatex = $1;
@@ -2166,6 +2197,8 @@ while (defined(local $_ = $ARGV[0])) {
       }
   }
   elsif (/^-ps$/)    { $postscript_mode = 1;
+                       # dvi mode OK
+                       $hnt_mode = $xdv_mode = 0;
                        if ( ($pdf_mode != 2) && ($pdf_mode != 3) ) {
                            # if pdf_mode is not via dvi or pdf, turn it off
                            $pdf_mode = 0;
@@ -2234,10 +2267,17 @@ while (defined(local $_ = $ARGV[0])) {
   elsif (/^-view=ps$/)      { $view = "ps";}
   elsif (/^-view=pdf$/)     { $view = "pdf"; }
   elsif (/^-Werror$/){ $warnings_as_errors = 1; }
-  elsif (/^-xdv$/)    { $xdv_mode = 1; }
+  elsif (/^-xdv$/)    { $xdv_mode = 1;
+                        $dvi_mode = $hnt_mode = $postscript_mode = 0;
+                        if ( $pdf_mode != 5 ) {
+                           # if pdf_mode is not by xelatex
+                           $pdf_mode = 0;
+                        }
+}
   elsif (/^-xdv-$/)   { $xdv_mode = 0; }
   elsif ( /^-xelatex$/ || /^-pdfxelatex$/ )      { 
       $pdf_mode = 5;
+      # Xdv mode OK, since use xelatex to make xdv file
       $dvi_mode =  $hnt_mode = $postscript_mode = 0; 
   }
 # See above for -xelatex=...
@@ -2330,20 +2370,25 @@ print "$My_name: This is $version_details.\n",
 
 &config_to_mine;
 
-if ($out_dir eq '' ){
-    # Default to cwd
-    $out_dir = '.';
-}
-if ( $aux_dir eq '' ){
-    # Default to out_dir
-    #  ?? This is different than MiKTeX
-    $aux_dir = $out_dir;
-}
 # Save original values for use in diagnositics.
 # We may change $aux_dir and $out_dir after a detection
 #  of results of misconfiguration.
 $aux_dir_requested = $aux_dir;
 $out_dir_requested = $out_dir;
+$out2_dir_requested = $out2_dir;
+
+if ($out_dir eq '' ){
+    # Default to cwd
+    $out_dir = '.';
+}
+if ($out2_dir eq '' ){
+    # Default to cwd
+    $out2_dir = $out_dir;
+}
+if ( $aux_dir eq '' ){
+    # Default to out_dir
+    $aux_dir = $out_dir;
+}
 
 if ($bibtex_use > 1) {
     push @generated_exts, 'bbl';
@@ -2565,10 +2610,11 @@ if ( $view eq "default" ) {
     # If default viewer requested, use "highest" of dvi, ps and pdf
     #    that was requested by user.  
     # No explicit request means view dvi.
-    $view = "dvi";
-    if ( $hnt_mode ) { $view = "hnt"; }
     if ( $pdf_mode ) { $view = "pdf"; }
-    if ( $postscript_mode ) { $view = "ps"; }
+    elsif ( $postscript_mode ) { $view = "ps"; }
+    elsif ( $xdv_mode ) { $view = "none"; }
+    elsif ( $hnt_mode ) { $view = "hnt"; }
+    else { $view = "dvi"; }
 }
 
 # Determine requests.
@@ -2590,6 +2636,19 @@ if ($pdf_mode > 5) {
 if ( ($dvi_mode || $postscript_mode) && $pdf_mode ) {
     my %disallowed = ();
     foreach (1,4,5) { $disallowed{$_} = 1; }
+    if ($disallowed{$pdf_mode}) {
+        warn
+            "$My_name: \$pdf_mode = $pdf_mode is incompatible with dvi and postscript modes\n",
+            "  which are required by other requests.\n";
+        if ($postscript_mode) { $pdf_mode = 2; }
+        else { $pdf_mode = 3; }
+        warn
+            "  I replaced it by $pdf_mode, to be compatible with those other requests.\n";
+    }
+}
+if ( $xdv_mode && $pdf_mode ) {
+    my %disallowed = ();
+    foreach (1,2,3,4) { $disallowed{$_} = 1; }
     if ($disallowed{$pdf_mode}) {
         warn
             "$My_name: \$pdf_mode = $pdf_mode is incompatible with dvi and postscript modes\n",
@@ -2742,10 +2801,19 @@ our ( @default_includes, $texfile_name, $root_filename, $log_name,
       $dvi_name, $dviF_name, $hnt_name, $ps_name, $psF_name, $pdf_name,
       $xdv_name, 
       $dvi_final, $hnt_final, $ps_final, $pdf_final, $xdv_final,
+      $dvi_final2, $hnt_final2, $ps_final2, $pdf_final2,
       $view_file,
       %rule_list,
       $missing_dvi_pdf, $switched_primary_output
-);
+    );
+# Defaults for when rule-using subroutines are used outside a rule:
+$rule = '';
+$Pbase = \$root_filename;
+$Psource = \$texfile_name;
+my $start_time = time();
+$Prun_time = \$start_time;
+
+
 FILE:
 foreach $filename ( @file_list )
 {
@@ -2776,6 +2844,7 @@ foreach $filename ( @file_list )
     #   Use of $do_cd, which can affect how $aux_dir and $out_dir get normalized.
     local $aux_dir = $aux_dir;
     local $out_dir = $out_dir;
+    local $out2_dir = $out2_dir;
 
     local $dvilualatex = $dvilualatex;
     local $hilatex = $hilatex;
@@ -2791,6 +2860,18 @@ foreach $filename ( @file_list )
     # not known until after the call to normalize_aux_out_ETC:
     &set_aux_out_options;
     &set_names;   # Names of standard files
+    if ($diagnostics || $aux_out_dir_report ) {
+        print "$My_name: Cwd: '", good_cwd(), "'\n";
+        print "$My_name: Normalized aux dir, out dir, out2 dir:\n",
+              "  '$aux_dir', '$out_dir', '$out2_dir'\n";
+        print "$My_name: Combining forms of aux dir, out dir, out2 dir:\n",
+              "  '$aux_dir1', '$out_dir1', '$out2_dir1'\n";
+        print "$My_name: Base name of generated files:\n",
+              "  '$root_filename'\n";
+        if ($aux_out_dir_report == 2) {
+            next FILE;
+        }
+    }
     
     # For use under error conditions:
     @default_includes = ($texfile_name, $aux_main);
@@ -3249,25 +3330,32 @@ sub normalize_aux_out_ETC {
     # Ensure the output/auxiliary directories exist, if need be, **with error checking**.
     my $ret1 = 0;
     my $ret2 = 0;
+    my $ret3 = 0;
     eval {
         if ( $out_dir ) {
             $ret1 = make_path_mod( $out_dir,  'output' );
         }
+        if ( $out2_dir ) {
+            $ret2 = make_path_mod( $out2_dir,  'final output' );
+        }
         if ( $aux_dir && ($aux_dir ne $out_dir) ) {
-            $ret2 = make_path_mod( $aux_dir,  'auxiliary' );
+            $ret3 = make_path_mod( $aux_dir,  'auxiliary' );
         }
     };
-    if ($ret1 || $ret2 || $@ ) {
+    if ($ret1 || $ret2 || $ret3 || $@ ) {
         if ($@) { print "Error message:\n  $@"; }
         die "$My_name: Since there was trouble making the output (and aux) dirs, I'll stop\n"
     }
 
     if ($normalize_names) {
-        foreach ( $aux_dir, $out_dir ) { $_ = normalize_filename_abs($_); }
+        foreach ( $aux_dir, $out_dir, $out2_dir ) {
+            $_ = normalize_filename_abs($_);
+        }
     }
     $aux_dir1 = $aux_dir;
     $out_dir1 = $out_dir;
-    foreach ( $aux_dir1, $out_dir1 ) {
+    $out2_dir1 = $out2_dir;
+    foreach ( $aux_dir1, $out_dir1, $out2_dir1 ) {
         if ($_ eq '.') {$_ = '';}
         if ( ($_ ne '')  && ! m([\\/\:]$) ) {
             # Add a trailing '/' if necessary to give a string that can be
@@ -3314,16 +3402,6 @@ sub normalize_aux_out_ETC {
         # So the following is only needed for TeXLive.
         $ENV{TEXMFOUTPUT} = $aux_dir;
     }
-    
-    if ($diagnostics || $aux_out_dir_report ) {
-        print "$My_name: Cwd: '", good_cwd(), "'\n";
-        print "$My_name: Normalized aux dir and out dir: '$aux_dir', '$out_dir'\n";
-        print "$My_name: and combining forms: '$aux_dir1', '$out_dir1'\n";
-        if ($aux_out_dir_report == 2) {
-            exit 0;
-        }
-    }
-
 }  #END normalize_aux_out_ETC
 
 #############################################################
@@ -3449,6 +3527,7 @@ sub rdb_initialize_rules {
         # until run time, in case of changes.
         foreach ($base, $source, $dest, @$PA_extra_gen, @$PA_extra_source ) {
             s/%R/$root_filename/g;
+            s/%X/$out2_dir1/;
             s/%Y/$aux_dir1/;
             s/%Z/$out_dir1/;
         }
@@ -3486,6 +3565,7 @@ sub rdb_initialize_rules {
     elsif    ($pdf_mode == 5) { rdb_activate( 'xdvipdfmx' ); $current_primary = 'xelatex';  }
     if ($dvi_mode == 2) { $current_primary = 'dvilualatex'; }
     if ($hnt_mode) { $current_primary = 'hilatex'; }
+    if ($xdv_mode) { $current_primary = 'xelatex';  }
 
     rdb_activate( $current_primary );
 
@@ -3494,7 +3574,6 @@ sub rdb_initialize_rules {
     if ($postscript_mode) { $target_files{$ps_final} = 1; }
     if ($pdf_mode) { $target_files{$pdf_final} = 1; }
     if ($xdv_mode) { $target_files{$xdv_final} = 1; }
-
     &rdb_set_rule_net;
 } # END rdb_initialize_rules
 
@@ -3504,21 +3583,22 @@ sub rdb_set_rule_templates {
 # Set up specifications for standard rules, adjusted to current conditions
 # Substitutions: %S = source, %D = dest, %B = this rule's base
 #                %T = texfile, %R = root = base for latex.
+#                %X for $out2_dir1, 
 #                %Y for $aux_dir1, %Z for $out_dir1
 
 
     my $print_file = '';
     my $print_cmd = 'NONE';
     if ( $print_type eq 'dvi' ) {
-        $print_file = $dvi_final;
+        $print_file = $dvi_final2;
         $print_cmd = $lpr_dvi;
     }
     elsif ( $print_type eq 'pdf' ) {
-        $print_file = $pdf_final;
+        $print_file = $pdf_final2;
         $print_cmd = $lpr_pdf;
     }
     elsif ( $print_type eq 'ps' ) {
-        $print_file = $ps_final;
+        $print_file = $ps_final2;
         $print_cmd = $lpr;
     }
     elsif ( $print_type eq 'none' ) {
@@ -3533,7 +3613,7 @@ sub rdb_set_rule_templates {
 
     if ( ($view eq 'dvi') || ($view eq 'hnt') || ($view eq 'pdf') || ($view eq 'ps') ) {
         no strict "refs";
-        $view_file = ${$view.'_final'};
+        $view_file = ${$view.'_final2'};
         $viewer = ${$view.'_previewer'};
         $viewer_update_method = ${$view.'_update_method'};
         $viewer_update_signal = ${$view.'_update_signal'};
@@ -3544,6 +3624,8 @@ sub rdb_set_rule_templates {
     # Specification of internal command for viewer update:
     my $PA_update = ['do_update_view', $viewer_update_method, $viewer_update_signal, 0, 1];
 
+    # Base name is to be without path for *latex-type rules
+    # With path for others.
     %rule_list = (
         'dvilualatex'  => [ 'primary',  "$dvilualatex",  '',      "%T",        $dvi_name,  "%R",   1, [$aux_main, $log_name], [$aux_main] ],
         'hilatex'   => [ 'primary',  "$hilatex",     '',          "%T",        $hnt_name,  "%R",   1, [$aux_main, $log_name], [$aux_main] ],
@@ -3551,12 +3633,14 @@ sub rdb_set_rule_templates {
         'lualatex'  => [ 'primary',  "$lualatex",  '',            "%T",        $pdf_name,  "%R",   1, [$aux_main, $log_name], [$aux_main] ],
         'pdflatex'  => [ 'primary',  "$pdflatex",  '',            "%T",        $pdf_name,  "%R",   1, [$aux_main, $log_name], [$aux_main] ],
         'xelatex'   => [ 'primary',  "$xelatex",   '',            "%T",        $xdv_name,  "%R",   1, [$aux_main, $log_name], [$aux_main] ],
+
         'dvipdf'    => [ 'external', "$dvipdf",    'do_viewfile', $dvi_final,  $pdf_name,  "%Z%R", 1 ],
         'xdvipdfmx' => [ 'external', "$xdvipdfmx", 'do_viewfile', $xdv_final,  $pdf_name,  "%Z%R", 1 ],
         'dvips'     => [ 'external', "$dvips",     'do_viewfile', $dvi_final,  $ps_name,   "%Z%R", 1 ],
         'dvifilter' => [ 'external', $dvi_filter,  'do_viewfile', $dvi_name,   $dviF_name, "%Z%R", 1 ],
         'ps2pdf'    => [ 'external', "$ps2pdf",    'do_viewfile', $ps_final,   $pdf_name,  "%Z%R", 1 ],
         'psfilter'  => [ 'external', $ps_filter,   'do_viewfile', $ps_name,    $psF_name,  "%Z%R", 1 ],
+
         'print'     => [ 'external', "$print_cmd", 'if_source',   $print_file, "",         "",     1 ],
         'update_view' => [ 'external', $viewer_update_command, $PA_update,
                                $view_file,  "",        "",   2 ],
@@ -3763,7 +3847,12 @@ sub set_trivial_aux_fdb {
     # 2. Write a corresponding fdb file
     # 3. Provoke a run of *latex (actually of all primaries). 
 
-    open( my $aux_file, '>', $aux_main )
+    # Use raw mode for writing aux file, so that line endings are \n.
+    # Otherwise on Windows, the aux file file will have \r\n line endings.
+    # Since both TeXLive and MiKTeX write \n rather than \r\n, latexmk will
+    # unnecessarily detect a change in the aux file because of the changed
+    # line endings, and thereby provoke a superfluous extra *latex run.
+    open( my $aux_file, '> :raw', $aux_main )
         or die "Cannot write file '$aux_main'\n";
     fprint8( $aux_file, "\\relax \n" );
     # The following is added by recent versions of latex for a
@@ -3788,8 +3877,9 @@ sub do_cleanup {
     my $kind = $_[0];
     if (! $kind ) { return; }
     my @files_to_delete = ();
-    my @dirs = ($aux_dir1);
-    if ($out_dir1 ne $aux_dir1) { push @dirs, $out_dir1; }
+    my %dirs = ();
+    foreach ($aux_dir1, $out_dir1, $out2_dir1) { $dirs{$_} = 1; }
+    my @dirs = keys %dirs;
 
     push @files_to_delete, &get_small_cleanup;
     if ($kind == 1) {
@@ -3797,19 +3887,25 @@ sub do_cleanup {
             push @files_to_delete, cleanup_get1( $dir1, @final_output_exts );
         }
     }
-    # show_array( "Files to delete", sort @files_to_delete );
 
-    # Names of contents of directory are longer than the name of the directory,
-    # but contain the directory name as an initial segment.
-    # Therefore deleting files and directories in the order given by reverse
-    # sort deletes contents of directory before attempting to delete the
-    # directory:
+    # Run the hooks first, since to determine what custom deletions they
+    #   are to make, the hook subroutines may need access to files that
+    #   cleanup later deletes (log, aux, ...). 
+    run_hooks( 'cleanup' );
+    if ($kind == 1) { run_hooks( 'cleanup_extra_full' ); }
+    
+    # Names of contents of directory are longer than the name of the
+    #   directory, but contain the directory name as an initial segment.
+    #   Therefore deleting files and directories in the order given by
+    #   reverse sort deletes contents of directory before attempting to
+    #   delete the directory:
     unlink_or_move( reverse sort @files_to_delete );
     
-    # If the fdb file (or log, fls and/or aux files) exist, it/they will have
-    #   been used to make a changed rule database.  But a cleanup implies
-    #   that we need a virgin rule database, corresponding to current state
-    #    of files (after cleanup) so we reset the rule database and rule net:
+    # If the fdb file (or log, fls and/or aux files) exist, it/they will
+    #   have been used to make a changed rule database.  But a cleanup
+    #   implies that we need a virgin rule database, corresponding to
+    #   current state of files (after cleanup) so we reset the rule
+    #   database and rule net: 
     &rdb_initialize_rules;
 }
 
@@ -3876,7 +3972,7 @@ sub get_small_cleanup {
                        }
                    }
                }
-               elsif ( $rule =~ /^(latex|lualtex|pdflatex|xelatex)/ ) {
+               elsif ( exists $possible_primaries{$rule} ) {
                    foreach my $key (keys %$PHdest) {
                        $other_generated{$key} = 1;
                    }
@@ -4675,7 +4771,8 @@ sub print_help
   "   -bibtex-cond  - use bibtex when needed, but only if the bib file exists\n",
   "   -bibtex-cond1 - use bibtex when needed, but only if the bib file exists;\n",
   "                   on cleanup delete bbl file only if bib file exists\n",
-  "   -bibfudge or -bibtexfudge - change directory to output directory when running bibtex\n",
+  "   -bibfudge or -bibtexfudge - change directory to output directory when\n",
+  "                   running bibtex\n",
   "   -bibfudge- or -bibtexfudge- - don't change directory when running bibtex\n",
   "   -bm <message> - Print message across the page when converting to postscript\n",
   "   -bi <intensity> - Set contrast or intensity of banner\n",
@@ -4701,10 +4798,11 @@ sub print_help
   "                    and turn on showing of dependency list\n",
   "   -dF <filter> - Filter to apply to dvi file\n",
   "   -dir-report  - Before processing a tex file, report aux and out dir settings\n",
+  "                  Report includes cwd and basename of output files\n",
   "   -dir-report- - Before processing a tex file, do not report aux and out dir\n",
   "                  settings\n",
-  "   -dir-report-only - Report aux and out dir settings after initialization\n",
-  "                  and previous option processing, and then stop\n", 
+  "   -dir-report-only - Report aux and out dir settings after initialization for\n",
+  "                  each tex file, without compiling it\n", 
   "   -dvi    - generate dvi by latex\n",
   "   -dvilua - generate dvi by dvilualatex\n",
   "   -dvi-   - turn off required dvi\n",
@@ -4724,9 +4822,11 @@ sub print_help
   "   -g-    - Turn off -g and -gg\n",
   "   -h     - print help\n",
   "   -hnt   - generate hnt by hilatex\n",
-  "   -help - print help\n",
-  "   -indexfudge or -makeindexfudge - change directory to output directory when running makeindex\n",
-  "   -indexfudge- or -makeindexfudge- - don't change directory when running makeindex\n",
+  "   -help  - print help\n",
+  "   -indexfudge or -makeindexfudge - change directory to output directory when\n",
+  "            running makeindex\n",
+  "   -indexfudge- or -makeindexfudge- - don't change directory when running\n",
+  "            makeindex\n",
   "   -jobname=STRING - set basename of output file(s) to STRING.\n",
   "            (Like --jobname=STRING on command line for many current\n",
   "            implementations of latex/pdflatex.)\n",
@@ -4743,9 +4843,12 @@ sub print_help
   "                   and turn dvi/ps modes off\n",
   "   -M     - Show list of dependent files after processing\n",
   "   -MF file - Specifies name of file to receives list dependent files\n",
-  "   -MP    - List of dependent files includes phony target for each source file.\n",
-  "   -makeindexfudge - change directory to output directory when running makeindex\n",
-  "   -makeindexfudge-- don't change directory to output directory when running makeindex\n",
+  "   -MP    - List of dependent files includes phony target for each source\n",
+  "            file.\n",
+  "   -makeindexfudge - change directory to output directory when running\n",
+  "                     makeindex\n",
+  "   -makeindexfudge- - don't change directory to output directory when\n",
+  "                      running makeindex\n",
   "   -MSWinBackSlash  under MSWin use backslash (\\) for directory separators\n",
   "                    for filenames given to called programs\n",
   "   -MSWinBackSlash-  under MSWin use forward slash (/) for directory separators\n",
@@ -4756,10 +4859,13 @@ sub print_help
   "   -nobibfudge or -nobibtexfudge - don't change directory when running bibtex\n",
   "   -nodependents  - Do not show list of dependent files after processing\n",
   "   -noemulate-aux-dir - use -aux-directory option with *latex\n",
-  "   -noindexfudge or -nomakeindexfudge - don't change directory when running makeindex\n",
+  "   -noindexfudge or -nomakeindexfudge - don't change directory when running\n",
+  "                    makeindex\n",
   "   -norc          - omit automatic reading of system, user and project rc files\n",
   "   -output-directory=dir or -outdir=dir\n",
   "                  - set name of directory for output files\n",
+  "   -out2dir=dir\n",
+  "                  - set name of directory for final output files\n",
   "   -output-format=FORMAT\n",
   "                  - if FORMAT is dvi, turn on dvi output, turn off others\n",
   "                  - if FORMAT is pdf, turn on pdf output, turn off others\n",
@@ -5125,7 +5231,7 @@ sub check_biber_log {
         warn "$My_name: Failed to find one or more biber source files:\n";
         foreach (@not_found) { warn "    '$_'\n"; }
         if ($force_mode) {
-            warn "==== Force_mode is on, so I will continue.  ",
+           warn "==== Force_mode is on, so I will continue.  ",
                  "But there may be problems ===\n";
         }
         if ($control_file_missing) {
@@ -5423,6 +5529,10 @@ sub set_names {
     $ps_name   = "%Z%R.ps";
     $psF_name  = "%Z%R.psF";
     $pdf_name  = "%Z%R.pdf";
+    $dvi_final2 = "%X%R.dvi";
+    $hnt_final2 = "%X%R.hnt";
+    $pdf_final2 = "%X%R.pdf";
+    $ps_final2 = "%X%R.ps";
     ## It would be logical for a .xdv file to be put in the out_dir,
     ## just like a .dvi file.  But the only program, MiKTeX, that
     ## currently implements aux_dir, and hence allows aux_dir ne out_dir,
@@ -5430,8 +5540,12 @@ sub set_names {
     $xdv_name   = "%Y%R.xdv";
 
     foreach ( $aux_main, $log_name, $fdb_name, $fls_name, $fls_name_alt,
-              $dvi_name, $hnt_name, $ps_name, $pdf_name, $xdv_name, $dviF_name, $psF_name ) {
+              $dvi_name, $hnt_name, $ps_name, $pdf_name, $xdv_name,
+              $dviF_name, $psF_name,
+              $dvi_final2, $hnt_final2, $pdf_final2, $ps_final2,
+        ) {
         s/%R/$root_filename/g;
+        s/%X/$out2_dir1/;
         s/%Y/$aux_dir1/;
         s/%Z/$out_dir1/;
     }
@@ -5452,6 +5566,95 @@ sub set_names {
 
 #**************************************************
 
+sub do_moves_aux_to_out {
+    # do_moves_aux_to_out( source, dest )
+    # Moves appropriate output files from source dir (e.g., $aux_dir1) to
+    # dest dir (e.g., $out_dir1).
+    # Veto move of file if it wasn't generated on current compilation.
+    # Special treatment of .fls file
+    # Assume rule context, which may be global context.
+    # Directory names should end in /, so that concatenation OK.
+    my ($source1, $dest1) = @_;
+    foreach my $ext ( 'fls', 'dvi', 'hnt', 'pdf', 'ps', 'synctex', 'synctex.gz' ) {
+        if ( ($ext eq 'fls') && ! $fls_uses_out_dir ) {next;}
+        my $from =  "$source1$$Pbase.$ext";
+        my $to = "$dest1$$Pbase.$ext" ;
+        if ( test_gen_file_time( $from ) ) {
+            if (! $silent) { print "$My_name: Moving '$from' to '$to'\n"; }
+            my $ret = move( $from, $to );
+            if ( ! $ret ) { die "  That failed, with message '$!'\n";}
+        }
+    }
+} #END do_moves_aux_to_out
+
+#*************************************************************************
+
+sub do_copies_out_to_out2 {
+    # do_copies_out_to_out2( source, dest )
+    # Copies final output files from source dir (e.g., $out_dir1) to
+    # dest dir (e.g., $out2_dir1).
+    # Note copy, not move, otherwise rules complain about non-existent
+    #   destination pdf file (etc). 
+    # Assume rule context, which is normally global context.
+    # Directory names should end in /, so that concatenation OK.
+    my ($source1, $dest1) = @_;
+
+    # Ideally, guard against source and destination being same.
+    # Easy case:
+    my $absSource = abs_path($source1);
+    my $absDest = abs_path($dest1);
+    if ( defined($absSource) && defined($absDest) && ($absSource eq $absDest) ) {
+        # Directories are same.  Nothing to do.
+        # Note that abs_path can return undef under certain error conditions.
+        # I'll leave the diagnosis to the copy subroutine.
+        return;
+    }
+    # !!! HOWEVER: !!
+    # There can be multiple ways of referring to the same directories
+    # without that being detectable by the use of abs_path
+    # on the names: E.g., on Windows one directory is referred to via a
+    # drive letter that is used for files on a server, and the second
+    # uses the '\\...' (or '//...'construction to refer to the server directly.
+    # Also, on a OS/FS combination that is insensitive to case, the
+    # abs_paths can differ in case while referring to the same entity
+    # On UNIX, I can use a dev and inode test for equality, from the
+    # results of stat.
+    # But that doesn't work on Windows (where the inode numbers
+    # returned by stat are always zero).
+    # Easiest is to let the copy subroutine do the work, and just
+    # diagnose the situation when it fails 
+    
+    say "$My_name: Copying final output files from '$source1' to '$dest1'";
+
+    foreach ( @out2_exts ) {
+        my $name = ( /%R/ ? $_ : "%R.$_" );
+        $name =~ s/%R/$$Pbase/;
+        my $from =  "$source1$name";
+        my $to = "$dest1$name";
+        if ( test_gen_file_time( $from ) ) {
+            if (! $silent) { print "$My_name: Copying '$from' to '$to'\n"; }
+            # Work around problem that if $from and $to refer to the same
+            # file, then copy returns zero, for error, but does **not** set
+            # $!.  (This is surely a bug, since copy (i.e.,
+            # File::Copy::copy) is documented to set $! when it encounters
+            # an error.) So in this situation $! contains whatever error
+            # code was set by something else earlier.
+            # I'll reset $! to 0 here, which corresponds to no error.
+            # If after running copy, it's still zero, but copy reports
+            # failure, then that indicates that $from and $to are the same
+            # file, and we didn't actually need a copy; for latexmk it's a
+            # non-error.
+            local $! = 0;
+            my $ret = copy( $from, $to );
+            if ( $ret ) { } # Success
+            elsif ($!) { warn "$My_name: Failure of copy from '$from' to '$to', error =\n $!\n"; }
+            else { }  # Non-error.
+        }
+    }
+} #END do_copies_out_to_out2
+
+#*************************************************************************
+
 sub correct_locations {
     # Deal with situations after a *latex run where files are in different
     # directories than expected (specifically aux v. output directory).
@@ -5467,26 +5670,15 @@ sub correct_locations {
     # Assumes rule context.
     
     my $where_log = &find_set_log;
-    if ( $emulate_aux && ($aux_dir ne $out_dir) ) {
-        # Move output files from aux_dir to out_dir
-        # Move fls file also, if the configuration is for fls in out_dir.
-        # Omit 'xdv', that goes to aux_dir (as with MiKTeX). It's not final output.
-        foreach my $ext ( 'fls', 'dvi', 'hnt', 'pdf', 'ps', 'synctex', 'synctex.gz' ) {
-            if ( ($ext eq 'fls') && ! $fls_uses_out_dir ) {next;}
-            my $from =  "$aux_dir1$$Pbase.$ext";
-            my $to = "$out_dir1$$Pbase.$ext" ;
-            if ( test_gen_file_time( $from ) ) {
-                if (! $silent) { print "$My_name: Moving '$from' to '$to'\n"; }
-                my $ret = move( $from, $to );
-                if ( ! $ret ) { die "  That failed, with message '$!'\n";}
-            }
-        }
+
+    if ( ($aux_dir_requested ne '') && $emulate_aux && ($aux_dir ne $out_dir) ) {
+        do_moves_aux_to_out( $aux_dir1, $out_dir1 );
     }
 
     # Fix ups on fls file:
     if ($recorder) {
         # Deal with following special cases:
-        #   1. Some implemenations of *latex give fls files of name latex.fls
+        #   1. Some implementations of *latex give fls files of name latex.fls
         #      or pdflatex.fls instead of $$Pbase.fls.
         #   2. In some implementations, the writing of the fls file (memory
         #      of old implementations) may not respect the -output-directory
@@ -6018,8 +6210,9 @@ LINE:
                 $idx_file = $1;                
             }
             else {
-                warn "$My_name: Message indicates index file was written\n",
-                     "  ==> but I do not know how to understand it: <==\n",
+                warn "$My_name: A message suggests an index file may have been written\n",
+                    "  but it is not of a form I understand. This is probably innocuous.\n",
+                    "  The message is\n",
                      "  '$_'\n";
                 next LINE;
             }
@@ -6117,7 +6310,9 @@ LINE:
             my $dir = $1;
             my $file = $2;
             my $full_dir = $aux_dir1.$dir;
-            if ( ($aux_dir ne '') && (! -e $full_dir) && ( $file =~ /\.aux$/) ) {
+            if ( ($aux_dir ne '') && (! -e $full_dir)
+                 && ( ($file =~ /\.aux$/) || ($allow_subdir_creation == 2) )
+               ) {
                 warn "$My_name: === There were problems writing to '$file' in '$full_dir'\n",
                      "    I'll try to make the subdirectory later.\n"
                   if $diagnostics;
@@ -6126,9 +6321,9 @@ LINE:
             else {
                 warn "$My_name: ====== There were problems writing to",
                      "----- '$file' in '$full_dir'.\n",
-                     "----- But this is not the standard situation of\n",
-                     "----- aux file to subdir of output directory, with\n",
-                     "----- non-existent subdir\n",
+                     "----- But this is not the standard situation of file to subdir of output\n",
+                     "----- directory, with non-existent subdir, and either file is aux file or\n",
+                     "----- or \$allow_subdir_creation is set to 2.\n";
             }
         }
 
@@ -6142,7 +6337,7 @@ LINE:
         my @new_includes = ();
         
    GRAPHICS_INCLUDE_CANDIDATE:
-        while ( /<([^>]+)(>|$)/g ) {
+        while ( /<([^>\{]+)(>|\{|$)/g ) {
             if ( -f $1 ) { push @new_includes, $1; }
          }  # GRAPHICS_INCLUDE_CANDIDATE:
 
@@ -6681,9 +6876,13 @@ sub parse_fls {
     print "$My_name: Examining '$fls_name'\n"
         if not $silent;
 
-    my $pdf_base = basename($pdf_name);
-    my $log_base = basename($log_name);
-    my $out_base = basename($$Pdest);
+    # For use when checking for INPUT of normal OUTPUT file:
+    my %danger_dirs = ( $aux_dir1 => 1, $out_dir1 => 1, $out2_dir1 => 1 );
+    # The keys of %vetoed are the names of INPUT files that aren't to be treated as source files.
+    # This variable is used to avoid repeated repeated warnings for the same file of this kind.
+    # Such repeats would be common, since INPUT filename lines are often repeated in the .fls file.
+    my %vetoed = ();
+    
     my $pwd_subst = undef; # Initial string for pwd that is to be removed to
                            # make relative paths, when possible.  It must end
                            # in '/', if defined.
@@ -6714,8 +6913,10 @@ sub parse_fls {
             # line is UTF-8. 
             # So give special treatment to PWD line under Windows.
             # Also to guard against any other problems, check for non-UTF-8 lines. 
-            if ( ($^O eq 'MSWin32') && /PWD/ && ! is_valid_utf8($_) ) {                               print
-                  "PWD line not in UTF-8.  This is normal for older TeXLives (2021 and earlier).\n".                                                                                        "I will handle it.\n";
+            if ( ($^O eq 'MSWin32') && /PWD/ && ! is_valid_utf8($_) ) {
+                print
+                    "PWD line not in UTF-8.  This is normal for older TeXLives (2021 and earlier).\n".
+                    "   I will handle it.\n";
                 # Assume in CS_system, no change needed.
             }
             elsif ( ! is_valid_utf8($_) ) {
@@ -6763,48 +6964,99 @@ sub parse_fls {
             if ( (exists $$Poutputs{$file}) && (! exists $$Pinputs{$file}) ) {
                 $$Pfirst_read_after_write{$file} = 1;
             }
-            # Take precautions when the main destination file (or pdf file) or the log
-            # file are listed as INPUT files in the .fls file.
-            # At present, the known cases are caused by hyperxmp, which reads file metadata
-            # for certain purposes (e.g., setting a current date and time, or finding the
-            # pdf file size).  These uses are legitimate, but the files should not be
-            # treated as genuine source files for *latex.
-            # Note that both the pdf and log files have in their contents strings for
-            # time and date, so in general their contents don't stabilize between runs
-            # of *latex.  Hence adding them to the list of source files on the basis of
-            # their appearance in the list of input files in the .fls file would cause
-            # an incorrect infinite loop in the reruns of *latex.
+            
+
+            # PRECAUTIONS for main output pdf file (and potentially others) being INPUT
+            #==========================================================================
+            #     
+            # In almost all cases, the main output files (notably pdf, but
+            # also dvi, ps, xdv, hnt, and also the log file) are pure
+            # output files, and don't participate in circular dependences.
+            # However, there are known situations where at least the pdf
+            # file does.  This siutation is potentially problematic, since
+            # some of these normally output-only files, including the pdf
+            # file, contain content that gives a time stamp.  In a circular
+            # dependency involving such files, latexmk's normal methods
+            # give a perpetually out-of-date situation, and hence an
+            # infinite loop.
             #
-            # Older versions of hyperxmp (e.g., 2020/10/05 v. 5.6) reported the pdf file
-            # as an input file.
-            # The current version when used with xelatex reports the .log file as an
-            # input file. 
+            # If such a file is listed as being INPUT in the .fls file,
+            # then this needs to be detected, and special precautions
+            # taken. In the one known case where there is both such a
+            # circular dependency and the pdf file listed as INPUT in the
+            # fls file, it suffices not to put that file in the list of
+            # input files.
             #
-            # The test for finding the relevant .pdf (or .dvi ...) and .log files is
-            # on basenames rather than full name to evade in a simple-minded way
-            # alias issues with the directory part:
-            if ( basename($file) eq $pdf_base ) {
-                warn "$My_name: !!!!!!!!!!! Fls file lists main pdf **output** file as an input\n",
-                     "   file for rule '$rule'. I won't treat as a source file, since that can\n",
-                     "   lead to an infinite loop.\n",
-                     "   This situation can be caused by the hyperxmp package in an old version,\n",
-                     "   in which case you can ignore this message.\n";
-            } elsif ( basename($file) eq $out_base ) {
-                warn "$My_name: !!!!!!!!!!! Fls file lists main **output** file as an input\n",
-                     "   file for rule '$rule'. I won't treat as a source file, since that can\n",
-                     "   lead to an infinite loop.\n",
-                     "   This situation can be caused by the hyperxmp package in an old version,\n",
-                     "   in which case you can ignore this message.\n";
-            } elsif ( basename($file) eq $log_base ) {
-                warn "$My_name: !!!!!!!!!!! Fls file lists log file as an input file for\n",
-                     "   rule '$rule'. I won't treat it as a source file.\n",
-                     "   This situation can occur when the hyperxmp package is used with\n",
-                     "   xelatex; the package reads the .log file's metadata to set current\n",
-                     "   date and time.  In this case you can safely ignore this message.\n";
-            } else {
-                $$Pinputs{$file} = 1;
+            # Note that, in general, it is logically difficult to set up
+            # such circular dependencies within *latex to get a desired
+            # useful effect without the use of external software
+            #
+            # The known cases of the relevant kinds of circular dependency
+            # both involve the output pdf file:
+            #
+            # (a) hyperxmp in some versions, e.g., 2020/10/05 v. 5.6, reads
+            #     metadata of the pdf file produced by pdflatex (to get the
+            #     filesize), which results in the pdf file being reported
+            #     as an INPUT file of pdflatex.
+            #     Without special precautions, latexmk gets into an
+            #     infinite loop.  But correct functioning is achieved
+            #     simply by ensuring that the pdf file is not inserted in
+            #     the list of source files for *latex.
+            #     More recent versions of hyperxmp work differently, and so
+            #     do not cause 
+            #     
+            # (b) The memoize package uses non-trivial content from the pdf
+            #     file.  There is a clear and essential circular
+            #     dependency.  But given the way the package and its
+            #     associated script work, the pdf file doesn't appear any
+            #     where relevant to be detected by latexmk, and the package
+            #     and its script take care such that all necessary reruns
+            #     by latexmk get done.
+            #     In addition, there is a special configuration --- see
+            #     example_rcfiles/memoize_latexmkrc --- to allow memoize to
+            #     be used properly with latexmk.  So that doesn't entail
+            #     special diagnosis here.
+            #
+            # The above illustrate that circular dependencies involving
+            # these normally output-only files can exist, legitimately.  So
+            # we have to allow for the situation.
+            #
+            # The hyperxmp example shows that it does happen in reality
+            # that the main pdf output file is listed in the .fls file, and
+            # so that we do need an explicit test.
+            # But there are no other known situations for other classes of
+            # files that are normally only output (e.g., log, dvi, etc), so
+            # I'll restrict the detection to the pdf case, but in a form
+            # that can be generalized if need be.
+            #
+            # Given the vagaries of how the aux and output directories
+            # could be used, the test allows for the file being in any of
+            # the relevant directories.  There is a potential issue that
+            # different strings could be used for the name of the same
+            # directories. That would entail a fancier test, but that issue
+            # has not arisen in practice so far.  Since the cases where the
+            # test actually matters are already very rare, I won't handle
+            # that extra complication.
+
+            my ($base, $path, $ext) = fileparseA( $file );
+            if ( exists ($vetoed{$file}) ) {
             }
-        }
+            elsif ( ( $base eq $root_filename )
+                    && ( $ext eq '.pdf' )
+                    && ( exists $danger_dirs{$path} )
+                ) {
+                warn "$My_name: !!!!!!!!!!! Fls file lists a normal output-only file\n",
+                     "  '$file as an input file for rule '$rule'.\n",
+                     "  Hence I won't treat '$file' as an input file.\n",
+                     "  This kind of situation can be caused by the hyperxmp package in an old\n",
+                     "  version, in which case you can safely  ignore this message.\n";
+                $vetoed{$file} = 1;
+            }
+            else {
+                $$Pinputs{$file} = 1;
+            }        
+            
+        }  # end of handling INPUT line
         elsif (/^\s*OUTPUT\s+(.*)$/) {
             # Take precautions against aliasing of foo, ./foo and other possibilities for cwd.
             my $file = $1;
@@ -7631,6 +7883,7 @@ LINE:
     }
     close $in_handle;
     # Get state of dependencies, including creating cus deps if needed
+    # !!!??? This doesn't match definition of rdb_set_dependents
     &rdb_set_dependents( keys %rule_db );
     &rdb_set_rule_net;
 
@@ -7972,7 +8225,7 @@ sub rdb_set_latex_deps {
                          "     But a non-directory file of this name exists!\n";
                 }
                 else {
-                    if (mkdir $dir) {
+                    if (make_path_mod($dir)) {
                         print "$My_name: Directory '$dir' created\n";
                     }
                     else {
@@ -8088,6 +8341,12 @@ sub rdb_set_latex_deps {
         }
     }
 
+    foreach my $file ( keys %generated_fls ) {
+        if ( $file =~ /^(.*)\.idx$/ ) {
+            $idx_files{$file} = [ "$1.ind", $1 ];
+            print "Have index file '$file', @{$idx_files{$file}}\n";
+        }
+    }
   IDX_FILE:
     foreach my $idx_file ( keys %idx_files ) {
         my ($ind_file, $ind_base) = @{$idx_files{$idx_file}};
@@ -8310,7 +8569,7 @@ NEW_SOURCE:
 
     my @more_sources = &rdb_set_dependents( $rule );
     my $num_new = $#more_sources + 1;
-    foreach (@more_sources) { 
+    foreach (@more_sources) {
         $dependents{$_} = 4;
         if ( ! -e $_ ) { 
             # Failure was non-existence of makable file
@@ -8572,7 +8831,8 @@ sub rdb_find_source_file {
     }
     if ( exists $ENV{TEXINPUTS} ) {
         foreach my $searchpath (split $search_path_separator, $ENV{TEXINPUTS}) {
-            my $file = catfile($searchpath,$_[0]);
+            my $file = catfileA($searchpath,$_[0]);
+            if ( $file =~ /\\/ ) { print "====== '$file'\n"; die; }
             my $test = "$file.$_[1]";
             if ( -e $test ) {
                 return $file;
@@ -8589,7 +8849,7 @@ sub rdb_one_dep {
     # Assume file (and rule) context for DESTINATION file.
 
     # Only look for dependency if $rule is primary rule (i.e., latex
-    # or pdflatex) or is a custom dependency:
+    # or pdflatex) or is a custom dependency:  ???WHY???!!!
     if ( (! exists $possible_primaries{$rule}) && ($rule !~ /^cusdep/) ) {
         return;
     }
@@ -8660,7 +8920,7 @@ DEP:
                 && (! -e $file ) 
                 && (! -e "$base_name.$proptoext" ) 
                 && exists $$Pinput_extensions{$proptoext}
-              ) {
+            ) {
             # Empty extension and non-existent destination
             #   This normally results from  \includegraphics{A}
             #    without graphics extension for file, when file does
@@ -9154,7 +9414,7 @@ sub rdb_make {
         #      no output files changed), either because no input files
         #      changed and no run was needed, or because the
         #      number of passes through the rule exceeded the
-        #      limit.  In the second case $too_many_runs is set.
+        #      limit.  In the second case $too_many_passes was set.
         rdb_for_some( [@pre_primary, $current_primary], \&rdb_make1 );
         if ($switched_primary_output) {
             print "=========SWITCH OF OUTPUT WAS DONE.\n";
@@ -9181,7 +9441,7 @@ sub rdb_make {
             }
             else { last PASS; }
         }
-        if ($runs == 0) {
+        if ( ($runs == 0) && (! $too_many_passes) && (! $failure) ) {
             # $failure not set on this pass, so use value from previous pass:
             $failure = $previous_failure;
             if ($retry_msg) {
@@ -9200,9 +9460,8 @@ sub rdb_make {
         }
         rdb_for_some( [@post_primary], \&rdb_make1 );
         if ( ($runs == 0) || $too_many_passes ) {
-            # If $too_many_passes is set, it should also be that
-            # $runs == 0; but for safety, I also checked
-            # $too_many_passes.
+            # Either nothing needed to be done,
+            # and/or a rule needed to be run more than the allowed count.
             last PASS;
         }
      }
@@ -9236,8 +9495,11 @@ sub rdb_make {
                       }
                     ); 
     }
-
     rdb_for_some( [@unusual_one_time], \&rdb_make1 );
+    if ( ($out2_dir_requested ne '') && ($out_dir ne $out2_dir) ) {
+        do_copies_out_to_out2( $out_dir1, $out2_dir1 );
+    }
+    
 
     #---------------------------------------
     # All of make done. Finish book-keeping:
@@ -9632,7 +9894,13 @@ sub rdb_run1 {
     else {
         # No special analysis for other rules
     }
-
+    if ($$Pdest eq $pdf_final) {
+        if ( run_hooks( 'after_main_pdf' ) ) {
+            warn "$My_name: ======Some hook failed.\n";
+            $return = -1;
+        }
+    }
+    
     # General
     $updated = 1;
     if ( ($$Plast_result == 0) && ($return != 0) && ($return != -2) ) {
@@ -10572,6 +10840,7 @@ sub rdb_create_rule {
     foreach ( $PAextra_gen, $PAextra_source ) {
         if (! defined $_) { $_ = []; }
     }
+    
     my $last_result = -1;
     my $last_result_info = '';
     my $no_history = ($run_time <= 0);
@@ -11505,6 +11774,7 @@ sub add_hook {
         warn "In add_hook, request to add hook to non-existent stack '$stack'.\n";
         return 0;
     }
+    print "============== ADDING HOOK to $stack\n";
 
     my $ref;
     if ( ref $routine ) {
@@ -11530,22 +11800,35 @@ sub run_hooks {
     #   a. If arguments follow the stackname in the call to run_hooks, these
     #      are given to the called subroutines.
     #   b. Otherwise a hash of information is given to the called subroutines.
-    # Return 1 for success, 0 for failure.        
+    # Each has a return value, which like from system, is 0 for success. 
+    # Return 0 for success, non-zero for failure.   
     my $name = shift;
     my $Pstack = $hooks{$name};
     my @args = @_;
     if (!@args) { @args = &info_make; }
     else { print "Have args\n"; }
-    if (defined $Pstack) {
+
+    if ( ! defined $Pstack ) {
+        warn "run_hooks: No stack named '$name'\n";
+        # But I'll not treat this as an error.  Is that appropriate?
+        return 0;
+    }
+    elsif (! @$Pstack) {
+            # Nothing to do
+            return 0;
+    }
+    else {
+        print "$My_name: Running hooks in stack $name\n";
+        my $fail = 0;
         # Do NOT use default $_, as in "for (...) {...}":
         # The called subroutine may change $_, which is a global variable
         # (although localized to the for loop and called subroutines).
-        for my $Psub ( @$Pstack) { &$Psub(@args); }
-        return 1;
-    }
-    else {
-        warn "run_hooks: No stack named '$name'\n";
-        return 0;
+        for my $Psub ( @$Pstack) {
+            if ( &$Psub(@args) ) {
+                $fail = 1;
+            }
+        }
+        return $fail;
     }
 }
 
@@ -11720,6 +12003,15 @@ sub ext_no_period {
     $ext =~ s/^\.//;
     return $ext;
  }
+
+#************************************************************
+
+sub catfileA {
+    # Like catfile, but change \ to / in result.
+    my $file = catfile(@_);
+    $file =~ s[\\][/]g;
+    return $file;
+}
 
 #************************************************************
 
@@ -12300,7 +12592,7 @@ sub config_to_mine {
     # -outdir=... option, are already in the system CS, because that is
     # how strings are passed on  the command line.
     # So we just need to do a conversion for strings with utf8 flag on:
-    foreach ( $out_dir, $aux_dir, @default_files, @default_excluded_files ) {
+    foreach ( $out_dir, $out2_dir, $aux_dir, @default_files, @default_excluded_files ) {
         if (utf8::is_utf8($_)) { $_ = encode( $CS_system, $_ ); }
     }
 } #END config_to_mine

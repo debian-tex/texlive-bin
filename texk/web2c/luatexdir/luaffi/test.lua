@@ -21,15 +21,13 @@ local function loadlib(lib)
     error("Unable to load", lib)
 end
 
-if _VERSION == 'Lua 5.1' then
-    dlls.__cdecl = loadlib('ffi/libtest')
-else
-    dlls.__cdecl = ffi.load(package.searchpath('ffi.libtest', package.cpath))
+if ffi.debug then
+    dlls.__cdecl = ffi.load('./libffitest')
 end
 
 if ffi.arch == 'x86' and ffi.os == 'Windows' then
-    dlls.__stdcall = ffi.load('test_stdcall')
-    dlls.__fastcall = ffi.load('test_fastcall')
+    --dlls.__stdcall = ffi.load('ffitest_stdcall')
+    --dlls.__fastcall = ffi.load('ffitest_fastcall')
 end
 
 local function check(a, b, msg)
@@ -326,14 +324,14 @@ local buf = ffi.new('char[256]')
 
 local function checkbuf(type, ret, msg)
     local str = tostring(test_values[type]):gsub('^cdata%b<>: ', '')
-    check(ffi.string(buf), str, msg)
+    check(string.lower(ffi.string(buf)), string.lower(str), msg)
     check(ret, #str, msg)
 end
 
 local function checkalign(type, v, ret)
     --print(v)
-    local str = tostring(test_values[type]):gsub('^cdata%b<>: ', '')
-    check(ffi.string(buf), ('size %d offset %d align %d value %s'):format(ffi.sizeof(v), ffi.offsetof(v, 'v'), ffi.alignof(v, 'v'), str))
+    local str = string.lower(tostring(test_values[type]):gsub('^cdata%b<>: ', ''))
+    check(string.lower(ffi.string(buf)), ('size %d offset %d align %d value %s'):format(ffi.sizeof(v), ffi.offsetof(v, 'v'), ffi.alignof(v, 'v'), str))
     check(ret, #str)
 end
 
@@ -343,6 +341,8 @@ local i64 = ffi.typeof('int64_t')
 local first = true
 
 for convention,c in pairs(dlls) do
+
+    
     check(c.add_i8(1,1), 2)
     check(c.add_i8(256,1), 1)
     check(c.add_i8(127,1), -128)
@@ -360,21 +360,17 @@ for convention,c in pairs(dlls) do
     check(c.inc_e32(c.FOO32), c.BAR32)
     check(c.ret_fp(c.g_fp), c.g_fp)
     check(c.ret_fp2(c.g_fp), c.g_fp)
+    print("on line",debug.getinfo(1).currentline)
 
-    if c.have_complex() then
-        check(c.add_dc(3+4*i, 4+5*i), 7+9*i)
-        check(c.add_fc(2+4*i, 6+8*i), 8+12*i)
-        types.dc = 'double complex'
-        types.fc = 'float complex'
-    else
-        types.dc = nil
-        types.fc = nil
-    end
+    check(c.add_dc(3+4*i, 4+5*i), 7+9*i)
+    check(c.add_fc(2+4*i, 6+8*i), 8+12*i)
+    types.dc = 'double complex'
+    types.fc = 'float complex'
+
     check((3+4*i).re, 3)
     check((3+4*i).im, 4)
     check(ffi.new('complex float', 2+8*i).re, 2)
     check(ffi.new('complex float', 5+6*i).im, 6)
-
     check(c.have_complex(), c.have_complex2())
     check(c.is_msvc, c.is_msvc2)
 
@@ -382,17 +378,26 @@ for convention,c in pairs(dlls) do
     check(c.g_i8, -8)
     check(c.g_i16, -16)
     check(c.g_i32, -32)
-    check(c.g_i64, i64(-64))
+    if _VERSION=='Lua 5.1' or _VERSION=='Lua 5.2' then
+        check(c.g_i64, i64(-64))
+    else
+        check(c.g_i64, -64)
+    end
+    print("on line",debug.getinfo(1).currentline)
     check(c.g_u8, 8)
     check(c.g_u16, 16)
     check(c.g_u32, 32)
-    check(c.g_u64, u64(64))
+    if _VERSION=='Lua 5.1' or _VERSION=='Lua 5.2' then
+        check(c.g_u64, u64(64))
+    else
+        check(c.g_u64, 64)
+    end
+   
     check(c.g_f, 3)
     check(c.g_d, 5)
-    if c.have_complex() then
-        check(c.g_dc, 7 + 8*i)
-        check(c.g_fc, 6 + 9*i)
-    end
+    check(c.g_dc, 7 + 8*i)
+    check(c.g_fc, 6 + 9*i)
+
     check(ffi.cast('void*', c.g_fp), c.g_p)
     check(c.g_s, 'g_s')
     check(c.g_sp, 'g_sp')
@@ -403,28 +408,38 @@ for convention,c in pairs(dlls) do
     check(c.g_date.nMonthDay, 2)
     check(c.g_date.nMonth, 3)
     check(c.g_date.nYear, 4)
-
+   
     c.g_b = false; check(c.g_b, false)
     c.g_i8 = -108; check(c.g_i8, -108)
     c.g_i16 = -1016; check(c.g_i16, -1016)
     c.g_i32 = -1032; check(c.g_i32, -1032)
-    c.g_i64 = -1064; check(c.g_i64, i64(-1064))
+    c.g_i64 = -1064;
+    if _VERSION=='Lua 5.1' or _VERSION=='Lua 5.2' then
+        check(c.g_i64, i64(-1064))
+    else
+        check(c.g_i64, -1064)
+    end
     c.g_u8 = 208; check(c.g_u8, 208)
     c.g_u16 = 2016; check(c.g_u16, 2016)
     c.g_u32 = 2032; check(c.g_u32, 2032)
-    c.g_u64 = 2064; check(c.g_u64, u64(2064))
+    c.g_u64 = 2064;
+    if _VERSION=='Lua 5.1' or _VERSION=='Lua 5.2' then
+        check(c.g_u64, u64(2064))
+    else
+        check(c.g_u64, 2064)
+    end
     c.g_f = 13; check(c.g_f, 13)
     c.g_d = 15; check(c.g_d, 15)
-    if c.have_complex() then
-        c.g_dc = 17+18*i; check(c.g_dc, 17+18*i)
-        c.g_fc = 16+19*i; check(c.g_fc, 16+19*i)
-    end
+
+    c.g_dc = 17+18*i; check(c.g_dc, 17+18*i)
+    c.g_fc = 16+19*i; check(c.g_fc, 16+19*i)
+
     c.g_sp = 'foo'; check(c.g_sp, 'foo')
     c.g_e8 = c.BAR8; check(c.g_e8, c.BAR8)
     c.g_e16 = c.BAR16; check(c.g_e16, c.BAR16)
     c.g_e32 = c.BAR32; check(c.g_e32, c.BAR32)
     c.g_date.nWeekDay = 3; check(c.g_date.nWeekDay, 3)
-
+    print("on line",debug.getinfo(1).currentline)
     local align_attr = c.is_msvc and [[
         struct align_attr_ALIGN_SUFFIX {
             char pad;
@@ -440,7 +455,8 @@ for convention,c in pairs(dlls) do
 
         int print_align_attr_ALIGN_SUFFIX(char* buf, struct align_attr_ALIGN_SUFFIX* p);
         ]]
-
+   
+    
     for suffix, type in pairs(types) do
         local test = test_values[type]
         --print('checkbuf', suffix, type, buf, test)
@@ -452,27 +468,27 @@ for convention,c in pairs(dlls) do
 
         local v = ffi.new('struct align_0_' .. suffix, {0, test})
         checkalign(type, v, c['print_align_0_' .. suffix](buf, v))
-
+       
         for _,align in ipairs{1,2,4,8,16} do
+           
             if align > c.max_alignment() then
                 break
             end
-
+           
             if first then
                 ffi.cdef(palign:gsub('SUFFIX', suffix):gsub('TYPE', type):gsub('ALIGN', align))
                 ffi.cdef(align_attr:gsub('SUFFIX', suffix):gsub('TYPE', type):gsub('ALIGN', align))
             end
-
+           
             local v = ffi.new('struct align_' .. align .. '_' .. suffix, {0, test})
             checkalign(type, v, c['print_align_' .. align .. '_' .. suffix](buf, v))
-
+           
             -- MSVC doesn't support aligned attributes on enums
             if not type:match('^enum e[0-9]*$') or not c.is_msvc then
                 local v2 = ffi.new('struct align_attr_' .. align .. '_' .. suffix, {0, test})
                 checkalign(type, v2, c['print_align_attr_' .. align .. '_' .. suffix](buf, v2))
             end
-        end
-
+        end 
         if not c.is_msvc then
             if first then
                 local h = [[
@@ -486,23 +502,21 @@ for convention,c in pairs(dlls) do
             end
 
             local v = ffi.new('struct align_attr_def_' .. suffix, {0, test})
-            -- print(type)
-            -- print("Align " .. c['print_align_attr_def_' .. suffix](buf, v))
-            -- print(ffi.string(buf))
-            -- checkalign(type, v, c['print_align_attr_def_' .. suffix](buf, v))
-        end
+            checkalign(type, v, c['print_align_attr_def_' .. suffix](buf, v))
+        end 
     end
-
+    print("on line",debug.getinfo(1).currentline)
     local psz = ffi.new('size_t[1]')
     local palign = ffi.new('size_t[1]')
     local function check_align(type, test, ret)
-        --print('check_align', type, test, ret, ffi.string(buf), psz[0], palign[0])
+        print('check_align', type, palign[0],ffi.alignof(type))
         check(tonumber(palign[0]), ffi.alignof(type))
         check(tonumber(psz[0]), ffi.sizeof(type))
+        print('***',psz[0], palign[0], buf[0],tostring(test)..":"..tostring(ffi.string(buf)))
         check(ret, #test)
         check(test, ffi.string(buf))
     end
-
+    
     for _, tnum in ipairs{8, 16, 32, 64} do
         if first then
             ffi.cdef(bitfields:gsub('TNUM',tnum))
@@ -533,7 +547,7 @@ for convention,c in pairs(dlls) do
             check_align('struct ba_'..tnum..'_'..bnum, '1 2', c['print_ba_'..tnum..'_'..bnum](psz, palign, buf, {1,2}))
         end
     end
-
+    
     check_align('struct Date', '1 2 3 4', c.print_date(psz, palign, buf, {1,2,3,4}))
     check_align('struct Date2', '1 2 3 4', c.print_date2(psz, palign, buf, {1,2,3,4}))
     check_align('struct sysv1', '1 2 3', c.print_sysv1(psz, palign, buf, {1,2,3}))
@@ -543,7 +557,7 @@ for convention,c in pairs(dlls) do
     check_align('struct sysv5', '1 2 3', c.print_sysv5(psz, palign, buf, {1,2,3}))
     check_align('struct sysv6', '1 2 3', c.print_sysv6(psz, palign, buf, {1,2,3}))
     check_align('struct sysv7', '1 2 3 4 5', c.print_sysv7(psz, palign, buf, {1,2,3,4,5}))
-
+    
     local cbs = [[
     typedef const char* (*__cdecl sfunc)(const char*);
     int call_i(int (*__cdecl func)(int), int arg);
@@ -557,9 +571,9 @@ for convention,c in pairs(dlls) do
     enum e16 call_e16(enum e16 (*__cdecl func)(enum e16), enum e16 arg);
     enum e32 call_e32(enum e32 (*__cdecl func)(enum e32), enum e32 arg);
     ]]
-
+    print("on line",debug.getinfo(1).currentline)
     ffi.cdef(cbs:gsub('__cdecl', convention))
-
+    
     local u3 = ffi.new('uint64_t', 3)
     check(c.call_i(function(a) return 2*a end, 3), 6)
     assert(math.abs(c.call_d(function(a) return 2*a end, 3.2) - 6.4) < 0.0000000001)
@@ -570,10 +584,11 @@ for convention,c in pairs(dlls) do
     check(c.call_e16(function(v) return v + 1 end, c.FOO16), c.BAR16)
     check(c.call_e32(function(v) return v + 1 end, c.FOO32), c.BAR32)
 
-    if c.have_complex() then
-        check(c.call_dc(function(v) return v + 2+3*i end, 4+6*i), 6+9*i)
-        check(c.call_fc(function(v) return v + 1+2*i end, 7+4*i), 8+6*i)
-    end
+
+    check(c.call_dc(function(v) return v + 2+3*i end, 4+6*i), 6+9*i)
+    check(c.call_fc(function(v) return v + 1+2*i end, 7+4*i), 8+6*i)
+
+
 
     local u2 = ffi.new('uint64_t', 2)
     local cb = ffi.new('sfunc', function(s) return s + u3 end)
@@ -592,7 +607,7 @@ for convention,c in pairs(dlls) do
     check(err:gsub('^.*: ',''), "can't set the function for a non-lua callback")
 
     check(c.call_fptr({function(a) return 3*a end}, 5), 15)
-
+    
     local suc, err = pcall(c.call_s, function(s) error(ffi.string(s), 0) end, 'my error')
     check(suc, false)
     check(err, 'my error')
@@ -604,7 +619,7 @@ for convention,c in pairs(dlls) do
     check(ffi.errno(4), 3)
     check(ffi.errno(), 4)
     check(c.get_errno(), 4)
-
+    print("on line",debug.getinfo(1).currentline)
     local gccattr = {
         __cdecl = 'int test_pow(int v) __attribute__((cdecl));',
         __stdcall = 'int test_pow(int v) __attribute__(stdcall);',
@@ -613,7 +628,7 @@ for convention,c in pairs(dlls) do
 
     ffi.cdef(gccattr[convention])
     check(c.test_pow(5), 25)
-
+    
     ffi.cdef [[
         int va_list_size, va_list_align;
         int vsnprintf(char* buf, size_t sz, const char* fmt, va_list ap);
@@ -624,7 +639,7 @@ for convention,c in pairs(dlls) do
     assert(ffi.istype('va_list', ffi.new('__gnuc_va_list')))
     check(ffi.sizeof('va_list'), c.va_list_size)
     check(ffi.alignof('va_list'), c.va_list_align)
-
+    print("on line",debug.getinfo(1).currentline)
     first = false
 end
 
@@ -671,17 +686,19 @@ assert(not pcall(function()
 end))
 
 local mt = {}
-local vls = ffi.new(ffi.metatype('struct vls', mt), 1)
+local vls0 = ffi.new(ffi.metatype('struct vls', mt), 1)
 
-assert(not pcall(function() return vls.key end))
+assert(not pcall(function() return vls0.key end))
 
 mt.__index = function(vls, key)
     return function(vls, a, b)
         return 'in index ' .. key .. ' ' .. vls.d.a .. ' ' .. a .. ' ' .. b
     end
 end
+local vls = ffi.new(ffi.metatype('struct vls', mt), 1)
 
 vls.d.a = 3
+--for k,v in pairs(vls) do print("=", k,v) end
 check(vls:key('a', 'b'), 'in index key 3 a b')
 
 assert(not pcall(function() vls.k = 3 end))
@@ -689,6 +706,7 @@ assert(not pcall(function() vls.k = 3 end))
 mt.__newindex = function(vls, key, val)
     error('in newindex ' .. key .. ' ' .. vls.d.a .. ' ' .. val, 0)
 end
+ffi.metatype('struct vls', mt)
 
 vls.d.a = 4
 local suc, err = pcall(function() vls.key = 'val' end)
@@ -709,6 +727,7 @@ mt.__unm = function(vls) return -vls.d.a end
 mt.__concat = function(vls, a) return vls.d.a .. a end
 mt.__len = function(vls) return vls.d.a end
 mt.__tostring = function(vls) return 'string ' .. vls.d.a end
+ffi.metatype('struct vls', mt)
 
 vls.d.a = 5
 check(vls + 5, 10)
@@ -736,7 +755,7 @@ if _VERSION ~= 'Lua 5.1' then
     check(vls .. 'str', '5str')
     check(#vls, 5)
 end
-
+print("on line",debug.getinfo(1).currentline)
 check(tostring(1.1+3.2*i), '1.1+3.2i')
 check((1+3*i)*(2+4*i), -10+10*i)
 check((3+2*i)*(3-2*i), 13+0*i)
@@ -757,24 +776,26 @@ if _VERSION == "Lua 5.3" then
 
     local native_80 = 0x8000000000000000
 
-    for _, func in ipairs{ffi.C.add_i64, ffi.C.add_u64} do
-        -- 0x7FFFFFFFFFFFFFFF (native)         + 1 == 0x8000000000000000 (native)
-        local res = func(native_7F, 1)
-        assert(type(res) == "number", "native_7F: returned value not a number")
-        assert(res == native_80, "native_7F: math error")
+    for _, c in pairs(dlls) do
+        for _, func in ipairs{c.add_i64, c.add_u64} do
+            -- 0x7FFFFFFFFFFFFFFF (native)         + 1 == 0x8000000000000000 (native)
+            local res = func(native_7F, 1)
+            check(type(res) , "number", "native_7F: returned value not a number")
+            check(res , native_80, "native_7F: math error")
 
-        -- 0x7FFFFFFFFFFFFFFF (cdata int64_t)  + 1 == 0x8000000000000000 (native)
-        local res = func(cdata_long_7F, 1)
-        assert(type(res) == "number", "cdata_long_7F: returned value not a number")
-        assert(res == native_80, "cdata_long_7F: math error")
+            -- 0x7FFFFFFFFFFFFFFF (cdata int64_t)  + 1 == 0x8000000000000000 (native)
+            local res = func(cdata_long_7F, 1)
+            check(type(res) , "number", "cdata_long_7F: returned value not a number")
+            check(res , native_80, "cdata_long_7F: math error")
 
-        -- 0x7FFFFFFFFFFFFFFF (cdata uint64_t) + 1 == 0x8000000000000000 (native)
-        local res = func(cdata_ulong_7F, 1)
-        assert(type(res) == "number", "cdata_ulong_7F: returned value not a number")
-        assert(res == native_80, "cdata_ulong_7F: math error")
+            -- 0x7FFFFFFFFFFFFFFF (cdata uint64_t) + 1 == 0x8000000000000000 (native)
+            local res = func(cdata_ulong_7F, 1)
+            check(type(res) , "number", "cdata_ulong_7F: returned value not a number")
+            check(res , native_80, "cdata_ulong_7F: math error")
+        end
     end
 end
-
+print("on line",debug.getinfo(1).currentline)
 -- Long double is not supported yet but it should be parsed
 ffi.cdef('long double foo(long double val);')
 check(tostring(ffi.debug().functions.foo):match('ctype(%b<>)'), '<long double (*)(long double)>')
@@ -874,7 +895,7 @@ struct newtest {
     int c;
 };
 ]]
-
+print("on line",debug.getinfo(1).currentline)
 local tp = ffi.metatype("struct newtest", {__new =
   function(tp, x, y, z)
     tp = ffi.new(tp)
@@ -903,7 +924,7 @@ if _VERSION ~= 'Lua 5.1' then
     x, y = ipairs(v)
     assert(x == 2 and y == 3)
 end
-
+print("on line",debug.getinfo(1).currentline)
 -- test for pointer to struct having same metamethods
 local st = ffi.cdef "struct ptest {int a, b;};"
 local tp = ffi.metatype("struct ptest", {__index = function(s, k) return k end, __len = function(s) return 3 end})
@@ -915,7 +936,7 @@ local b = ffi.new("int[2]")
 local c = ffi.cast("struct ptest *", b)
 assert(c.banana == "banana") -- should have same methods
 assert(#c == 3)
-
+print("on line",debug.getinfo(1).currentline)
 
 ffi.cdef [[
 char buf[512];
@@ -927,31 +948,35 @@ void test_call_pppppiifiii(void* p1, void* p2, void* p3, void* p4, void* p5, int
 void test_call_pppppiiifii(void* p1, void* p2, void* p3, void* p4, void* p5, int i1, int i2, int i3, float i4, int i5, int i6);
 ]]
 
-ffi.C.test_call_echo("input")
-assert(ffi.C.buf == "input")
+for _, c in pairs(dlls) do
+    c.test_call_echo("input")
+    assert(c.buf == "input")
 
-local function ptr(x) return ffi.new('void*', x) end
+    local function ptr(x) return ffi.new('void*', x) end
 
-ffi.C.test_call_pppppii(ptr(1), ptr(2), ptr(3), ptr(4), ptr(5), 6, 7)
-assert(ffi.C.buf == "0x1 0x2 0x3 0x4 0x5 6 7")
+    c.test_call_pppppii(ptr(1), ptr(2), ptr(3), ptr(4), ptr(5), 6, 7)
+    assert(c.buf == "1 2 3 4 5 6 7")
 
-ffi.C.test_call_pppppiiiiii(ptr(1), ptr(2), ptr(3), ptr(4), ptr(5), 6, 7, 8, 9, 10, 11)
-assert(ffi.C.buf == "0x1 0x2 0x3 0x4 0x5 6 7 8 9 10 11")
+    c.test_call_pppppiiiiii(ptr(1), ptr(2), ptr(3), ptr(4), ptr(5), 6, 7, 8, 9, 10, 11)
+    assert(c.buf == "1 2 3 4 5 6 7 8 9 10 11")
 
-ffi.C.test_call_pppppffffff(ptr(1), ptr(2), ptr(3), ptr(4), ptr(5), 6.5, 7.5, 8.5, 9.5, 10.5, 11.5)
-assert(ffi.C.buf == "0x1 0x2 0x3 0x4 0x5 6.5 7.5 8.5 9.5 10.5 11.5")
+    c.test_call_pppppffffff(ptr(1), ptr(2), ptr(3), ptr(4), ptr(5), 6.5, 7.5, 8.5, 9.5, 10.5, 11.5)
+    assert(c.buf == "1 2 3 4 5 6.5 7.5 8.5 9.5 10.5 11.5")
 
-ffi.C.test_call_pppppiifiii(ptr(1), ptr(2), ptr(3), ptr(4), ptr(5), 6, 7, 8.5, 9, 10, 11)
-assert(ffi.C.buf == "0x1 0x2 0x3 0x4 0x5 6 7 8.5 9 10 11")
+    c.test_call_pppppiifiii(ptr(1), ptr(2), ptr(3), ptr(4), ptr(5), 6, 7, 8.5, 9, 10, 11)
+    assert(c.buf == "1 2 3 4 5 6 7 8.5 9 10 11")
 
-ffi.C.test_call_pppppiiifii(ptr(1), ptr(2), ptr(3), ptr(4), ptr(5), 6, 7, 8, 9.5, 10, 11)
-assert(ffi.C.buf == "0x1 0x2 0x3 0x4 0x5 6 7 8 9.5 10 11")
+    c.test_call_pppppiiifii(ptr(1), ptr(2), ptr(3), ptr(4), ptr(5), 6, 7, 8, 9.5, 10, 11)
+    assert(c.buf == "1 2 3 4 5 6 7 8 9.5 10 11")
 
-local sum = ffi.C.add_dc(ffi.new('complex', 1, 2), ffi.new('complex', 3, 5))
-assert(ffi.istype('complex', sum))
 
-sum = ffi.C.add_fc(ffi.new('complex float', 1, 2), ffi.new('complex float', 3, 5))
-assert(ffi.istype('complex float', sum))
+    local sum = c.add_dc(ffi.new('complex', 1, 2), ffi.new('complex', 3, 5))
+    assert(ffi.istype('complex', sum))
+
+    sum = c.add_fc(ffi.new('complex float', 1, 2), ffi.new('complex float', 3, 5))
+    assert(ffi.istype('complex float', sum))
+
+end
 
 ffi.cdef [[
 struct Arrays {
@@ -1000,4 +1025,36 @@ local str = f:read('*l')
 assert(str == 'test: foo', str)
 f:close()
 
+print("on line",debug.getinfo(1).currentline)
+--long arg Callback test
+
+function printArgs(...)
+    local t={}
+    for i, v in ipairs(table.pack(...)) do
+        t[i]=tostring(v);
+    end
+    return table.concat(t,',')
+end
+
+local test_func=ffi.new("const char* (*)(int8_t,int16_t,complex float)",printArgs)
+assert(ffi.string(test_func(1,2,ffi.new("complex float",7,8)))=="1,2,7+8i")
+test_func:free()
+test_func=ffi.new("const char* (*)(int8_t,int16_t,int,complex float)",printArgs)
+assert(ffi.string(test_func(1,2,6,ffi.new("complex float",7,8)))=="1,2,6,7+8i")
+test_func:free()
+test_func=ffi.new("const char* (*)(int8_t,int16_t,complex double)",printArgs)
+assert(ffi.string(test_func(1,2,ffi.new("complex float",7,8)))=="1,2,7+8i")
+test_func:free()
+test_func=ffi.new("const char* (*)(int8_t,int16_t,int,complex double)",printArgs)
+assert(ffi.string(test_func(1,2,6,ffi.new("complex float",7,8)))=="1,2,6,7+8i")
+test_func:free()
+test_func=ffi.new("const char* (*)(int8_t,int16_t,long,complex double,int8_t,int16_t,long,complex double,int8_t,int16_t,long,complex double,double,double,float)",printArgs)
+local exp1="1,2,6,7+8i,1,2,6,7+8i,1,2,6,7+8i,9,9,4";
+local exp2="1,2,6,7+8i,1,2,6,7+8i,1,2,6,7+8i,9.0,9.0,4.0";
+local real=ffi.string(test_func(1,2,6,ffi.new("complex float",7,8),1,2,6,ffi.new("complex float",7,8),1,2,6,ffi.new("complex float",7,8),9,9,4));
+if(not (real==exp1 or real==exp2))then
+    check(real,exp1)
+    check(real,exp2)
+end
+test_func:free()
 print('Test PASSED')

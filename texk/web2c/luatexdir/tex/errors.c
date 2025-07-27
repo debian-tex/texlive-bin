@@ -106,7 +106,12 @@ void flush_err(void)
         if (callback_id > 0) {
             run_callback(callback_id, "->");
         } else {
-            tprint(s);
+	    callback_id = callback_defined(show_ignored_error_message_callback);
+	    if (callback_id > 0) {
+	      run_callback(callback_id, "->");
+	    } else {
+              tprint(s);
+	    }  
         }
         in_error = 0 ;
     }
@@ -127,6 +132,30 @@ void print_err(const char *s)
         print_file_line();
     } else {
         tprint_nl("! ");
+    }
+    tprint(s);
+    if (callback_id <= 0) {
+        xfree(last_error);
+        last_error = (string) xmalloc((unsigned) (strlen(s) + 1));
+        strcpy(last_error,s);
+    }
+}
+
+void print_ignored_err(const char *s)
+{
+    int callback_id = callback_defined(show_ignored_error_message_callback);
+    if (interaction == error_stop_mode) {
+        wake_up_terminal();
+    }
+    if (callback_id > 0) {
+        err_old_setting = selector;
+        selector = new_string;
+        in_error = 1 ;
+    }
+    if (filelineerrorstylep) {
+        print_file_line();
+    } else {
+        tprint_nl("ignored error ");
     }
     tprint(s);
     if (callback_id <= 0) {
@@ -906,16 +935,22 @@ suppressed it.
 If |tracing_lost_chars_par| (i.e. \.{\\tracinglostchar})  is  greater than 2,
 it's considered as an error.
 
+=0 : nothing 
+=1 : warning only to log file
+=2 : warning + force terminal 
+=3 : error                      
+=4 : warning (+ force terminal) : per request latex team
+>4 : error                      : per request latex team
+
 */
 
 void char_warning(internal_font_number f, int c)
 {
-    /*tex saved value of |tracing_online| */
-    int old_setting;
-    /* index to current digit; we assume that $0\L n<16^{22}$ */
-    int k;
     if (tracing_lost_chars_par > 0) {
-        old_setting = tracing_online_par;
+        /*tex saved value of |tracing_online| */
+        int old_setting = tracing_online_par;
+        /* index to current digit; we assume that $0\L n<16^{22}$ */
+        int k;
         if (tracing_lost_chars_par > 1)
             tracing_online_par = 1;
         begin_diagnostic();
@@ -941,7 +976,9 @@ void char_warning(internal_font_number f, int c)
         end_diagnostic(false);
         tracing_online_par = old_setting;
     }
-    if (tracing_lost_chars_par > 2) {
+    if (tracing_lost_chars_par == 3) {
+       error();
+    } else if (tracing_lost_chars_par > 4) {
        error();
     }
 }

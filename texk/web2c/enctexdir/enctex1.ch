@@ -1,4 +1,4 @@
-% $Id$
+% $Id: enctex1.ch 57736 2021-02-13 23:02:37Z karl $
 % enctex1.ch: implementation of enc\TeX, to be applied on top of tex.ch.
 % This is the first set of changes, used by all engines supporting encTeX
 % (i.e., everything but XeTeX and LuaTeX).

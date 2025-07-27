@@ -1558,8 +1558,14 @@ void check_o_mode(PDF pdf, const char *s, int o_mode_bitpattern, boolean strict)
     output_mode o_mode;
     const char *m = NULL;
     if (lua_only) {
-        normal_error("lua only","no backend present, needed for what you asked for");
-        return ;
+        boolean texlua_img = false;
+        get_lua_boolean("texconfig", "texlua_img", &texlua_img);
+        if (texlua_img) {
+            /* Ok, lets hope that you know what you are doing! */
+        } else {
+            normal_error("lua only","no backend present, needed for what you asked for");
+            return ;
+        }
     }
     if (output_mode_used == OMODE_NONE)
         o_mode = get_o_mode();
@@ -2020,7 +2026,7 @@ void pdf_end_page(PDF pdf)
         pdf_end_dict(pdf);
     }
     /*tex Generate |ProcSet| in version 1.*/
-    if (pdf->major_version == 1) {
+    if (pdf->major_version == 1 && ! pdf_omit_procset) {
         pdf_add_name(pdf, "ProcSet");
         pdf_begin_array(pdf);
         if ((procset & PROCSET_PDF) != 0)
@@ -2130,6 +2136,11 @@ static boolean substr_of_str(const char *s, const char *t)
     return true;
 }
 
+const char* pdf_pdf_prefix_str(const char *a, const char *b)
+{
+    return (pdf_ptex_prefix ? a : b);
+}
+
 static int pdf_print_info(PDF pdf, int luatexversion, str_number luatexrevision)
 {
     boolean creator_given = false;
@@ -2195,7 +2206,7 @@ static int pdf_print_info(PDF pdf, int luatexversion, str_number luatexrevision)
         pdf_dict_add_name(pdf, "Trapped", "False");
     }
     if ((pdf_suppress_optional_info & 1) == 0) {
-        pdf_dict_add_string(pdf, "PTEX.FullBanner", luatex_banner);
+        pdf_dict_add_string(pdf, pdf_pdf_prefix_str("PTEX_FullBanner", "PTEX.FullBanner"), luatex_banner);
     }
     pdf_end_dict(pdf);
     pdf_end_obj(pdf);

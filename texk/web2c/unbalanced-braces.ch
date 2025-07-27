@@ -1,4 +1,4 @@
-% $Id$
+% $Id: unbalanced-braces.ch 71417 2024-06-03 22:32:13Z karl $
 % Fix overrun/underrun of \write and \output. David Fuchs, 2024.
 % Public domain.
 %
@@ -6,8 +6,8 @@
 % an \output or \write and ending up in all sorts of ill-defined
 % trouble.  (Including the case of \output=\toks with no braces.)
 % 
-% For some problematic input files, see tests/unbalanced-braces.test
-% (not a runnable test).
+% For some problematic input texts, see tests/unbalanced-braces.test
+% (not a runnable test). References to bug reports are also there.
 %
 % The idea is that when it's time to run/evaluate each \output or \write,
 % they have to come to an end exactly as expected: at the right brace that
@@ -47,7 +47,7 @@
         begin decr(param_ptr);
         flush_list(param_stack[param_ptr]);
         end
-    else if (token_type=output_text)and(output_active) then
+    else if (token_type=output_text)and(not output_can_end) then
       fatal_error("Unbalanced output routine");
 @.Unbalanced output routine@>
 @z
@@ -103,6 +103,19 @@ while (loc=null)and(token_type<>v_template)
 % that we were just finished with it, so it's where the brace
 % came from.
 
+@x [45.989] l.19364 p.B417
+@!output_active:boolean; {are we in the midst of an output routine?}
+@y
+@!output_active:boolean; {are we in the midst of an output routine?}
+@!output_can_end:boolean; {is this an auspicious time for it to end?}
+@z
+
+@x [45.989] l.19367 p.B417
+output_active:=false; insert_penalties:=0;
+@y
+output_active:=false; output_can_end:=false; insert_penalties:=0;
+@z
+
 % In <Resume the page builder after an output routine has come to an end>:
 @x [45.1026] l.19938 p.B432
 begin if (loc<>null) or
@@ -121,8 +134,10 @@ begin
 end_token_list; {conserve stack space in case more outputs are triggered}
 end_graf; unsave; output_active:=false; insert_penalties:=0;@/
 @y
-end_graf; unsave; output_active:=false; insert_penalties:=0;@/
+output_can_end:=true;
 end_token_list; {conserve stack space in case more outputs are triggered}
+output_can_end:=false;
+end_graf; unsave; output_active:=false; insert_penalties:=0;@/
 @z
 
 % <Expand macros in the token list and...> had set mode:=0 while

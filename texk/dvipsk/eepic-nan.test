@@ -1,5 +1,5 @@
 #! /bin/sh -vx
-# $Id$
+# $Id: eepic-nan.test 67885 2023-08-11 14:25:18Z takuji $
 # Public domain.
 # ensure we don't get nan from eepic doc.
 # Report from Stefan Moser to mactex-support, 20 Oct 2010 02:37:45.

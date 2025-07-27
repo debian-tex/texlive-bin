@@ -1,5 +1,5 @@
 #! /bin/sh -vx
-# $Id$
+# $Id: bibtex-mem.test 67993 2023-08-20 14:27:19Z takuji $
 # Copyright 2017 Karl Berry <tex-live@tug.org>
 # Copyright 2010 Peter Breitenlohner <tex-live@tug.org>
 # You may freely use, modify and/or distribute this file.

@@ -1,5 +1,5 @@
 #! /bin/sh -vx
-# $Id$
+# $Id: synctex.test 68086 2023-08-27 14:18:33Z takuji $
 # Copyright 2017 Karl Berry <tex-live@tug.org>
 # Copyright 2014 Peter Breitenlohner <tex-live@tug.org>
 # You may freely use, modify and/or distribute this file.

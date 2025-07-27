@@ -1,5 +1,5 @@
 ## utils/axodraw2/ac/withenable.ac: configure.ac fragment for TL subdir
-dnl $Id$
+dnl $Id: withenable.ac 55466 2020-06-07 18:00:56Z karl $
 dnl
 dnl Copyright 2018-2020 Karl Berry <tex-live@tug.org>
 dnl You may freely use, modify and/or distribute this file.

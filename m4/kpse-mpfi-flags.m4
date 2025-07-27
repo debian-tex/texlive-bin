@@ -1,4 +1,4 @@
-# $Id$
+# $Id: kpse-mpfi-flags.m4 69664 2024-02-01 22:56:12Z karl $
 # Public macros for the TeX Live (TL) tree.
 # Copyright (C) 2022-2024 Luigi Scarso <tex-live@tug.org>
 #

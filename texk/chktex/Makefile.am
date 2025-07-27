@@ -1,4 +1,4 @@
-## $Id$
+## $Id: Makefile.am 65275 2022-12-15 11:48:56Z hironobu $
 ## Makefile.am for the TeX Live subdirectory texk/chktex/
 ##
 ## Copyright 2017-2022 Karl Berry <tex-live@tug.org>

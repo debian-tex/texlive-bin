@@ -1,5 +1,5 @@
 #! /bin/sh -vx
-# $Id$
+# $Id: kpsesafe.test 70253 2024-02-29 18:02:29Z karl $
 # Copyright 2024 Karl Berry <tex-live@tug.org>
 # You may freely use, modify and/or distribute this file.
 

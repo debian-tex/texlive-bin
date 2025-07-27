@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id$
+# $Id: buildinfo.sh 51449 2019-06-24 22:12:32Z karl $
 # Public domain. Report basics of current system; run from top-level
 # Makefile so any make overrides will be taken into account. (And from
 # Build.) buildenv.log with full environment dump is also created.

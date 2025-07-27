@@ -1,4 +1,4 @@
-## $Id$
+## $Id: Makefile.am 63193 2022-05-01 00:38:37Z takuji $
 ## Makefile.am for the TeX Live subdirectory texk/dvi2tty/
 ##
 ## Copyright 2017 Karl Berry <tex-live@tug.org>

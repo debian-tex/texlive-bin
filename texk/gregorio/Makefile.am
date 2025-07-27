@@ -1,4 +1,4 @@
-## $Id$
+## $Id: Makefile.am 46939 2018-03-12 23:07:15Z kakuto $
 ## Makefile.am for the TeX Live subdirectory texk/gregorio/
 ##
 ## Copyright 2016-2017 Karl Berry <tex-live@tug.org>

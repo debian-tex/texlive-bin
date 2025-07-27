@@ -1,4 +1,4 @@
-## $Id$
+## $Id: hitex.am 65165 2022-12-02 15:51:09Z mruckert $
 ## texk/web2c/hitexdir/am/hitex.am: Makefile fragment for HiTeX
 ##
 ## Copyright 2021-2022 Martin Ruckert <ruckert@cs.hm.edu>

@@ -1,4 +1,4 @@
-# $Id$
+# $Id: splitinfo.gawk 34143 2014-05-20 17:30:45Z karl $
 # Public domain.  Originally written 2014 by Karl Berry.
 # Split chapter 2 of plain text output from makeinfo,
 # making each section into a separate README file.

@@ -1,3 +1,148 @@
+2025-05-17  Karl Berry  <karl@freefriends.org>
+
+        * NEWS,
+        * pdftex_version.h,
+        * pdftex.web (pdftex_revision, pdftex_version_string):
+        version [1.40.]28 for post-TL25 fix.
+
+2025-05-15  Thanh Han The  <hanthethanh@gmail.com>
+
+	* pdftex.web (adv_char_width): remove dd parameter; call
+	divide_scaled by the hardwired 4, instead of dd.
+	(pdf_init_font): also check that the width of character 32 is >one_bp
+	for the pdf_font_has_space_char value.
+	(pdf_begin_string, output_one_char): change adv_char_width calls
+	similarly.
+	This is to fix overlapping text in ptmr8r and other fonts,
+	reported by Ulrike 01 May 2025 10:23:07.
+	Test: 40-overlapping-text-with-pdfinterwordspaceon.
+	(pdftex r963)
+
+2025-04-17  Karl Berry  <karl@freefriends.org>
+
+	* pdftex.web (bool): rename variable to booltemp, kowtowing to C23.
+
+2025-03-07  Karl Berry  <karl@tug.org>
+
+	* TL'25 release.
+
+2025-02-18  Thanh Han The  <hanthethanh@gmail.com>
+
+	* pdftex.web (pdf_begin_string): more space fixes.
+	(pdftex r958)
+
+2025-02-17  Thanh Han The  <hanthethanh@gmail.com>
+
+	* pdftex.web (pdf_begin_string): remove	"and (not must_set_text_pos)"
+	from condition for must_insert_space := true.
+	(pdftex r955)
+
+2025-02-16  Thanh Han The  <hanthethanh@gmail.com>
+
+	* pdftex.web: fixes for previous change to add missing interword
+	spaces at font switches, following reports:
+	https://tug.org/pipermail/pdftex/2025-February/009443.html
+	https://tug.org/pipermail/tex-live/2025-February/051136.html
+	https://tug.org/pipermail/tex-live/2025-February/051139.html
+	Copied from pdftex r953.
+
+2025-02-11  Max Chernoff  <tex@maxchernoff.ca>
+
+	* pdftex.web (scale_image): no warning if both resolutions are zero.
+	https://tug.org/pipermail/pdftex/2025-February/009441.html
+
+2025-02-02  Karl Berry  <karl@freefriends.org>
+
+	* pdftex.ch: try to give original files and line numbers for changes.
+
+2025-01-31  Karl Berry  <karl@freefriends.org>
+
+	* pdftex.ch (l.1891): have print_ignored_error respect
+	--file-line-error; noted by Martin Ruckert.
+	* pdftex.web (etex_int_pars): add eTeX_states, not
+	eTeX_state_code, as it was before; noted by Martin Ruckert.
+
+2025-01-27  Karl Berry  <karl@freefriends.org>
+
+	* NEWS: 2025 font scaling entry; belated 2024 cross-engine entry.
+
+	* am/pdftex.am (pdftex-pool.c): exit 1 if makecpool failed.
+	(pdftex-final.ch): remove $@ and exit 1 if tie failed.
+
+2025-01-25  Karl Berry  <karl@freefriends.org>
+
+        * NEWS,
+        * pdftex_version.h,
+        * pdftex.web (pdftex_revision, pdftex_version_string):
+        version [1.40.]27 for TL25.
+
+2025-01-25  Thanh Han The  <hanthethanh@gmail.com>
+
+	* pdftex.web (print_ignored_err): new @d.
+	(ignore_primitive_error_code, ignore_primitive_error): new primitive
+	\ignoreprimitiveerror.
+	(is_bit_set): new fn.
+	(finite_shrink): if it's set, make "Infinite glue shrinkage
+	found in box being split" error into warning.
+	(Generate all \eTeX): define it.
+	(Cases for |print_param|): print it.
+	Request from Frank Mittelbach, 22 Jul 2024 22:37:26 (private mail).
+	* NEWS: mention this.
+
+2025-01-23  Thanh Han The  <hanthethanh@gmail.com>
+
+	* pdftex.web (Glob...): remove pdf_last_f; remove uses.
+	(pdf_set_f): test and set pdf_f.
+	(pdf_begin_string): new variable move_by_tm.
+	Test gen_faked_interword_space and new move_by_tm to determine
+	when to insert a space.
+	Report from Ulrike Fischer:
+	  https://tug.org/pipermail/pdftex/2024-July/009424.html
+	with followup from Ross Moore:
+	  https://tug.org/pipermail/pdftex/2025-January/009426.html
+
+2025-01-22  Karl Berry  <hanthethanh@gmail.com>
+
+	* pdftex.web (scale_image): rename resolution_ratio to one_inch.
+	Suggestion from Thanh.
+
+2025-01-18  Andreas Scherer  <https://ascherer.github.io>
+
+	* pdftex.web: Purge backslash from |maxdimen|.
+
+2025-01-17  Max Chernoff  <tex@maxchernoff.ca>
+
+	* pdftex.web (Glob..., Set init...): new global
+	resolution_ratio==226.
+	(scale_image): use it to report a warning for too-small resolutions
+	(e.g., 1px x 1px). https://tex.stackexchange.com/questions/734919
+
+2024-08-04  Thanh Han The  <hanthethanh@gmail.com>
+
+	* pdftoepdf.cc (write_epdf): reversed sep and pdfkeyprefix.
+
+2024-07-26  Andreas Scherer  <https://ascherer.github.io>
+
+	* pdftex.ch: Prepare for compilation with gcc-14.
+
+2024-05-24  Thanh Han The  <hanthethanh@gmail.com>
+
+	* pdftex.web (pdf_ptex_use_underscore_code),
+	(pdf_ptex_use_underscore): new \pdfptexuseunderscore parameter.
+	(Put each ...): define it.
+	(print_param): print it.
+	(get_ptex_use_underscore): new fn to implement it.
+	(pdf_print_info): adjust Fullbanner prefix character.
+	* pdftoepdf.cc (getptexuseunderscore): declare fn.
+	(write_epdf): use it for FileName, PageNumber, InfoDict.
+
+2024-04-18  Thanh Han The  <hanthethanh@gmail.com>
+
+	* pdftex.web (pdf_begin_string): increase tolerance for finding
+	interword spaces by 1pt, since overfull lines can have smaller
+	spaces than space-space_shrink. Report from Ulrike,
+	https://tug.org/pipermail/pdftex/2024-April/009388.html
+
 2024-03-10  Karl Berry  <karl@tug.org>
 
 	* TL'24 release.

@@ -2,7 +2,7 @@
 
 --[[
 
-File l3build.lua Copyright (C) 2014-2024 The LaTeX Project
+File l3build.lua Copyright (C) 2014-2025 The LaTeX Project
 
 It may be distributed and/or modified under the conditions of the
 LaTeX Project Public License (LPPL), either version 1.3c of this
@@ -25,7 +25,7 @@ for those people who are interested.
 --]]
 
 -- Version information
-release_date = "2024-02-08"
+release_date = "2025-02-23"
 
 -- File operations are aided by the LuaFileSystem module
 local lfs = require("lfs")
@@ -128,7 +128,15 @@ if forcecheckepoch then
 end
 if forcedocepoch then
   if match(typesetexe,"luatex") or match(typesetexe,"lualatex") then
-    typesetopts = typsetopts .. " -utc"
+    typesetopts = typesetopts .. " -utc"
+  end
+end
+-- Allow for LaTeX "dev" release
+if options["dev"] then
+  if checkformat == "latex" then
+    checkformat = "latex-dev"
+  elseif checkformat ~= "latex-dev" then
+    print("Ignoring --dev option with non-LaTeX format")
   end
 end
 

@@ -1,5 +1,5 @@
 #!/bin/sh -vx
-# $Id$
+# $Id: zfmtcompress.test 68965 2023-11-25 14:28:06Z takuji $
 # Public domain. Originally written by Hironori Kitagawa, 2019.
 # This test is intended to be used in a suitable temporary directory
 # after installing all engines. It should not be enabled in build stage.

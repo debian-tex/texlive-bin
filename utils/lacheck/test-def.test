@@ -1,5 +1,5 @@
 #! /bin/sh -vx
-# $Id$
+# $Id: test-def.test 51589 2019-07-09 03:36:40Z kakuto $
 # Copyright 2019 Karl Berry <tex-live@tug.org>
 # You may freely use, modify and/or distribute this file.
 

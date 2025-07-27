@@ -1,3 +1,4 @@
+#!/bin/bash
 
 gitmode=1
 if [ "$1" = "-svn" ] ; then
@@ -9,18 +10,19 @@ if [ -n "$1" ] ; then
   svnroot="$1"
 else
   if [ $gitmode = 1 ] ; then
-    svnroot=~/Development/TeX/texlive.git/Build/source
+    svnroot=~/devel/TeXLive/zzz_upstream_raw/texlive-source/source_tl2025
   else
-    svnroot=~/Development/TeX/texlive-svn/Build/source
+    svnroot=~/devel/TeXLive/zzz_upstream_raw/texlive-source/source_tl2025
   fi
 fi
-baseyear=2023
+baseyear=2025
 
 cmd="svn info"
 if [ $gitmode = 1 ] ; then
   cmd="git svn info"
 fi
-svni=$(cd $svnroot ; $cmd | grep "^Last Changed Rev" | awk '{print$4}')
+svni=$(cd $svnroot ; $cmd | grep "^Last Changed Rev" | sed s/"Last Changed Rev: "//)
+#svni=74609
 verstr=texlive-bin-$baseyear.`date +%Y%m%d`.$svni
 pkgstr=texlive-bin_$baseyear.`date +%Y%m%d`.$svni
 
@@ -29,16 +31,16 @@ if [ -r $verstr ] ; then
   exit 1
 fi
 
-cmd="svn status --no-ignore"
-if [ $gitmode = 1 ] ; then
-  cmd="git status --ignored --short"
-fi
-svnstat=$(cd $svnroot ; $cmd)
-if [ -n "$svnstat" ] ; then
-  echo "Strange files present, stopping!"
-  echo $svnstat
-  exit 1
-fi
+#cmd="svn status --no-ignore"
+#if [ $gitmode = 1 ] ; then
+#  cmd="git status --ignored --short"
+#fi
+#svnstat=$(cd $svnroot ; $cmd)
+#if [ -n "$svnstat" ] ; then
+#  echo "Strange files present, stopping!"
+#  echo $svnstat
+#  exit 1
+#fi
 
 echo "copying"
 cp -a $svnroot $verstr
@@ -51,6 +53,8 @@ rm -rf $verstr/utils/asymptote
 rm -rf $verstr/utils/xindy
 rm -rf $verstr/utils/ps2eps
 rm -rf $verstr/utils/t1utils
+rm -rf $verstr/texk/gregorio/gregorio-src/fonts
+rm -rf $verstr/texk/web2c/doc/luatex/old/
 # irrelevant for sources on Linux, Win32 only
 # don't remove the source, automake checks for these files in reautoconf!
 find $verstr -name \*.dll -o -name \*.exe | xargs rm

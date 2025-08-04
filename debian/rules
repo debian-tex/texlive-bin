@@ -55,6 +55,13 @@ else
   WITHLUAJIT=yes
 endif
 
+ZZIPLIB=--with-system-zziplib
+
+ifeq ($(DEB_HOST_ARCH), i386))
+  # Not use system zziplib on i386 arches.
+  ZZIPLIB=--without-system-zziplib
+endif
+
 #
 # it seems that ARM metafont segfaults due to a problem with armhf's malloc
 # see Debian bug #678604
@@ -130,7 +137,7 @@ override_dh_auto_configure-arch:
 	--with-system-libgs			\
 	--with-system-pixman			\
 	--with-system-libpaper			\
-	--with-system-zziplib			\
+	$(ZZIPLIB)			\
 	--with-system-icu			\
 	--with-system-gmp			\
 	--with-system-mpfi			\

@@ -1,8 +1,8 @@
-texlive-bin (2025.20250727.75242+ds-2) UNRELEASED; urgency=medium
+texlive-bin (2025.20250727.75242+ds-2) experimental; urgency=medium
 
   * Build with embedded zziplib on i386.
 
- -- Hilmar Preuße <hille42@debian.org>  Mon, 04 Aug 2025 17:09:33 +0200
+ -- Hilmar Preuße <hille42@debian.org>  Mon, 04 Aug 2025 22:46:53 +0200
 
 texlive-bin (2025.20250727.75242+ds-1) experimental; urgency=medium
 

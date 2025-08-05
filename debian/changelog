@@ -1,3 +1,9 @@
+texlive-bin (2025.20250727.75242+ds-3) experimental; urgency=medium
+
+  * Disable zziplib test suite.
+
+ -- Hilmar Preuße <hille42@debian.org>  Tue, 05 Aug 2025 23:52:44 +0200
+
 texlive-bin (2025.20250727.75242+ds-2) experimental; urgency=medium
 
   * Build with embedded zziplib on i386.

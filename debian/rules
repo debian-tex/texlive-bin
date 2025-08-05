@@ -121,6 +121,12 @@ override_dh_auto_configure-arch:
 	# by a patch is executable, same for pdftexdir - stupid dpkg-source
 	chmod 0755 texk/mendexk/tests/mendex.test
 	chmod 0755 texk/web2c/pdftexdir/expanded.test
+	# make sure that the lacheck test script is executable
+	# this is only necessary since quilt/dpkg does not support
+	# permissions
+	chmod ugo+x utils/lacheck/test-def.test
+	chmod ugo+x libs/zziplib/zziplib.test
+	
 	# run out configure script
 	dh_auto_configure -- -C --prefix=/usr	\
 	--datarootdir=/usr/share/texlive	\
@@ -167,10 +173,6 @@ override_dh_auto_configure-arch:
 	--disable-dvisvgm			\
 	--enable-ttf2pk2			\
 	--enable-ipc				
-	# make sure that the lacheck test script is executable
-	# this is only necessary since quilt/dpkg does not support
-	# permissions
-	chmod ugo+x utils/lacheck/test-def.test
 
 override_dh_auto_configure-indep:
 	# Nothing to do here

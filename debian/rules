@@ -174,6 +174,25 @@ override_dh_auto_configure-arch:
 	--enable-ttf2pk2			\
 	--enable-ipc				
 
+	# HACK: manually create the detex-src subdirectory inside the build
+	# directory to ensure it exists; the situation is the following:
+	# - texk/detex/Makefile.am has a rule to generate detex-src/detex.h
+	#   from detex-src/detex.l using lex (wrapped in build-aux/ylwrap)
+	# - ylwrap does not create any missing subdirectory for the output file
+	# - automake (currently 1.17) generate a rule to create the needed
+	#   subdirectory, however it is only added as dependency for the
+	#   detex-src/detex.o object file (build from detex-src/detex.c, which
+	#   includes the generated detex-src/detex.h); this rule is also
+	#   written in the Makefile after the rule to invoke ylwrap
+	# - GNU make starting from 4.4 remakes rules in the same order they
+	#   were processed, rather the opposite as in previous versions
+	# When building with a single build job, the rule to generate
+	# detex-src/detex.h is processed before the rule to create the output
+	# subdirectory; thus in a builddir!=srcdir build ylwrap fails as:
+	# ../../../texk/detex/../../build-aux/ylwrap: line 204: ../detex-src/detex.c: No such file or directory
+	# While this feels like a bug in automake, work around it for now.
+	mkdir -p $(CURDIR)/Work/texk/detex/detex-src/
+
 override_dh_auto_configure-indep:
 	# Nothing to do here
 

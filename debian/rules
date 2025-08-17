@@ -57,7 +57,7 @@ endif
 
 ZZIPLIB=--with-system-zziplib
 
-ifeq ($(DEB_HOST_ARCH), i386))
+ifeq ($(DEB_HOST_ARCH_CPU), i386)
   # Not use system zziplib on i386 arches.
   ZZIPLIB=--without-system-zziplib
 endif

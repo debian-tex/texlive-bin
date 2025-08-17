@@ -1,3 +1,16 @@
+texlive-bin (2025.20250727.75242+ds-5) UNRELEASED; urgency=medium
+
+  [ Pino Toscano ]
+  * Import patch 0001-consider-Hurd-as-a-POSIX-system.patch from src:luajit as
+    luajit-hurd.diff to support Hurd in the embedded luajit copy.
+  * Use DEB_HOST_ARCH rather than DEB_HOST_ARCH_CPU to use the embedded zziplib
+    copy on any i386 architecture, not only on Linux, as the problem applies
+    regardless of the OS.
+  * Enable the luajit support also on hurd-amd64.
+  * Add a workaround for missing automake dependencies in single job builds.
+
+ -- Debian TeX Task Force <debian-tex-maint@lists.debian.org>  Sun, 17 Aug 2025 09:38:50 +0200
+
 texlive-bin (2025.20250727.75242+ds-4) unstable; urgency=medium
 
   * Upload to unstable.

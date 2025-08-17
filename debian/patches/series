@@ -47,3 +47,4 @@ gcc-15/6bf2b2d8ad6bfc810038ba8d426cc603f88ae99a.patch
 texlive_svn_r75793.diff
 texlive_svn_r74888.diff
 zziplib.diff
+luajit-hurd.diff

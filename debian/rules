@@ -211,7 +211,6 @@ override_dh_install-arch:
 	mv $(DEBIANTMP)/usr/include/kpathsea/c-auto.h \
 		$(DEBIANTMP)/usr/include/$(DEB_HOST_MULTIARCH)/kpathsea/
 	dh_install --sourcedir=$(CURDIR)/$(DEBIANTMP)
-	dh_missing --sourcedir=$(CURDIR)/$(DEBIANTMP) --fail-missing
 
 execute_after_dh_install-arch:
 	# replace xdvi wrapper shell script with perl variant to
@@ -296,11 +295,7 @@ override_dh_compress:
 	dh_compress -X.pdf
 
 override_dh_missing:
-	# already called above with --fail-missing, no idea
-	# why it still lists each and every file as not being
-	# installed, seems to be some wonderful magic of dh
-	# which nobody can understand
-	true
+	dh_missing --sourcedir=$(CURDIR)/$(DEBIANTMP) --fail-missing
 
 override_dh_makeshlibs:
 	dh_makeshlibs -plibkpathsea6

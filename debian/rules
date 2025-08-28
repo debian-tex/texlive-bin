@@ -191,7 +191,8 @@ override_dh_auto_configure-arch:
 	# subdirectory; thus in a builddir!=srcdir build ylwrap fails as:
 	# ../../../texk/detex/../../build-aux/ylwrap: line 204: ../detex-src/detex.c: No such file or directory
 	# While this feels like a bug in automake, work around it for now.
-	mkdir -p $(CURDIR)/Work/texk/detex/detex-src/
+	# https://lists.gnu.org/archive/html/bug-automake/2017-06/msg00005.html
+	#mkdir -p $(CURDIR)/Work/texk/detex/detex-src/
 
 override_dh_auto_configure-indep:
 	# Nothing to do here

@@ -7,7 +7,10 @@ texlive-bin (2025.20250727.75242+ds-5) UNRELEASED; urgency=medium
     copy on any i386 architecture, not only on Linux, as the problem applies
     regardless of the OS (Closes: #1111536).
   * Enable the luajit support also on hurd-amd64.
-  * Add a workaround for missing automake dependencies in single job builds.
+
+  [ Samuel Thibault ]
+  * Patch detex/Makefile.am to to fix build failure on single job builders
+    (Closes: #1111524).
 
   * Implement override_dh_missing correctly.
 

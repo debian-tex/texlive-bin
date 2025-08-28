@@ -1,0 +1,22 @@
+Description: Make sure the work directoy to build detex does exist.
+ On single job build servers the call to build detex is called before
+ the appropriate sub dir does exists. This is assumed to be a bug in
+ automake.
+Forwarded: not yet
+Author: Samuel Thibault <sthibault@debian.org>
+Bug: https://lists.gnu.org/archive/html/bug-automake/2017-06/msg00005.html
+Bug-Debian: http://bugs.debian.org/1111524
+Applied-Upstream: not yet
+Last-Update: 2025-08-21
+
+--- texlive-bin.orig/texk/detex/Makefile.am
++++ texlive-bin/texk/detex/Makefile.am
+@@ -28,6 +28,8 @@
+ 	@DETEX_TREE@/detex.h \
+ 	@DETEX_TREE@/detex.l
+ 
++BUILT_SOURCES = detex-src/$(am__dirstamp)
++
+ LDADD = $(KPATHSEA_LIBS)
+ 
+ $(detex_OBJECTS): $(KPATHSEA_DEPEND)

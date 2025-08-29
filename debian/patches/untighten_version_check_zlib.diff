@@ -1,7 +1,7 @@
 Description: Untighten version check of runtime linked zlib. Fix for #1056183.
 Forwarded: not-done, could be done
 Author: Hilmar Preuße <hille42@web.de>
-Last-Update: 20231119
+Last-Update: 2023-11-19
 
 --- texlive-bin.orig/texk/web2c/luatexdir/luazlib/lzlib.c
 +++ texlive-bin/texk/web2c/luatexdir/luazlib/lzlib.c

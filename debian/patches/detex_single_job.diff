@@ -2,7 +2,7 @@ Description: Make sure the work directoy to build detex does exist.
  On single job build servers the call to build detex is called before
  the appropriate sub dir does exists. This is assumed to be a bug in
  automake.
-Forwarded: not yet
+Forwarded: https://svn.tug.org:8369/texlive?revision=76190&view=revision
 Author: Samuel Thibault <sthibault@debian.org>
 Bug: https://lists.gnu.org/archive/html/bug-automake/2017-06/msg00005.html
 Bug-Debian: http://bugs.debian.org/1111524

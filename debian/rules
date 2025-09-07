@@ -81,7 +81,6 @@ export CFLAGS += -std=gnu17
 
 # Debug symbols.
 export CFLAGS += -g
-export CPPFLAGS += -g
 
 %:
 	dh $@ --builddirectory Work --max-parallel=8

@@ -77,10 +77,7 @@ endif
 
 # Workaround for incompatibility to GCC 15.
 # Mostly lua[hb][jit]text, pdftex & ps2pk are not fixed yet.
-export CFLAGS += -std=gnu17
-
-# Debug symbols.
-export CFLAGS += -g
+export DEB_CFLAGS_MAINT_APPEND += -std=gnu17
 
 %:
 	dh $@ --builddirectory Work --max-parallel=8

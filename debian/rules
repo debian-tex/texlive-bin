@@ -27,7 +27,7 @@ LUAJIT_GOOD_ARCHS := amd64 armel armhf arm64 hurd-amd64 hurd-i386 i386 powerpc
 include /usr/share/dpkg/architecture.mk
 
 ifeq ($(DEB_HOST_ARCH), alpha)
-  export LDFLAGS = -Wl,--no-relax
+  export DEB_LDFLAGS_MAINT_APPEND = -Wl,--no-relax
 endif
 
 #
@@ -39,7 +39,7 @@ endif
 BROKEN_ICU_ARCHS := sparc64
 ifneq (,$(findstring $(DEB_HOST_ARCH), $(BROKEN_ICU_ARCHS)))
   export DEB_CFLAGS_MAINT_APPEND += -DU_IS_BIG_ENDIAN=0
-  export CXXFLAGS += -DU_IS_BIG_ENDIAN=0
+  export DEB_CXXFLAGS_MAINT_APPEND += -DU_IS_BIG_ENDIAN=0
 else
 endif
 
@@ -68,7 +68,7 @@ endif
 # Building in arm mode helps
 #
 ifeq ($(DEB_HOST_ARCH), armhf)
-  export DEB_CFLAGS_MAINT_APPEND += -marm
+  DEB_CFLAGS_MAINT_APPEND += -marm
 endif
 
 # warning: if the --with autoreconf is removed then
@@ -77,7 +77,9 @@ endif
 
 # Workaround for incompatibility to GCC 15.
 # Mostly lua[hb][jit]text, pdftex & ps2pk are not fixed yet.
-export DEB_CFLAGS_MAINT_APPEND += -std=gnu17
+DEB_CFLAGS_MAINT_APPEND += -std=gnu17
+
+export DEB_CFLAGS_MAINT_APPEND
 
 %:
 	dh $@ --builddirectory Work --max-parallel=8

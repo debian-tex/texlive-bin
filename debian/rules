@@ -203,7 +203,7 @@ override_dh_auto_install-arch:
 	dh_auto_install -- DESTDIR=$(CURDIR)/$(DEBIANTMP)
 
 override_dh_auto_install-indep:
-	# Nothing to do here
+	mkdir -p $(CURDIR)/$(DEBIANTMP)
 
 override_dh_install-arch:
 	# remove .la files which we do not install, so that dh_install

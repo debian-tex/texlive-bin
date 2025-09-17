@@ -19,6 +19,7 @@ Build-Depends-Arch:
   libgraphite2-dev,
   libharfbuzz-dev (>= 2.4),
   libicu-dev,
+  libluajit-5.1-dev [amd64 armel armhf arm64 i386 powerpc],
   libmpfi-dev (>= 1.5.4),
   libmpfr-dev,
   libpaper-dev,

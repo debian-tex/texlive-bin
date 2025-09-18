@@ -1,6 +1,8 @@
-From: Enrico Tassi <gareuselesinge@debian.org>
 Date: Fri, 14 Aug 2015 16:11:50 +0200
 Subject: consider Hurd as a POSIX system
+Forwarded: https://github.com/LuaJIT/LuaJIT/issues/1384
+Author: Enrico Tassi <gareuselesinge@debian.org>
+Last-Update: 2025-08-18
 
 ---
  src/Makefile  | 3 +++

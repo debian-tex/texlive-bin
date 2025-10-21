@@ -154,13 +154,6 @@ Description: TeX Live: SyncTeX parser library (development part)
  This package contains the static library and header files for the SyncTex
  parser library.
 
-Package: libtexlua53
-Section: oldlibs
-Architecture: all
-Depends: libtexlua53-5, ${misc:Depends}
-Description: transitional package (lib)
- This is a transitional (library) package. It can safely be removed.
-
 Package: libtexlua53-5
 Section: libs
 Architecture: any
@@ -171,13 +164,6 @@ Replaces: libtexlua53 (<< 2022.20220321.62855-2~)
 Breaks: libtexlua53 (<< 2022.20220321.62855-2~)
 Description: TeX Live: Lua 5.3, modified for use with LuaTeX
  The Lua 5.3 library as used within LuaTeX.
-
-Package: libtexlua53-dev
-Section: oldlibs
-Architecture: all
-Depends: libtexlua-dev, ${misc:Depends}
-Description: transitional package (dev)
- This is a transitional (development) package. It can safely be removed.
 
 Package: libtexlua-dev
 Section: libdevel

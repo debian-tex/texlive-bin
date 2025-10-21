@@ -276,8 +276,8 @@ ifeq ($(WITHLUAJIT), yes)
 	dh_installdocs -plibtexluajit2 -plibtexluajit-dev
 endif
 
-override_dh_installdocs-indep:
-	dh_installdocs -plibtexlua53 -plibtexlua53-dev
+#override_dh_installdocs-indep:
+#	dh_installdocs -plibtexlua53 -plibtexlua53-dev
 
 override_dh_installchangelogs:
 	dh_installchangelogs

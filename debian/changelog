@@ -12,6 +12,10 @@ texlive-bin (2025.20250727.75242+ds-5) UNRELEASED; urgency=medium
   * Patch detex/Makefile.am to fix build failure on single job builders
     (Closes: #1111524).
 
+  [ Gianfranco Costamagna ]
+  * Patch mendexk-upmendex-fix-pnumconv to FTBFS on Big Endian Architectures
+    with security flags (Closes: #1119667).
+
   * Implement override_dh_missing correctly.
   * Lintian stuff.
   * Use DEB_CFLAGS_MAINT_APPEND (instead of CFLAGS) to append flags to gcc

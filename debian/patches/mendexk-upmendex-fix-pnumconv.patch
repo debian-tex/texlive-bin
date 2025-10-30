@@ -1,0 +1,77 @@
+Author: Ryan Lee <ryan.lee@canonical.com>
+Subject: Fix uninit memory access in pnumconv caused my missing else
+Bug-Ubuntu: https://bugs.launchpad.net/ubuntu/+source/texlive-bin/+bug/2125767
+Forwarded: https://tug.org/pipermail/tex-k/2025-October/004208.html
+
+Index: b/texk/mendexk/convert.c
+===================================================================
+--- a/texk/mendexk/convert.c	2025-09-30 16:45:05.624911321 -0700
++++ b/texk/mendexk/convert.c	2025-09-30 16:45:18.913176387 -0700
+@@ -478,6 +478,7 @@
+ 			case 'c':
+ 			case 'C':
+ 				if (i==0) cc=100;
++				else {
+ 					switch (page[i-1]) {
+ 					case 'x':
+ 					case 'X':
+@@ -496,6 +497,7 @@
+ 					default:
+ 						break;
+ 					}
++				}
+ 				break;
+ 
+ 			case 'd':
+@@ -522,6 +524,7 @@
+ 			case 'm':
+ 			case 'M':
+ 				if (i==0) cc=1000;
++				else {
+ 					switch (page[i-1]) {
+ 					case 'c':
+ 					case 'C':
+@@ -536,6 +539,7 @@
+ 					default:
+ 						break;
+ 					}
++				}
+ 				break;
+ 
+ 			default:
+Index: b/texk/upmendex/convert.c
+===================================================================
+--- a/texk/upmendex/convert.c	2025-09-30 16:45:05.624911321 -0700
++++ b/texk/upmendex/convert.c	2025-09-30 16:45:30.128143004 -0700
+@@ -398,6 +398,7 @@
+ 			case 'c':
+ 			case 'C':
+ 				if (i==0) cc=100;
++				else {
+ 					switch (page[i-1]) {
+ 					case 'x':
+ 					case 'X':
+@@ -416,6 +417,7 @@
+ 					default:
+ 						break;
+ 					}
++				}
+ 				break;
+ 
+ 			case 'd':
+@@ -442,6 +444,7 @@
+ 			case 'm':
+ 			case 'M':
+ 				if (i==0) cc=1000;
++				else {
+ 					switch (page[i-1]) {
+ 					case 'c':
+ 					case 'C':
+@@ -456,6 +459,7 @@
+ 					default:
+ 						break;
+ 					}
++				}
+ 				break;
+ 
+ 			default:

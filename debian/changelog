@@ -1,4 +1,4 @@
-texlive-bin (2025.20250727.75242+ds-5) UNRELEASED; urgency=medium
+texlive-bin (2025.20250727.75242+ds-5) unstable; urgency=medium
 
   [ Pino Toscano ]
   * Import patch 0001-consider-Hurd-as-a-POSIX-system.patch from src:luajit as
@@ -21,8 +21,9 @@ texlive-bin (2025.20250727.75242+ds-5) UNRELEASED; urgency=medium
   * Use DEB_CFLAGS_MAINT_APPEND (instead of CFLAGS) to append flags to gcc
     to /not/ kill hardening flags.
   * Drop transitional packages libtexlua53-dev & libtexlua53.
+  * Bump Standards version, no changes needed.
 
- -- Debian TeX Task Force <debian-tex-maint@lists.debian.org>  Sun, 17 Aug 2025 09:38:50 +0200
+ -- Hilmar Preuße <hille42@debian.org>  Wed, 26 Nov 2025 14:46:26 +0100
 
 texlive-bin (2025.20250727.75242+ds-4) unstable; urgency=medium
 

@@ -15,7 +15,7 @@ Files: debian/*
 Copyright: Copyright (C) 2005-2022 Norbert Preining <preining@logic.at>
            Copyright (C) 2006-2011 Frank Küster <frank@kuesterei.ch>
            Copyright (C) 2002-2007 Julian Gilbey <jdg@debian.org>
-           Copyright (C) 2006-2023 Hilmar Preusse <hille42@web.de>
+           Copyright (C) 2006-2025 Hilmar Preusse <hille42@web.de>
 License: GPL-2+
 
 Files: libs/lua53/*

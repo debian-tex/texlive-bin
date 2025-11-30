@@ -56,11 +56,11 @@ Recommends: texlive-base, dvisvgm
 Suggests: texlive-binaries-sse2 [amd64 armel armhf arm64 hurd-amd64 hurd-i386 i386 powerpc], hintview
 Replaces: ptex-bin, mendexk, jmpost, luatex (<< 2014), gregorio (<= 2.3-1),
     texlive-extra-utils (<< 2020.20200329), texlive-luatex (<< 2020.20200329)
-Conflicts: mendexk, makejvf, jmpost
+Conflicts: mendexk, makejvf, jmpost, dvidvi
 Breaks: texlive-base (<< 2021), luatex (<< 2014), gregorio (<= 2.3-1),
     texlive-extra-utils (<< 2020.20200329), texlive-luatex (<< 2020.20200329),
     context (<= 2021.03.05.20230120+dfsg-1), texlive-formats-extra (<< 2023.20230613)
-Provides: texlive-base-bin, makejvf, mendexk, jmpost, luatex
+Provides: texlive-base-bin, makejvf, mendexk, jmpost, luatex, dvidvi
 Description: Binaries for TeX Live
  This package contains all the binaries of TeX Live packages.
  .

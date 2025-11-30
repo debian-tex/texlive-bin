@@ -1,3 +1,11 @@
+texlive-bin (2025.20250727.75242+ds-6) UNRELEASED; urgency=medium
+
+  * Start providing the dvidvi program.
+    - This solves the RFA issue (Closes: #1006644)
+    - TL is built using standard flags (Closes: #1119401)
+
+ -- Hilmar Preuße <hille42@debian.org>  Sun, 30 Nov 2025 15:33:33 +0100
+
 texlive-bin (2025.20250727.75242+ds-5) unstable; urgency=medium
 
   [ Pino Toscano ]

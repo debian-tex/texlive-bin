@@ -168,7 +168,6 @@ override_dh_auto_configure-arch:
 	--disable-t1utils			\
 	--disable-cjkutils			\
 	--disable-chktex			\
-	--disable-dvidvi			\
 	--disable-lacheck			\
 	--disable-texdoctk			\
 	--disable-ttf2pk			\
